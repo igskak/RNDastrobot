@@ -365,6 +365,14 @@
           "fetchUnavailable": "Сеть недоступна.",
           "loadFailed": "Не удалось загрузить динамику аспекта.",
           "missingContext": "Контекст аспекта неполный."
+        },
+        "motion": {
+          "direct": "директное",
+          "retrograde": "ретроградное"
+        },
+        "station": {
+          "direct": "директная",
+          "retrograde": "ретроградная"
         }
       },
       "pageTitle": "Прогностика",
@@ -397,8 +405,8 @@
         "balances": "Балансы",
         "prognosticShort": "Прогноз",
         "stelliums": "Стеллиумы",
-        "jones": "Космограмма Джонса",
-        "dispositors": "Схема диспозиторов",
+        "jones": "Фигуры Джонса",
+        "dispositors": "Цепочка диспозиторов",
         "lunar": "Луна",
         "voidmoon": "Луна без курса",
         "eclipses": "Затмения",
@@ -503,6 +511,7 @@
         "addWidgetTitle": "Добавить виджет вокруг карты?",
         "widgetMoveCopy": "Блок будет перемещён из «{location}».",
         "widgetMovedFrom": "Виджет добавлен, блок перемещён из «{location}»",
+        "widgetReturnedTo": "Виджет убран, блок вернулся в «{location}»",
         "widgetAdded": "Виджет добавлен",
         "widgetReplaceCopy": "Текущий виджет в этой позиции будет заменён.",
         "emptyTab": "Пусто",
@@ -828,8 +837,8 @@
       "options": {
         "orientationAries": "Овен 0°",
         "orientationAsc": "Асцендент",
-        "showApplyingSeparating": "Показывать сходящиеся / расходящиеся",
-        "showSpeed": "Показывать скорость",
+        "showApplyingSeparating": "Показывать сходящиеся / расходящиеся аспекты",
+        "showSpeed": "Показывать скорости планет",
         "showStationary": "Показывать стационарность",
         "showAspectText": "Показывать название аспекта текстом"
       },
@@ -1057,7 +1066,7 @@
         "mainKicker": "Дома и связи",
         "mainTitle": "Главные управители",
         "modalClose": "Закрыть схему",
-        "modalTitle": "Схема диспозиторов",
+        "modalTitle": "Цепочка диспозиторов",
         "modeLabel": "Режим",
         "chainModes": {
           "detriment": "Изгнание",
@@ -1074,7 +1083,7 @@
         "tabs": {
           "jones": "Фигура Джонса",
           "label": "Фигура и диспозиторы",
-          "scheme": "Схема диспозиторов"
+          "scheme": "Цепочка диспозиторов"
         },
         "openSchema": "Открыть схему цепочек"
       },
@@ -1251,18 +1260,18 @@
         "aspects": {
           "aspect": "Аспект",
           "orb": "Орбис",
-          "type": "Фаза"
+          "type": "Тип"
         },
         "houses": {
-          "cusp": "Куспид дома",
+          "cusp": "Куспид",
           "ruler": "Управитель",
-          "sign": "Знак"
+          "sign": "Координата"
         },
         "planets": {
           "house": "Дом",
-          "position": "Положение",
+          "position": "Координата",
           "speed": "Скорость",
-          "symbol": "Символ",
+          "symbol": "Элемент",
           "speedHint": "Суточная скорость в % от средней. Синий — почти стационар, красный — быстрый."
         }
       },

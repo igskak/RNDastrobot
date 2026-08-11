@@ -55,11 +55,26 @@
 }
 
 .aspect-dynamics-heading h2 {
+    /* Заголовок собран из тех же векторных глифов, что и колесо. */
+    display: flex;
+    align-items: center;
+    gap: 7px;
     margin: 0;
     color: var(--text-primary);
     font-size: 18px;
     line-height: 1.12;
     font-weight: 750;
+}
+
+.aspect-dynamics-heading h2 .planet-icon-svg {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-primary);
+}
+
+.aspect-dynamics-title-aspect {
+    font-size: 17px;
+    line-height: 1;
 }
 
 .aspect-dynamics-subtitle {

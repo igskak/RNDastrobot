@@ -159,8 +159,13 @@
             return;
         }
         const chips = active.map((ev) => {
-            const pSym = window.Symbols?.getPlanetSymbol?.(ev.transit_body) || ev.transit_body;
-            const nSym = window.Symbols?.getPlanetSymbol?.(ev.natal_body) || ev.natal_body;
+            // Те же векторные глифы, что и на карте, — старый шрифтовой символ
+            // расходился с колесом (заметнее всего у Плутона).
+            const bodyGlyph = (name) => window.Symbols?.getPlanetSymbolMarkup?.(name, { size: 15 })
+                || window.Symbols?.getPlanetSymbol?.(name)
+                || name;
+            const pSym = bodyGlyph(ev.transit_body);
+            const nSym = bodyGlyph(ev.natal_body);
             const aSym = window.Symbols?.aspects?.[ev.aspect_type] || ev.aspect_type;
             const harmony = RD().getAspectHarmony(ev.aspect_type);
             const exact = new Date(ev.t_exact);

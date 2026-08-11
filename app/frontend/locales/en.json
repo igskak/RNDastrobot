@@ -365,6 +365,14 @@
           "fetchUnavailable": "Network is unavailable.",
           "loadFailed": "Could not load aspect dynamics.",
           "missingContext": "Aspect context is incomplete."
+        },
+        "motion": {
+          "direct": "direct",
+          "retrograde": "retrograde"
+        },
+        "station": {
+          "direct": "direct",
+          "retrograde": "retrograde"
         }
       },
       "pageTitle": "Forecast",
@@ -397,8 +405,8 @@
         "balances": "Balances",
         "prognosticShort": "Forecast",
         "stelliums": "Stelliums",
-        "jones": "Jones cosmogram",
-        "dispositors": "Dispositor scheme",
+        "jones": "Jones patterns",
+        "dispositors": "Dispositor chain",
         "lunar": "Moon",
         "voidmoon": "Void Moon",
         "eclipses": "Eclipses",
@@ -503,6 +511,7 @@
         "addWidgetTitle": "Add widget around the chart?",
         "widgetMoveCopy": "The block will be moved from “{location}”.",
         "widgetMovedFrom": "Widget added, block moved from “{location}”",
+        "widgetReturnedTo": "Widget removed, the block is back in “{location}”",
         "widgetAdded": "Widget added",
         "widgetReplaceCopy": "The current widget in this position will be replaced.",
         "emptyTab": "Empty",
@@ -829,7 +838,7 @@
         "orientationAries": "Aries 0°",
         "orientationAsc": "Ascendant",
         "showApplyingSeparating": "Show applying / separating aspects",
-        "showSpeed": "Show speed",
+        "showSpeed": "Show planet speeds",
         "showStationary": "Show stationary",
         "showAspectText": "Show aspect name as text"
       },
@@ -1057,7 +1066,7 @@
         "mainKicker": "Houses and links",
         "mainTitle": "Main rulers",
         "modalClose": "Close diagram",
-        "modalTitle": "Dispositor scheme",
+        "modalTitle": "Dispositor chain",
         "modeLabel": "Mode",
         "chainModes": {
           "detriment": "Detriment",
@@ -1074,7 +1083,7 @@
         "tabs": {
           "jones": "Jones pattern",
           "label": "Pattern and dispositors",
-          "scheme": "Dispositor scheme"
+          "scheme": "Dispositor chain"
         },
         "openSchema": "Open chain diagram"
       },
@@ -1251,18 +1260,18 @@
         "aspects": {
           "aspect": "Aspect",
           "orb": "Orb",
-          "type": "Phase"
+          "type": "Type"
         },
         "houses": {
-          "cusp": "House cusp",
+          "cusp": "Cusp",
           "ruler": "Ruler",
-          "sign": "Sign"
+          "sign": "Coordinate"
         },
         "planets": {
           "house": "House",
-          "position": "Position",
+          "position": "Coordinate",
           "speed": "Speed",
-          "symbol": "Symbol",
+          "symbol": "Element",
           "speedHint": "Daily motion as % of average speed. Blue = near-stationary, red = fast."
         }
       },

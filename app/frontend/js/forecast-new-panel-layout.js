@@ -27,10 +27,13 @@
     var SCHEMA_VERSION = 1;
 
     // Canonical view catalog. Order here is the default tab order.
-    // Granular blocks: the former 'configs' block is split into 'configs'
-    // (configuration aspects) + 'stelliums'; the former 'rulers' block is split
-    // into 'jones' (Jones cosmogram) + 'dispositors' (dispositor scheme).
-    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'stelliums', 'balances', 'jones', 'dispositors', 'profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars'];
+    // Granular blocks: the former 'rulers' block is split into 'jones'
+    // (Jones pattern) + 'dispositors' (dispositor chain). Stelliums are NOT a
+    // separate block — they render inside 'configs' (фидбек астролога, п.8).
+    // Раскладки, сохранённые с блоком 'stelliums', мигрируют сами:
+    // normalizeLayout выбрасывает неизвестный view, а вкладку, оставшуюся без
+    // блоков, отбрасывает.
+    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'balances', 'jones', 'dispositors', 'profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars'];
 
     // "Moment now" views: not a property of the natal/prog chart but of the
     // current instant (source 'now'). They are registered as explicit blocks
@@ -45,7 +48,6 @@
         aspects: 'page.chart.tabs.aspects',
         grid: 'page.forecastNew.tabs.grid',
         configs: 'page.forecastNew.tabs.configs',
-        stelliums: 'page.forecastNew.tabs.stelliums',
         balances: 'page.forecastNew.tabs.balances',
         jones: 'page.forecastNew.tabs.jones',
         dispositors: 'page.forecastNew.tabs.dispositors',
@@ -68,7 +70,7 @@
     // corner, never both — corners share the per-mode block pool with panels).
     // Each corner holds 0 or 1 block. Order = visual reading order.
     var CORNER_KEYS = ['tl', 'tr', 'bl', 'br'];
-    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars', 'lunar', 'voidmoon', 'eclipses', 'hours'];
+    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'jones', 'profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars', 'lunar', 'voidmoon', 'eclipses', 'hours'];
     var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects', 'lunar', 'voidmoon', 'eclipses', 'hours'];
     var CORNER_DISCOURAGED_VIEWS = ['grid', 'dispositors'];
 
@@ -196,7 +198,7 @@
         };
 
         // single: natal-only.
-        var singleLeftViews = ['planets', 'aspects', 'grid', 'configs', 'stelliums'];
+        var singleLeftViews = ['planets', 'aspects', 'grid', 'configs'];
         var singleRightViews = ['houses', 'balances', 'jones', 'dispositors'];
         layout.panels.single = {
             left: singleLeftViews.map(function (v) { return singleBlockTab('single', 'left', 'natal', v); }),
@@ -233,7 +235,7 @@
                     tab('builtin-natal-aspects', null, blocks('natal', ['aspects', 'grid'])),
                 ],
                 right: [
-                    tab('builtin-natal-analysis', null, blocks('natal', ['configs', 'stelliums', 'balances'])),
+                    tab('builtin-natal-analysis', null, blocks('natal', ['configs', 'balances'])),
                     tab('builtin-natal-patterns', null, blocks('natal', ['jones', 'dispositors'])),
                 ],
             },
@@ -244,7 +246,7 @@
                 ],
                 right: [
                     tab('builtin-transit-current', null, blocks('prog', ['planets', 'houses', 'aspects', 'grid'])),
-                    tab('builtin-transit-analysis', null, blocks('prog', ['configs', 'stelliums', 'balances', 'jones', 'dispositors'])),
+                    tab('builtin-transit-analysis', null, blocks('prog', ['configs', 'balances', 'jones', 'dispositors'])),
                 ],
             },
             progressions_directions: {
@@ -254,7 +256,7 @@
                 ],
                 right: [
                     tab('builtin-pd-current', null, blocks('prog', ['planets', 'houses', 'aspects', 'grid'])),
-                    tab('builtin-pd-analysis', null, blocks('prog', ['configs', 'stelliums', 'balances', 'jones', 'dispositors'])),
+                    tab('builtin-pd-analysis', null, blocks('prog', ['configs', 'balances', 'jones', 'dispositors'])),
                 ],
             },
             natal_forecast_comparison: {
@@ -286,7 +288,7 @@
                 corners: {
                     tl: { source: 'natal', view: 'balances' },
                     tr: { source: 'natal', view: 'configs' },
-                    bl: { source: 'natal', view: 'stelliums' },
+                    bl: null,
                     br: { source: 'natal', view: 'jones' },
                 },
             };
@@ -297,7 +299,7 @@
                     tab('builtin-natal-single-aspects', null, blocks('natal', ['aspects', 'grid'])),
                 ],
                 right: [
-                    tab('builtin-natal-single-analysis', null, blocks('natal', ['configs', 'stelliums', 'balances'])),
+                    tab('builtin-natal-single-analysis', null, blocks('natal', ['configs', 'balances'])),
                     tab('builtin-natal-single-patterns', null, blocks('natal', ['jones', 'dispositors'])),
                 ],
             };
@@ -594,6 +596,9 @@
                     el.classList.add('active');
                     el.classList.remove('is-compact'); // shed corner-compact styling when back in a panel
                     delete el.dataset.cornerView;
+                    // Consumers bind interactions above both panels and corners,
+                    // so the block itself has to say which chart it belongs to.
+                    el.dataset.blockSource = block.source;
                     if (showHeaders) {
                         var wrap = doc.createElement('div');
                         wrap.className = 'forecast-new-block';
@@ -629,6 +634,7 @@
                     if (el) {
                         el.classList.add('active', 'is-compact');
                         el.dataset.cornerView = block.view;
+                        el.dataset.blockSource = block.source;
                         var toolbar = doc.createElement('div');
                         toolbar.className = 'forecast-new-corner-toolbar';
                         var title = doc.createElement('span');

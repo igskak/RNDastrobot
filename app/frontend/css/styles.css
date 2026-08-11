@@ -2988,6 +2988,25 @@ input[type="number"] {
     color: var(--text-muted);
 }
 
+/* Глиф тела рисуется в квадратном SVG с заметным пустым полем по краям,
+   поэтому значок ретроградности подтягиваем вплотную к самому символу. */
+.aspect-grid-body {
+    display: inline-flex;
+    align-items: flex-start;
+    justify-content: center;
+    line-height: 1;
+}
+
+.aspect-grid-body .planet-icon-svg {
+    display: inline-flex;
+    align-items: center;
+}
+
+.aspect-grid-body .retro-indicator {
+    margin-left: -3px;
+    align-self: flex-start;
+}
+
 .aspect-grid .grid-harmonious {
     background: rgba(43, 122, 75, 0.12);
     color: #1A6638;

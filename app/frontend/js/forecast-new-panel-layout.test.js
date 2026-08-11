@@ -14,9 +14,9 @@ const def = L.buildDefaultForecastNewLayout();
 ok(def.schema_version === 1, 'schema_version stamped');
 ok(def.panels.multi.left.length === L.VIEW_KEYS.length, 'multi.left has all catalog views');
 ok(def.panels.multi.left.every(t => t.blocks[0].source === 'natal'), 'multi.left all natal');
-ok(def.panels.multi.right.length === 10, 'multi.right has 9 prognostic tabs and eclipses');
+ok(def.panels.multi.right.length === 9, 'multi.right has 8 prognostic tabs and eclipses');
 ok(def.panels.multi.right.filter(t => t.blocks[0].view !== 'eclipses').every(t => t.blocks[0].source === 'prog'), 'multi.right chart tabs all prog');
-ok(def.panels.single.left.length === 5, 'single.left 5 (planets/aspects/grid/configs/stelliums)');
+ok(def.panels.single.left.length === 4, 'single.left 4 (planets/aspects/grid/configs)');
 ok(def.panels.single.right.length === 5, 'single.right has four natal tabs and eclipses');
 ok(def.panels.single.right.filter(t => t.blocks[0].view !== 'eclipses').every(t => t.blocks[0].source === 'natal'), 'single chart tabs all natal');
 
@@ -249,6 +249,34 @@ ok(!L.BLOCK_TARGET_MAP['now:profections'], 'no now:profections pairing');
   ok(!L.BLOCK_TARGET_MAP['prog:' + view], 'no prog:' + view + ' pairing (natal-only)');
   ok(L.CORNER_RECOMMENDED_VIEWS.includes(view), view + ' offered in corner widget dropdown');
 });
+
+
+// --- stelliums merged into configs (фидбек астролога, п.8) -------------------
+ok(L.VIEW_KEYS.indexOf('stelliums') === -1, 'stelliums is no longer a standalone block');
+ok(!L.BLOCK_TARGET_MAP['natal:stelliums'] && !L.BLOCK_TARGET_MAP['prog:stelliums'], 'stelliums has no render target');
+(() => {
+    // Раскладка, сохранённая до объединения: вкладка только со стеллиумами
+    // должна исчезнуть, соседняя — потерять лишь этот блок.
+    const migrated = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: {
+                left: [
+                    { id: 'only-stelliums', blocks: [{ source: 'natal', view: 'stelliums' }] },
+                    { id: 'mixed', blocks: [{ source: 'natal', view: 'configs' }, { source: 'natal', view: 'stelliums' }] },
+                ],
+                right: [],
+                corners: { tl: { source: 'natal', view: 'stelliums' }, tr: null, bl: null, br: null },
+            },
+            single: { left: [{ id: 's1', blocks: [{ source: 'natal', view: 'planets' }] }], right: [] },
+        },
+    });
+    const left = migrated.panels.multi.left;
+    ok(left.length === 1 && left[0].id === 'mixed', 'migration: stelliums-only tab dropped');
+    ok(left[0].blocks.length === 1 && left[0].blocks[0].view === 'configs', 'migration: stelliums block stripped from a mixed tab');
+    ok(migrated.panels.multi.corners.tl === null, 'migration: stelliums corner widget cleared');
+})();
+
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -105,6 +105,8 @@ function setupDom() {
         planets: { Pluto: 'P', Sun: 'S' },
         aspects: { Trine: 'tri' },
         getPlanetSymbol: (name) => ({ Pluto: 'P', Sun: 'S' }[name] || name),
+        // Заголовок модалки берёт векторный глиф оттуда же, откуда колесо.
+        getPlanetSymbolMarkup: (name) => `<span class="planet-icon-svg">${({ Pluto: 'P', Sun: 'S' }[name] || name)}</span>`,
         getAspectDisplay: (name) => ({ Trine: 'tri' }[name] || name),
         normalizeBodyName: (name) => name,
     };
@@ -406,7 +408,12 @@ test('modal renders success summary from fetched dynamics data', async () => {
     assert.equal(overlay.classList.contains('hidden'), false);
     assert.ok(document.querySelector('.aspect-dynamics-overview-canvas'));
     assert.equal(document.querySelector('.aspect-dynamics-scrollbar').disabled, false);
-    assert.match(document.querySelector('#aspectDynamicsTitle').textContent, /P tri S/);
+    // Заголовок собирается из отдельных элементов-глифов (те же векторные
+    // иконки, что и на карте), поэтому в textContent между ними нет пробелов —
+    // они заданы флексом. Проверяем и состав, и то, что глифы именно элементы.
+    const modalTitle = document.querySelector('#aspectDynamicsTitle');
+    assert.match(modalTitle.textContent.replace(/\s+/g, ''), /PtriS/);
+    assert.equal(modalTitle.querySelectorAll('.planet-icon-svg').length, 2);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Closest approach/);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Pass 1/);
     assert.ok(document.querySelector('.aspect-dynamics-summary-table'));

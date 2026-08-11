@@ -15,11 +15,8 @@ class ChartDataRenderer {
         this.housesTable = resolveElement(options.housesTable, options.housesTableId, 'housesTable');
         this.aspectsTable = resolveElement(options.aspectsTable, options.aspectsTableId, 'aspectsTable');
         this.aspectGridContainer = resolveElement(options.aspectGridContainer, options.aspectGridContainerId, 'aspectGridContainer');
+        // Конфигурации и стеллиумы живут в одном контейнере (см. renderConfigurations).
         this.configsContainer = resolveElement(options.configsContainer, options.configsContainerId, 'configurationsContainer');
-        // Optional separate container for stelliums. When provided (forecast-new
-        // granular blocks), configurations and stelliums render into distinct
-        // containers. When absent, they stack in configsContainer as before.
-        this.stelliumsContainer = resolveElement(options.stelliumsContainer, options.stelliumsContainerId, null);
         this.balancesContainer = resolveElement(options.balancesContainer, options.balancesContainerId, 'balancesContainer');
         this.dignitiesContainer = resolveElement(options.dignitiesContainer, options.dignitiesContainerId, 'dignitiesContainer');
         this.aspectSortHeadersSelector = options.aspectSortHeadersSelector || '#aspects-list th.sortable[data-sort]';
@@ -994,6 +991,15 @@ class ChartDataRenderer {
         }).join('');
     }
 
+    // Заголовок ячейки аспектной сетки: глиф тела и значок ретроградности
+    // держатся вплотную друг к другу — SVG-глиф несёт много пустого поля,
+    // поэтому значок прижимаем к нему отрицательным отступом (см. .aspect-grid-body).
+    renderGridHeaderBody(planet) {
+        const symbol = this.getPlanetSymbolMarkup(planet.name, { size: 15, title: this.planetName(planet.name) });
+        const retro = this.retroIndicatorHtml(planet.retrograde, 'retro-indicator--micro');
+        return `<span class="aspect-grid-body">${symbol}${retro}</span>`;
+    }
+
     /**
      * Треугольная сетка аспектов (Aspect Grid) — профессиональный стандарт
      * Включает все точки с которыми строятся аспекты
@@ -1026,13 +1032,13 @@ class ChartDataRenderer {
         // Заголовок
         html += '<tr><th></th>';
         filtered.forEach(p => {
-            html += `<th title="${this.planetName(p.name)}">${this.getPlanetSymbolMarkup(p.name, { size: 15, title: this.planetName(p.name) })}${this.retroIndicatorHtml(p.retrograde, 'retro-indicator--micro')}</th>`;
+            html += `<th title="${this.planetName(p.name)}">${this.renderGridHeaderBody(p)}</th>`;
         });
         html += '</tr>';
 
         // Строки (треугольная матрица)
         filtered.forEach((rowPlanet, rowIdx) => {
-            html += `<tr><th title="${this.planetName(rowPlanet.name)}">${this.getPlanetSymbolMarkup(rowPlanet.name, { size: 15, title: this.planetName(rowPlanet.name) })}${this.retroIndicatorHtml(rowPlanet.retrograde, 'retro-indicator--micro')}</th>`;
+            html += `<tr><th title="${this.planetName(rowPlanet.name)}">${this.renderGridHeaderBody(rowPlanet)}</th>`;
 
             filtered.forEach((colPlanet, colIdx) => {
                 if (colIdx >= rowIdx) {
@@ -1128,14 +1134,16 @@ class ChartDataRenderer {
         this.dignitiesContainer.innerHTML = html;
     }
 
+    /**
+     * Конфигурации и стеллиумы — один блок: сначала аспектные фигуры,
+     * ниже — подзаголовок «Стеллиумы» и его карточки. Раздельные контейнеры
+     * (forecast-new когда-то держал стеллиумы отдельной вкладкой) больше
+     * не поддерживаются: астролог попросил показывать всё вместе.
+     */
     renderConfigurations(configurations, stelliums) {
-        if (!this.configsContainer && !this.stelliumsContainer) return;
+        if (!this.configsContainer) return;
 
-        // When a dedicated stelliums container is wired (forecast-new granular
-        // blocks), configurations and stelliums render into separate containers.
-        const splitStelliums = Boolean(this.stelliumsContainer);
         let html = '';
-        let stelliumsHtml = '';
 
         // Конфигурации (сортируем по силе)
         if (configurations && configurations.length > 0) {
@@ -1151,15 +1159,10 @@ class ChartDataRenderer {
                     class="config-card config-card--compact"
                     data-config-planets="${this.escapeHtml((c.planets_involved || []).join('|'))}"
                     data-config-aspect-keys="${this.escapeHtml((c.aspects || []).map((aspect) => this.getAspectKey(aspect)).filter(Boolean).join('|'))}"
-                    data-compact-value="${Math.round(c.strength_score || 0)}"
-                    title="${this.escapeHtml(`${this.formatConfigType(c.type)} · ${this.t('page.chart.configurations.strengthShort', { value: Math.round(c.strength_score || 0) })}`)}"
+                    title="${this.escapeHtml(this.formatConfigType(c.type))}"
                 >
                     <div class="config-card-head">
-                        <h4>
-                            ${Symbols.configIcons[c.type] || '◆'}
-                            ${this.formatConfigType(c.type)}
-                        </h4>
-                        <span class="config-strength-badge" data-compact-value="${Math.round(c.strength_score || 0)}">${this.t('page.chart.configurations.strengthShort', { value: Math.round(c.strength_score || 0) })}</span>
+                        <h4>${this.escapeHtml(this.formatConfigType(c.type))}</h4>
                     </div>
                     <div class="config-planets config-planets--compact">
                         ${c.apex_planet ? `
@@ -1197,12 +1200,8 @@ class ChartDataRenderer {
                 return (b.count || 0) - (a.count || 0);
             });
 
-            // In split mode stelliums go to their own container without the
-            // duplicate heading; in combined mode they keep the section heading.
-            if (!splitStelliums) {
-                html += `<h3 style="margin: 20px 0 12px; font-size: 15px;">${this.t('page.chart.configurations.stelliums')}</h3>`;
-            }
-            const sink = sortedStelliums.map(s => `
+            html += `<h3 style="margin: 20px 0 12px; font-size: 15px;">${this.t('page.chart.configurations.stelliums')}</h3>`;
+            html += sortedStelliums.map(s => `
                 <div
                     class="config-card config-card--compact"
                     data-config-planets="${this.escapeHtml((s.planets || []).join('|'))}"
@@ -1229,19 +1228,6 @@ class ChartDataRenderer {
                     </div>
                 </div>
             `).join('');
-            if (splitStelliums) stelliumsHtml += sink; else html += sink;
-        }
-
-        if (splitStelliums) {
-            if (this.configsContainer) {
-                this.configsContainer.innerHTML = html
-                    || `<p style="color: #6e6e73; text-align: center; padding: 40px;">${this.t('page.chart.empty.noConfigurations')}</p>`;
-            }
-            if (this.stelliumsContainer) {
-                this.stelliumsContainer.innerHTML = stelliumsHtml
-                    || `<p style="color: #6e6e73; text-align: center; padding: 40px;">${this.t('page.chart.empty.noStelliums') || this.t('page.chart.empty.noConfigurations')}</p>`;
-            }
-            return;
         }
 
         if (!html) {
