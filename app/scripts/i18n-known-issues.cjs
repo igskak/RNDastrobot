@@ -42,6 +42,8 @@ const KNOWN_UNTRANSLATED_VALUE_KEYS = [
     // Subscription tier names are kept as brand labels in every locale.
     'page.pricing.plans.practitioner.name',
     'page.pricing.plans.studio.name',
+    // Swiss Ephemeris is the name of the ephemeris library itself.
+    'page.index.foundation.items.ephemeris.title',
 ];
 
 module.exports = {

@@ -1107,6 +1107,7 @@
         "recording": "Recording {time}",
         "resize": "Resize assistant",
         "send": "Send",
+        "showTable": "Show table ({count})",
         "thinking": "Calculating…",
         "title": "Ask about this chart",
         "toggle": "Open chart assistant",
