@@ -290,7 +290,7 @@ def build_query_tools() -> List[Dict]:
                     "survey_id": {
                         "type": "string",
                         "description": (
-                            "Reuse a survey already computed in this conversation. Skips the scan AND guarantees you describe the same events; without it a recomputation can differ if settings changed."
+                            "Optional. Omit it to reuse the conversation's most recent survey, which is what a follow-up like \"покажи таблицу\" or \"а графиком\" should do — do NOT invent an id. Pass one only if you were given it."
                         ),
                     },
                     "start_date": {"type": "string", "description": "YYYY-MM-DD"},
@@ -353,7 +353,7 @@ def build_query_tools() -> List[Dict]:
                     "survey_id": {
                         "type": "string",
                         "description": (
-                            "Reuse a survey already computed in this conversation. Skips the scan AND guarantees you describe the same events; without it a recomputation can differ if settings changed."
+                            "Optional. Omit it to reuse the conversation's most recent survey, which is what a follow-up like \"покажи таблицу\" or \"а графиком\" should do — do NOT invent an id. Pass one only if you were given it."
                         ),
                     },
                     "start_date": {"type": "string", "description": "YYYY-MM-DD"},
@@ -477,7 +477,7 @@ def build_query_tools() -> List[Dict]:
                     "survey_id": {
                         "type": "string",
                         "description": (
-                            "Reuse a survey already computed in this conversation. Skips the scan AND guarantees you describe the same events; without it a recomputation can differ if settings changed."
+                            "Optional. Omit it to reuse the conversation's most recent survey, which is what a follow-up like \"покажи таблицу\" or \"а графиком\" should do — do NOT invent an id. Pass one only if you were given it."
                         ),
                     },
                     "start_date": {"type": "string", "description": "YYYY-MM-DD"},

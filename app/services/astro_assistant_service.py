@@ -47,7 +47,7 @@ from app.services.astro_narrative import (
     narrate,
 )
 from app.services.astro_patterns import discover
-from app.services.assistant_survey_store import load_survey, save_survey
+from app.services.assistant_survey_store import latest_survey, load_survey, save_survey
 from app.services.assistant_table_service import describe_table
 from app.services.assistant_visualization import build_visualization
 from app.services.astro_judge import (
@@ -1472,13 +1472,7 @@ class AstroAssistantService:
         follow-up describes the SAME events, where a recomputation could quietly
         differ if the astrologer changed their orbs in between.
         """
-        requested = args.get("survey_id")
-        if requested:
-            stored = load_survey(
-                self.db, survey_id=str(requested),
-                astrologer_id=self.astrologer_id, chart_user_id=user_id)
-            if stored is None:
-                raise ValueError(f"unknown_survey_id:{requested}")
+        def _from_stored(stored: Dict) -> Dict:
             parameters = stored.get("parameters") or {}
             return {
                 "status": "ok",
@@ -1490,6 +1484,30 @@ class AstroAssistantService:
                 "truncated": stored.get("truncated", False),
                 "from_store": True,
             }
+
+        requested = args.get("survey_id")
+        if requested:
+            stored = load_survey(
+                self.db, survey_id=str(requested),
+                astrologer_id=self.astrologer_id, chart_user_id=user_id)
+            if stored is None:
+                raise ValueError(f"unknown_survey_id:{requested}")
+            return _from_stored(stored)
+
+        # A follow-up ("покажи таблицу", "а графиком") names no window and no id,
+        # because the model cannot know one: conversation history carries only
+        # {role, content}, so the previous turn's tool results are not replayed.
+        # Left to guess it invents an id — observed live, calling with
+        # "survey_1", burning an iteration on the error before recomputing.
+        # Reuse the conversation's last survey instead, which is also the only
+        # way the follow-up describes the SAME events as the answer above it.
+        if not args.get("start_date") and not args.get("end_date"):
+            recent = latest_survey(
+                self.db, astrologer_id=self.astrologer_id, chart_user_id=user_id,
+                conversation_id=self.conversation_id)
+            if recent and recent.get("events"):
+                return _from_stored(recent)
+
         key = json.dumps({
             "start": args.get("start_date"), "end": args.get("end_date"),
             "profile": args.get("profile"), "target_profile": args.get("target_profile"),

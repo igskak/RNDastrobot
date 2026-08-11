@@ -152,3 +152,62 @@ def test_migration_056_is_idempotent():
     assert sql.count("CREATE INDEX IF NOT EXISTS") >= 2
     # Cascades so a deleted astrologer does not leave orphaned chart data behind.
     assert "ON DELETE CASCADE" in sql
+
+
+# --- follow-ups reuse the conversation's survey ------------------------------------
+
+def test_latest_survey_returns_the_most_recent_in_the_conversation():
+    """A follow-up cannot name a survey_id: conversation history carries only
+    {role, content}, so the previous turn's tool results are not replayed. Left
+    to guess, the model invents one — observed live calling with "survey_1"."""
+    from app.services.assistant_survey_store import latest_survey
+    import time
+
+    db = _session()
+    aid, cid, conv = uuid4(), uuid4(), uuid4()
+    save_survey(db, survey_id="ts_old", astrologer_id=aid, chart_user_id=cid,
+                conversation_id=conv, parameters={}, events=_events(2),
+                summary=None, methodology_hash=None)
+    time.sleep(0.01)
+    save_survey(db, survey_id="ts_new", astrologer_id=aid, chart_user_id=cid,
+                conversation_id=conv, parameters={}, events=_events(5),
+                summary=None, methodology_hash=None)
+
+    got = latest_survey(db, astrologer_id=aid, chart_user_id=cid, conversation_id=conv)
+    assert got["survey_id"] == "ts_new"
+    assert len(got["events"]) == 5
+
+
+def test_latest_survey_does_not_cross_conversations():
+    """A follow-up in one thread must not answer from a survey run in another."""
+    from app.services.assistant_survey_store import latest_survey
+
+    db = _session()
+    aid, cid = uuid4(), uuid4()
+    save_survey(db, survey_id="ts_a", astrologer_id=aid, chart_user_id=cid,
+                conversation_id=uuid4(), parameters={}, events=_events(),
+                summary=None, methodology_hash=None)
+    assert latest_survey(db, astrologer_id=aid, chart_user_id=cid,
+                         conversation_id=uuid4()) is None
+
+
+def test_latest_survey_is_tenant_scoped():
+    from app.services.assistant_survey_store import latest_survey
+
+    db = _session()
+    conv = uuid4()
+    save_survey(db, survey_id="ts_x", astrologer_id=uuid4(), chart_user_id=uuid4(),
+                conversation_id=conv, parameters={}, events=_events(),
+                summary=None, methodology_hash=None)
+    assert latest_survey(db, astrologer_id=uuid4(), chart_user_id=uuid4(),
+                         conversation_id=conv) is None
+
+
+def test_an_unknown_id_still_errors_rather_than_falling_back():
+    """Substituting a different survey for one the caller explicitly named would
+    answer confidently about the wrong data."""
+    from app.services.assistant_survey_store import load_survey
+    db = _session()
+    saved = _save(db)
+    assert load_survey(db, survey_id="ts_nope",
+                       astrologer_id=saved["astrologer_id"]) is None

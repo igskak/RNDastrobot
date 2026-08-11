@@ -107,6 +107,42 @@ def load_survey(
         return None
 
 
+def latest_survey(
+    db: Session,
+    *,
+    astrologer_id: UUID,
+    chart_user_id: UUID,
+    conversation_id: Optional[UUID] = None,
+) -> Optional[Dict]:
+    """The most recent survey in this conversation, events included.
+
+    Follow-ups need this because the model cannot know a survey_id: conversation
+    history carries only {role, content}, so tool results from the previous turn
+    are not replayed. Left to guess, the model invents one — observed live,
+    calling a tool with survey_id "survey_1", eating an iteration on the error
+    before recomputing the whole survey.
+
+    Scoped to the conversation when one is known, so a follow-up in thread A
+    cannot silently answer from a survey run in thread B.
+    """
+    try:
+        query = db.query(AssistantSurvey).filter(
+            AssistantSurvey.astrologer_id == astrologer_id,
+            AssistantSurvey.chart_user_id == chart_user_id,
+        )
+        if conversation_id is not None:
+            query = query.filter(AssistantSurvey.conversation_id == conversation_id)
+        row = query.order_by(AssistantSurvey.created_at.desc()).first()
+        if row is None:
+            return None
+        return load_survey(
+            db, survey_id=row.survey_id, astrologer_id=astrologer_id,
+            chart_user_id=chart_user_id)
+    except Exception:
+        logger.exception("latest survey lookup failed")
+        return None
+
+
 def list_surveys(
     db: Session,
     *,
