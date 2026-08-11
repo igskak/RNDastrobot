@@ -54,13 +54,17 @@ class _FakeClient:
 
 
 def _service_with_fake_transits(record):
-    service = AstroAssistantService.__new__(AstroAssistantService)
-    service.db = None
-    service.default_timezone = "Europe/Kiev"
-    service.default_anchor_date = date(2026, 6, 11)
-    service.default_workspace = None
-    service.astrologer_id = None
-    service._chart_dataset = None  # __init__ is bypassed by __new__
+    # Construct properly rather than through __new__. The old form bypassed
+    # __init__ and hand-set a few attributes, so every new per-turn field broke
+    # these tests the moment chat() touched it — which is a property of the
+    # helper, not of the code under test.
+    service = AstroAssistantService(
+        db_session=None,
+        default_timezone="Europe/Kiev",
+        default_anchor_date=date(2026, 6, 11),
+        default_workspace=None,
+        astrologer_id=None,
+    )
 
     class _FakeTransits:
         def find_aspect_passes(self, **kwargs):

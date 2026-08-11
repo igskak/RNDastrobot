@@ -45,6 +45,7 @@ from app.services.astro_narrative import (
     NARRATIVE_ENABLED,
     is_analytical_turn,
     narrate,
+    split_visual_directive,
 )
 from app.services.astro_patterns import discover
 from app.services.assistant_survey_store import latest_survey, load_survey, save_survey
@@ -987,6 +988,9 @@ class AstroAssistantService:
         # Survey results by parameter set, so survey+intersect in one turn
         # computes once.
         self._survey_memo: Dict[str, Dict] = {}
+        # Arguments of the last survey this turn ran, so a presentation
+        # directive resolves to the same dataset the answer describes.
+        self._last_survey_args: Optional[Dict] = None
         # Per-turn methodology fingerprint (migration 055). Resolved once at the
         # top of chat() — before any model call — then stamped onto every tool
         # result and persisted with the turn.
@@ -1518,7 +1522,43 @@ class AstroAssistantService:
         }, sort_keys=True, default=str)
         if key not in self._survey_memo:
             self._survey_memo[key] = self._exec_survey_transits(user_id, args)
+        if self._survey_memo[key].get("status") == "ok":
+            self._last_survey_args = dict(args)
         return self._survey_memo[key]
+
+    def _apply_visual_directive(self, user_id: UUID, directive: Dict,
+                                args: Dict) -> List[Dict]:
+        """Build what the narrator asked for, as if it had called the tools.
+
+        Results are appended to tool_results so the client renders them through
+        exactly the same path as an explicit request, and so the turn's capture
+        records what the astrologer actually saw. Failures are dropped silently:
+        the narrator was told not to reference the visuals in prose, so a missing
+        chart leaves no dangling sentence.
+        """
+        if not directive:
+            return []
+        out: List[Dict] = []
+        if directive.get("table"):
+            try:
+                result = self._exec_open_full_analysis_table(user_id, dict(args))
+                if result.get("status") == "ok":
+                    out.append({"name": "open_full_analysis_table",
+                                "arguments": {"auto": True}, "result": result})
+            except Exception:
+                logger.exception("directed table failed")
+        chart = directive.get("chart")
+        if chart:
+            try:
+                result = self._exec_create_astro_visualization(user_id, {
+                    **args, "type": chart, "group_by": directive.get("group_by")})
+                if result.get("status") == "ok":
+                    out.append({"name": "create_astro_visualization",
+                                "arguments": {"auto": True, "type": chart},
+                                "result": result})
+            except Exception:
+                logger.exception("directed chart failed")
+        return out
 
     def _exec_open_full_analysis_table(self, user_id: UUID, args: Dict) -> Dict:
         """Offer the full table for a survey (spec §9.9).
@@ -1899,6 +1939,9 @@ class AstroAssistantService:
             if not getattr(msg, "tool_calls", None):
                 raw = msg.content or ""
                 narrated = False
+                # Reuse the survey this turn already produced, so the directive
+                # cannot silently describe a different dataset.
+                args_for_visuals = self._last_survey_args or {}
                 # §16: hand a broad analytical answer to a writer that holds the
                 # findings and no tools. Only when findings exist — a lookup has
                 # nothing to narrate and must not pay for a second completion.
@@ -1912,7 +1955,16 @@ class AstroAssistantService:
                         timeout=REQUEST_TIMEOUT_S,
                     )
                     if written:
-                        raw, narrated = written, True
+                        # The narrator is the only stage that sees the finished
+                        # report, so it owns the "does this answer want a table
+                        # or a chart" judgement. It has no tools by design; it
+                        # returns a directive and the server builds from the
+                        # survey it already holds — no extra model call.
+                        raw, directive = split_visual_directive(written)
+                        narrated = True
+                        for extra in self._apply_visual_directive(
+                                user_id, directive, args_for_visuals):
+                            tool_results.append(extra)
                 final_actions, reply, guardrail = self._finalize_reply(
                     raw_reply=raw,
                     messages=messages,

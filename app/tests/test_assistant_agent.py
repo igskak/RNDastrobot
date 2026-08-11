@@ -254,11 +254,15 @@ def test_assistant_defaults_to_compact_modern_model():
 
 
 def _service_with_fake_transits(record):
-    service = AstroAssistantService.__new__(AstroAssistantService)
-    service.db = None
-    service.default_timezone = "Europe/Kiev"
-    service.default_anchor_date = date(2026, 6, 11)
-    service.default_workspace = None
+    # Constructed properly rather than via __new__: these tests drive chat(),
+    # so every per-turn field has to exist. Hand-setting a subset meant each new
+    # field broke them for a reason that had nothing to do with the assertion.
+    service = AstroAssistantService(
+        db_session=None,
+        default_timezone="Europe/Kiev",
+        default_anchor_date=date(2026, 6, 11),
+        default_workspace=None,
+    )
 
     class _FakeTransits:
         def find_aspect_passes(self, **kwargs):
@@ -303,10 +307,10 @@ def test_chat_dispatches_tool_and_injects_active_chart_user_id(monkeypatch):
 
 
 def test_chat_handles_tool_error_without_crashing(monkeypatch):
-    service = AstroAssistantService.__new__(AstroAssistantService)
-    service.db = None
-    service.default_timezone = "UTC"
-    service.default_anchor_date = date(2026, 6, 11)
+    service = AstroAssistantService(
+        db_session=None, default_timezone="UTC",
+        default_anchor_date=date(2026, 6, 11),
+    )
 
     class _RaisingTransits:
         def find_aspect_passes(self, **kwargs):

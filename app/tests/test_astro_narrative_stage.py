@@ -195,3 +195,119 @@ def test_reasoning_effort_replaces_verbosity_not_joins_it():
         os.environ.clear()
         os.environ.update(original)
         importlib.reload(nar)
+
+
+# --- the narrator owns the presentation judgement ---------------------------------
+
+def test_prompt_gives_the_narrator_the_decision():
+    """It is the only stage that sees the finished report, so it is the only one
+    that can judge whether the report wants a table or a chart."""
+    assert "PRESENTATION DIRECTIVE" in _SYSTEM
+    assert "VISUALS:" in _SYSTEM
+    assert "One chart, never several" in FLAT
+    assert "A chart that repeats a two-line finding is noise" in FLAT
+
+
+def test_prompt_forbids_referencing_the_visuals_in_prose():
+    """The narrator writes before the chart is known to be drawable, so a
+    'see below' can end up pointing at nothing."""
+    assert "Do NOT mention the table or the chart in your prose" in FLAT
+
+
+def test_directive_is_parsed_and_never_leaks_into_the_reply():
+    from app.services.astro_narrative import split_visual_directive
+
+    clean, directive = split_visual_directive(
+        'Отчёт.\n\nVISUALS: {"table": true, "chart": "monthly_heatmap", "group_by": null}')
+    assert clean == "Отчёт."
+    assert directive == {"table": True, "chart": "monthly_heatmap", "group_by": None}
+
+
+def test_directive_survives_bold_and_fences():
+    from app.services.astro_narrative import split_visual_directive
+
+    for wrapper in ('**VISUALS: {"table": true, "chart": null}**',
+                    '`VISUALS: {"table": true, "chart": null}`',
+                    '> VISUALS: {"table": true, "chart": null}'):
+        clean, directive = split_visual_directive(f"Отчёт.\n{wrapper}")
+        assert "VISUALS" not in clean
+        assert directive["table"] is True
+
+
+def test_a_malformed_directive_is_removed_even_when_unparseable():
+    """Leaving it turns an internal control line into visible text in the
+    astrologer's answer, which is worse than losing the judgement."""
+    from app.services.astro_narrative import split_visual_directive
+
+    clean, directive = split_visual_directive('Отчёт.\nVISUALS: {сломано')
+    assert "VISUALS" not in clean
+    assert directive == {}
+
+
+def test_an_invented_chart_type_is_dropped_not_drawn():
+    from app.services.astro_narrative import split_visual_directive
+
+    _, directive = split_visual_directive(
+        'x\nVISUALS: {"table": true, "chart": "pie_of_destiny"}')
+    assert directive["chart"] is None
+    assert directive["table"] is True
+
+
+def test_bar_without_a_group_field_is_dropped_rather_than_guessed():
+    from app.services.astro_narrative import split_visual_directive
+
+    _, directive = split_visual_directive('x\nVISUALS: {"table": false, "chart": "bar"}')
+    assert directive["chart"] is None
+
+
+def test_no_directive_means_no_visuals():
+    """The behaviour that existed before this stage owned the decision."""
+    from app.services.astro_narrative import split_visual_directive
+
+    clean, directive = split_visual_directive("Обычный ответ без директивы.")
+    assert clean == "Обычный ответ без директивы."
+    assert directive == {}
+
+
+def test_directive_results_are_appended_as_tool_results():
+    """They must travel the same path as an explicit request, so the client
+    renders them identically and the turn's capture records what was shown."""
+    from datetime import date
+    from uuid import uuid4
+
+    from app.services.astro_assistant_service import AstroAssistantService
+
+    service = AstroAssistantService(
+        db_session=None, default_timezone="UTC",
+        default_anchor_date=date(2026, 8, 3), astrologer_id=uuid4())
+    service._exec_open_full_analysis_table = lambda uid, a: {
+        "status": "ok", "row_count": 22, "survey_id": "ts_x"}
+    service._exec_create_astro_visualization = lambda uid, a: {
+        "status": "ok", "chart": {"type": a["type"], "series": [], "alt": "x"}}
+
+    out = service._apply_visual_directive(
+        uuid4(), {"table": True, "chart": "monthly_heatmap", "group_by": None}, {})
+    assert [r["name"] for r in out] == [
+        "open_full_analysis_table", "create_astro_visualization"]
+    assert all(r["arguments"]["auto"] is True for r in out)
+
+
+def test_a_failed_directive_drops_silently():
+    """The narrator was told not to reference the visuals, so a missing chart
+    leaves no dangling sentence to contradict."""
+    from datetime import date
+    from uuid import uuid4
+
+    from app.services.astro_assistant_service import AstroAssistantService
+
+    service = AstroAssistantService(
+        db_session=None, default_timezone="UTC",
+        default_anchor_date=date(2026, 8, 3), astrologer_id=uuid4())
+    service._exec_create_astro_visualization = lambda uid, a: {
+        "status": "error", "error": "too_few_rows_for_a_chart"}
+    service._exec_open_full_analysis_table = lambda uid, a: (_ for _ in ()).throw(
+        RuntimeError("boom"))
+
+    out = service._apply_visual_directive(
+        uuid4(), {"table": True, "chart": "orb_line"}, {})
+    assert out == []
