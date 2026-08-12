@@ -1062,6 +1062,7 @@
           "noJones": "Jones pattern is not calculated.",
           "noMainRulers": "Main rulers are not defined."
         },
+        "chainEnd": "chain end",
         "jonesKicker": "Jones pattern",
         "mainKicker": "Houses and links",
         "mainTitle": "Main rulers",

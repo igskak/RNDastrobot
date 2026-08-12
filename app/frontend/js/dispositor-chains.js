@@ -33,6 +33,25 @@
         Aquarius: 'Saturn',
         Pisces: 'Jupiter',
     };
+    // Классическая экзальтация есть лишь у семи знаков — у остальных пяти её
+    // нет вовсе, и это не пробел в таблице, а суть схемы: цепочка на таком
+    // знаке обрывается. Таблица достоинств аккаунта, наоборот, раздаёт
+    // экзальтацию всем двенадцати (Стрелец → Хирон, Скорпион → Уран и т.д.),
+    // поэтому там цепочка не прерывается никогда.
+    const CLASSICAL_EXALTATIONS = {
+        Aries: 'Sun',
+        Taurus: 'Moon',
+        Gemini: null,
+        Cancer: 'Jupiter',
+        Leo: null,
+        Virgo: 'Mercury',
+        Libra: 'Saturn',
+        Scorpio: null,
+        Sagittarius: null,
+        Capricorn: 'Mars',
+        Aquarius: null,
+        Pisces: 'Venus',
+    };
     const OPPOSITE_SIGN = Object.fromEntries(SIGN_ORDER.map((sign, index) => [
         sign,
         SIGN_ORDER[(index + 6) % 12],
@@ -135,6 +154,15 @@
         }
         if (displayOptions.classicalRulers && mode === 'detriment') {
             return CLASSICAL_RULERS[OPPOSITE_SIGN[sign]] || getRulerForSign(sign, mode, dignities);
+        }
+        // Экзальтация и падение тоже идут по классике: возвращаем null как
+        // значащее «экзальтации нет», без отката на таблицу аккаунта — иначе
+        // тумблер не даёт того, ради чего его включают.
+        if (displayOptions.classicalRulers && mode === 'exaltation') {
+            return CLASSICAL_EXALTATIONS[sign] || null;
+        }
+        if (displayOptions.classicalRulers && mode === 'fall') {
+            return CLASSICAL_EXALTATIONS[OPPOSITE_SIGN[sign]] || null;
         }
         return getRulerForSign(sign, mode, dignities);
     }
@@ -325,8 +353,13 @@
         const housesByRuler = new Map();
         const startPlanets = [];
 
+        // Подпись под глифом — какими домами управляет само тело, и это его
+        // постоянное свойство, а не свойство открытой вкладки: связи в схеме
+        // строятся по выбранному достоинству, а дома всегда домицильные.
+        // Иначе на «Экзальтации» подписи почти у всех исчезают (экзальтация
+        // есть лишь у семи знаков) и схему не с чем соотнести на карте.
         houses.forEach((house) => {
-            const ruler = getHouseRuler(house, mode, dignities, displayOptions);
+            const ruler = getHouseRuler(house, 'domicile', dignities, displayOptions);
             const houseNumber = getHouseNumber(house);
             if (!ruler || !houseNumber) return;
             if (!housesByRuler.has(ruler)) housesByRuler.set(ruler, []);
@@ -383,7 +416,14 @@
             return { start: startPlanet, steps, finalKey, cycle };
         });
 
-        return { chains, housesByRuler };
+        // Тело без диспозитора в этой схеме — это не цепочка, а одинокий глиф.
+        // В домициле такого не бывает (у каждого знака есть управитель), а на
+        // «Экзальтации» так выпадала половина карты, и блок превращался в
+        // россыпь отдельных значков. Одношаговый тупик выбрасываем: если тело
+        // участвует в чьей-то цепочке, оно всё равно нарисуется внутри неё.
+        const linkedChains = chains.filter((chain) => !(chain.steps.length === 1 && !chain.steps[0]?.ruler));
+
+        return { chains: linkedChains, housesByRuler };
     }
 
     function renderCompactNode(node, housesByRuler, displayOptions, extraClass = '') {
@@ -392,13 +432,16 @@
             getPlanetName(node.planet),
             node.sign ? signLabel(node.sign) : '',
             houseLabel ? `${t('common.house')} ${houseLabel}` : '',
+            node.terminal ? t('page.chart.rulers.chainEnd') : '',
         ].filter(Boolean).join(' · ');
         const positionStyle = Number.isFinite(node.x) && Number.isFinite(node.y)
             ? ` style="left:${node.x}px; top:${node.y}px;"`
             : '';
+        // Конец цепочки гасим, но подписываем — цветом одним сообщать нельзя.
+        const terminalClass = node.terminal ? ' dispositor-compact-node--terminal' : '';
         return `
             <span
-                class="dispositor-compact-node ${extraClass}"
+                class="dispositor-compact-node ${extraClass}${terminalClass}"
                 ${positionStyle}
                 title="${escapeHtml(label)}"
                 aria-label="${escapeHtml(label)}"
@@ -443,6 +486,7 @@
                     ...existing,
                     sign: existing.sign || step.sign || null,
                     retrograde: existing.retrograde || Boolean(step.retrograde),
+                    terminal: Boolean(existing.terminal || !step.ruler),
                 });
             });
         });
@@ -455,16 +499,32 @@
         const nodesByPlanet = buildCompactNodeMap(groupChains);
         const cycleRowPlanets = [...cycleOrder, cycleOrder[0]].filter(Boolean);
         const branchRows = [];
-        const seenBranches = new Set();
 
-        groupChains.forEach((chain) => {
-            const targetIndex = chain.steps.findIndex((step) => cycleSet.has(step.planet));
-            if (targetIndex <= 0) return;
-            const rowPlanets = chain.steps.slice(0, targetIndex + 1).map((step) => step.planet);
-            const signature = rowPlanets.join('>');
-            if (seenBranches.has(signature)) return;
-            seenBranches.add(signature);
-            branchRows.push(rowPlanets);
+        // Цепочки в группе — это по одной на каждое стартовое тело, поэтому у
+        // соседних общий хвост: ♂→♀→☿→♄ и ♀→☿→♄ и ☿→♄ раньше рисовались тремя
+        // строками, и один и тот же Сатурн повторялся в каждой. Идём от самых
+        // длинных и обрываем строку на первом уже нарисованном теле: оно
+        // остаётся в строке как якорь (приглушённым), но своей строки больше
+        // не получает. Каждое тело схемы рисуется ровно один раз.
+        const drawn = new Set(cycleOrder);
+        const byLength = [...groupChains].sort((a, b) => (
+            b.steps.length - a.steps.length || String(a.start).localeCompare(String(b.start))
+        ));
+
+        byLength.forEach((chain) => {
+            const rowPlanets = [];
+            let anchor = null;
+            for (const step of chain.steps) {
+                rowPlanets.push(step.planet);
+                if (drawn.has(step.planet)) {
+                    anchor = step.planet;
+                    break;
+                }
+            }
+            const fresh = rowPlanets.filter((planet) => !drawn.has(planet));
+            if (!fresh.length) return;
+            fresh.forEach((planet) => drawn.add(planet));
+            branchRows.push({ planets: rowPlanets, anchor });
         });
 
         return `
@@ -484,16 +544,23 @@
                     </div>
                     ${branchRows.length ? `
                         <div class="dispositor-cycle-branches">
-                            ${branchRows.map((rowPlanets) => `
+                            ${branchRows.map((row) => `
                                 <div class="dispositor-cycle-branch-row">
-                                    ${rowPlanets.map((planet, index) => `
+                                    ${row.planets.map((planet, index) => `
                                         ${index > 0 ? renderCompactInlineArrow() : ''}
                                         ${renderCompactStaticNode(
                                             planet,
                                             nodesByPlanet,
                                             housesByRuler,
                                             displayOptions,
-                                            cycleSet.has(planet) ? 'dispositor-compact-node--main' : '',
+                                            [
+                                                cycleSet.has(planet) ? 'dispositor-compact-node--main' : '',
+                                                // Якорь — тело, нарисованное в другой строке;
+                                                // здесь оно только показывает, куда ведёт ветвь.
+                                                planet === row.anchor && index === row.planets.length - 1
+                                                    ? 'dispositor-compact-node--repeat'
+                                                    : '',
+                                            ].filter(Boolean).join(' '),
                                         )}
                                     `).join('')}
                                 </div>
@@ -584,10 +651,15 @@
         const ensureNode = (planet, source = {}) => {
             if (!planet) return null;
             const existing = nodes.get(planet) || { planet, sign: null, retrograde: false };
+            // Тупик — только у настоящего шага цепочки: у него есть поле ruler,
+            // и оно пустое. Узел, созданный из ссылки на управителя, о своём
+            // диспозиторе ещё ничего не знает и тупиком не считается.
+            const isDeadEnd = Object.prototype.hasOwnProperty.call(source, 'ruler') && !source.ruler;
             nodes.set(planet, {
                 ...existing,
                 sign: existing.sign || source.sign || null,
                 retrograde: existing.retrograde || Boolean(source.retrograde),
+                terminal: Boolean(existing.terminal || isDeadEnd),
             });
             return nodes.get(planet);
         };
