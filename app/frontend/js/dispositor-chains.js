@@ -13,15 +13,11 @@
     ];
     const COMPACT_SCHEME_BODY_ORDER = BODY_ORDER.slice(0, 10);
     const DISPLAY_OPTIONS_STORAGE_KEY = 'dispositorChainDisplayOptions';
-    // Версия сохранённых настроек блока. Поднимается, когда меняется значение
-    // по умолчанию: настройки пишутся целиком, поэтому старую запись нельзя
-    // отличить от осознанного выбора иначе как по версии (см. readDisplayOptions).
-    const DISPLAY_OPTIONS_VERSION = 2;
     const DEFAULT_DISPLAY_OPTIONS = {
         mode: 'domicile',
         showArrowDirection: true,
         showHouseRulers: true,
-        classicalRulers: true,
+        classicalRulers: false,
     };
     const CLASSICAL_RULERS = {
         Aries: 'Mars',
@@ -1131,29 +1127,18 @@
         } catch {
             stored = {};
         }
-        // Настройки сохраняются целиком, поэтому у всех, кто хоть раз открывал
-        // попап, лежит явное classicalRulers:false — но это прежнее значение по
-        // умолчанию, а не выбор. Записи старой версии читаем без него, один
-        // раз: как только пользователь тронет любой переключатель, запись
-        // перепишется с новой версией и его выбор станет своим.
-        const storedIsCurrent = Number(stored.version) >= DISPLAY_OPTIONS_VERSION;
-        const storedClassicalRulers = storedIsCurrent ? stored.classicalRulers : undefined;
-
         return {
             ...DEFAULT_DISPLAY_OPTIONS,
             mode: normalizeDisplayMode(overrides.mode || stored.mode || DEFAULT_DISPLAY_OPTIONS.mode),
             showArrowDirection: (overrides.showArrowDirection ?? stored.showArrowDirection ?? DEFAULT_DISPLAY_OPTIONS.showArrowDirection) !== false,
             showHouseRulers: (overrides.showHouseRulers ?? stored.showHouseRulers ?? DEFAULT_DISPLAY_OPTIONS.showHouseRulers) !== false,
-            classicalRulers: (overrides.classicalRulers ?? storedClassicalRulers ?? DEFAULT_DISPLAY_OPTIONS.classicalRulers) === true,
+            classicalRulers: (overrides.classicalRulers ?? stored.classicalRulers ?? DEFAULT_DISPLAY_OPTIONS.classicalRulers) === true,
         };
     }
 
     function saveDisplayOptions(displayOptions) {
         try {
-            window.localStorage?.setItem(
-                DISPLAY_OPTIONS_STORAGE_KEY,
-                JSON.stringify({ ...displayOptions, version: DISPLAY_OPTIONS_VERSION }),
-            );
+            window.localStorage?.setItem(DISPLAY_OPTIONS_STORAGE_KEY, JSON.stringify(displayOptions));
         } catch {
             // Local storage is optional; the active render still uses the selected options.
         }
@@ -1354,7 +1339,6 @@
         buildChains,
         buildHouseDispositorScheme,
         buildCompactLayout,
-        readDisplayOptions,
         closeModal,
     };
 
