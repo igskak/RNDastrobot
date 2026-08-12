@@ -33,6 +33,25 @@
         Aquarius: 'Saturn',
         Pisces: 'Jupiter',
     };
+    // Классическая экзальтация есть лишь у семи знаков — у остальных пяти её
+    // нет вовсе, и это не пробел в таблице, а суть схемы: цепочка на таком
+    // знаке обрывается. Таблица достоинств аккаунта, наоборот, раздаёт
+    // экзальтацию всем двенадцати (Стрелец → Хирон, Скорпион → Уран и т.д.),
+    // поэтому там цепочка не прерывается никогда.
+    const CLASSICAL_EXALTATIONS = {
+        Aries: 'Sun',
+        Taurus: 'Moon',
+        Gemini: null,
+        Cancer: 'Jupiter',
+        Leo: null,
+        Virgo: 'Mercury',
+        Libra: 'Saturn',
+        Scorpio: null,
+        Sagittarius: null,
+        Capricorn: 'Mars',
+        Aquarius: null,
+        Pisces: 'Venus',
+    };
     const OPPOSITE_SIGN = Object.fromEntries(SIGN_ORDER.map((sign, index) => [
         sign,
         SIGN_ORDER[(index + 6) % 12],
@@ -135,6 +154,15 @@
         }
         if (displayOptions.classicalRulers && mode === 'detriment') {
             return CLASSICAL_RULERS[OPPOSITE_SIGN[sign]] || getRulerForSign(sign, mode, dignities);
+        }
+        // Экзальтация и падение тоже идут по классике: возвращаем null как
+        // значащее «экзальтации нет», без отката на таблицу аккаунта — иначе
+        // тумблер не даёт того, ради чего его включают.
+        if (displayOptions.classicalRulers && mode === 'exaltation') {
+            return CLASSICAL_EXALTATIONS[sign] || null;
+        }
+        if (displayOptions.classicalRulers && mode === 'fall') {
+            return CLASSICAL_EXALTATIONS[OPPOSITE_SIGN[sign]] || null;
         }
         return getRulerForSign(sign, mode, dignities);
     }
@@ -471,16 +499,32 @@
         const nodesByPlanet = buildCompactNodeMap(groupChains);
         const cycleRowPlanets = [...cycleOrder, cycleOrder[0]].filter(Boolean);
         const branchRows = [];
-        const seenBranches = new Set();
 
-        groupChains.forEach((chain) => {
-            const targetIndex = chain.steps.findIndex((step) => cycleSet.has(step.planet));
-            if (targetIndex <= 0) return;
-            const rowPlanets = chain.steps.slice(0, targetIndex + 1).map((step) => step.planet);
-            const signature = rowPlanets.join('>');
-            if (seenBranches.has(signature)) return;
-            seenBranches.add(signature);
-            branchRows.push(rowPlanets);
+        // Цепочки в группе — это по одной на каждое стартовое тело, поэтому у
+        // соседних общий хвост: ♂→♀→☿→♄ и ♀→☿→♄ и ☿→♄ раньше рисовались тремя
+        // строками, и один и тот же Сатурн повторялся в каждой. Идём от самых
+        // длинных и обрываем строку на первом уже нарисованном теле: оно
+        // остаётся в строке как якорь (приглушённым), но своей строки больше
+        // не получает. Каждое тело схемы рисуется ровно один раз.
+        const drawn = new Set(cycleOrder);
+        const byLength = [...groupChains].sort((a, b) => (
+            b.steps.length - a.steps.length || String(a.start).localeCompare(String(b.start))
+        ));
+
+        byLength.forEach((chain) => {
+            const rowPlanets = [];
+            let anchor = null;
+            for (const step of chain.steps) {
+                rowPlanets.push(step.planet);
+                if (drawn.has(step.planet)) {
+                    anchor = step.planet;
+                    break;
+                }
+            }
+            const fresh = rowPlanets.filter((planet) => !drawn.has(planet));
+            if (!fresh.length) return;
+            fresh.forEach((planet) => drawn.add(planet));
+            branchRows.push({ planets: rowPlanets, anchor });
         });
 
         return `
@@ -500,16 +544,23 @@
                     </div>
                     ${branchRows.length ? `
                         <div class="dispositor-cycle-branches">
-                            ${branchRows.map((rowPlanets) => `
+                            ${branchRows.map((row) => `
                                 <div class="dispositor-cycle-branch-row">
-                                    ${rowPlanets.map((planet, index) => `
+                                    ${row.planets.map((planet, index) => `
                                         ${index > 0 ? renderCompactInlineArrow() : ''}
                                         ${renderCompactStaticNode(
                                             planet,
                                             nodesByPlanet,
                                             housesByRuler,
                                             displayOptions,
-                                            cycleSet.has(planet) ? 'dispositor-compact-node--main' : '',
+                                            [
+                                                cycleSet.has(planet) ? 'dispositor-compact-node--main' : '',
+                                                // Якорь — тело, нарисованное в другой строке;
+                                                // здесь оно только показывает, куда ведёт ветвь.
+                                                planet === row.anchor && index === row.planets.length - 1
+                                                    ? 'dispositor-compact-node--repeat'
+                                                    : '',
+                                            ].filter(Boolean).join(' '),
                                         )}
                                     `).join('')}
                                 </div>

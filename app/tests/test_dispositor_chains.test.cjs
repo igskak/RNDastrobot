@@ -337,3 +337,94 @@ test('domicile scheme keeps every body and marks no dead ends', () => {
     assert.equal(planets.size, 10, 'в домициле управитель есть у каждого знака');
     assert.equal(deadEnds.length, 0);
 });
+
+// --- реальная таблица достоинств аккаунта --------------------------------
+//
+// В настройках экзальтация роздана всем двенадцати знакам (Стрелец → Хирон,
+// Скорпион → Уран, Близнецы и Лев → Плутон, Водолей → Меркурий), поэтому
+// цепочка не обрывается никогда и всё стягивается в один цикл. Ровно это
+// астролог и увидела на своей карте вместо одной строки.
+
+const ACCOUNT_DIGNITIES = {
+    Aries: { ruler: 'Mars', exaltation: 'Sun' },
+    Taurus: { ruler: 'Venus', exaltation: 'Moon' },
+    Gemini: { ruler: 'Mercury', exaltation: 'Pluto' },
+    Cancer: { ruler: 'Moon', exaltation: 'Jupiter' },
+    Leo: { ruler: 'Sun', exaltation: 'Pluto' },
+    Virgo: { ruler: 'Mercury', co_ruler: 'Proserpina', exaltation: 'Mercury' },
+    Libra: { ruler: 'Venus', co_ruler: 'Chiron', exaltation: 'Saturn' },
+    Scorpio: { ruler: 'Pluto', co_ruler: 'Mars', exaltation: 'Uranus' },
+    Sagittarius: { ruler: 'Jupiter', co_ruler: 'Neptune', exaltation: 'Chiron' },
+    Capricorn: { ruler: 'Saturn', co_ruler: 'Uranus', exaltation: 'Mars' },
+    Aquarius: { ruler: 'Uranus', co_ruler: 'Saturn', exaltation: 'Mercury' },
+    Pisces: { ruler: 'Neptune', co_ruler: 'Jupiter', exaltation: 'Venus' },
+};
+
+function withAccountDignities() {
+    window.accountPreferencesCache = { methodology: { dignities: { signs: ACCOUNT_DIGNITIES } } };
+}
+
+function renderScheme(dispositorChains, options) {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    dispositorChains.render(container, makeReferenceChart(), { section: 'scheme', showHouseRulers: true, ...options });
+    return container;
+}
+
+function rowChains(container) {
+    return [...container.querySelectorAll('.dispositor-cycle-row, .dispositor-cycle-branch-row')].map((row) => (
+        [...row.querySelectorAll('.dispositor-compact-node')]
+            .map((node) => (node.getAttribute('aria-label') || '').split(' · ')[0])
+            .join('>')
+    ));
+}
+
+test('classical rulers switch also swaps the exaltation table', () => {
+    const dispositorChains = setupDispositorChains();
+    withAccountDignities();
+
+    const account = dispositorChains.buildHouseDispositorScheme(makeReferenceChart(), 'exaltation', {
+        mode: 'exaltation', showHouseRulers: true, classicalRulers: false,
+    });
+    const classical = dispositorChains.buildHouseDispositorScheme(makeReferenceChart(), 'exaltation', {
+        mode: 'exaltation', showHouseRulers: true, classicalRulers: true,
+    });
+
+    // Стрелец: в таблице аккаунта экзальтирует Хирон, в классике — никто.
+    assert.equal(account.chains.find((chain) => chain.start === 'Saturn').steps[0].ruler, 'Chiron');
+
+    const classicalTail = classical.chains
+        .find((chain) => chain.start === 'Mars').steps
+        .at(-1);
+    assert.equal(classicalTail.planet, 'Saturn');
+    assert.equal(classicalTail.ruler, null, 'откат на таблицу аккаунта недопустим');
+
+    const signatures = new Set(classical.chains.map((chain) => chain.steps.map((step) => step.planet).join('>')));
+    assert.ok(signatures.has('Mars>Venus>Mercury>Saturn'), 'цепочка как в эталоне астролога');
+});
+
+test('cycle group draws every body once instead of repeating shared tails', () => {
+    const dispositorChains = setupDispositorChains();
+    withAccountDignities();
+
+    const container = renderScheme(dispositorChains, { mode: 'exaltation', classicalRulers: false });
+    const rows = rowChains(container);
+    const bodies = [...container.querySelectorAll('.dispositor-compact-node')]
+        .filter((node) => !node.classList.contains('dispositor-compact-node--repeat'))
+        .map((node) => (node.getAttribute('aria-label') || '').split(' · ')[0]);
+
+    assert.equal(new Set(bodies).size, bodies.length, `тело нарисовано дважды: ${rows.join(' | ')}`);
+    // Хвост ☿→♄→⚷ раньше повторялся в четырёх строках из семи.
+    assert.ok(rows.length <= 3, `строк должно остаться немного, получили ${rows.length}`);
+});
+
+test('account dignities keep the chain connected — nothing dead-ends', () => {
+    const dispositorChains = setupDispositorChains();
+    withAccountDignities();
+
+    const { chains } = dispositorChains.buildHouseDispositorScheme(makeReferenceChart(), 'exaltation', {
+        mode: 'exaltation', showHouseRulers: true, classicalRulers: false,
+    });
+
+    assert.equal(chains.flatMap((chain) => chain.steps).filter((step) => !step.ruler).length, 0);
+});
