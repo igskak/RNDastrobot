@@ -428,3 +428,43 @@ test('account dignities keep the chain connected — nothing dead-ends', () => {
 
     assert.equal(chains.flatMap((chain) => chain.steps).filter((step) => !step.ruler).length, 0);
 });
+
+// --- значение по умолчанию для «Классических управителей» ----------------
+
+test('classical rulers are on by default', () => {
+    const dispositorChains = setupDispositorChains();
+    withAccountDignities();
+    window.localStorage.clear();
+
+    assert.equal(dispositorChains.readDisplayOptions().classicalRulers, true);
+
+    // Классика: Стрелец без экзальтации, поэтому цепочка обрывается на Сатурне
+    // и группа рисуется графом, а не строками цикла.
+    const container = renderScheme(dispositorChains, { mode: 'exaltation' });
+    const bodies = [...container.querySelectorAll('.dispositor-compact-node')]
+        .map((node) => (node.getAttribute('aria-label') || '').split(' · ')[0]);
+
+    assert.equal(container.querySelectorAll('.dispositor-cycle-row').length, 0, 'цикла быть не должно');
+    assert.equal(container.querySelectorAll('.dispositor-compact-node--terminal').length, 1);
+    assert.deepEqual(
+        [...new Set(bodies)].sort(),
+        ['Mars', 'Mercury', 'Moon', 'Neptune', 'Saturn', 'Venus'],
+        'Солнце, Юпитер, Уран и Плутон остаются без связей и не рисуются',
+    );
+});
+
+test('stale saved options do not pin the old default, an explicit choice does', () => {
+    const dispositorChains = setupDispositorChains();
+
+    // Запись без версии — прежнее значение по умолчанию, а не выбор.
+    window.localStorage.setItem('dispositorChainDisplayOptions', JSON.stringify({
+        mode: 'exaltation', showHouseRulers: true, classicalRulers: false,
+    }));
+    assert.equal(dispositorChains.readDisplayOptions().classicalRulers, true);
+
+    // Та же запись с текущей версией — пользователь выключил осознанно.
+    window.localStorage.setItem('dispositorChainDisplayOptions', JSON.stringify({
+        mode: 'exaltation', showHouseRulers: true, classicalRulers: false, version: 2,
+    }));
+    assert.equal(dispositorChains.readDisplayOptions().classicalRulers, false);
+});
