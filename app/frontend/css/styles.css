@@ -3422,6 +3422,12 @@ input[type="number"] {
     opacity: 0.72;
 }
 
+/* Конец цепочки: у тела нет диспозитора в выбранном достоинстве. Гасим весь
+   узел вместе с подписью домов, чтобы обрыв читался сразу (фидбек, п.17). */
+.dispositor-compact-node--terminal {
+    opacity: 0.42;
+}
+
 .dispositor-cycle-table {
     display: grid;
     gap: 9px;

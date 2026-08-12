@@ -325,8 +325,13 @@
         const housesByRuler = new Map();
         const startPlanets = [];
 
+        // Подпись под глифом — какими домами управляет само тело, и это его
+        // постоянное свойство, а не свойство открытой вкладки: связи в схеме
+        // строятся по выбранному достоинству, а дома всегда домицильные.
+        // Иначе на «Экзальтации» подписи почти у всех исчезают (экзальтация
+        // есть лишь у семи знаков) и схему не с чем соотнести на карте.
         houses.forEach((house) => {
-            const ruler = getHouseRuler(house, mode, dignities, displayOptions);
+            const ruler = getHouseRuler(house, 'domicile', dignities, displayOptions);
             const houseNumber = getHouseNumber(house);
             if (!ruler || !houseNumber) return;
             if (!housesByRuler.has(ruler)) housesByRuler.set(ruler, []);
@@ -383,7 +388,14 @@
             return { start: startPlanet, steps, finalKey, cycle };
         });
 
-        return { chains, housesByRuler };
+        // Тело без диспозитора в этой схеме — это не цепочка, а одинокий глиф.
+        // В домициле такого не бывает (у каждого знака есть управитель), а на
+        // «Экзальтации» так выпадала половина карты, и блок превращался в
+        // россыпь отдельных значков. Одношаговый тупик выбрасываем: если тело
+        // участвует в чьей-то цепочке, оно всё равно нарисуется внутри неё.
+        const linkedChains = chains.filter((chain) => !(chain.steps.length === 1 && !chain.steps[0]?.ruler));
+
+        return { chains: linkedChains, housesByRuler };
     }
 
     function renderCompactNode(node, housesByRuler, displayOptions, extraClass = '') {
@@ -392,13 +404,16 @@
             getPlanetName(node.planet),
             node.sign ? signLabel(node.sign) : '',
             houseLabel ? `${t('common.house')} ${houseLabel}` : '',
+            node.terminal ? t('page.chart.rulers.chainEnd') : '',
         ].filter(Boolean).join(' · ');
         const positionStyle = Number.isFinite(node.x) && Number.isFinite(node.y)
             ? ` style="left:${node.x}px; top:${node.y}px;"`
             : '';
+        // Конец цепочки гасим, но подписываем — цветом одним сообщать нельзя.
+        const terminalClass = node.terminal ? ' dispositor-compact-node--terminal' : '';
         return `
             <span
-                class="dispositor-compact-node ${extraClass}"
+                class="dispositor-compact-node ${extraClass}${terminalClass}"
                 ${positionStyle}
                 title="${escapeHtml(label)}"
                 aria-label="${escapeHtml(label)}"
@@ -443,6 +458,7 @@
                     ...existing,
                     sign: existing.sign || step.sign || null,
                     retrograde: existing.retrograde || Boolean(step.retrograde),
+                    terminal: Boolean(existing.terminal || !step.ruler),
                 });
             });
         });
@@ -584,10 +600,15 @@
         const ensureNode = (planet, source = {}) => {
             if (!planet) return null;
             const existing = nodes.get(planet) || { planet, sign: null, retrograde: false };
+            // Тупик — только у настоящего шага цепочки: у него есть поле ruler,
+            // и оно пустое. Узел, созданный из ссылки на управителя, о своём
+            // диспозиторе ещё ничего не знает и тупиком не считается.
+            const isDeadEnd = Object.prototype.hasOwnProperty.call(source, 'ruler') && !source.ruler;
             nodes.set(planet, {
                 ...existing,
                 sign: existing.sign || source.sign || null,
                 retrograde: existing.retrograde || Boolean(source.retrograde),
+                terminal: Boolean(existing.terminal || isDeadEnd),
             });
             return nodes.get(planet);
         };
