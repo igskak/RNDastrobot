@@ -100,14 +100,34 @@ def test_failure_returns_none_so_the_tool_stage_answer_survives():
     """The caller already holds a serviceable answer; a narration failure must
     degrade to it rather than losing the astrologer's turn."""
     client = _FakeClient(explode=True)
-    assert narrate(client=client, user_question="q",
-                   tool_results=[{"name": "discover_patterns", "result": {}}]) is None
+    text, diag = narrate(client=client, user_question="q",
+                         tool_results=[{"name": "discover_patterns", "result": {}}])
+    assert text is None
+    # The reason must survive the fallback, or a dead stage is indistinguishable
+    # from a switched-off one — which is exactly what happened on production.
+    assert diag["status"] == "failed"
+    assert diag["error"] == "RuntimeError"
+    assert diag["model"]
 
 
-def test_empty_output_is_treated_as_failure():
+def test_empty_output_is_reported_apart_from_a_crash():
+    """An empty completion is the reasoning-budget failure, not a transport
+    error. Collapsing them sends the next investigation to the wrong place."""
     client = _FakeClient(content="   ")
-    assert narrate(client=client, user_question="q",
-                   tool_results=[{"name": "discover_patterns", "result": {}}]) is None
+    text, diag = narrate(client=client, user_question="q",
+                         tool_results=[{"name": "discover_patterns", "result": {}}])
+    assert text is None
+    assert diag["status"] == "empty"
+    assert "error" not in diag
+
+
+def test_success_carries_the_model_it_actually_used():
+    client = _FakeClient(content="report")
+    text, diag = narrate(client=client, user_question="q",
+                         tool_results=[{"name": "discover_patterns", "result": {}}])
+    assert text == "report"
+    assert diag["status"] == "ok"
+    assert diag["model"] == client.captured["model"]
 
 
 # --- the prompt itself ----------------------------------------------------------
@@ -311,3 +331,66 @@ def test_a_failed_directive_drops_silently():
     out = service._apply_visual_directive(
         uuid4(), {"table": True, "chart": "orb_line"}, {})
     assert out == []
+
+
+# --- the reason must reach the caller, not just the log ------------------------
+
+def _chat_with(monkeypatch, *, enabled, tool_name, narrate_impl=None):
+    """Drive the real chat() loop to the no-tool-calls exit, so the assertion is
+    on what the turn actually returns rather than on narrate() in isolation."""
+    from datetime import date
+    from uuid import uuid4
+
+    import app.services.astro_assistant_service as svc
+    from app.tests.test_assistant_characterization import (
+        _FakeClient, _msg, _service_with_fake_transits, _tool_call)
+
+    service = _service_with_fake_transits({})
+    scripted = [
+        _msg(tool_calls=[_tool_call("c1", tool_name, "{}")]),
+        _msg(content="tool-stage answer."),
+    ]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+    monkeypatch.setattr(svc, "NARRATIVE_ENABLED", enabled)
+    if narrate_impl is not None:
+        monkeypatch.setattr(svc, "narrate", narrate_impl)
+    return service.chat(uuid4(), [{"role": "user", "content": "q"}])
+
+
+def test_turn_records_that_the_stage_was_switched_off(monkeypatch):
+    res = _chat_with(monkeypatch, enabled=False, tool_name="discover_patterns")
+    assert res["narrated"] is False
+    assert res["narrative"]["status"] == "disabled"
+
+
+def test_turn_records_a_lookup_as_not_analytical(monkeypatch):
+    """Not narrating a lookup is correct behaviour, and must not read as a
+    failure when the rate is reviewed."""
+    res = _chat_with(monkeypatch, enabled=True, tool_name="get_chart_data")
+    assert res["narrated"] is False
+    assert res["narrative"]["status"] == "not_analytical"
+
+
+def test_turn_records_a_narrator_crash_distinctly(monkeypatch):
+    """The case that cost a live investigation: the astrologer still gets the
+    tool-stage answer, but the turn now says WHY it was not narrated."""
+    res = _chat_with(
+        monkeypatch, enabled=True, tool_name="discover_patterns",
+        narrate_impl=lambda **kw: (None, {"status": "failed",
+                                          "error": "NotFoundError",
+                                          "model": "gpt-5.6-luna"}))
+    assert res["reply"] == "tool-stage answer."      # the turn is not lost
+    assert res["narrated"] is False
+    assert res["narrative"]["status"] == "failed"
+    assert res["narrative"]["error"] == "NotFoundError"
+
+
+def test_turn_records_a_successful_narration(monkeypatch):
+    res = _chat_with(
+        monkeypatch, enabled=True, tool_name="discover_patterns",
+        narrate_impl=lambda **kw: ("отчёт.", {"status": "ok",
+                                              "model": "gpt-5.6-luna"}))
+    assert res["reply"] == "отчёт."
+    assert res["narrated"] is True
+    assert res["narrative"]["status"] == "ok"

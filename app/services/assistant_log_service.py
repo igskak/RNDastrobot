@@ -78,6 +78,7 @@ def log_turn(
     unsupported_dates: Optional[list] = None,
     tools_used: Optional[list] = None,
     narrated: Optional[bool] = None,
+    narrative_diag: Optional[Dict] = None,
 ) -> "tuple[Optional[UUID], Optional[int]]":
     """Persist one assistant turn. Returns (conversation_id, metric_id), or
     (None, None) on failure. The metric_id lets the client flag that turn for
@@ -121,6 +122,7 @@ def log_turn(
             unsupported_dates=unsupported_dates,
             tools_used=tools_used,
             narrated=narrated,
+            narrative_diag=narrative_diag,
         )
         db.add(metric)
         db.commit()

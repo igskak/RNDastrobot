@@ -1939,14 +1939,23 @@ class AstroAssistantService:
             if not getattr(msg, "tool_calls", None):
                 raw = msg.content or ""
                 narrated = False
+                # A boolean cannot tell "switched off" from "crashed", and that
+                # ambiguity cost a live investigation: prod showed narrated=False
+                # and the flag, the model access and the code version all had to
+                # be ruled out by hand. The reason is recorded now.
+                narrative: Dict = {"status": "disabled"}
                 # Reuse the survey this turn already produced, so the directive
                 # cannot silently describe a different dataset.
                 args_for_visuals = self._last_survey_args or {}
                 # §16: hand a broad analytical answer to a writer that holds the
                 # findings and no tools. Only when findings exist — a lookup has
                 # nothing to narrate and must not pay for a second completion.
-                if NARRATIVE_ENABLED and is_analytical_turn(tool_results):
-                    written = narrate(
+                if not NARRATIVE_ENABLED:
+                    pass
+                elif not is_analytical_turn(tool_results):
+                    narrative = {"status": "not_analytical"}
+                else:
+                    written, narrative = narrate(
                         client=client,
                         tool_results=tool_results,
                         user_question=_last_user_text(messages),
@@ -1982,6 +1991,7 @@ class AstroAssistantService:
                     "max_iterations_reached": False,
                     "guardrail": guardrail,
                     "narrated": narrated,
+                    "narrative": narrative,
                     "methodology": self._methodology,
                     "unsupported_dates": unsupported_dates(reply, tool_results),
                     "metrics": usage.as_metrics(

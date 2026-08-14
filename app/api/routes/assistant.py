@@ -10,7 +10,7 @@ only a missing natal chart is a 404, and internal errors never leak text.
 from __future__ import annotations
 
 from datetime import date as date_type
-from typing import List, Optional
+from typing import Dict, List, Optional
 from uuid import UUID
 
 import pytz
@@ -392,6 +392,7 @@ def _log_assistant_turn(
     unsupported_dates: Optional[list] = None,
     tools_used: Optional[list] = None,
     narrated: Optional[bool] = None,
+    narrative_diag: Optional[Dict] = None,
 ) -> "tuple[Optional[UUID], Optional[int]]":
     db = db_manager.get_new_session()
     try:
@@ -412,6 +413,7 @@ def _log_assistant_turn(
             unsupported_dates=unsupported_dates,
             tools_used=tools_used,
             narrated=narrated,
+            narrative_diag=narrative_diag,
         )
     finally:
         db.close()
@@ -503,6 +505,7 @@ async def chat(
         unsupported_dates=result.get("unsupported_dates") or [],
         tools_used=[t.get("name") for t in (result.get("tool_results") or [])],
         narrated=result.get("narrated"),
+        narrative_diag=result.get("narrative"),
     )
 
     return ChatResponse(

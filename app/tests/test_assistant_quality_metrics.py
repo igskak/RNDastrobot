@@ -156,3 +156,35 @@ def test_migration_057_is_idempotent_and_nullable():
     assert sql.count("IF NOT EXISTS") >= 4
     alter = sql.upper().split("ALTER TABLE", 1)[1].split(";", 1)[0]
     assert "NOT NULL" not in alter
+
+
+# --- why the narrator did not run --------------------------------------------------
+
+def test_narrative_status_is_broken_out_by_reason():
+    """narrated_rate alone is not actionable: a low rate can mean the stage is off,
+    that the traffic was lookups, or that every call is crashing. Those need three
+    different responses, so they need three different numbers."""
+    db = _session()
+    aid = uuid4()
+    _turn(db, aid, narrated=True, narrative_diag={"status": "ok"})
+    _turn(db, aid, narrated=False, narrative_diag={"status": "not_analytical"})
+    _turn(db, aid, narrated=False,
+          narrative_diag={"status": "failed", "error": "NotFoundError",
+                          "model": "gpt-5.6-luna"})
+    _turn(db, aid, narrated=False, narrative_diag={"status": "failed"})
+
+    out = compute_quality_metrics(db, astrologer_id=aid)
+    assert out["narrative_status"] == {"failed": 2, "ok": 1, "not_analytical": 1}
+    assert out["targets"]["narrated_rate"] == 0.25
+
+
+def test_turns_logged_before_the_column_existed_do_not_break_the_rollup():
+    """057 rows carry no diag. They must count toward narrated_rate and simply
+    contribute no reason, rather than poisoning the breakdown with a null key."""
+    db = _session()
+    aid = uuid4()
+    _turn(db, aid, narrated=True)
+    _turn(db, aid, narrated=False, narrative_diag={"status": "disabled"})
+    out = compute_quality_metrics(db, astrologer_id=aid)
+    assert out["narrative_status"] == {"disabled": 1}
+    assert out["targets"]["narrated_rate"] == 0.5

@@ -1636,6 +1636,11 @@ class AssistantTurnMetric(Base):
     unsupported_dates = Column(JSON, nullable=True)
     tools_used = Column(JSON, nullable=True)
     narrated = Column(Boolean, nullable=True)
+    # Migration 058. `narrated` alone says only "no report", which is the same
+    # answer for a disabled stage, a lookup with nothing to narrate, and a stage
+    # that raised — three very different states, one of them a production
+    # outage. {status, model, effort, error} makes the difference queryable.
+    narrative_diag = Column(JSON, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     conversation = relationship("AssistantConversation", back_populates="turn_metrics")

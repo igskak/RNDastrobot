@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from loguru import logger
 
@@ -145,13 +145,19 @@ def narrate(
     locale_line: Optional[str] = None,
     usage=None,
     timeout: float = 60.0,
-) -> Optional[str]:
-    """Write the analytical report from findings alone. None on any failure.
+) -> Tuple[Optional[str], Dict]:
+    """Write the analytical report from findings alone.
 
-    Returning None rather than raising is deliberate: the caller already holds a
-    serviceable answer from the tool stage, and a narration failure must degrade
-    to that rather than costing the astrologer their turn.
+    Returns ``(text_or_None, diagnostics)``. Degrading to None rather than
+    raising is deliberate — the caller already holds a serviceable answer from
+    the tool stage, and a narration failure must not cost the astrologer their
+    turn. But that fallback is exactly what hid a misconfiguration twice: once
+    an empty reasoning completion, once a stage that never ran in production.
+    So the reason travels with the result and is persisted, because "disabled"
+    and "crashed" look identical from the outside.
     """
+    diag = {"model": model_for("narrative"),
+            "effort": NARRATIVE_REASONING_EFFORT or None}
     messages: List[Dict] = [{"role": "system", "content": _SYSTEM}]
     if locale_line:
         messages.append({"role": "system", "content": locale_line})
@@ -180,10 +186,15 @@ def narrate(
         if usage is not None:
             usage.add(getattr(response, "usage", None))
         text = (response.choices[0].message.content or "").strip()
-        return text or None
-    except Exception:
+        if text:
+            return text, {"status": "ok", **diag}
+        # An empty completion is the reasoning-budget failure: the model spends
+        # the whole ceiling thinking and emits nothing. It is not the same as a
+        # transport error and must not be reported as one.
+        return None, {"status": "empty", **diag}
+    except Exception as exc:
         logger.exception("narrative analyst failed; serving the tool-stage answer")
-        return None
+        return None, {"status": "failed", "error": type(exc).__name__, **diag}
 
 
 # Spec §18 — Report Renderer.

@@ -66,6 +66,7 @@ def compute_quality_metrics(
     truncation_turns = 0
     guardrail: Dict[str, int] = {}
     tool_usage: Dict[str, int] = {}
+    narrative: Dict[str, int] = {}
 
     for row in rows:
         names = list(row.tools_used or [])
@@ -85,6 +86,13 @@ def compute_quality_metrics(
 
         if row.narrated:
             narrated_turns += 1
+        # A low narrated_rate is only actionable once you know WHY. Counting the
+        # reason here means the stage being off, the model rejecting the call and
+        # an empty completion are three different numbers, not one.
+        diag = row.narrative_diag or {}
+        status = diag.get("status") if isinstance(diag, dict) else None
+        if status:
+            narrative[status] = narrative.get(status, 0) + 1
         if row.max_iterations_reached:
             truncation_turns += 1
 
@@ -111,6 +119,7 @@ def compute_quality_metrics(
             "ungrounded_dates": ungrounded_dates,
         },
         "guardrail": dict(sorted(guardrail.items(), key=lambda kv: -kv[1])),
+        "narrative_status": dict(sorted(narrative.items(), key=lambda kv: -kv[1])),
         "tool_usage": dict(sorted(tool_usage.items(), key=lambda kv: -kv[1])),
     }
 
