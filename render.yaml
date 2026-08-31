@@ -60,6 +60,14 @@ services:
       # master-prompt answer with no code change.
       - key: ASSISTANT_NARRATIVE_ENABLED
         value: "true"
+      # Owner-only ops view (routes/ops.py): comma-separated emails allowed to
+      # read cross-tenant signups and beta feedback. Unset => the route 404s for
+      # everyone, which is the intended default. Set it in the Render dashboard,
+      # not here: as of 2026-08 this service does not pick up blueprint envVars
+      # (ASSISTANT_NARRATIVE_ENABLED above reads "true" and arrives unset at
+      # runtime — proved by narrative_diag={"status":"disabled"} on live turns).
+      - key: OPS_OWNER_EMAILS
+        sync: false
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
