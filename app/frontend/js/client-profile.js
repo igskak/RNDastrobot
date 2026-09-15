@@ -1129,14 +1129,14 @@ async function openCallRecording(sessionId, rowEl) {
 
     if (panel.dataset.loaded) return;
     panel.dataset.loaded = '1';
-    panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Loading…</div>`;
+    panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> ${escapeHtml(t('page.clientProfile.recordings.loading'))}</div>`;
 
     try {
         const csRes = await apiFetch(`${API_BASE}/call-sessions/${sessionId}`);
         const cs = csRes.ok ? await csRes.json() : null;
 
         if (cs?.call_status === 'processing') {
-            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Transcription in progress… this may take a few minutes.</div>`;
+            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> ${escapeHtml(t('page.clientProfile.recordings.transcriptionInProgress'))}</div>`;
             pollProcessingSession(sessionId, panel, rowEl);
             return;
         }
@@ -1147,7 +1147,7 @@ async function openCallRecording(sessionId, rowEl) {
         const audio = audioRes?.ok ? await audioRes.json() : null;
         panel.innerHTML = buildRecordingPanelHTML(cs, audio?.url || null, sessionId);
     } catch (err) {
-        panel.innerHTML = `<p class="cs-panel-error">Could not load recording: ${escapeHtml(err.message)}</p>`;
+        panel.innerHTML = `<p class="cs-panel-error">${escapeHtml(t('page.clientProfile.recordings.couldNotLoad', { message: err.message }))}</p>`;
     }
 }
 
@@ -1160,7 +1160,7 @@ function pollProcessingSession(sessionId, panel, rowEl) {
         attempts++;
         if (attempts > MAX_ATTEMPTS) {
             clearInterval(timer);
-            panel.innerHTML = `<div class="cs-panel-error">Processing timed out. <button class="ui-btn ui-btn--primary ui-btn--sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">Retry</button></div>`;
+            panel.innerHTML = `<div class="cs-panel-error">${escapeHtml(t('page.clientProfile.recordings.processingTimedOut'))} <button class="ui-btn ui-btn--primary ui-btn--sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('common.retry'))}</button></div>`;
             return;
         }
         try {
@@ -1280,22 +1280,22 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
 async function retryProcessing(sessionId, btn) {
     const orig = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Starting…';
+    btn.textContent = t('page.clients.detail.startingCall');
     try {
         const res = await apiFetch(`${API_BASE}/call-sessions/${sessionId}/reprocess`, { method: 'POST' });
         if (!res.ok) {
             const d = await res.json().catch(() => ({}));
-            throw new Error(d.detail || 'Failed to start reprocessing');
+            throw new Error(d.detail || t('page.clientProfile.recordings.reprocessFailed'));
         }
         const panel = document.getElementById(`cs-panel-${sessionId}`);
         const row   = document.querySelector(`.cs-row--expandable[data-session-id="${sessionId}"]`);
         if (panel && row) {
             delete panel.dataset.loaded;
-            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Transcription in progress…</div>`;
+            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> ${escapeHtml(t('page.clientProfile.recordings.transcriptionInProgressShort'))}</div>`;
             pollProcessingSession(sessionId, panel, row);
         }
     } catch (err) {
-        showToast(err.message || 'Could not retry', 'error');
+        showToast(err.message || t('page.clientProfile.recordings.retryFailed'), 'error');
         btn.disabled = false;
         btn.textContent = orig;
     }

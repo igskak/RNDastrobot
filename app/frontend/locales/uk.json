@@ -225,7 +225,8 @@
     "edit": "Редагувати",
     "delete": "Видалити",
     "save": "Зберегти",
-    "time": "Час"
+    "time": "Час",
+    "undo": "Скасувати дію"
   },
   "i18n": {
     "loading": "Завантаження...",
@@ -236,7 +237,8 @@
     "name": {
       "en": "Англійська",
       "ru": "Російська",
-      "uk": "Українська"
+      "uk": "Українська",
+      "de": "Німецька"
     }
   },
   "page": {
@@ -693,6 +695,83 @@
         "unavailable": "Додайте соляр або карту партнера, щоб поміняти карти місцями",
         "chip": "Основна карта: {chart}",
         "baseTitle": "{chart} (основна)"
+      },
+      "emptyLayer": {
+        "title": "Шар не вибрано",
+        "body": "Додайте шар для розрахунку"
+      },
+      "timeStepper": {
+        "date": "Дата",
+        "time": "Час",
+        "birthDate": "Дата народження",
+        "birthTime": "Час народження",
+        "resetCurrent": "Повернути поточні дату й час",
+        "resetBirth": "Повернути дату й час народження",
+        "customTooltip": "Власний крок: {step}",
+        "customActions": "Перехід на власний крок",
+        "back": "Назад на власний крок",
+        "forward": "Уперед на власний крок",
+        "step": "Крок",
+        "unit": "Од.",
+        "units": {
+          "second": "секунд",
+          "minute": "хвилин",
+          "hour": "годин",
+          "day": "днів",
+          "week": "тижнів",
+          "month": "місяців",
+          "year": "років"
+        },
+        "segments": {
+          "yearThousands": {
+            "title": "Тисячі років"
+          },
+          "yearHundreds": {
+            "title": "Сотні років"
+          },
+          "yearTens": {
+            "title": "Десятки років"
+          },
+          "yearOnes": {
+            "title": "Роки"
+          },
+          "monthTens": {
+            "title": "Десятки місяців"
+          },
+          "monthOnes": {
+            "title": "Місяці"
+          },
+          "dayTens": {
+            "title": "Десятки днів"
+          },
+          "dayOnes": {
+            "title": "Дні"
+          },
+          "hour": {
+            "title": "Години"
+          },
+          "tenMinute": {
+            "title": "Десятки хвилин"
+          },
+          "minute": {
+            "title": "Хвилини"
+          },
+          "tenSecond": {
+            "title": "Десятки секунд"
+          },
+          "second": {
+            "title": "Секунди"
+          }
+        },
+        "unitsOne": {
+          "second": "секунда",
+          "minute": "хвилина",
+          "hour": "година",
+          "day": "день",
+          "week": "тиждень",
+          "month": "місяць",
+          "year": "рік"
+        }
       }
     },
     "plan": {
@@ -1135,7 +1214,10 @@
         "correctionSubmit": "Надіслати",
         "correctionThanks": "Дякуємо за відгук — ми його врахуємо.",
         "feedbackLike": "Позначити відповідь корисною",
-        "feedbackDislike": "Позначити відповідь для виправлення"
+        "feedbackDislike": "Позначити відповідь для виправлення",
+        "actionConfirmTitle": "Підтвердьте: {action}",
+        "actionApply": "Застосувати",
+        "actionCancelled": "Скасовано: {action}"
       },
       "edit": {
         "errors": {
@@ -1320,7 +1402,9 @@
         "personPlaceholder": "Шукати людину…",
         "personPrimary": "основний",
         "tagsLabel": "Теги",
-        "tagsPlaceholder": "Новий тег…"
+        "tagsPlaceholder": "Новий тег…",
+        "removeTag": "Видалити {name}",
+        "removePerson": "Видалити {name}"
       }
     },
     "chat": {
@@ -1605,7 +1689,8 @@
         "paidBadge": "Сплачено",
         "unpaidBadge": "Не сплачено",
         "lastSession": "Остання:",
-        "nextSession": "Наступна:"
+        "nextSession": "Наступна:",
+        "startCall": "Почати дзвінок"
       },
       "consultation": {
         "kicker": "Історія зустрічей",
@@ -1656,7 +1741,8 @@
         "passed": "{days} дн. тому",
         "tomorrow": "Завтра",
         "openChart": "Відкрити",
-        "noAlerts": "Немає подій цього місяця"
+        "noAlerts": "Немає подій цього місяця",
+        "passedOne": "1 день тому"
       }
     },
     "chartPicker": {
@@ -1724,7 +1810,16 @@
         "noData": "Поки немає даних запису.",
         "failed": "Обробка не вдалася.",
         "retry": "Повторити",
-        "summaryFailed": "Розшифровку готово, але резюме не вдалося згенерувати."
+        "summaryFailed": "Розшифровку готово, але резюме не вдалося згенерувати.",
+        "loading": "Завантаження…",
+        "transcriptionInProgress": "Триває транскрибування… Це може зайняти кілька хвилин.",
+        "couldNotLoad": "Не вдалося завантажити запис: {message}",
+        "processingTimedOut": "Час обробки вичерпано.",
+        "reprocessFailed": "Не вдалося запустити повторну обробку",
+        "transcriptionInProgressShort": "Триває транскрибування…",
+        "retryFailed": "Не вдалося повторити спробу",
+        "audioUnsupported": "Ваш браузер не підтримує відтворення аудіо.",
+        "startProcessing": "Почати обробку"
       },
       "solar": {
         "defaultName": "Соляр {year}",
@@ -2937,7 +3032,8 @@
         "ambiguous_statement": "Неоднозначне твердження",
         "incomplete_context": "Неповний контекст",
         "unresolved_topic": "Невирішена тема"
-      }
+      },
+      "requestFailed": "Запит не виконано (HTTP {status})."
     },
     "pricing": {
       "meta": {
@@ -2956,7 +3052,8 @@
       "billing": {
         "monthly": "Помісячно",
         "annual": "Раз на рік",
-        "save": "вигода ~17%"
+        "save": "вигода ~17%",
+        "ariaLabel": "Період оплати"
       },
       "period": "/ міс",
       "plans": {
@@ -3005,7 +3102,10 @@
         "privacy": "Конфіденційність",
         "refund": "Повернення",
         "contact": "Контакти",
-        "copyright": "© 2026 Steliara. Платежі обробляє Stripe як merchant of record (Stripe Managed Payments)."
+        "copyright": "© 2026 Steliara. Платежі обробляє Stripe як merchant of record (Stripe Managed Payments).",
+        "cloudSoftware": "Хмарна астрологічна програма",
+        "workspace": "Робочий простір астролога",
+        "practiceManagement": "Керування практикою"
       }
     },
     "legal": {

@@ -141,6 +141,8 @@ _MULTI_WHEEL_INTENT_RE = re.compile(
     r"|многокольц\w*"
     r"|multi[-\s]?(?:wheel|layer)(?:\s+mode)?"
     r"|multi\s+mode"
+    r"|mehrere\s+(?:horoskop)?ring\w*"
+    r"|mehrfach(?:ring|ansicht)\w*"
     r")",
     re.IGNORECASE,
 )
@@ -151,16 +153,20 @@ _SINGLE_WHEEL_INTENT_RE = re.compile(
     r"|режим(?:\s+\w+){0,2}\s+одиночн\w*"
     r"|только\s+натал\w*"
     r"|single[-\s]?(?:wheel|layer)?(?:\s+mode)?"
+    r"|einzelansicht"
+    r"|einzel(?:ring|modus)\w*"
     r")",
     re.IGNORECASE,
 )
 _ADD_LAYER_VERB_RE = re.compile(
-    r"\b(add|build|create)\b|добав\w*|созда\w*|постро\w*",
+    r"\b(add|build|create)\b|добав\w*|созда\w*|постро\w*"
+    r"|füg\w*(?:\s+\w+){0,4}\s+hinzu|hinzufüg\w*",
     re.IGNORECASE,
 )
 _LAYER_METHOD_INTENT_RE = re.compile(
     r"\b(transit|progression|direction|solar|synastry)\b"
-    r"|транзит\w*|прогресс\w*|дирекц\w*|соляр\w*|солнечн\w*|синастр\w*",
+    r"|транзит\w*|прогресс\w*|дирекц\w*|соляр\w*|солнечн\w*|синастр\w*"
+    r"|transit\w*|progression\w*|direktion\w*|solar\w*|synastr\w*",
     re.IGNORECASE,
 )
 
@@ -265,7 +271,8 @@ _AFFIRMATIVE_RE = re.compile(
     r"^\W*("
     r"да|давай(те)?|ага|угу|хорошо|ладно|окей|ок|поехали|начинай|начинайте|"
     r"продолжай|продолжайте|продолжим|дальше|валяй|"
-    r"yes|yeah|yep|ok|okay|sure|go|go ahead|do it|start|continue|proceed"
+    r"yes|yeah|yep|ok|okay|sure|go|go ahead|do it|start|continue|proceed|"
+    r"ja|ja(?:,\s*|\s+)bitte|gern|gerne|machen sie weiter|weiter|los"
     r")\W*$",
     re.IGNORECASE,
 )
@@ -274,7 +281,8 @@ _AFFIRMATIVE_RE = re.compile(
 # "да" be a confirmation rather than an answer to some other question.
 _OFFER_RE = re.compile(
     r"(могу\s|хотите|если хотите|начать с|предлага|показать\?|"
-    r"shall i|would you like|i can |want me to|should i )",
+    r"shall i|would you like|i can |want me to|should i |"
+    r"möchten sie|soll ich|ich kann |darf ich )",
     re.IGNORECASE,
 )
 
@@ -340,8 +348,14 @@ def _wheel_view_action(view: str) -> Dict:
     }
 
 
-def _wheel_view_reply(view: str, messages: List[Dict]) -> str:
+def _wheel_view_reply(view: str, messages: List[Dict], locale: Optional[str] = None) -> str:
     text = _last_user_text(messages)
+    if (locale or "").strip().lower() == "de":
+        return (
+            "Zur Mehrfachansicht gewechselt."
+            if view == "multi"
+            else "Zur Einzelansicht gewechselt."
+        )
     if not _CYRILLIC_RE.search(text):
         return (
             "Switched to multi-wheel mode."
@@ -355,8 +369,12 @@ def _wheel_view_reply(view: str, messages: List[Dict]) -> str:
     )
 
 
-def _refuse_and_redirect(messages: List[Dict]) -> str:
+def _refuse_and_redirect(messages: List[Dict], locale: Optional[str] = None) -> str:
     """Canned Layer-3 refusal: decline meaning, offer the data. Astrologer's language."""
+    if (locale or "").strip().lower() == "de":
+        return ("Ich deute die Bedeutung astrologischer Konfigurationen nicht. "
+                "Ich kann Ihnen die zugrunde liegenden Daten und Berechnungen nennen — "
+                "sagen Sie mir bitte, welche Werte Sie sehen möchten.")
     if _CYRILLIC_RE.search(_last_user_text(messages)):
         return ("Я не интерпретирую значение конфигураций. Могу привести только данные "
                 "и расчёты — скажите, какие показатели показать.")
@@ -364,7 +382,7 @@ def _refuse_and_redirect(messages: List[Dict]) -> str:
             "data and calculations — tell me which figures to show.")
 
 
-_LOCALE_LANGUAGE = {"en": "English", "ru": "Russian", "uk": "Ukrainian"}
+_LOCALE_LANGUAGE = {"en": "English", "ru": "Russian", "uk": "Ukrainian", "de": "German"}
 
 
 def _locale_instruction(locale: Optional[str]) -> Optional[str]:
@@ -378,8 +396,9 @@ def _locale_instruction(locale: Optional[str]) -> Optional[str]:
     if not code:
         return None
     label = _LOCALE_LANGUAGE.get(code, code)
+    formality = " Address the astrologer formally using ‘Sie’." if code == "de" else ""
     return (f"The astrologer's interface language is {label}. Write your reply in "
-            f"{label} by default. Switch languages only if the astrologer's latest "
+            f"{label} by default.{formality} Switch languages only if the astrologer's latest "
             f"message is clearly written in a different language — then match that "
             f"message's language.")
 
@@ -1823,7 +1842,7 @@ class AstroAssistantService:
             return None
 
     def _finalize_reply(self, *, raw_reply, messages, actions, client, convo, usage,
-                        tool_results):
+                        tool_results, locale=None):
         """Single Layer-3 gate BOTH chat() exits call. Returns (actions, reply, guardrail).
 
         Order: coerce wheel-view (own text, unrendered/unjudged) -> render
@@ -1834,7 +1853,7 @@ class AstroAssistantService:
         """
         final_actions, coerced_view = _coerce_wheel_view_actions(messages, actions)
         if coerced_view:
-            return final_actions, _wheel_view_reply(coerced_view, messages), "ok"
+            return final_actions, _wheel_view_reply(coerced_view, messages, locale), "ok"
 
         index = build_citation_index(tool_results)
 
@@ -1853,7 +1872,7 @@ class AstroAssistantService:
 
         reply, ok = render(raw_reply)
         if not ok:  # fabricated/unresolved citation
-            return final_actions, _refuse_and_redirect(messages), "blocked_citation"
+            return final_actions, _refuse_and_redirect(messages, locale), "blocked_citation"
 
         if not JUDGE_ENABLED:
             return final_actions, reply, "ok"
@@ -1864,7 +1883,7 @@ class AstroAssistantService:
         except Exception:
             logger.exception("assistant judge unavailable; fail-closed soft")
             if heuristic_interpretation(reply):
-                return final_actions, _refuse_and_redirect(messages), "blocked_degraded"
+                return final_actions, _refuse_and_redirect(messages, locale), "blocked_degraded"
             return final_actions, reply, "degraded"
 
         if verdict == VERDICT_ALLOW:
@@ -1881,14 +1900,14 @@ class AstroAssistantService:
                 except Exception:
                     if not heuristic_interpretation(regen):
                         return final_actions, regen, "regenerated_degraded"
-        return final_actions, _refuse_and_redirect(messages), "blocked"
+        return final_actions, _refuse_and_redirect(messages, locale), "blocked"
 
     def chat(self, user_id: UUID, messages: List[Dict], locale: Optional[str] = None) -> Dict:
         """
         Run the function-calling loop for the active chart (user_id).
 
         ``messages`` is the prior conversation as [{role, content}, …].
-        ``locale`` is the astrologer's UI language (en/ru/uk) so the reply matches it.
+        ``locale`` is the astrologer's UI language (en/ru/uk/de) so the reply matches it.
         Returns {reply, tool_results, iterations, max_iterations_reached}.
         """
         if not is_openai_configured():
@@ -1982,6 +2001,7 @@ class AstroAssistantService:
                     convo=convo,
                     usage=usage,
                     tool_results=tool_results,
+                    locale=locale,
                 )
                 return {
                     "reply": reply,
@@ -2058,6 +2078,7 @@ class AstroAssistantService:
             convo=convo,
             usage=usage,
             tool_results=tool_results,
+            locale=locale,
         )
         return {
             "reply": reply,

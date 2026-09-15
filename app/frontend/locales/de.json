@@ -1,0 +1,3353 @@
+{
+  "app": {
+    "language": "Sprache"
+  },
+  "astro": {
+    "aspect": {
+      "Biquintile": "Biquintil",
+      "Conjunction": "Konjunktion",
+      "Novile": "Novil",
+      "Opposition": "Opposition",
+      "Quincunx": "Quinkunx",
+      "Quintile": "Quintil",
+      "Semisextile": "Halbsextil",
+      "Semisquare": "Halbquadrat",
+      "Septile": "Septil",
+      "Sesquiquadrate": "Anderthalbquadrat",
+      "Sextile": "Sextil",
+      "Square": "Quadrat",
+      "Trine": "Trigon",
+      "Vigintile": "Vigintil",
+      "Semi_Nonagon": "Halbnonagon",
+      "Decile": "Dezil",
+      "Nonagon": "Nonagon",
+      "Binonagon": "Binonagon",
+      "Sentagon": "Sentagon",
+      "Tridecile": "Tridezil"
+    },
+    "configuration": {
+      "Bisextile": "Bisextil",
+      "Chariot": "Wagen (geschlossener Briefumschlag)",
+      "Grand_Cross": "Großes Kreuz",
+      "Grand_Trine": "Großes Trigon",
+      "Kite": "Drachenfigur",
+      "Mystic_Rectangle": "Mystisches Rechteck",
+      "Open_Envelope": "Offener Briefumschlag",
+      "Sail": "Segel",
+      "Skewed_Sail": "Schräges Segel",
+      "Star_of_David": "Davidstern",
+      "T_Square": "T-Quadrat",
+      "Yod": "Yod"
+    },
+    "dignity": {
+      "detriment": "Exil",
+      "domicile": "Domizil",
+      "exaltation": "Erhöhung",
+      "fall": "Fall"
+    },
+    "element": {
+      "Air": "Luft",
+      "Earth": "Erde",
+      "Fire": "Feuer",
+      "Water": "Wasser"
+    },
+    "feature": {
+      "short": {
+        "almuten": "Almuten",
+        "anareta": "Anareta",
+        "aspect_king": "Aspektkönig",
+        "cazimi": "Cazimi",
+        "charioteer": "Wagenlenker",
+        "combust": "verbrannt",
+        "destructive": "destruktiv",
+        "doryphoros": "Doryphoros",
+        "elevated": "eleviert",
+        "handle": "Henkel",
+        "intercepted": "eingeschlossen",
+        "jubilee": "Jubiläumsgrad",
+        "middle": "Mittelgrad",
+        "peregrine": "peregrin",
+        "royal": "königlich",
+        "under_rays": "unter Sonnenstrahlen",
+        "oriental": "oriental.",
+        "occidental": "okzidental.",
+        "out_of_bounds": "OOB"
+      }
+    },
+    "houseSystem": {
+      "campanus": "Campanus",
+      "equal": "Äqualhäuser",
+      "koch": "Koch",
+      "placidus": "Placidus",
+      "regiomontanus": "Regiomontanus",
+      "wholeSign": "Ganzzeichenhäuser"
+    },
+    "mode": {
+      "short": {
+        "Cardinal": "Kardinal",
+        "Fixed": "Fix",
+        "Mutable": "Veränderlich"
+      }
+    },
+    "pattern": {
+      "Bowl": "Schale",
+      "Bucket": "Eimer",
+      "Bundle": "Bündel",
+      "Locomotive": "Lokomotive",
+      "Seesaw": "Wippe",
+      "Splash": "Streuform",
+      "Splay": "Spreizform"
+    },
+    "planet": {
+      "AntiVertex": "Antivertex",
+      "ASC": "Aszendent",
+      "BlackMoon": "Schwarzer Mond",
+      "Chiron": "Chiron",
+      "DSC": "Deszendent",
+      "EastPoint": "Ostpunkt",
+      "IC": "Imum Coeli",
+      "Jupiter": "Jupiter",
+      "MC": "Medium Coeli",
+      "Mars": "Mars",
+      "Mercury": "Merkur",
+      "Moon": "Mond",
+      "Neptune": "Neptun",
+      "PartOfFortune": "Glückspunkt",
+      "Pluto": "Pluto",
+      "Proserpina": "Proserpina",
+      "Saturn": "Saturn",
+      "SouthNode": "Absteigender Mondknoten",
+      "Sun": "Sonne",
+      "TrueNode": "Aufsteigender Mondknoten",
+      "Uranus": "Uranus",
+      "Venus": "Venus",
+      "Vertex": "Vertex",
+      "WhiteMoon": "Weißer Mond",
+      "Fortune": "Glückspunkt",
+      "TrueNorthNode": "Aufsteigender Mondknoten",
+      "TrueSouthNode": "Absteigender Mondknoten"
+    },
+    "polarity": {
+      "Feminine": "Weiblich",
+      "Masculine": "Männlich"
+    },
+    "sign": {
+      "Aquarius": "Wassermann",
+      "Aries": "Widder",
+      "Cancer": "Krebs",
+      "Capricorn": "Steinbock",
+      "Gemini": "Zwillinge",
+      "Leo": "Löwe",
+      "Libra": "Waage",
+      "Pisces": "Fische",
+      "Sagittarius": "Schütze",
+      "Scorpio": "Skorpion",
+      "Taurus": "Stier",
+      "Virgo": "Jungfrau"
+    }
+  },
+  "common": {
+    "all": "Alle",
+    "back": "Zurück",
+    "calculate": "Berechnen",
+    "cancel": "Abbrechen",
+    "chart": "Horoskop",
+    "close": "Schließen",
+    "date": "Datum",
+    "day": "Tag",
+    "displaySettings": "Anzeigeeinstellungen",
+    "error": "Fehler",
+    "errorWithMessage": "Fehler: {message}",
+    "footer": "Astrologische Berechnungen auf Grundlage der Swiss Ephemeris und moderner astronomischer Standards",
+    "from": "Von",
+    "house": "Haus",
+    "loading": "Wird geladen …",
+    "location": "Ort",
+    "longitude": "Länge",
+    "major": "Hauptaspekte",
+    "majorShort": "H",
+    "method": {
+      "direction": "Direktionen",
+      "directionNaibod": "Direktionen (Naibod)",
+      "directionSolarArc": "Sonnenbogendirektionen",
+      "directionSymbolic": "Zodiakale Direktionen",
+      "directionZodiacal": "Zodiakale Direktionen",
+      "progression": "Progressionen",
+      "solar": "Solarhoroskop",
+      "transit": "Transite"
+    },
+    "minimize": "Minimieren",
+    "next": "Weiter",
+    "minor": "Nebenaspekte",
+    "minorShort": "N",
+    "previous": "Zurück",
+    "month": {
+      "long": {
+        "april": "April",
+        "august": "August",
+        "december": "Dezember",
+        "february": "Februar",
+        "january": "Januar",
+        "july": "Juli",
+        "june": "Juni",
+        "march": "März",
+        "may": "Mai",
+        "november": "November",
+        "october": "Oktober",
+        "september": "September"
+      }
+    },
+    "notAvailable": "Nicht verfügbar",
+    "openChat": "Chat öffnen",
+    "orb": "Orbis",
+    "pause": "Pause",
+    "planet": "Planet",
+    "position": "Position",
+    "reset": "Zurücksetzen",
+    "resetView": "Ansicht zurücksetzen",
+    "retry": "Erneut versuchen",
+    "settings": "Einstellungen",
+    "to": "Bis",
+    "today": "Heute",
+    "week": "Woche",
+    "year": "Jahr",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "direction": {
+      "northShort": "N",
+      "southShort": "S",
+      "eastShort": "O",
+      "westShort": "W"
+    },
+    "brandName": "Steliara",
+    "monthLabel": "Monat",
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "time": "Uhrzeit",
+    "undo": "Rückgängig"
+  },
+  "i18n": {
+    "loading": "Wird geladen …",
+    "sample_only_en": "Englischer Ersatztext",
+    "sample_with_param": "Guten Tag, {name}!"
+  },
+  "locale": {
+    "name": {
+      "en": "Englisch",
+      "ru": "Russisch",
+      "uk": "Ukrainisch",
+      "de": "Deutsch"
+    }
+  },
+  "page": {
+    "onboarding": {
+      "welcome": {
+        "kicker": "Schritt 1 von 3",
+        "title": "Beginnen Sie mit einer Person",
+        "text": "Legen Sie ein Profil mit Horoskop an. So bleiben Prognosen, Notizen und bisherige Beratungen an einem Ort.",
+        "primary": "Erstes Klientenprofil anlegen",
+        "skip": "Später einrichten"
+      },
+      "dock": {
+        "title": "Erste Schritte",
+        "collapse": "Einführung einklappen",
+        "expand": "Einführung ausklappen",
+        "dismiss": "Ausblenden",
+        "steps": {
+          "profile_chart": "Profil und Horoskop anlegen",
+          "forecast_ready": "Berechnete Prognose ansehen",
+          "assistant_answer": "Eine Antwort vom Assistenten erhalten"
+        }
+      },
+      "forecast": {
+        "title": "Ihre Prognose ist schon da",
+        "text": "Die heutigen Transite sind bereits für das Geburtshoroskop berechnet und eingeblendet. Datum und Methode können Sie jederzeit ändern."
+      },
+      "multi": {
+        "title": "Zwischen Horoskopansichten wechseln",
+        "text": "Das Geburtshoroskop ist als Einzelhoroskop geöffnet. Im Doppelhoroskop werden die Prognoseebenen darübergelegt.",
+        "open": "Doppelhoroskop öffnen"
+      },
+      "layers": {
+        "title": "Fügen Sie die gewünschten Ebenen hinzu",
+        "text": "Aktivieren Sie Transite, Progressionen, Direktionen, Solare und Synastrie – einzeln oder gemeinsam.",
+        "continue": "Weiter"
+      },
+      "multipleLayers": {
+        "title": "Jede Ebene arbeitet unabhängig",
+        "text": "Wählen Sie eine Ebene aus. Horoskop, Tabellen, Aspekte und Assistent zeigen dann deren Daten. Mehrere Ebenen können gleichzeitig aktiv bleiben."
+      },
+      "micro": {
+        "gotIt": "Verstanden",
+        "date": {
+          "title": "Betrachten Sie jeden beliebigen Zeitpunkt",
+          "text": "Eine Datumsänderung berechnet nur die aktive Ebene neu. Die übrigen Ebenen bleiben unverändert. So können Sie Zeiträume direkt vergleichen."
+        }
+      },
+      "assistant": {
+        "title": "Stellen Sie Fragen zu den Horoskopdaten",
+        "text": "Der Assistent findet Aspekte und exakte Zeitpunkte. Die Deutung bleibt bei Ihnen.",
+        "open": "Assistenten öffnen",
+        "prompt": "Welche Aspekte sind gerade aktiv, und wann werden sie exakt?",
+        "contextual": {
+          "transitNow": "Welche Transite haben gerade den kleinsten Orbis?",
+          "exactDates": "Wann werden die aktiven Aspekte exakt?",
+          "compareLayers": "Vergleichen Sie die aktiven Prognoseebenen und heben Sie die wichtigsten Ergebnisse hervor.",
+          "progressionNow": "Welche Progressionen sind derzeit besonders bedeutsam?",
+          "progressionTransit": "Wie aktivieren die aktuellen Transite die Progressionen?",
+          "directionNow": "Welche Direktionen sind derzeit besonders bedeutsam?",
+          "solarThemes": "Welche Themen stehen in diesem Solarjahr im Vordergrund?",
+          "solarTiming": "Wann werden die Themen des Solars durch Transite aktiviert?",
+          "synastryTight": "Welche Aspekte zwischen den beiden Horoskopen haben den kleinsten Orbis?",
+          "synastryDynamics": "Welche Beziehungsdynamik ist in diesem Horoskop am stärksten ausgeprägt?"
+        }
+      },
+      "complete": {
+        "title": "Alles ist bereit",
+        "text": "Das Horoskop ist im Profil gespeichert, die Prognose berechnet. Der Assistent arbeitet bereits mit diesen Daten.",
+        "continue": "Mit der Deutung fortfahren"
+      },
+      "settings": {
+        "text": "Zeigen Sie die kurze Einführung in die wichtigsten Arbeitsschritte erneut an.",
+        "reset": "Einführung wiederholen",
+        "resetDone": "Einführung wieder aktiviert"
+      }
+    },
+    "forecastNew": {
+      "resultViews": {
+        "wheel": "Horoskop",
+        "layers": "Ebenen",
+        "aspects": "Aspekte",
+        "layersTitle": "Aktive Ebenen",
+        "layersSubtitle": "Übersicht der für dieses Horoskop berechneten Methoden.",
+        "aspectsTitle": "Aspekte der aktiven Ebenen",
+        "aspectsSubtitle": "Gemeinsame Aspektliste aller aktivierten Ebenen.",
+        "emptyLayers": "Keine berechneten Ebenen aktiv.",
+        "emptyAspects": "Mit den aktuellen Filtern wurden keine Aspekte in den aktiven Ebenen gefunden.",
+        "layer": "Ebene",
+        "source": "Quelle",
+        "bodies": "Planeten und Häuser",
+        "aspectsCount": "Aspekte",
+        "aspect": "Aspekt",
+        "phase": "Phase",
+        "orb": "Orbis",
+        "manualPartner": "Partnerprofil (manuell)"
+      },
+      "aspectDynamics": {
+        "loading": "Diagramm wird geladen …",
+        "toolbar": "Diagrammsteuerung",
+        "zoomXIn": "X-Achse vergrößern",
+        "zoomXOut": "X-Achse verkleinern",
+        "zoomYIn": "Y-Achse vergrößern",
+        "zoomYOut": "Y-Achse verkleinern",
+        "resetZoom": "Zoom zurücksetzen",
+        "legend": {
+          "orb": "Orbis mit Vorzeichen",
+          "selected": "Gewähltes Datum",
+          "exact": "Exakter Aspekt"
+        },
+        "closest": "Größte Annäherung",
+        "pass": "Durchgang {number}",
+        "noExactPass": "Kein exakter Durchgang",
+        "summary": {
+          "exact": "Exakt",
+          "stations": "Stationen"
+        },
+        "empty": {
+          "notInOrb": "Zum gewählten Zeitpunkt liegt der Aspekt außerhalb des Orbis.",
+          "unknownNatal": "Das Radixobjekt ist nicht verfügbar.",
+          "unknownAspect": "Dieser Aspekttyp ist nicht verfügbar.",
+          "unsupportedTransit": "Dieses Element des Transithoroskops wird nicht unterstützt.",
+          "noVisibleContacts": "Keine Kontakte im angezeigten Zeitraum.",
+          "noData": "Keine Daten zum Aspektverlauf vorhanden."
+        },
+        "errors": {
+          "fetchUnavailable": "Keine Netzwerkverbindung.",
+          "loadFailed": "Der Aspektverlauf konnte nicht geladen werden.",
+          "missingContext": "Die Angaben zum Aspekt sind unvollständig."
+        },
+        "motion": {
+          "direct": "direktläufig",
+          "retrograde": "rückläufig"
+        },
+        "station": {
+          "direct": "direktläufig",
+          "retrograde": "rückläufig"
+        }
+      },
+      "pageTitle": "Prognose",
+      "unknownClient": "",
+      "loader": "Prognose wird geladen …",
+      "layersAria": "Prognoseebenen",
+      "backToClients": "Zurück zur Praxis",
+      "natalPanelTitle": "Radix",
+      "solarCalculating": "Solar wird berechnet …",
+      "mobilePanels": {
+        "primary": "Basis",
+        "comparison": "Vergleich",
+        "multiChart": "Horoskop",
+        "multiLayers": "Ebenen",
+        "singleData": "Daten",
+        "singleAnalysis": "Analyse"
+      },
+      "leftLayerAria": "Methode des Basishoroskops",
+      "birthDateTimeLabel": "Geburtsdatum / Geburtszeit",
+      "dateTimeLabel": "Datum / Uhrzeit",
+      "natalStepperAria": "Geburtsdatum ändern",
+      "transitStepperAria": "Transitzeitpunkt ändern",
+      "locationPlaceholder": "Geburtsort",
+      "prognosticLocationPlaceholder": "Ort",
+      "timezonePlaceholder": "Zeitzone",
+      "tabsOverflowAria": "Weitere Ansichten",
+      "tabs": {
+        "grid": "Aspektmatrix",
+        "configs": "Konfigurationen",
+        "balances": "Bilanzen",
+        "prognosticShort": "Prognose",
+        "stelliums": "Stellien",
+        "jones": "Jones-Figuren",
+        "dispositors": "Dispositorenkette",
+        "lunar": "Mond",
+        "voidmoon": "Mondpause",
+        "eclipses": "Finsternisse",
+        "hours": "Stunden",
+        "profections": "Profektionen",
+        "extraangles": "Weitere Achsenpunkte",
+        "antiscia": "Antiszien",
+        "asteroids": "Asteroiden",
+        "dominants": "Dominanten",
+        "fixstars": "Fixsterne"
+      },
+      "view": {
+        "single": "Einzelhoroskop",
+        "multi": "Doppelhoroskop"
+      },
+      "settings": {
+        "cuspCircles": "Kreise der Häuserspitzen",
+        "resetLocalSettings": "Ansichtseinstellungen zurücksetzen",
+        "resetConfirm": "Horoskopeinstellungen auf die Standardwerte zurücksetzen?"
+      },
+      "direction": {
+        "popoverAria": "Direktionseinstellungen",
+        "typeLabel": "Direktionsart",
+        "zodiacal": "Zodiakal",
+        "solarArc": "Sonnenbogen",
+        "naibod": "Naibod"
+      },
+      "solar": {
+        "popoverAria": "Solareinstellungen",
+        "yearLabel": "Solarjahr",
+        "placeLabel": "Solarort",
+        "placePlaceholder": "Solarort …",
+        "chartTitlePrefix": "Solar",
+        "saved": "Solar als Horoskop gespeichert",
+        "notReady": "Berechnen Sie zuerst das Solar."
+      },
+      "synastry": {
+        "popoverAria": "Synastriepartner",
+        "sourceAria": "Quelle des Partnerhoroskops",
+        "fromDb": "Aus der Datenbank",
+        "manual": "Manuell",
+        "partnerOption": "— Partnerprofil —",
+        "namePlaceholder": "Name der Partnerperson",
+        "dateAria": "Geburtsdatum der Partnerperson",
+        "timeAria": "Geburtszeit der Partnerperson",
+        "timezoneAria": "Zeitzone der Partnerperson",
+        "timezoneOption": "Zeitzone",
+        "locationPlaceholder": "Geburtsort",
+        "locationAria": "Geburtsort der Partnerperson",
+        "apply": "Übernehmen",
+        "enterPrompt": "Geben Sie die Daten des Partnerhoroskops ein.",
+        "headerManualTitle": "Daten des Partnerhoroskops",
+        "headerManualHint": "Geben Sie hier die Daten des zweiten Horoskops ein oder wählen Sie ein gespeichertes Horoskop.",
+        "errorDateTime": "Geben Sie Geburtsdatum und Geburtszeit der Partnerperson ein.",
+        "errorTimezone": "Wählen Sie die Zeitzone der Partnerperson.",
+        "errorPlace": "Geben Sie den Geburtsort der Partnerperson ein.",
+        "saved": "Partnerhoroskop der Synastrie gespeichert",
+        "notReady": "Berechnen Sie zuerst die Synastrie."
+      },
+      "matrix": {
+        "displayShort": "S",
+        "aspectingShort": "A",
+        "natalCusps": "Radix-Häuserspitzen",
+        "cuspAria": "Spitze von Haus {house}: Aspekte berücksichtigen",
+        "alwaysDisplayed": "Immer sichtbar"
+      },
+      "panelEditor": {
+        "toggle": "Bereiche einrichten",
+        "title": "Bereiche anordnen",
+        "addTab": "Reiter",
+        "addBlock": "Block hinzufügen",
+        "switchPanel": "Bereich wechseln",
+        "rightPanel": "Rechter Bereich",
+        "reset": "Auf Standard zurücksetzen",
+        "resetConfirm": "Anordnung der Bereiche auf den Standard zurücksetzen?",
+        "undo": "Rückgängig",
+        "tabRemoved": "Reiter entfernt",
+        "saveFailed": "Die Anordnung konnte nicht gespeichert werden.",
+        "newTabTitle": "Neuer Reiter",
+        "presets": "Anordnungen",
+        "presetsEmpty": "Noch keine Anordnungen gespeichert",
+        "presetSave": "+ Aktuelle Anordnung speichern",
+        "presetNamePrompt": "Name der Anordnung:",
+        "presetLoad": "Laden",
+        "presetLoaded": "Geladen",
+        "presetDeleted": "gelöscht",
+        "dragHint": "Ziehen",
+        "corners": "Widgets neben dem Horoskop",
+        "cornerTl": "Oben links",
+        "cornerTr": "Oben rechts",
+        "cornerBl": "Unten links",
+        "cornerBr": "Unten rechts",
+        "cornersCopy": "Platzieren Sie bis zu vier kompakte Anzeigen neben dem Horoskop.",
+        "addWidget": "Widget hinzufügen",
+        "replaceWidget": "Widget ersetzen",
+        "clearWidgets": "Alle Widgets entfernen",
+        "removeWidget": "Widget entfernen",
+        "widgetsCleared": "Widgets entfernt",
+        "widgetRecommended": "Empfohlene Widgets",
+        "widgetCompactTables": "Kompakte Tabellen",
+        "widgetOther": "Möglicherweise schwer lesbar",
+        "addWidgetTitle": "Widget neben dem Horoskop hinzufügen?",
+        "widgetMoveCopy": "Der Block wird aus „{location}“ verschoben.",
+        "widgetMovedFrom": "Widget hinzugefügt, Block aus „{location}“ verschoben",
+        "widgetReturnedTo": "Widget entfernt, Block wieder in „{location}“",
+        "widgetAdded": "Widget hinzugefügt",
+        "widgetReplaceCopy": "Das Widget an dieser Position wird ersetzt.",
+        "emptyTab": "Leer",
+        "widgetDenseWarning": "In der kompakten Darstellung ist dieser Block möglicherweise schwer lesbar.",
+        "replace": "Ersetzen",
+        "instructions": "Ziehen Sie Reiter und Blöcke in die gewünschten Bereiche. Änderungen werden automatisch gespeichert.",
+        "primaryChart": "Basishoroskop",
+        "comparisonChart": "Vergleichshoroskop",
+        "chartData": "Horoskopdaten",
+        "comparisonMode": "Vergleichsmodus",
+        "done": "Fertig",
+        "builtinWorkspaces": "Vorbereitete Arbeitsbereiche",
+        "myWorkspaces": "Meine Arbeitsbereiche",
+        "saveAsNew": "Als neu speichern",
+        "saveWorkspaceCopy": "Geben Sie diesem Arbeitsbereich einen Namen, damit Sie ihn schnell wiederfinden.",
+        "workspaceName": "Name des Arbeitsbereichs",
+        "save": "Speichern",
+        "saving": "Wird gespeichert …",
+        "saved": "Alle Änderungen gespeichert",
+        "retry": "Erneut versuchen",
+        "move": "Verschieben",
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "moveBlockTitle": "Block verschieben?",
+        "moveBlockCopy": "Dieser Block befindet sich bereits in „{location}“. Hierher verschieben?",
+        "blockMoved": "Block verschoben",
+        "workspaceApplied": "Arbeitsbereich übernommen",
+        "workspaceReset": "Arbeitsbereich zurückgesetzt",
+        "deleteWorkspaceTitle": "Arbeitsbereich löschen?",
+        "groups": {
+          "chart": "Horoskop",
+          "positions": "Positionen",
+          "aspects": "Aspekte",
+          "analysis": "Analyse",
+          "now": "Aktuell",
+          "advanced": "Erweitert"
+        },
+        "workspaces": {
+          "natalConsultation": "Radixberatung",
+          "transits": "Transite",
+          "progressionsDirections": "Progressionen und Direktionen",
+          "natalForecastComparison": "Radix und Prognose vergleichen",
+          "compact": "Kompaktansicht"
+        }
+      },
+      "lunar": {
+        "phase": {
+          "new": "Neumond",
+          "waxing_crescent": "Zunehmende Sichel",
+          "first_quarter": "Erstes Viertel",
+          "waxing_gibbous": "Zunehmender Dreiviertelmond",
+          "full": "Vollmond",
+          "waning_gibbous": "Abnehmender Dreiviertelmond",
+          "last_quarter": "Letztes Viertel",
+          "waning_crescent": "Abnehmende Sichel"
+        },
+        "vocActive": "Mondpause",
+        "vocInactive": "Keine Mondpause",
+        "untilEgress": "bis zum Zeichenwechsel",
+        "nextVoid": "nächste Mondpause",
+        "nextAspect": "nächster Aspekt",
+        "new_moon": "Neumond",
+        "full_moon": "Vollmond",
+        "eclipse": {
+          "solar": "Sonnenfinsternis",
+          "lunar": "Mondfinsternis"
+        }
+      },
+      "voidmoon": {
+        "title": "Mondpause",
+        "active": "Jetzt",
+        "upcoming": "Nächster Zeitraum",
+        "from": "von",
+        "to": "bis",
+        "afterAspect": "nach dem Aspekt",
+        "empty": "Kein Zeitraum gefunden"
+      },
+      "eclipses": {
+        "empty": "Keine Finsternisse im Monat vor oder nach dem gewählten Datum",
+        "maximum": "Maximum",
+        "magnitude": "Größe",
+        "visible": "Am Horoskoport sichtbar",
+        "notVisible": "Am Horoskoport nicht sichtbar",
+        "locationUnavailable": "Koordinaten des Horoskoports nicht verfügbar",
+        "types": {
+          "solar": "Sonnenfinsternis",
+          "lunar": "Mondfinsternis"
+        },
+        "classes": {
+          "total": "total",
+          "annular": "ringförmig",
+          "hybrid": "hybrid",
+          "partial": "partiell",
+          "penumbral": "Halbschatten"
+        }
+      },
+      "hours": {
+        "dayRuler": "Tagesherrscher",
+        "lunarDay": "Mondtag",
+        "day": "Tag",
+        "night": "Nacht",
+        "unavailable": "Nicht verfügbar (Polartag oder Polarnacht)",
+        "noLocation": "Keine Koordinaten für das Horoskop vorhanden"
+      },
+      "zodiac": {
+        "sidereal": "Siderisch",
+        "tropical": "Tropisch",
+        "label": "Tierkreis",
+        "ayanamsha": {
+          "lahiri": "Lahiri",
+          "fagan_bradley": "Fagan-Bradley",
+          "krishnamurti": "Krishnamurti",
+          "raman": "Raman",
+          "de_luce": "De Luce"
+        }
+      },
+      "profections": {
+        "age": "Alter",
+        "annual": "Jährlich",
+        "monthly": "Monatlich",
+        "house": "Haus {house}",
+        "empty": "Keine Profektionsdaten vorhanden",
+        "noSavedChart": "Speichern Sie das Horoskop, um die Profektionen anzuzeigen."
+      },
+      "composite": {
+        "calculate": "Komposit",
+        "methodLabel": "Berechnungsmethode",
+        "relationshipModeAria": "Methode der Beziehungsanalyse",
+        "midpoint": "Halbsummen",
+        "davison": "Davison",
+        "saved": "Komposit gespeichert",
+        "unavailable": "Für ein Kombin nach Davison werden vollständige Geburtsdaten benötigt.",
+        "noPartner": "Wählen Sie zuerst ein Partnerprofil.",
+        "planets": "Planeten",
+        "angles": "Achsenpunkte",
+        "houses": "Häuser",
+        "aspects": "Aspekte"
+      },
+      "extraangles": {
+        "empty": "Keine Daten zu weiteren Achsenpunkten vorhanden"
+      },
+      "antiscia": {
+        "empty": "Keine Daten vorhanden",
+        "antiscion": "Antiszie",
+        "contra_antiscion": "Gegenantiszie",
+        "contacts": "Kontakte"
+      },
+      "asteroids": {
+        "empty": "Keine Daten vorhanden",
+        "house": "Haus {house}"
+      },
+      "dominants": {
+        "empty": "Keine Daten vorhanden",
+        "planets": "Planeten",
+        "signs": "Zeichen",
+        "houses": "Häuser",
+        "elements": "Elemente",
+        "modes": "Modalitäten",
+        "element": {
+          "fire": "Feuer",
+          "earth": "Erde",
+          "air": "Luft",
+          "water": "Wasser"
+        },
+        "mode": {
+          "cardinal": "Kardinal",
+          "fixed": "Fix",
+          "mutable": "Veränderlich"
+        }
+      },
+      "fixstars": {
+        "empty": "Keine Konjunktionen",
+        "conjunctions": "Konjunktionen"
+      },
+      "swap": {
+        "label": "Horoskope tauschen",
+        "hint": "Tauschen: {natal} ↔ {chart}",
+        "active": "Radix wieder als Basishoroskop verwenden (derzeit: {chart})",
+        "unavailable": "Fügen Sie ein Solar- oder Partnerhoroskop hinzu, um die Horoskope zu tauschen.",
+        "chip": "Basishoroskop: {chart}",
+        "baseTitle": "{chart} (Basis)"
+      },
+      "emptyLayer": {
+        "title": "Keine Ebene ausgewählt",
+        "body": "Fügen Sie eine Ebene für die Berechnung hinzu"
+      },
+      "timeStepper": {
+        "date": "Datum",
+        "time": "Uhrzeit",
+        "birthDate": "Geburtsdatum",
+        "birthTime": "Geburtszeit",
+        "resetCurrent": "Auf das aktuelle Datum und die aktuelle Uhrzeit zurücksetzen",
+        "resetBirth": "Auf Geburtsdatum und Geburtszeit zurücksetzen",
+        "customTooltip": "Eigener Schritt: {step}",
+        "customActions": "Um einen eigenen Schritt verschieben",
+        "back": "Einen eigenen Schritt zurück",
+        "forward": "Einen eigenen Schritt vor",
+        "step": "Schritt",
+        "unit": "Einheit",
+        "units": {
+          "second": "Sekunden",
+          "minute": "Minuten",
+          "hour": "Stunden",
+          "day": "Tage",
+          "week": "Wochen",
+          "month": "Monate",
+          "year": "Jahre"
+        },
+        "segments": {
+          "yearThousands": {
+            "title": "Jahrtausende"
+          },
+          "yearHundreds": {
+            "title": "Jahrhunderte"
+          },
+          "yearTens": {
+            "title": "Jahrzehnte"
+          },
+          "yearOnes": {
+            "title": "Jahre"
+          },
+          "monthTens": {
+            "title": "Zehn Monate"
+          },
+          "monthOnes": {
+            "title": "Monate"
+          },
+          "dayTens": {
+            "title": "Zehn Tage"
+          },
+          "dayOnes": {
+            "title": "Tage"
+          },
+          "hour": {
+            "title": "Stunden"
+          },
+          "tenMinute": {
+            "title": "Zehn Minuten"
+          },
+          "minute": {
+            "title": "Minuten"
+          },
+          "tenSecond": {
+            "title": "Zehn Sekunden"
+          },
+          "second": {
+            "title": "Sekunden"
+          }
+        },
+        "unitsOne": {
+          "second": "Sekunde",
+          "minute": "Minute",
+          "hour": "Stunde",
+          "day": "Tag",
+          "week": "Woche",
+          "month": "Monat",
+          "year": "Jahr"
+        }
+      }
+    },
+    "plan": {
+      "names": {
+        "trial": "Testphase",
+        "solo": "Einsteiger",
+        "standard": "Standard",
+        "pro": "Pro",
+        "expired": "Testphase beendet"
+      },
+      "descriptions": {
+        "trial": "14 Tage voller Pro-Zugang: unbegrenzt viele Horoskope, verknüpfte Personen, Synastrie, Assistent, Gespräche, Aufnahmen und Transkription.",
+        "solo": "Zum Lernen und für die eigene Praxis: unbegrenzt viele gespeicherte Horoskope, Profile, verknüpfte Personen und Synastrie. Gespräche, Beratungen, Assistent, Sprachsteuerung und Gesprächsstatistiken sind nicht enthalten.",
+        "standard": "Unbegrenzt viele gespeicherte Horoskope und alle Funktionen für die Beratungspraxis – ohne Gespräche, Aufnahmen und Sprachtranskription.",
+        "pro": "Voller Zugang zum Arbeitsbereich, einschließlich Gesprächen, Aufnahmen, Transkription und Gesprächsauswertung."
+      },
+      "usage": {
+        "savedChartsLimited": "{current}/{max} Horoskope",
+        "savedChartsUnlimited": "Horoskope: {current}"
+      },
+      "statusWithLimitedCharts": "{plan} · {current}/{max} Horoskope",
+      "statusWithUnlimitedCharts": "{plan} · Horoskope: {current}",
+      "modal": {
+        "kicker": "Tarif erweitern",
+        "title": "Wählen Sie Ihren Tarif",
+        "copy": {
+          "default": "Wählen Sie einen Tarif, um diesen Arbeitsbereich freizuschalten.",
+          "limit": "Sie haben die maximale Anzahl gespeicherter Horoskope in Ihrem Tarif erreicht. Wählen Sie einen Tarif mit mehr Platz, um fortzufahren.",
+          "calls": "Gespräche, Aufnahmen und Transkription sind im Pro-Tarif enthalten.",
+          "consultations": "Beratungen und der Beratungsverlauf sind in den Tarifen für die Beratungspraxis enthalten.",
+          "assistant": "Der Horoskopassistent ist in den Tarifen für die Beratungspraxis enthalten.",
+          "transcription": "Sprachsteuerung und Transkription sind im Pro-Tarif enthalten.",
+          "trial_ended": "Ihre kostenlose Testphase ist beendet. Wählen Sie einen Tarif, um weiterhin Horoskope und Profile anzulegen sowie Gespräche und den Chat zu nutzen. Ihre gespeicherten Daten können Sie weiterhin ansehen."
+        },
+        "choosePlan": "Zu {plan} wechseln",
+        "activating": "Wird aktiviert …",
+        "openingCheckout": "Zahlungsseite wird geöffnet …",
+        "errors": {
+          "updateFailed": "Der Tarif kann derzeit nicht geändert werden.",
+          "checkoutFailed": "Die Zahlungsseite kann derzeit nicht geöffnet werden.",
+          "portalFailed": "Die Aboverwaltung kann derzeit nicht geöffnet werden."
+        }
+      },
+      "limits": {
+        "savedChartsReached": "Sie haben die maximale Anzahl gespeicherter Horoskope in Ihrem Tarif erreicht."
+      },
+      "upgrade": {
+        "callsLocked": "Gespräche und Aufnahmen sind im Pro-Tarif enthalten.",
+        "consultationsLocked": "Der Beratungsverlauf ist in Ihrem aktuellen Tarif nicht enthalten."
+      }
+    },
+    "accountSettings": {
+      "actions": {
+        "reload": "Neu laden",
+        "restore": "Einstellungen auf Standard zurücksetzen",
+        "save": "Allgemeine Einstellungen speichern",
+        "saveShort": "Speichern",
+        "discard": "Verwerfen"
+      },
+      "tabs": {
+        "ariaLabel": "Einstellungsbereiche",
+        "chart": "Horoskopeinstellungen",
+        "formats": "Formate",
+        "billing": "Abrechnung und Tarif",
+        "account": "Konto"
+      },
+      "groups": {
+        "display": "Anzeige"
+      },
+      "savebar": {
+        "unsaved": "Ungespeicherte Änderungen",
+        "saved": "✓ Gespeichert"
+      },
+      "badge": "Einmal festlegen, überall verwenden",
+      "confirmReset": {
+        "confirm": "Auf Standard zurücksetzen",
+        "copy": "Alle allgemeinen Einstellungen werden auf die Standardwerte zurückgesetzt. Die bisherigen Werte lassen sich danach nicht wiederherstellen.",
+        "title": "Einstellungen auf Standard zurücksetzen?"
+      },
+      "plan": {
+        "portal": "Abo verwalten",
+        "billingFree": "Kostenloser Tarif ohne aktives kostenpflichtiges Abo.",
+        "billingRenewsAt": "Ihr Abo ist aktiv. Nächste Verlängerung: {date}.",
+        "billingCancelsAt": "Ihr Abo endet zum Ablauf des Abrechnungszeitraums am {date}.",
+        "billingStatus": {
+          "active": "Ihr Abo ist aktiv.",
+          "trialing": "Ihre Abo-Testphase ist aktiv.",
+          "past_due": "Eine Zahlung ist überfällig. Ihr Zugang bleibt bis zum Ende des bezahlten Zeitraums bestehen.",
+          "canceled": "Ihr Abo wurde gekündigt.",
+          "expired": "Ihr Abo ist abgelaufen.",
+          "unknown": "Der Abo-Status wird geprüft."
+        }
+      },
+      "creation": {
+        "copy": "Wählen Sie das Häusersystem für neue Horoskope. Sie können es in einzelnen Ansichten bei Bedarf ändern.",
+        "dateFormat": "Datumsformat",
+        "dateFormatCopy": "Gilt für Datumsangaben in der gesamten Oberfläche.",
+        "dateFormatOptions": {
+          "ddmmyyyy": "TT.MM.JJJJ",
+          "mmddyyyy": "MM/TT/JJJJ",
+          "yyyymmdd": "JJJJ-MM-TT",
+          "locale": "An Oberflächensprache anpassen"
+        },
+        "degreeFormat": "Gradangaben",
+        "degreeFormatCopy": "Gilt für Planeten- und Hauspositionen in der gesamten Oberfläche.",
+        "degreeFormatOptions": {
+          "degreesMinutes": "Grad und Minuten",
+          "degreesMinutesSeconds": "Grad, Minuten und Sekunden",
+          "degreesOnly": "Nur Grad"
+        },
+        "houseSystem": "Standard-Häusersystem",
+        "timezoneLabelFormat": "Anzeige der Zeitzone",
+        "timezoneLabelFormatCopy": "Ändert nur die Beschriftung: `UTC+3` oder `GMT+3`. Berechnungen und tatsächliche Zeitzonen-IDs bleiben unverändert.",
+        "timezoneLabelFormatOptions": {
+          "gmt": "GMT",
+          "utc": "UTC"
+        },
+        "title": "Vorgaben für neue Horoskope"
+      },
+      "fields": {
+        "aspectScope": "Aspektbereich",
+        "aspectTypes": "Aspekttypen",
+        "aspectTypesHint": "Wählen Sie die Aspekte, die in den jeweiligen Ansichten standardmäßig aktiv sein sollen.",
+        "extras": "Weitere Optionen",
+        "matrixCopy": "Hier legen Sie bei Bedarf fest, welche Planeten und Häuser standardmäßig sichtbar sind und für Aspekte berücksichtigt werden.",
+        "matrixTitle": "Matrix für Planeten und Häuser",
+        "orientation": "Ausrichtung"
+      },
+      "heading": "Allgemeine Einstellungen",
+      "limits": {
+        "copy": "`Orben`, `Bilanzen`, Aspekt- und Planetenfarben können hier noch nicht eingestellt werden. Diese Optionen folgen später."
+      },
+      "loading": "Allgemeine Einstellungen werden geladen …",
+      "matrix": {
+        "columns": {
+          "aspecting": "Aspekte",
+          "body": "Planeten und Häuser",
+          "display": "Anzeigen",
+          "bodyAria": "Planeten und Häuser"
+        }
+      },
+      "options": {
+        "orientationAries": "0° Widder",
+        "orientationAsc": "Aszendent",
+        "showApplyingSeparating": "Applikative und separative Aspekte anzeigen",
+        "showSpeed": "Planetengeschwindigkeiten anzeigen",
+        "showStationary": "Stationäre Planeten anzeigen",
+        "showAspectText": "Aspektnamen als Text anzeigen"
+      },
+      "orbs": {
+        "cuspsShort": "Spitze",
+        "cuspsTitle": "Häuserspitzen",
+        "actions": {
+          "applyNatal": "Radix-Orben übernehmen"
+        },
+        "copy": "Das Prognoseprofil gilt für Transite, Progressionen, Direktionen und Solare.",
+        "hints": {
+          "natal": "Radix-Orben werden für die Berechnung der Radixaspekte verwendet.",
+          "prognostic": "Prognose-Orben werden für Transite, Progressionen, Direktionen und Solare verwendet.",
+          "synastry": "Synastrie-Orben gelten für Aspekte zwischen zwei Horoskopen. Kleinere Orben verringern die Zahl der angezeigten Aspekte."
+        },
+        "matrix": {
+          "cornerTitle": "Orbismatrix nach Aspekt und Horoskopelement"
+        },
+        "pairStrategy": {
+          "average": "Mittelwert",
+          "hint": "Radix-Orben gelten für die Berechnung der Radixaspekte. Haben zwei Horoskopelemente unterschiedliche Orben, können Sie den größeren, kleineren oder mittleren Wert verwenden.",
+          "label": "Orbis bei unterschiedlichen Werten",
+          "larger": "Größerer Wert",
+          "smaller": "Kleinerer Wert"
+        },
+        "tabs": {
+          "ariaLabel": "Orbisprofile",
+          "natal": "Radix",
+          "prognostic": "Prognose",
+          "synastry": "Synastrie"
+        },
+        "viewMode": {
+          "ariaLabel": "Ansicht der Orbistabelle",
+          "compact": "Kompakt",
+          "default": "Standard"
+        },
+        "title": "Orbisprofile"
+      },
+      "dignities": {
+        "columns": {
+          "planet": "Planet"
+        },
+        "copy": "Bearbeiten Sie Domizil und Erhöhung. Exil und Fall werden daraus automatisch abgeleitet. Diese Zuordnung gilt anschließend für Ihr gesamtes Konto.",
+        "hint": "Bearbeiten Sie Domizil und Erhöhung. Exil und Fall ergeben sich automatisch aus den gegenüberliegenden Zeichen.",
+        "states": {
+          "empty": "Nicht zugeordnet",
+          "primary": "Hauptherrscher",
+          "secondary": "Mitherrscher"
+        },
+        "title": "Herrschertabelle"
+      },
+      "methodology": {
+        "balances": {
+          "columns": {
+            "planet": "Planet",
+            "point": "Punkt",
+            "weight": "Gewichtung"
+          },
+          "copy": "Gewichtungen für die Berechnung zusammengefasster Horoskopwerte nach Zeichen und Häusern",
+          "planetWeights": "Planeten",
+          "specialPoints": "Besondere Punkte",
+          "title": "Bilanzen"
+        }
+      },
+      "subtitle": "Legen Sie Ihre Vorgaben einmal fest und passen Sie einzelne Horoskope nur dort an, wo es nötig ist.",
+      "stationary": {
+        "copy": "Legen Sie fest, ab welcher Geschwindigkeit ein Planet als stationär gilt – im Verhältnis zu seiner mittleren Geschwindigkeit.",
+        "threshold": {
+          "hint": "Prozent der mittleren Geschwindigkeit. Bei einem Wert von 5 gilt ein Planet als stationär, wenn er sich mit höchstens 5 % seiner üblichen Geschwindigkeit bewegt.",
+          "label": "Schwellenwert für Stationarität (%)"
+        },
+        "title": "Stationarität"
+      },
+      "subtitleWithEmail": "Angemeldet als {email}. Legen Sie Ihre Vorgaben einmal fest und passen Sie einzelne Horoskope bei Bedarf an.",
+      "tables": {
+        "aspects": {
+          "copy": "Jede Zeile steht für einen Aspekttyp. Aktivieren Sie ihn in den Ansichten, in denen er standardmäßig berücksichtigt werden soll.",
+          "title": "Aspekte für alle Ansichten"
+        },
+        "bodies": {
+          "copy": "Legen Sie fest, welche Planeten und Häuser sichtbar sind und für Aspekte berücksichtigt werden.",
+          "title": "Horoskopelemente für alle Ansichten"
+        },
+        "columns": {
+          "aspect": "Aspekt",
+          "biwheel": "Doppelhoroskop",
+          "natal": "Radix",
+          "setting": "Einstellung",
+          "solar": "Solar",
+          "single": "Einzelhoroskop",
+          "double": "Doppelhoroskop"
+        },
+        "defaults": {
+          "copy": "Die wichtigsten Vorgaben stehen in einer gemeinsamen Matrix. So können Sie alle Ansichten direkt vergleichen.",
+          "title": "Anzeigeeinstellungen"
+        },
+        "notAvailable": "—"
+      },
+      "title": "Allgemeine Einstellungen",
+      "visual": {
+        "angularCuspsBlack": {
+          "label": "Spitzen der Eckhäuser schwarz hervorheben"
+        },
+        "exactAspectHighlight": {
+          "label": "Exakte Aspekte hervorheben"
+        },
+        "columns": {
+          "color": "Farbe",
+          "element": "Element",
+          "override": "Abweichende Einstellung",
+          "type": "Typ",
+          "planet": "Planet",
+          "housePoint": "Haus / Achsenpunkt"
+        },
+        "panels": {
+          "aspectColors": "Aspektfarben",
+          "bodyOverrides": "Planeten",
+          "elementPalette": "Elementfarben",
+          "wheel": "Häuser",
+          "aspects": "Aspekte",
+          "elements": "Elemente",
+          "planets": "Planeten",
+          "houses": "Häuser"
+        },
+        "tabs": {
+          "ariaLabel": "Bereiche der Darstellungseinstellungen"
+        },
+        "title": "Farbeinstellungen"
+      },
+      "toasts": {
+        "loadFailed": "Allgemeine Einstellungen konnten nicht geladen werden.",
+        "orbsCopied": "Radix-Orben in das Prognoseprofil kopiert",
+        "reloadFailed": "Einstellungen konnten nicht neu geladen werden.",
+        "restored": "Standardwerte in das Formular übernommen",
+        "saveFailed": "Allgemeine Einstellungen konnten nicht gespeichert werden.",
+        "saved": "Allgemeine Einstellungen gespeichert"
+      },
+      "views": {
+        "biwheel": {
+          "copy": "Legt fest, wie Doppelhoroskope und Vergleiche angezeigt werden, bevor Sie einzelne Ansichten anpassen.",
+          "title": "Vorgaben für Doppelhoroskope"
+        },
+        "natal": {
+          "copy": "Legt die Standardausrichtung, Aspektfilter und Tabelleneinstellungen für die Arbeit mit der Radix fest.",
+          "title": "Vorgaben für Radixhoroskope"
+        },
+        "solar": {
+          "copy": "Legt eine einheitliche Darstellung für Solare fest, die Sie bei Bedarf für ein einzelnes Jahr anpassen können.",
+          "title": "Vorgaben für Solare"
+        }
+      },
+      "workflow": {
+        "copy": "Neue Horoskope übernehmen diese Einstellungen. Änderungen innerhalb einer Ansicht gelten nur dort. Ihre allgemeinen Vorgaben bleiben erhalten.",
+        "title": "Übersichtlich verwalten"
+      }
+    },
+    "chart": {
+      "actions": {
+        "addLayer": "Ebene hinzufügen",
+        "editClient": "Profildaten bearbeiten",
+        "label": "Aktionen",
+        "openMenu": "Horoskopaktionen öffnen",
+        "openSynastry": "Synastrie",
+        "saveChart": "Horoskop speichern",
+        "saveSourceChart": "Horoskop speichern",
+        "saveSourceChartPromptTitle": "Horoskoptitel",
+        "saveSourceChartKindPrompt": "Horoskopart: birth, event, company, horary, relocation, solar_point, test, other",
+        "saveSourceChartTitleRequired": "Geben Sie einen Titel für das Horoskop ein.",
+        "saveSourceChartSaved": "Horoskop in der Bibliothek gespeichert.",
+        "saveSourceChartError": "Das Horoskop konnte nicht gespeichert werden: {error}",
+        "saveSourceChartDefaultTitle": "Horoskop {date}"
+      },
+      "aspects": {
+        "settings": {
+          "sortBy": "Sortierung",
+          "sortModes": {
+            "orb": "Nach Orbis",
+            "planet": "Nach Planeten"
+          },
+          "showWith": "Aspekte anzeigen mit",
+          "title": "Aspekteinstellungen"
+        }
+      },
+      "balances": {
+        "angular": "Eckhäuser",
+        "brahma": "Brahma",
+        "cadent": "Fallende Häuser",
+        "cosmogramTitle": "Kosmogrammfigur",
+        "east": "Östlich",
+        "elementsTitle": "Elemente",
+        "emptyArc": "Leerer Bogen: {value}°",
+        "handle": "Henkel: {planet}",
+        "hemispheresTitle": "Hemisphäre",
+        "houseGroupsTitle": "Häusergruppen",
+        "lower": "Unterhalb",
+        "leading": "Führender Planet: {planet}",
+        "modesTitle": "Modalitäten",
+        "polarityTitle": "Polarität",
+        "quadrant1": "I",
+        "quadrant2": "II",
+        "quadrant3": "III",
+        "quadrant4": "IV",
+        "quadrantsTitle": "Quadranten",
+        "succedent": "Nachfolgende Häuser",
+        "tabs": {
+          "house": "Nach Häusern",
+          "sign": "Nach Zeichen",
+          "title": "Art der Bilanz"
+        },
+        "upper": "Oberhalb",
+        "vishnu": "Vishnu",
+        "west": "Westlich",
+        "zonesTitle": "Zonen",
+        "shiva": "Shiva"
+      },
+      "rulers": {
+        "chainsKicker": "Ketten",
+        "chainsTitle": "Herrscherketten",
+        "empty": {
+          "noChains": "Keine Daten für die Berechnung der Ketten vorhanden.",
+          "noJones": "Die Jones-Figur wurde nicht berechnet.",
+          "noMainRulers": "Die Hauptherrscher sind nicht bestimmt."
+        },
+        "chainEnd": "Kettenende",
+        "jonesKicker": "Jones-Figur",
+        "mainKicker": "Häuser und Verbindungen",
+        "mainTitle": "Hauptherrscher",
+        "modalClose": "Diagramm schließen",
+        "modalTitle": "Dispositorenkette",
+        "modeLabel": "Modus",
+        "chainModes": {
+          "detriment": "Exil",
+          "domicile": "Domizil",
+          "exaltation": "Erhöhung",
+          "fall": "Fall"
+        },
+        "options": {
+          "arrowDirection": "Pfeilrichtung",
+          "chainType": "Kettentyp",
+          "classicalRulers": "Klassische Herrscher",
+          "houseRulers": "Häuserherrscher"
+        },
+        "tabs": {
+          "jones": "Jones-Figur",
+          "label": "Figur und Dispositoren",
+          "scheme": "Dispositorenkette"
+        },
+        "openSchema": "Kettendiagramm öffnen"
+      },
+      "chat": {
+        "actionsUnavailable": "Auf dieser Seite sind keine Aktionen verfügbar.",
+        "suggestionsTitle": "Zum Beispiel:",
+        "suggestTransit": "Fügen Sie die heutigen Transite hinzu.",
+        "suggestSolar": "Berechnen Sie das Solar für 2027.",
+        "suggestSingle": "Zeigen Sie das Einzelhoroskop.",
+        "close": "Assistenten schließen",
+        "empty": "Fragen Sie nach Transiten, Aspektzeitpunkten, Rückläufigkeiten oder Stationen in diesem Horoskop.",
+        "mic": "Sprache aufnehmen",
+        "micDenied": "Der Mikrofonzugriff wurde verweigert. Erlauben Sie ihn im Browser, um zu diktieren.",
+        "micUnavailable": "Die Spracheingabe ist in diesem Browser nicht verfügbar.",
+        "noChart": "Öffnen Sie zuerst ein Horoskop. Anschließend können Sie hier Fragen dazu stellen.",
+        "voiceCommand": "Sprachbefehl",
+        "voiceCommandHint": "Sprechen Sie jetzt. Tippen Sie zum Senden erneut auf das Mikrofon.",
+        "openVoiceResult": "Ergebnis des Assistenten öffnen",
+        "confirmInChat": "Im Assistenten wartet eine Aktion auf Ihre Bestätigung.",
+        "placeholder": "Frage zu diesem Horoskop …",
+        "recording": "Aufnahme {time}",
+        "resize": "Größe des Assistenten anpassen",
+        "send": "Senden",
+        "showTable": "Tabelle anzeigen ({count})",
+        "thinking": "Wird berechnet …",
+        "title": "Fragen zu diesem Horoskop",
+        "toggle": "Horoskopassistenten öffnen",
+        "transcribing": "Wird transkribiert …",
+        "transcribingAndSending": "Wird transkribiert und gesendet …",
+        "transcribeFailed": "Die Aufnahme konnte nicht transkribiert werden. Versuchen Sie es erneut oder geben Sie Ihre Frage ein.",
+        "history": "Chatverlauf",
+        "historyTitle": "Unterhaltungen",
+        "newThread": "Neuer Chat",
+        "noThreads": "Noch keine Unterhaltungen.",
+        "untitled": "Unbenannter Chat",
+        "delete": "Unterhaltung löschen",
+        "deleteConfirm": "Diese Unterhaltung löschen? Das lässt sich nicht rückgängig machen.",
+        "loadFailed": "Die Unterhaltungen konnten nicht geladen werden.",
+        "provenanceSummary": "Mit Quelldaten verknüpft · {count} Werkzeuge ✓",
+        "provenanceDegraded": "Prüfungen eingeschränkt",
+        "provenanceComputed": "Datensatz {hash} · alle Zahlen serverseitig berechnet",
+        "contextLabel": "Kontext",
+        "correctionFlag": "Diese Antwort zur Korrektur melden",
+        "correctionNote": "Was war falsch? (optional)",
+        "provenanceSummaryOne": "Mit Quelldaten verknüpft · 1 Werkzeug ✓",
+        "correctionSubmit": "Senden",
+        "correctionThanks": "Vielen Dank für Ihre Rückmeldung. Wir werden sie berücksichtigen.",
+        "feedbackLike": "Diese Antwort als hilfreich markieren",
+        "feedbackDislike": "Diese Antwort zur Korrektur melden",
+        "actionConfirmTitle": "Bitte bestätigen: {action}",
+        "actionApply": "Anwenden",
+        "actionCancelled": "Abgebrochen: {action}"
+      },
+      "edit": {
+        "errors": {
+          "chartUnavailable": "Das aktuelle Horoskop ist nicht verfügbar. Bitte öffnen Sie es erneut.",
+          "saveFailed": "Die Profildaten konnten nicht aktualisiert werden.",
+          "userIdMissing": "Die Profil-ID fehlt. Bitte öffnen Sie das Horoskop erneut."
+        },
+        "kicker": "Daten korrigieren",
+        "placeCurrent": "Die aktuellen Koordinaten bleiben erhalten, solange Sie keinen anderen Ort auswählen.",
+        "placeHint": "Wählen Sie den korrigierten Geburtsort aus den Vorschlägen, damit die Koordinaten genau stimmen.",
+        "placeManual": "Wählen Sie einen neuen Ort aus der Liste, um seine genauen Koordinaten zu übernehmen.",
+        "placeSelected": "Koordinaten und Zeitzone wurden anhand des gewählten Orts aktualisiert.",
+        "submit": "Speichern und neu berechnen",
+        "submitting": "Horoskop wird aktualisiert …",
+        "subtitle": "Korrigieren Sie die Geburtsdaten und arbeiten Sie direkt mit dem aktualisierten Horoskop weiter.",
+        "success": "Profildaten aktualisiert",
+        "title": "Geburtsdaten bearbeiten"
+      },
+      "synastry": {
+        "createKicker": "Neue Person",
+        "createSubmitting": "Profil wird angelegt und Horoskop berechnet …",
+        "createSubtitle": "Fügen Sie die zweite Person direkt aus dem Geburtshoroskop hinzu und öffnen Sie anschließend die Synastrie.",
+        "empty": "Noch keine Personen verknüpft. Legen Sie eine neue Person an oder verknüpfen Sie ein vorhandenes Profil.",
+        "kicker": "Mit wem möchten Sie vergleichen?",
+        "loadFailed": "Verknüpfte Personen konnten nicht geladen werden.",
+        "subtitle": "Wählen Sie eine Person aus der Liste oder fügen Sie eine neue hinzu, ohne das Geburtshoroskop zu verlassen.",
+        "title": "Synastrie"
+      },
+      "configurations": {
+        "apex": "Spitze: {planet}",
+        "countShort": "Pl.: {count}",
+        "houseLabel": "Haus {house}",
+        "planetCount": "Planeten: {count}",
+        "stelliums": "Stellien",
+        "strength": "Stärke: {value}",
+        "strengthShort": "St.: {value}",
+        "title": "Aspektkonfigurationen"
+      },
+      "empty": {
+        "noBalances": "Keine Bilanzdaten vorhanden",
+        "noConfigurations": "Keine Konfigurationen gefunden",
+        "noDignities": "Keine Daten zu Würden vorhanden",
+        "noStelliums": "Keine Stellien"
+      },
+      "grid": {
+        "title": "Aspektmatrix"
+      },
+      "header": {
+        "defaultTitle": "Geburtshoroskop"
+      },
+      "houseCusp": "Spitze von Haus {house}",
+      "legend": {
+        "harmonious": "Harmonisch",
+        "neutral": "Neutral",
+        "tense": "Spannungsreich"
+      },
+      "loading": "Horoskopdaten werden geladen …",
+      "mobile": {
+        "chart": "Horoskop",
+        "quick": {
+          "aspects": "Aspekte ansehen",
+          "houses": "Häuser ansehen"
+        }
+      },
+      "nav": {
+        "forecast": "Prognose",
+        "home": "Startseite",
+        "natal": "Radix",
+        "solar": "Solar",
+        "synastry": "Synastrie",
+        "tables": "Tabellen",
+        "forecastViewsAria": "Prognoseansichten"
+      },
+      "settings": {
+        "aspectOptions": "Aspektoptionen",
+        "aspectPhase": {
+          "all": "Alle",
+          "applying": "Applikativ",
+          "separating": "Separativ"
+        },
+        "aspectScope": {
+          "label": "Aspektbereich"
+        },
+        "houseSystem": {
+          "label": "Häusersystem"
+        },
+        "houseLabels": {
+          "arabic": "Arabische Hausnummern",
+          "label": "Hausnummerierung",
+          "outside": "Häuserspitzen außerhalb des Horoskops anzeigen",
+          "roman": "Römische Hausnummern"
+        },
+        "orientation": {
+          "aries": "0° Widder",
+          "asc": "Aszendent (ASC)",
+          "label": "Horoskopausrichtung"
+        },
+        "iconSize": "Symbolgröße",
+        "planetSize": "Planetengröße",
+        "planetsAndPoints": "Planeten und Punkte der Radix",
+        "pointSize": "Punktgröße",
+        "boldAscDsc": "ASC und DSC fett darstellen",
+        "boldMcIc": "MC und IC fett darstellen",
+        "boldAngularCusps": "Spitzen der Eckhäuser fett darstellen",
+        "showPlanetDegree": "Planetengrade im Horoskop anzeigen",
+        "showPlanetStationary": "Stationäre Planeten im Horoskop kennzeichnen",
+        "fixedStars": {
+          "all": "Alle Sterne anzeigen",
+          "brightness": "Mindesthelligkeit",
+          "conjunctions": "In Konjunktion mit Planeten und Häusern",
+          "filter": "Sternfilter",
+          "highlighted": "Hervorgehoben",
+          "magnitude": "Scheinbare Helligkeit",
+          "named": "Mit Namen",
+          "nebulae": "Nebel",
+          "none": "Nicht anzeigen",
+          "orb": "Orbis",
+          "showNames": "Sternnamen anzeigen",
+          "title": "Fixsterne"
+        },
+        "wheelOptions": "Horoskopoptionen",
+        "tableOptions": "Tabellenoptionen",
+        "showDeclinationAspects": "Parallelen (Deklination)"
+      },
+      "table": {
+        "aspects": {
+          "aspect": "Aspekt",
+          "orb": "Orbis",
+          "type": "Typ"
+        },
+        "houses": {
+          "cusp": "Spitze",
+          "ruler": "Herrscher",
+          "sign": "Koordinate"
+        },
+        "planets": {
+          "house": "Haus",
+          "position": "Koordinate",
+          "speed": "Geschwindigkeit",
+          "symbol": "Element",
+          "speedHint": "Tagesbewegung in Prozent der mittleren Geschwindigkeit. Blau: nahezu stationär. Rot: schnell."
+        }
+      },
+      "tooltip": {
+        "fixedStars": "Fixsterne"
+      },
+      "tabs": {
+        "aspects": "Aspekte",
+        "balances": "Bilanzen",
+        "configurations": "Konfigurationen",
+        "grid": "Aspektmatrix",
+        "houses": "Häuser",
+        "planets": "Planeten",
+        "rulers": "Figur / Herrscher"
+      },
+      "presets": {
+        "saveBtn": "Konfiguration speichern",
+        "pickerLabel": "Gespeicherte Konfigurationen",
+        "pickerHeader": "Gespeicherte Konfigurationen",
+        "emptyList": "Noch keine Konfigurationen gespeichert",
+        "promptName": "Name der Konfiguration",
+        "defaultName": "Meine Konfiguration",
+        "untitled": "Ohne Namen",
+        "savedToast": "Konfiguration gespeichert",
+        "saveFailed": "Die Konfiguration konnte nicht gespeichert werden.",
+        "applied": "Konfiguration übernommen",
+        "applyFailed": "Die Konfiguration konnte nicht übernommen werden.",
+        "deleteConfirm": "Diese Konfiguration löschen?",
+        "deleteAria": "Konfiguration löschen",
+        "deleteFailed": "Die Konfiguration konnte nicht gelöscht werden."
+      },
+      "title": "Geburtshoroskop",
+      "saveModal": {
+        "momentRequired": "Geben Sie Datum und Uhrzeit des Horoskops ein.",
+        "personLabel": "Mit Personen verknüpfen",
+        "personPlaceholder": "Person suchen …",
+        "personPrimary": "Hauptprofil",
+        "tagsLabel": "Tags",
+        "tagsPlaceholder": "Neuer Tag …",
+        "removeTag": "{name} entfernen",
+        "removePerson": "{name} entfernen"
+      }
+    },
+    "chat": {
+      "errors": {
+        "assistantFallback": "Entschuldigung, etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+        "sendFailed": "Die Nachricht konnte nicht gesendet werden."
+      }
+    },
+    "calendar": {
+      "clientUnnamed": "Ohne Namen",
+      "dialog": {
+        "client": "Person",
+        "loadingClients": "Wird geladen …",
+        "selectClient": "Person auswählen"
+      },
+      "errors": {
+        "loadEvents": "Termine konnten nicht geladen werden.",
+        "selectClient": "Bitte wählen Sie eine Person aus."
+      },
+      "header": {
+        "kicker": "Terminplanung",
+        "subtitle": "Planen und verwalten Sie Ihre Beratungen. Klicken Sie auf ein Datum, um einen Termin hinzuzufügen.",
+        "title": "Beratungskalender"
+      },
+      "legend": {
+        "cancelled": "Abgesagt",
+        "completed": "Abgeschlossen",
+        "noShow": "Nicht erschienen",
+        "planned": "Geplant"
+      },
+      "messages": {
+        "consultationSaved": "Beratung gespeichert"
+      },
+      "meta": {
+        "title": "Kalender – Steliara"
+      },
+      "nav": {
+        "clients": "Personen"
+      },
+      "view": {
+        "day": "Tag",
+        "month": "Monat",
+        "today": "Heute",
+        "week": "Woche"
+      }
+    },
+    "clients": {
+      "hero": {
+        "eyebrow": "Arbeitsbereich für Astrologie",
+        "kicker": "Mehr Übersicht für Ihre Beratungspraxis",
+        "title": "Organisieren Sie Ihre Praxis. Mit Ruhe und Überblick.",
+        "subtitle": "Horoskope, Notizen und nächste Schritte sind schnell wieder zur Hand, wenn jemand zur nächsten Beratung kommt.",
+        "badgesAriaLabel": "Vorteile des Arbeitsbereichs",
+        "badges": {
+          "private": "Private Profile und Notizen",
+          "history": "Gespeicherte Horoskope im Verlauf",
+          "reports": "Alle Unterlagen an einem Ort"
+        },
+        "aside": {
+          "label": "Ihr Praxisalltag",
+          "title": "Auch die Organisation Ihrer Praxis darf sich stimmig anfühlen.",
+          "subtitle": "Hier behalten Sie Zusammenhänge im Blick und finden schnell zurück zu früheren Beratungen.",
+          "point1": "Profile und Notizen übersichtlich ansehen, ohne den persönlichen Bezug zu verlieren.",
+          "point2": "Horoskope und Hintergründe schnell öffnen und nahtlos an die letzte Beratung anknüpfen.",
+          "point3": "Ihre Arbeit so organisieren, dass Sie dauerhaft den Überblick behalten."
+        }
+      },
+      "profile": {
+        "label": "Angemeldet",
+        "signedInAs": "{email}"
+      },
+      "workspace": {
+        "kicker": "Ihr Arbeitsbereich",
+        "title": "Praxis",
+        "subtitle": "Suchen, sortieren und öffnen Sie frühere Arbeiten. So bleibt die Geschichte jeder Person griffbereit."
+      },
+      "libraryTabs": {
+        "ariaLabel": "Bereiche der Bibliothek",
+        "charts": "Horoskope",
+        "people": "Personen"
+      },
+      "chartKindFilter": {
+        "label": "Horoskopart",
+        "ariaLabel": "Horoskope nach Art filtern",
+        "all": "Alle Arten"
+      },
+      "chartKinds": {
+        "birth": "Geburt",
+        "event": "Ereignis",
+        "company": "Unternehmen",
+        "horary": "Stundenhoroskop",
+        "relocation": "Relokation",
+        "solar_point": "Solarpunkt",
+        "test": "Test",
+        "other": "Sonstiges"
+      },
+      "charts": {
+        "openWorkspace": "Arbeitsbereich öffnen"
+      },
+      "people": {
+        "chartCount": "Horoskope: {count}",
+        "noPrimaryChart": "Kein Haupthoroskop"
+      },
+      "calendar": {
+        "nextMonth": "Nächster Monat",
+        "openFull": "Gesamten Kalender öffnen",
+        "previousMonth": "Vorheriger Monat"
+      },
+      "stats": {
+        "total": "Profile insgesamt",
+        "visible": "Aktuell angezeigt",
+        "latest": "Zuletzt hinzugefügt"
+      },
+      "actions": {
+        "calendar": "Kalender",
+        "confirmDelete": "Löschen bestätigen",
+        "delete": "Löschen",
+        "edit": "Bearbeiten",
+        "logout": "Abmelden",
+        "rename": "Umbenennen"
+      },
+      "counters": {
+        "shown": "Angezeigt: {shown}",
+        "shownOf": "Angezeigt: {shown} von {total}",
+        "total": "Insgesamt: {total}"
+      },
+      "createFirstCard": "Erstes Horoskop anlegen",
+      "empty": "Noch keine Profile",
+      "emptyHint": "Beginnen Sie mit Ihrem ersten Horoskop. So entsteht ein Arbeitsbereich, in dem Sie bei der nächsten Beratung schnell wieder anknüpfen können.",
+      "errors": {
+        "chartNotFound": "Horoskopdaten nicht gefunden",
+        "deleteFailed": "Das Profil konnte nicht gelöscht werden.",
+        "fetchList": "Die Profilliste konnte nicht geladen werden.",
+        "loadingWithMessage": "Fehler beim Laden: {message}"
+      },
+      "listAriaLabel": "Profilliste",
+      "messages": {
+        "confirmDeleteHint": "Klicken Sie zum Bestätigen erneut auf „Löschen“.",
+        "deleted": "Profil gelöscht",
+        "updated": "Profil aktualisiert",
+        "chartRenamed": "Horoskop umbenannt",
+        "chartUpdated": "Horoskop aktualisiert"
+      },
+      "newCard": "Profil hinzufügen",
+      "newChart": {
+        "btnLabel": "Neues Horoskop",
+        "kicker": "Horoskop",
+        "title": "Neues Horoskop",
+        "chartTitle": "Horoskoptitel",
+        "chartTitlePlaceholder": "Person, Ereignis … (optional)",
+        "submit": "Horoskop speichern",
+        "successToast": "Horoskop gespeichert",
+        "profile": {
+          "heading": "Profil",
+          "intro": "Zu wem gehört dieses Horoskop?",
+          "newTitle": "Neues Profil",
+          "newHint": "Für eine neue Person",
+          "existingTitle": "Vorhandenes Profil",
+          "existingHint": "Mit einem Klientenprofil verknüpfen",
+          "noneTitle": "Ohne Profil",
+          "noneHint": "Ereignis, Test oder Recherche",
+          "nameLabel": "Profilname",
+          "namePlaceholder": "Name der Person",
+          "searchLabel": "Profil suchen",
+          "searchPlaceholder": "Nach Name, Datum oder Ort suchen",
+          "noMatches": "Keine passenden Profile gefunden",
+          "noneNote": "Das Horoskop bleibt eigenständig. Sie können es später mit einem Profil verknüpfen.",
+          "submitNew": "Horoskop und Profil anlegen",
+          "submitExisting": "Horoskop anlegen und verknüpfen",
+          "nameRequired": "Geben Sie einen Profilnamen ein.",
+          "existingRequired": "Wählen Sie ein vorhandenes Profil.",
+          "createFailed": "Das Profil konnte nicht angelegt werden."
+        },
+        "errors": {
+          "dateRequired": "Bitte geben Sie das Geburtsdatum ein.",
+          "timeRequired": "Bitte geben Sie die Geburtszeit ein.",
+          "placeRequired": "Geben Sie einen Ort ein und wählen Sie ihn aus der Liste.",
+          "timezoneRequired": "Bitte wählen Sie eine Zeitzone."
+        },
+        "now": {
+          "action": "Jetzt",
+          "locating": "Aktueller Standort wird ermittelt …",
+          "currentLocation": "Aktueller Standort",
+          "locationReady": "Datum, Uhrzeit und Ort eingetragen",
+          "locationUnavailable": "Datum und Uhrzeit eingetragen. Der Standort konnte nicht ermittelt werden."
+        }
+      },
+      "newProfile": {
+        "kicker": "Neues Profil",
+        "title": "Neues Profil",
+        "subtitle": "Fügen Sie eine Person zu Ihrer Praxis hinzu – mit Geburtsdaten und Kontaktdaten an einem Ort.",
+        "submit": "Profil anlegen",
+        "successToast": "Profil angelegt",
+        "errors": {
+          "createFailed": "Das Profil konnte nicht angelegt werden."
+        }
+      },
+      "noResults": "Keine Treffer",
+      "noResultsHint": "Versuchen Sie einen anderen Namen, Ort oder Tag oder ändern Sie die Sortierung.",
+      "searchLabel": "Profil suchen",
+      "searchAriaLabel": "Profile durchsuchen",
+      "searchPlaceholder": "Nach Name oder Ort suchen",
+      "tagFilter": {
+        "all": "Alle Tags",
+        "ariaLabel": "Profile nach Tag filtern",
+        "label": "Tag"
+      },
+      "sortLabel": "Sortierung",
+      "sort": {
+        "birthAsc": "Geburtsdatum: älteste zuerst",
+        "birthDesc": "Geburtsdatum: jüngste zuerst",
+        "createdAsc": "Erstellt: älteste zuerst",
+        "createdDesc": "Erstellt: neueste zuerst",
+        "nameAsc": "Name A–Z",
+        "nameDesc": "Name Z–A"
+      },
+      "sortAriaLabel": "Profile sortieren",
+      "subtitle": "Profile",
+      "table": {
+        "actions": "Aktionen",
+        "birthDate": "Geburtsdatum",
+        "chartDate": "Datum und Uhrzeit des Horoskops",
+        "tags": "Tags",
+        "profiles": "Profile",
+        "chartName": "Horoskop",
+        "chartPlace": "Horoskoport",
+        "created": "Erstellt",
+        "name": "Name",
+        "noProfiles": "Kein Profil",
+        "noTags": "Keine Tags",
+        "place": "Ort"
+      },
+      "edit": {
+        "errors": {
+          "chartUnavailable": "Das Horoskop dieses Profils ist derzeit nicht verfügbar.",
+          "loadFailed": "Profildaten konnten nicht geladen werden.",
+          "saveFailed": "Profildaten konnten nicht gespeichert werden."
+        },
+        "kicker": "Schnellkorrektur",
+        "placeCurrent": "Der bisher im Profil gespeicherte Ort wird verwendet.",
+        "placeHint": "Wählen Sie einen Ort aus den Vorschlägen, um die Koordinaten automatisch zu aktualisieren.",
+        "placeManual": "Ort manuell eingegeben. Die Koordinaten bleiben unverändert, bis Sie einen Vorschlag auswählen.",
+        "placeSelected": "Ort aus den Vorschlägen ausgewählt. Die Koordinaten werden aktualisiert.",
+        "submit": "Änderungen speichern",
+        "submitting": "Wird gespeichert …",
+        "subtitle": "Korrigieren Sie Geburtsdaten direkt in Ihrem Arbeitsbereich.",
+        "title": "Profil bearbeiten",
+        "chartTitle": "Horoskopname",
+        "chartTitlePlaceholder": "z. B. Geburtshoroskop Anna",
+        "linkedPerson": "Verknüpfte Person",
+        "noLinkedPerson": "— nicht verknüpft —",
+        "chartMode": {
+          "kicker": "Horoskop bearbeiten",
+          "title": "Horoskop bearbeiten",
+          "subtitle": "Ändern Sie die Horoskopdaten und berechnen Sie das Horoskop neu."
+        }
+      },
+      "title": "Praxis – Steliara",
+      "crm": {
+        "contactHeader": "Kontaktdaten",
+        "email": "E-Mail",
+        "emailPlaceholder": "client@example.com",
+        "phone": "Telefon",
+        "phonePlaceholder": "+1 234 567 890",
+        "messenger": "Messenger",
+        "messengerPlaceholder": "Telegram, WhatsApp usw.",
+        "notes": "Notizen",
+        "notesPlaceholder": "Private Notizen zu diesem Profil …",
+        "tags": "Tags",
+        "tagsPlaceholder": "VIP, Stammklient, neu (durch Kommas getrennt)",
+        "existingTags": "Vorhandene Tags",
+        "noContact": "Keine Kontaktdaten"
+      },
+      "detail": {
+        "openChart": "Horoskop öffnen",
+        "actions": "Aktionen",
+        "logSession": "Beratungsnotiz hinzufügen",
+        "startingCall": "Wird gestartet …",
+        "callStartFailed": "Das Gespräch konnte nicht angelegt werden.",
+        "consultations": "Beratungsverlauf",
+        "noConsultations": "Noch keine Beratungsnotizen",
+        "paidBadge": "Bezahlt",
+        "unpaidBadge": "Offen",
+        "lastSession": "Letzte Beratung:",
+        "nextSession": "Nächste:",
+        "startCall": "Gespräch starten"
+      },
+      "consultation": {
+        "kicker": "Beratungsverlauf",
+        "title": "Beratungsnotiz hinzufügen",
+        "subtitle": "Halten Sie eine vergangene oder geplante Beratung fest, damit der Verlauf nachvollziehbar bleibt.",
+        "type": "Art der Beratung",
+        "types": {
+          "natal": "Radixdeutung",
+          "transit": "Transitanalyse",
+          "solar_return": "Solar",
+          "progression": "Progressionen",
+          "direction": "Direktionen",
+          "synastry": "Synastrie",
+          "horary": "Stundenastrologie",
+          "other": "Sonstiges"
+        },
+        "scheduledAt": "Datum und Uhrzeit",
+        "status": "Status",
+        "statuses": {
+          "planned": "Geplant",
+          "completed": "Abgeschlossen",
+          "cancelled": "Abgesagt",
+          "no_show": "Nicht erschienen"
+        },
+        "isPaid": "Bezahlt",
+        "duration": "Dauer (Min.)",
+        "durationPlaceholder": "60",
+        "notes": "Beratungsnotiz",
+        "notesPlaceholder": "Was wurde besprochen?",
+        "submit": "Notiz speichern",
+        "submitting": "Wird gespeichert …",
+        "errors": {
+          "deleteFailed": "Die Beratung konnte nicht gelöscht werden.",
+          "saveFailed": "Die Beratung konnte nicht gespeichert werden."
+        },
+        "messages": {
+          "created": "Beratungsnotiz hinzugefügt",
+          "deleted": "Beratungsnotiz entfernt"
+        }
+      },
+      "statsUpcoming": "Anstehend",
+      "statsUnpaid": "Zahlung offen",
+      "alerts": {
+        "solarReturnsTitle": "Solare in diesem Monat",
+        "transitsTitle": "Wichtige Transite (30 Tage)",
+        "daysUntil": "in {days} Tagen",
+        "today": "Heute",
+        "passed": "vor {days} Tagen",
+        "tomorrow": "Morgen",
+        "openChart": "Öffnen",
+        "noAlerts": "Keine auffälligen Ereignisse in diesem Monat",
+        "passedOne": "vor 1 Tag"
+      }
+    },
+    "chartPicker": {
+      "title": "Horoskop auswählen",
+      "subtitle": "Suchen Sie nach Titel, Person oder Tag.",
+      "searchPlaceholder": "Horoskope suchen …",
+      "select": "Auswählen",
+      "empty": "Keine Horoskope gefunden.",
+      "momentTitle": "Gespeichertes Horoskop laden",
+      "momentSubtitle": "Datum, Uhrzeit und Ort werden für die aktive Ebene übernommen.",
+      "natalMomentTitle": "Gespeichertes Horoskop laden",
+      "natalMomentSubtitle": "Es wird zum Basishoroskop dieses Arbeitsbereichs."
+    },
+    "clientProfile": {
+      "title": "Profil",
+      "backToClients": "Zurück zur Praxis",
+      "viewProfile": "Profil ansehen",
+      "profileAction": "Profil",
+      "startCall": "Gespräch starten",
+      "quickOpen": {
+        "savedCharts": "Gespeicherte Horoskope öffnen",
+        "relatedPeople": "Verknüpfte Personen öffnen",
+        "savedChartsTitle": "Gespeicherte Horoskope",
+        "savedChartsSubtitle": "Wählen Sie ein Horoskop, um es direkt zu öffnen.",
+        "relatedPeopleTitle": "Verknüpfte Personen",
+        "relatedPeopleSubtitle": "Wählen Sie eine Person für die Synastrie."
+      },
+      "sections": {
+        "contact": "Kontakt",
+        "notes": "Notizen",
+        "statistics": "Statistik",
+        "relatedPeople": "Synastriehoroskope",
+        "solarReturns": "Gespeicherte Solare",
+        "savedCharts": "Gespeicherte Horoskope",
+        "keyInsights": "Wichtige Erkenntnisse",
+        "consultations": "Beratungsverlauf",
+        "recordings": "Gesprächsaufnahmen",
+        "clientHistory": "Klientenverlauf"
+      },
+      "stats": {
+        "totalSessions": "Beratungen insgesamt",
+        "completed": "Abgeschlossen",
+        "planned": "Geplant",
+        "totalCalls": "Gesprächsaufnahmen",
+        "totalDuration": "Gesamtdauer",
+        "minutes": "Min.",
+        "paid": "Bezahlt",
+        "clientSince": "In der Praxis seit",
+        "lastSession": "Letzte Beratung"
+      },
+      "insights": {
+        "empty": "Noch keine Erkenntnisse vorhanden. Sie werden nach der KI-Auswertung aus den Gesprächsaufnahmen gewonnen."
+      },
+      "filter": {
+        "all": "Alle"
+      },
+      "recordings": {
+        "empty": "Noch keine Gesprächsaufnahmen vorhanden.",
+        "summary": "Zusammenfassung",
+        "keyPoints": "Kernaussagen",
+        "reviewShare": "Prüfen und teilen",
+        "fullTranscript": "Vollständiges Transkript",
+        "speakerAstrologer": "Astrologin / Astrologe",
+        "speakerGuest": "Gast",
+        "noData": "Noch keine Aufnahmedaten verfügbar.",
+        "failed": "Verarbeitung fehlgeschlagen.",
+        "retry": "Verarbeitung erneut starten",
+        "summaryFailed": "Das Transkript ist fertig, aber die Zusammenfassung konnte nicht erstellt werden.",
+        "loading": "Wird geladen…",
+        "transcriptionInProgress": "Die Transkription läuft… Das kann einige Minuten dauern.",
+        "couldNotLoad": "Die Aufzeichnung konnte nicht geladen werden: {message}",
+        "processingTimedOut": "Die Verarbeitung hat zu lange gedauert.",
+        "reprocessFailed": "Die erneute Verarbeitung konnte nicht gestartet werden",
+        "transcriptionInProgressShort": "Die Transkription läuft…",
+        "retryFailed": "Der Vorgang konnte nicht erneut gestartet werden",
+        "audioUnsupported": "Ihr Browser unterstützt die Audiowiedergabe nicht.",
+        "startProcessing": "Verarbeitung starten"
+      },
+      "solar": {
+        "defaultName": "Solar {year}",
+        "empty": "Noch keine Solare gespeichert. Sobald Sie ein Solar berechnen, erscheint es hier.",
+        "namePrompt": "Name des Solars",
+        "open": "Öffnen",
+        "openFailed": "Das Solar konnte nicht geöffnet werden.",
+        "rename": "Umbenennen",
+        "renameFailed": "Das Solar konnte nicht umbenannt werden.",
+        "renamed": "Solarname gespeichert"
+      },
+      "savedCharts": {
+        "defaultName": "Horoskop",
+        "defaultSolarName": "Solar {year}",
+        "defaultForecastName": "Prognose",
+        "defaultProgressionName": "Progression",
+        "defaultDirectionName": "Direktion",
+        "empty": "Noch keine Horoskope gespeichert. Speichern Sie ein Solar, eine Progression oder eine Direktion. Die gespeicherten Horoskope erscheinen anschließend hier.",
+        "namePrompt": "Horoskopname",
+        "open": "Öffnen",
+        "openFailed": "Das Horoskop konnte nicht geöffnet werden.",
+        "rename": "Umbenennen",
+        "renameFailed": "Das Horoskop konnte nicht umbenannt werden.",
+        "renamed": "Horoskopname gespeichert",
+        "types": {
+          "chart": "Horoskop",
+          "forecast": "Prognose",
+          "solar_return": "Solar",
+          "progression": "Progression",
+          "direction": "Direktion"
+        }
+      },
+      "linkedCharts": {
+        "title": "Horoskope dieses Profils",
+        "linkBtn": "Horoskop aus der Bibliothek verknüpfen",
+        "empty": "Keine Horoskope verknüpft",
+        "open": "Öffnen",
+        "setPrimary": "Als Haupthoroskop festlegen",
+        "unlink": "Verknüpfung lösen",
+        "linkedToast": "Horoskop mit dem Profil verknüpft",
+        "unlinkedToast": "Verknüpfung zum Profil gelöst",
+        "pickerKicker": "Horoskope",
+        "pickerTitle": "Horoskop aus der Bibliothek auswählen",
+        "pickerEmpty": "Keine Horoskope gefunden",
+        "linkAction": "Verknüpfen",
+        "alreadyLinked": "Verknüpft"
+      },
+      "related": {
+        "add": "Person hinzufügen",
+        "linkExisting": "Vorhandene Person auswählen",
+        "linkKicker": "Gespeicherte Personen",
+        "linkTitle": "Vorhandenes Profil auswählen",
+        "linkSubtitle": "Wählen Sie ein gespeichertes Profil, das Sie regelmäßig für Synastrien verwenden möchten.",
+        "searchLabel": "Profil suchen",
+        "searchPlaceholder": "Vorname, Nachname oder Geburtsort",
+        "linkSubmit": "Auswählen",
+        "linked": "Profil verknüpft",
+        "linkFailed": "Das Profil konnte nicht verknüpft werden.",
+        "loadCandidatesFailed": "Die Profilliste konnte nicht geladen werden.",
+        "noCandidates": "Keine weiteren Profile zum Verknüpfen verfügbar.",
+        "selectCandidate": "Wählen Sie ein Profil zum Verknüpfen.",
+        "empty": "Noch keine Personen für die Synastrie gespeichert.",
+        "createTitle": "Neue Person für die Synastrie",
+        "createSubmit": "Anlegen",
+        "created": "Person hinzugefügt",
+        "deleted": "Verknüpfung entfernt",
+        "confirmDelete": "Diese Person aus der Liste entfernen?",
+        "relationLabel": "Beziehung",
+        "relationPlaceholder": "Zum Beispiel: Partner, Ehepartner, Kind"
+      },
+      "errors": {
+        "noId": "Die Profil-ID fehlt in der URL.",
+        "notFound": "Profil nicht gefunden",
+        "loadFailed": "Das Profil konnte nicht geladen werden."
+      },
+      "unnamed": "Profil ohne Namen",
+      "clientHistory": {
+        "empty": "Noch keine Beratungen vorhanden."
+      },
+      "callStatus": {
+        "created": "Geplant",
+        "active": "Läuft",
+        "ended": "Beendet",
+        "processing": "Wird verarbeitet …",
+        "completed": "Abgeschlossen",
+        "failed": "Fehlgeschlagen",
+        "summaryFailed": "Zusammenfassung fehlgeschlagen"
+      }
+    },
+    "synastry": {
+      "title": "Synastrie",
+      "loading": "Synastrie wird berechnet …",
+      "headerTitle": "{client} × {partner}",
+      "openClientProfile": "Hauptprofil",
+      "openPartnerProfile": "Partnerprofil",
+      "phase": "Phase",
+      "tabs": {
+        "interAspects": "Aspekte zwischen Horoskopen",
+        "houseOverlays": "Häuserüberlagerung",
+        "more": "Weitere Ansichten"
+      },
+      "modes": {
+        "client": "Hauptprofil",
+        "compare": "Vergleichen",
+        "partner": "Partnerprofil"
+      },
+      "sections": {
+        "interAspects": "Aspekte zwischen den Horoskopen",
+        "houseOverlays": "Häuserüberlagerung"
+      },
+      "metrics": {
+        "interAspects": "Aspekte zwischen den Horoskopen",
+        "clientOverlay": "Planeten des Hauptprofils in den Häusern der Partnerperson",
+        "partnerOverlay": "Planeten der Partnerperson in den Häusern des Hauptprofils"
+      },
+      "overlays": {
+        "clientInPartner": "Hauptprofil in den Häusern der Partnerperson",
+        "partnerInClient": "Partnerperson in den Häusern des Hauptprofils"
+      },
+      "people": {
+        "natal": "Radix",
+        "client": "Hauptprofil",
+        "partner": "Partnerprofil",
+        "primary": "Hauptprofil"
+      },
+      "displayMode": {
+        "label": "Synastrieansicht",
+        "both": "Radix + Partnerhoroskop",
+        "natal": "Radix",
+        "partner": "Partnerhoroskop"
+      },
+      "compare": {
+        "clientOnly": "Das Geburtshoroskop des Hauptprofils wird angezeigt.",
+        "partnerOnly": "Das Geburtshoroskop der Partnerperson wird angezeigt.",
+        "overlayHint": "Radix und Partnerhoroskop werden gemeinsam dargestellt."
+      },
+      "errors": {
+        "missingParams": "Für eine Synastrie werden zwei Profile benötigt.",
+        "loadFailed": "Die Synastrie konnte nicht geladen werden."
+      }
+    },
+    "forecast": {
+      "biwheel": {
+        "clearFocus": "Auswahl aufheben",
+        "collapseAspects": "Aspekttabelle einklappen",
+        "collapseIngresses": "Ingresstabelle einklappen",
+        "empty": "Keine Daten für das Doppelhoroskop",
+        "mobileFilters": {
+          "close": "Legende ausblenden",
+          "open": "Legende"
+        },
+        "natalButton": "Radix",
+        "natalButtonHint": "Gedrückt halten für eine Vorschau, antippen zum Anheften der Radix",
+        "legend": {
+          "directionType": "Direktionsart",
+          "directions": "Direktionen",
+          "natal": "Radix",
+          "progressions": "Progressionen",
+          "toggleDirection": "Direktionen ein- oder ausblenden",
+          "toggleNatal": "Radixpunkte ein- oder ausblenden",
+          "toggleProgression": "Progressionen ein- oder ausblenden",
+          "toggleTransit": "Transite ein- oder ausblenden",
+          "transits": "Transite"
+        },
+        "openAspects": "Aspekttabelle ausklappen",
+        "openIngresses": "Ingresstabelle ausklappen",
+        "prognostic": "Prognose",
+        "settings": {
+          "natal": "Radixebene",
+          "natalPointSize": "Größe der Radixpunkte",
+          "orientation": "Ausrichtung",
+          "sectionFilters": "Filter",
+          "sectionVisual": "Darstellung",
+          "showAspectsWith": "Aspekte anzeigen mit",
+          "transit": "Transit-/Progressionsebene",
+          "transitPointSize": "Größe der Transitpunkte"
+        }
+      },
+      "chat": {
+        "title": "Prognosechat"
+      },
+      "directionType": {
+        "equatorial": "Naibod (äquatorial)",
+        "solarArc": "Sonnenbogen",
+        "symbolic": "Zodiakal",
+        "zodiacal": "Zodiakal"
+      },
+      "errors": {
+        "dateRequired": "Bitte geben Sie ein Datum ein.",
+        "datesRequired": "Bitte geben Sie Anfangs- und Enddatum ein.",
+        "invalidRange": "Der Datumsbereich ist ungültig.",
+        "selectLocationFromList": "Wählen Sie einen Ort aus den Vorschlägen.",
+        "transitDateMissing": "Bitte geben Sie ein Transitdatum ein.",
+        "yearRange": "Das Jahr muss zwischen 1900 und 2100 liegen."
+      },
+      "header": {
+        "title": "Prognose und Entwicklungen"
+      },
+      "help": {
+        "openTitle": "So lesen Sie diese Seite",
+        "sections": {
+          "activeNow": {
+            "text1": "Der Bereich <strong>Aktuell aktiv</strong> hebt Ereignisse nahe dem heutigen Datum hervor.",
+            "text2": "Die Beschriftungen zeigen, ob ein Ereignis heute exakt ist, kürzlich exakt war oder bald exakt wird.",
+            "text3": "So erhalten Sie schnell einen Überblick über den aktuellen Zeitraum.",
+            "title": "Aktuell aktiv"
+          },
+          "biwheel": {
+            "text1": "Das Doppelhoroskop zeigt die Radix gemeinsam mit Transiten, Progressionen oder Direktionen.",
+            "text2": "Über die Legende können Sie einzelne Ebenen ein- und ausblenden.",
+            "text3": "In den Einstellungen können Sie Ausrichtung und Punktgröße anpassen.",
+            "text4": "Klappen Sie die Aspekt- und Ingresstabellen auf, um die Einzelheiten zu sehen.",
+            "title": "Doppelhoroskop"
+          },
+          "principle": {
+            "text": "Wählen Sie eine Prognosemethode, einen Zeitraum und einen Ort. Klicken Sie anschließend auf <strong>Berechnen</strong>. Die Ergebnisse stehen als Zeitverlauf, Tabelle, Doppelhoroskop und Solar zur Verfügung.",
+            "title": "Erste Schritte"
+          },
+          "solar": {
+            "text": "Die Solaransicht zeigt das Sonnenrückkehrhoroskop, die Ortszeit und UTC sowie die Anzeigeeinstellungen. Sie hilft Ihnen, die Themen des Jahres zu betrachten.",
+            "title": "Solar"
+          },
+          "table": {
+            "text": "Sortieren und filtern Sie die Tabelle nach Typ, Aspekt, Orbis oder Suchbegriff, um gezielt die gewünschten Ereignisse zu finden.",
+            "title": "Ereignistabelle"
+          },
+          "timeline": {
+            "text1": "Der <strong>Zeitverlauf</strong> zeigt die Ereignisse in zeitlicher Reihenfolge.",
+            "text2": "Jeder Eintrag enthält Ereignistyp, Datum und die wichtigsten Angaben zum Aspekt oder Ingress.",
+            "text3": "Mit den Schritttasten und der Wiedergabe können Sie den Zeitraum nach und nach durchgehen.",
+            "text4": "Bewegen Sie den Mauszeiger über einen Eintrag, um weitere Angaben zu sehen.",
+            "text5": "Der Zähler oben zeigt, wie viele Ereignisse aus dem gesamten Zeitraum angezeigt werden.",
+            "text6": "Wenn keine Ereignisse erscheinen, überprüfen Sie Zeitraum und Filter.",
+            "title": "Zeitverlauf"
+          },
+          "tips": {
+            "item1": "Beginnen Sie mit einem Zeitraum von ein bis drei Monaten, damit die Ansicht übersichtlich bleibt.",
+            "item2": "Ein maximaler Orbis von 2 bis 3,5 Grad grenzt die Auswahl stärker ein.",
+            "item3": "Vergleichen Sie Zeitverlauf und Doppelhoroskop, um den Zusammenhang eines Ereignisses zu prüfen.",
+            "item4": "Öffnen Sie nach dem Filtern den Prognosechat, um Fragen zu den gefundenen Ereignissen zu stellen.",
+            "title": "Tipps für die Arbeit"
+          }
+        },
+        "title": "Prognosehilfe"
+      },
+      "presets": {
+        "oneDay": "1 Tag",
+        "oneMonth": "1 Monat",
+        "oneYear": "1 Jahr",
+        "sixMonths": "6 Monate",
+        "threeMonths": "3 Monate"
+      },
+      "summary": {
+        "actions": {
+          "editSetup": "Einstellungen bearbeiten",
+          "hideSetup": "Einstellungen ausblenden"
+        },
+        "biwheelReady": "Das Doppelhoroskop für {date} ist fertig. Es zeigt die Konstellationen zu diesem Zeitpunkt.",
+        "chips": {
+          "mode": "Ansicht",
+          "status": "Status",
+          "window": "Zeitraum"
+        },
+        "eyebrow": "Prognosen unterwegs",
+        "rangePending": "Wählen Sie den gewünschten Zeitraum und berechnen Sie anschließend die Prognose.",
+        "solarPending": "Wählen Sie Jahr und Solarort und berechnen Sie anschließend das Solar.",
+        "solarReady": "Das Solar für {year} ist fertig.",
+        "status": {
+          "focus": "Horoskop im Fokus",
+          "needsCalculation": "Noch nicht berechnet",
+          "ready": "Bereit"
+        },
+        "tableReady": "Die Ereignistabelle ist bereit zum Sortieren und Filtern.",
+        "timelineReady": "Prognoseereignisse in diesem Zeitraum: {count}.",
+        "window": {
+          "notSet": "Nicht festgelegt"
+        }
+      },
+      "scale": {
+        "focusEnter": "Horoskop fokussieren",
+        "focusExit": "Fokusansicht verlassen",
+        "nextStep": "Nächster Schritt",
+        "play": "Zeitverlauf abspielen",
+        "prevStep": "Vorheriger Schritt",
+        "range": "{start} - {end} ({count})",
+        "step": "Schritt"
+      },
+      "solar": {
+        "empty": "Solar nicht geladen",
+        "info": {
+          "localDate": "Datum und Uhrzeit vor Ort",
+          "utcDate": "Datum und Uhrzeit in UTC"
+        },
+        "loading": "Solar wird geladen …",
+        "locationPlaceholder": "Ort für das Solar",
+        "nameLabel": "Name",
+        "namePlaceholder": "Name des Solars",
+        "orientation": "Ausrichtung",
+        "orientationAries": "0° Widder",
+        "orientationAsc": "Aszendent",
+        "settings": {
+          "pointSize": "Punktgröße"
+        }
+      },
+      "table": {
+        "columns": {
+          "aspectSort": "Aspekt ⇅",
+          "dateSort": "Datum ⇅",
+          "ingressType": "Ingressart",
+          "method": "Methode",
+          "methodShort": "M",
+          "methodSort": "Methode ⇅",
+          "natalShort": "R",
+          "natalSort": "Radix ⇅",
+          "object": "Objekt",
+          "orbSort": "Orbis ⇅",
+          "transitShort": "T",
+          "transitSort": "Transit ⇅",
+          "transition": "Übergang",
+          "typeSort": "Typ ⇅",
+          "typeHint": "H = Hauptaspekt · N = Nebenaspekt"
+        },
+        "empty": "Keine Daten für die Prognosetabelle",
+        "filters": {
+          "aspect": "Aspekt",
+          "buttonClosed": "Filter",
+          "buttonOpen": "Filter ausblenden",
+          "events": "Ereignisse",
+          "maxOrb": "Maximaler Orbis",
+          "maxOrbPlaceholder": "z. B. 3.5",
+          "onlyAspects": "Nur Aspekte",
+          "onlyIngresses": "Nur Ingresse",
+          "search": "Suche",
+          "searchPlaceholder": "Planet, Aspekt oder Zeichen",
+          "type": "Typ"
+        },
+        "houseLabel": "Haus {house}",
+        "ingress": {
+          "cusp": "Ingress einer Häuserspitze",
+          "cuspLabel": "Spitze von Haus {house}",
+          "house": "Hauswechsel",
+          "sign": "Zeichenwechsel"
+        },
+        "ingresses": {
+          "title": "Ingresse"
+        },
+        "eclipses": {
+          "title": "Finsternisse",
+          "maximum": "Maximum",
+          "kind": "Art",
+          "class": "Typ",
+          "position": "Position",
+          "visibility": "Sichtbarkeit am Horoskoport",
+          "magnitude": "Größe",
+          "visible": "Sichtbar",
+          "notVisible": "Nicht sichtbar",
+          "locationUnavailable": "Koordinaten des Horoskoports nicht verfügbar",
+          "types": {
+            "solar": "Sonnenfinsternis",
+            "lunar": "Mondfinsternis"
+          },
+          "classes": {
+            "total": "total",
+            "annular": "ringförmig",
+            "hybrid": "hybrid",
+            "partial": "partiell",
+            "penumbral": "Halbschatten"
+          }
+        },
+        "noAspects": "Keine Aspekte",
+        "noData": "Keine Daten",
+        "noEvents": "Keine Ereignisse in diesem Zeitraum",
+        "noRowsByFilters": "Keine Einträge entsprechen den Filtern."
+      },
+      "tabs": {
+        "biwheel": "Doppelhoroskop",
+        "solar": "Solar",
+        "table": "Tabelle",
+        "timeline": "Zeitverlauf",
+        "multiViewRequired": "Wechseln Sie zum Doppelhoroskop, um Tabellen oder den Zeitverlauf für einen Zeitraum zu öffnen."
+      },
+      "timeline": {
+        "eclipses": {
+          "maximum": "Maximum",
+          "class": "Typ",
+          "visibility": "Sichtbarkeit",
+          "visible": "am Horoskoport sichtbar",
+          "notVisible": "Am Horoskoport nicht sichtbar",
+          "locationUnavailable": "Koordinaten des Horoskoports nicht verfügbar",
+          "types": {
+            "solar": "Sonnenfinsternis",
+            "lunar": "Mondfinsternis"
+          },
+          "classes": {
+            "total": "total",
+            "annular": "ringförmig",
+            "hybrid": "hybrid",
+            "partial": "partiell",
+            "penumbral": "Halbschatten"
+          }
+        },
+        "activeNow": {
+          "empty": "Keine exakten Aspekte in der Nähe des heutigen Datums",
+          "exactDaysAgo": {
+            "one": "Vor {days} Tag exakt",
+            "other": "Vor {days} Tagen exakt"
+          },
+          "exactInDays": {
+            "one": "In {days} Tag exakt",
+            "other": "In {days} Tagen exakt"
+          },
+          "exactToday": "Heute exakt",
+          "title": "Aktuell aktiv"
+        },
+        "clickHint": "Klicken Sie auf einen Ereignisbalken, um das Datum im Doppelhoroskop zu öffnen.",
+        "empty": "Keine Ereignisse im Zeitverlauf",
+        "eventCount": "{shown} angezeigt / {total} insgesamt",
+        "loading": "Zeitverlauf wird geladen …",
+        "tooltip": {
+          "allEntries": "Alle Eintritte",
+          "enter": "Eintritt",
+          "entries": "Eintritte",
+          "exact": "Exakt",
+          "leave": "Austritt",
+          "outOfRange": "außerhalb des Zeitraums"
+        }
+      },
+      "title": "Prognose"
+    },
+    "index": {
+      "errors": {
+        "calculateFailed": "Das Horoskop konnte nicht berechnet werden."
+      },
+      "form": {
+        "advanced": {
+          "copy": "Koordinaten und Häusersystem können Sie bei Bedarf auch manuell festlegen.",
+          "toggle": "Erweiterte Einstellungen"
+        },
+        "birthDate": {
+          "dayPlaceholder": "TT",
+          "label": "Geburtsdatum",
+          "monthPlaceholder": "MM",
+          "yearPlaceholder": "JJJJ"
+        },
+        "birthPlace": {
+          "label": "Geburtsort",
+          "placeholder": "Geben Sie einen Städtenamen ein und wählen Sie einen Vorschlag."
+        },
+        "birthTime": {
+          "hoursPlaceholder": "HH",
+          "label": "Geburtszeit",
+          "minutesPlaceholder": "MM"
+        },
+        "coordinates": {
+          "hint": "Werden aus dem gewählten Ort automatisch übernommen",
+          "label": "Koordinaten"
+        },
+        "ctaNote": "Ihr Horoskop öffnet sich direkt nach der Berechnung.",
+        "fullName": {
+          "firstNamePlaceholder": "Vorname",
+          "label": "Vollständiger Name",
+          "lastNamePlaceholder": "Nachname"
+        },
+        "houseSystem": {
+          "label": "Häusersystem"
+        },
+        "sections": {
+          "birth": {
+            "copy": "Geben Sie zuerst Geburtsdatum und Geburtszeit für die Berechnung ein.",
+            "title": "Geburtsdaten"
+          },
+          "identity": {
+            "copy": "Geben Sie den Namen ein, unter dem Sie dieses Horoskop speichern möchten.",
+            "title": "Person"
+          },
+          "location": {
+            "copy": "Wählen Sie den Geburtsort aus der Liste. Die Zeitzone wird automatisch eingetragen.",
+            "title": "Ort"
+          }
+        },
+        "submit": {
+          "idle": "Geburtshoroskop berechnen",
+          "loading": "Wird berechnet …"
+        },
+        "summary": {
+          "birth": "Geburtsdatum und Geburtszeit eingetragen",
+          "place": "Geburtsort ausgewählt",
+          "timezone": "Zeitzone bestätigt",
+          "title": "Bereit zur Berechnung"
+        },
+        "timezone": {
+          "autoDetected": "Automatisch erkannte Zeitzone",
+          "label": "Zeitzone",
+          "placeholder": "Zeitzone auswählen"
+        }
+      },
+      "subtitle": "Arbeitsbereich für Astrologie",
+      "title": "Steliara – Astrologiesoftware für Ihre gesamte Praxis",
+      "logo": "Steliara",
+      "nav": {
+        "faq": "Fragen",
+        "pricing": "Preise",
+        "productPagesAria": "Produktseiten",
+        "cloudAstrology": "Astrologiesoftware in der Cloud",
+        "astrologerWorkspace": "Arbeitsbereich für Astrologie",
+        "practiceManagement": "Praxisverwaltung",
+        "product": "Produkt",
+        "consultations": "Beratungen"
+      },
+      "cta": {
+        "primary": "Kostenlos starten",
+        "secondary": "So funktioniert es"
+      },
+      "hero": {
+        "kicker": "Ihr astrologischer Arbeitsbereich",
+        "title": "Ihre gesamte Praxis in einem System",
+        "text": "Von der Horoskopberechnung bis zur aufgezeichneten Beratung: Alles, was Sie für Ihre Arbeit brauchen, ist an einem Ort. Ohne zwischen Programmen zu wechseln.",
+        "proof": {
+          "accuracy": "Berechnungen mit Swiss Ephemeris",
+          "platform": "Mac, Windows und im Browser"
+        },
+        "trialNote": "14 Tage testen. Keine Kreditkarte erforderlich."
+      },
+      "preview": {
+        "title": "Klientenprofil",
+        "status": "Alles Wichtige griffbereit",
+        "modes": {
+          "profile": "Profil",
+          "forecast": "Zeiträume",
+          "chat": "Chat"
+        },
+        "insightTitle": "Das Wesentliche im Blick behalten",
+        "insight": "Vor dem Gespräch sehen Sie Horoskop, Aufnahmen, Notizen und wichtige Punkte. So müssen Sie sich die Vorgeschichte nicht erst wieder in Erinnerung rufen.",
+        "context": {
+          "personLabel": "Person",
+          "personValue": "Radixprofil",
+          "notesLabel": "Notizen",
+          "notesValue": "12 gespeicherte Punkte",
+          "recordingsLabel": "Gespräche",
+          "recordingsValue": "2 Aufnahmen",
+          "chartsLabel": "Horoskope",
+          "chartsValue": "Radix + Prognose"
+        },
+        "timeline": {
+          "itemOne": {
+            "label": "Okt. 2025 – Mai 2026",
+            "value": "Transit-Uranus zur Radix-Venus"
+          },
+          "itemTwo": {
+            "label": "Aktueller Schwerpunkt",
+            "value": "Solar und monatliche Auslösungen"
+          },
+          "itemThree": {
+            "label": "Für die Beratung gespeichert",
+            "value": "Wichtige Termine bleiben mit dem Profil verknüpft."
+          }
+        },
+        "chat": {
+          "query": "Zeigen Sie Uranus-Venus-Konjunktionen für die vergangenen und die kommenden fünf Jahre.",
+          "meta": "Antwort anhand der Horoskopdaten",
+          "answerTitle": "Drei Zeitfenster mit exakten Kontakten gefunden",
+          "answer": "Der Assistent liefert Termine, Zusammenhänge und Links zu den Horoskopen, die Sie für die Beratung brauchen."
+        },
+        "metricOne": {
+          "label": "Profil",
+          "value": "Person + Notizen"
+        },
+        "metricTwo": {
+          "label": "Unterlagen",
+          "value": "Horoskope + Zeiträume"
+        },
+        "metricThree": {
+          "label": "Assistent",
+          "value": "Antworten aus den Daten"
+        }
+      },
+      "faq": {
+        "kicker": "Fragen",
+        "title": "So funktioniert Steliara",
+        "items": {
+          "one": {
+            "q": "Ist das nur ein Rechner für Geburtshoroskope?",
+            "a": "Das Horoskop ist der Anfang. In Steliara verwalten Sie auch Personenprofile, Gesprächsverläufe, Notizen und Aufnahmen und durchsuchen astrologische Daten gezielt."
+          },
+          "two": {
+            "q": "Was kann ich in einem Profil speichern?",
+            "a": "Horoskope, Notizen, Gesprächsaufnahmen und wichtige Punkte, mit denen Sie vor dem nächsten Gespräch schnell wieder anknüpfen können."
+          },
+          "three": {
+            "q": "Wie funktioniert der Chat?",
+            "a": "Stellen Sie eine Frage zu Horoskop- oder Prognosedaten. Lassen Sie sich zum Beispiel Konjunktionen von Transit-Uranus zur Radix-Venus für die vergangenen und kommenden fünf Jahre zeigen. Sie erhalten die Zeiträume, ohne selbst danach suchen zu müssen."
+          },
+          "four": {
+            "q": "Übernimmt Steliara die Deutung für mich?",
+            "a": "Nein. Die Deutung bleibt bei Ihnen. Der Chat hilft Ihnen, Daten, Zeitpunkte und Links schneller zu finden."
+          },
+          "five": {
+            "q": "Gibt es Einstellungen für die professionelle Arbeit?",
+            "a": "Ja. Häusersysteme, Koordinaten und weitere Einstellungen stehen Ihnen für sorgfältige astrologische Arbeit zur Verfügung."
+          },
+          "six": {
+            "q": "Hilft Steliara bei der langfristigen Begleitung derselben Personen?",
+            "a": "Ja. Profile, Notizen, Aufnahmen und wichtige Gesprächspunkte halten die gemeinsame Geschichte fest."
+          },
+          "seven": {
+            "q": "Was erleichtert Steliara vor einer Beratung?",
+            "a": "Sie finden schneller zurück zur Person, zu früheren Themen, wichtigen Zeiträumen und aktuellen Horoskopen."
+          },
+          "eight": {
+            "q": "Worauf beruhen die Berechnungen?",
+            "a": "Die Berechnungen beruhen auf Swiss Ephemeris und modernen astronomischen Standards."
+          },
+          "nine": {
+            "q": "Muss ich meinen Beratungsstil ändern?",
+            "a": "Nein. Steliara unterstützt Ihre Arbeitsweise und gibt Ihnen keinen fertigen Stil vor."
+          },
+          "ten": {
+            "q": "Womit fange ich an?",
+            "a": "Erstellen Sie Ihr erstes Horoskop, speichern Sie ein Profil und stellen Sie im Chat eine konkrete Frage zu einem Zeitraum oder Aspekt."
+          }
+        }
+      },
+      "finalCta": {
+        "kicker": "Ihr erster Schritt",
+        "title": "Öffnen Sie ein Horoskop und probieren Sie es aus.",
+        "text": "Ein Profil, ein Horoskop. Entdecken Sie, wie schnell Sie alles wieder zur Hand haben.",
+        "trialNote": "14 Tage testen, ohne Kreditkarte."
+      },
+      "a11y": {
+        "navigation": "Navigation der Startseite",
+        "proofPoints": "Wichtige Funktionen",
+        "previewTabs": "Ansichten der Arbeitsbereichsvorschau",
+        "productPreview": "Vorschau des Arbeitsbereichs",
+        "trustIndicators": "Wichtige Funktionen",
+        "pillars": "Die Bereiche von Steliara"
+      },
+      "auth": {
+        "signIn": "Anmelden",
+        "signUp": "Praxis einrichten"
+      },
+      "common": {
+        "beta": "Beta"
+      },
+      "pillars": {
+        "charts": {
+          "title": "Horoskope und Prognosen",
+          "text": "Das Horoskop mit allen Daten auf einem Bildschirm: Häuser, Aspekte, Transite, Progressionen, Direktionen, Solar und Synastrie."
+        },
+        "people": {
+          "title": "Personen",
+          "text": "Ein Profil für jede Person: ihre Horoskope, Ihre Notizen und der gesamte Beratungsverlauf."
+        },
+        "consultations": {
+          "title": "Beratungen",
+          "text": "Videogespräche direkt in Steliara, mit Aufnahme und Transkription."
+        },
+        "assistant": {
+          "title": "Assistent",
+          "text": "Kurze Beratungszusammenfassungen und Antworten aus den Horoskopdaten."
+        }
+      },
+      "gap": {
+        "kicker": "Warum Steliara?",
+        "title": "Die Berechnungen hier. Die Klientendaten woanders.",
+        "text": "Steliara bringt beides zusammen: umfassende Berechnungen und einen Arbeitsbereich für die Beratungspraxis.",
+        "cards": {
+          "engines": {
+            "title": "Horoskopprogramme berechnen",
+            "text": "Leistungsfähige Programme wurden als Rechenwerkzeuge entwickelt. Für Personenprofile, Notizen oder den Beratungsverlauf ist darin kein Platz."
+          },
+          "apps": {
+            "title": "Schlanke Apps vereinfachen",
+            "text": "Moderne, leicht bedienbare Apps bieten meist weniger Berechnungs- und Einstellmöglichkeiten."
+          },
+          "manual": {
+            "title": "Sie halten alles selbst zusammen",
+            "text": "Am Ende bleiben mehrere Programme offen – und Sie übertragen die Zusammenhänge von einem ins andere."
+          }
+        }
+      },
+      "craft": {
+        "kicker": "Ihr Arbeitsbildschirm",
+        "title": "Das Horoskop und alle Daten gleichzeitig im Blick.",
+        "text": "Wir arbeiten selbst astrologisch und möchten Ihnen unnötige Klicks ersparen. Die Oberfläche ist so aufgebaut, dass Sie Gesuchtes direkt sehen, statt es in Menüs zu suchen.",
+        "items": {
+          "oneScreen": {
+            "title": "Ein Bildschirm",
+            "text": "Horoskop, Positionen, Häuser, Aspekte und Prognose – ohne zwischen Reitern zu wechseln."
+          },
+          "layers": {
+            "title": "Ebenen direkt zur Hand",
+            "text": "Transite, Progressionen, Direktionen, Solar und Synastrie lassen sich mit einem Klick aktivieren."
+          },
+          "custom": {
+            "title": "Passend zu Ihrer Arbeitsweise",
+            "text": "Bereiche, Datenansichten und Darstellung bleiben zwischen den Sitzungen erhalten. Richten Sie das Werkzeug so ein, wie es zu Ihnen passt."
+          }
+        }
+      },
+      "assistant": {
+        "kicker": "Fragen zu Horoskopdaten",
+        "title": "Ihre Frage. Eine Antwort aus dem Horoskop.",
+        "text": "Der Chat arbeitet mit den tatsächlichen Berechnungen. Fragen Sie nach Konjunktionen von Transit-Uranus zur Radix-Venus in den vergangenen und kommenden fünf Jahren – Sie erhalten die exakten Zeiträume. Oder lassen Sie sich etwas direkt auf dem Bildschirm anzeigen.",
+        "note": "Der Chat findet die Daten. Die Deutung bleibt bei Ihnen."
+      },
+      "people": {
+        "kicker": "Personenprofil",
+        "title": "Horoskope, Notizen und Verlauf in einem Profil.",
+        "text": "Jede Person hat ein Profil mit ihren Horoskopen, Ihren Notizen und allem, was Sie bereits besprochen haben. Öffnen Sie es vor der Beratung, und Sie sind wieder im Thema."
+      },
+      "consultations": {
+        "kicker": "Beratungen",
+        "title": "Videogespräche mit Aufnahme und Transkription.",
+        "text": "Führen Sie die Beratung direkt in Steliara. Das Gespräch wird aufgezeichnet und transkribiert, eine kurze Zusammenfassung im Profil gespeichert. Vor dem nächsten Termin müssen Sie nichts aus dem Gedächtnis rekonstruieren."
+      },
+      "foundation": {
+        "kicker": "Die Grundlage",
+        "title": "Präzision, auf die Sie sich verlassen können.",
+        "items": {
+          "ephemeris": {
+            "title": "Swiss Ephemeris",
+            "text": "Die Berechnungen erfolgen mit Swiss Ephemeris."
+          },
+          "settings": {
+            "title": "Umfassende Einstellungen",
+            "text": "Häusersysteme, tropischer und siderischer Tierkreis, Ayanamshas sowie Orbis- und Aspekteinstellungen."
+          },
+          "platform": {
+            "title": "Überall nutzbar",
+            "text": "Mac, Windows und jeder Browser. Ohne Installation."
+          }
+        }
+      }
+    },
+    "natalFull": {
+      "balances": {
+        "elements": "Elemente:",
+        "modes": "Modalitäten:",
+        "polarity": "Polarität:",
+        "zones": "Zonen:",
+        "quadrants": "Quadranten:",
+        "hemisphere": "Hemisphäre:",
+        "houseGroups": "Häusergruppen:",
+        "sign": "Nach Zeichen",
+        "house": "Nach Häusern",
+        "brahma": "Brahma",
+        "vishnu": "Vishnu",
+        "shiva": "Shiva",
+        "lower": "Unterhalb",
+        "upper": "Oberhalb",
+        "east": "Östlich",
+        "west": "Westlich",
+        "quadrant1": "I",
+        "quadrant2": "II",
+        "quadrant3": "III",
+        "quadrant4": "IV",
+        "angular": "Eckhäuser",
+        "succedent": "Nachfolgende Häuser",
+        "cadent": "Fallende Häuser"
+      },
+      "config": {
+        "apex": "Spitze: {planet}",
+        "house": "Haus {house}",
+        "stellium": "Stellium: {location}"
+      },
+      "empty": {
+        "noAspects": "Keine Aspekte",
+        "noBalances": "Keine Bilanzdaten vorhanden",
+        "noConfigurations": "Keine Konfigurationen",
+        "noSpecialPoints": "Keine besonderen Punkte"
+      },
+      "header": {
+        "defaultTitle": "Geburtshoroskop",
+        "title": "Geburtshoroskop – {place}",
+        "unknownPlace": "Unbekannter Ort"
+      },
+      "legend": {
+        "dignity": {
+          "detriment": "Exil",
+          "domicile": "Domizil",
+          "exaltation": "Erhöhung",
+          "fall": "Fall",
+          "title": "Würden"
+        },
+        "features": {
+          "almuten": "Almuten",
+          "anareta": "Anareta",
+          "aspectKing": "Aspektkönig",
+          "cazimi": "Cazimi",
+          "charioteer": "Wagenlenker",
+          "combust": "Verbrennung",
+          "doryphoros": "Doryphoros",
+          "elevated": "Eleviert",
+          "handle": "Henkel",
+          "intercepted": "Im eingeschlossenen Zeichen",
+          "peregrine": "Peregrin",
+          "royal": "Königsgrad",
+          "title": "Merkmale",
+          "underRays": "Unter den Sonnenstrahlen"
+        },
+        "harmony": {
+          "bad": "Spannungsreiche Aspekte",
+          "good": "Harmonische Aspekte",
+          "mixed": "Gemischte Aspekte",
+          "title": "Aspektcharakter"
+        },
+        "motion": {
+          "direct": "Direktläufig",
+          "retrograde": "Rückläufig",
+          "stationary": "Stationär",
+          "title": "Bewegung"
+        }
+      },
+      "loading": "Horoskop wird geladen …",
+      "nav": {
+        "legend": "Legende",
+        "wheel": "Horoskop"
+      },
+      "report": {
+        "cards": {
+          "axis": "Achse",
+          "dominants": "Dominanten",
+          "luminaries": "Sonne und Mond"
+        },
+        "kicker": "Bericht für unterwegs",
+        "subtitle": "Beginnen Sie mit den prägenden Strukturen. Die ausführlichen Tabellen öffnen Sie, wenn Sie die einzelnen Werte benötigen.",
+        "title": "Ihr Horoskop als übersichtlicher Bericht."
+      },
+      "sections": {
+        "aspects": "Aspekte",
+        "balances": "Bilanzen",
+        "configurations": "Konfigurationen",
+        "houses": "Häuser",
+        "minorAspects": "Nebenaspekte",
+        "planets": "Planeten",
+        "rulers": "Figur / Herrscher",
+        "specialPoints": "Besondere Punkte"
+      },
+      "summary": {
+        "figure": "Figur"
+      },
+      "table": {
+        "aspects": {
+          "aspect": "Aspekt",
+          "orb": "Orbis",
+          "orbSort": "Orbis ⇅",
+          "type": "Typ",
+          "typeSort": "Typ ⇅"
+        },
+        "houses": {
+          "house": "Haus",
+          "included": "Eingeschlossenes Zeichen",
+          "planets": "Planeten im Haus",
+          "ruler": "Herrscher",
+          "rulerIn": "Herrscher in Haus",
+          "sign": "Zeichen"
+        },
+        "planets": {
+          "aspects": "Aspekte",
+          "dignity": "Würde",
+          "features": "Merkmale",
+          "house": "Haus",
+          "karma": "Status",
+          "motion": "Bewegung",
+          "planet": "Planet",
+          "position": "Position",
+          "ruler": "Beherrschte Häuser",
+          "speed": "Geschwindigkeit"
+        },
+        "specialPoints": {
+          "house": "Haus",
+          "point": "Punkt",
+          "position": "Position"
+        }
+      },
+      "title": "Geburtshoroskop – Tabellenansicht",
+      "units": {
+        "degPerDay": "{value}°/Tag"
+      }
+    },
+    "login": {
+      "meta": {
+        "title": "Bei Steliara anmelden"
+      },
+      "hero": {
+        "eyebrow": "Ihr privater astrologischer Arbeitsbereich",
+        "title": "Professionelle Astrologie. Klar und übersichtlich.",
+        "subtitle": "Melden Sie sich an und verwalten Sie Profile, Geburtshoroskope und Prognosen gemeinsam in Ihrem Arbeitsbereich.",
+        "badges": {
+          "private": "Privater Arbeitsbereich für Astrologie",
+          "premium": "Helle, ruhige Oberfläche",
+          "multilingual": "In mehreren Sprachen verfügbar"
+        },
+        "badgesAriaLabel": "Produktvorteile",
+        "panel": {
+          "label": "Für die astrologische Beratungspraxis",
+          "point1": "Profile, Horoskope und Notizen an einem Ort organisieren.",
+          "point2": "Horoskope, Prognosen und den bisherigen Verlauf zusammen speichern und nahtlos weiterarbeiten.",
+          "point3": "Mit sicherer Anmeldung und Verifizierung von Anfang an verlässlich arbeiten.",
+          "point4": "Horoskope in einem ruhigen, klar gegliederten Arbeitsbereich leichter analysieren."
+        },
+        "footnote": "Wie ein eigenes Astrologiestudio: persönlich, präzise und vertrauenswürdig.",
+        "cardKicker": "Sicherer Zugang zu Ihrem Konto"
+      },
+      "mobileTrust": {
+        "copy": "Ihre Horoskope, Profile, Prognosen und der Assistent bleiben in einem sicheren Arbeitsbereich.",
+        "title": "Einfach anmelden."
+      },
+      "heading": "Sicher anmelden",
+      "subheading": "Mit Google oder mit E-Mail-Adresse und Passwort fortfahren.",
+      "divider": "oder mit Google fortfahren",
+      "dividerOr": "oder",
+      "hints": {
+        "capsLock": "Die Feststelltaste ist aktiviert.",
+        "emailDeliverySpamTitle": "Hinweis",
+        "emailDeliverySpam": "Steliara befindet sich in der Startphase. Unsere E-Mails landen daher manchmal im Spamordner. Bitte sehen Sie auch dort nach."
+      },
+      "status": {
+        "signingIn": "Anmeldung läuft …",
+        "googleRedirect": "Weiterleitung zu Google …",
+        "completingGoogle": "Google-Anmeldung wird abgeschlossen …",
+        "sendingResetLink": "Link wird gesendet …",
+        "savingPassword": "Passwort wird aktualisiert …",
+        "creatingAccount": "Konto wird erstellt …",
+        "accountReady": "Ihr Konto ist bereit. Melden Sie sich an, um fortzufahren.",
+        "sendingVerification": "Bestätigungslink wird gesendet …",
+        "verifyingEmail": "E-Mail-Adresse wird bestätigt …"
+      },
+      "actions": {
+        "signIn": "Anmelden",
+        "signingIn": "Anmeldung läuft …",
+        "continueWithGoogle": "Mit Google fortfahren",
+        "forgotPassword": "Passwort vergessen?",
+        "sendResetLink": "Link zum Zurücksetzen senden",
+        "sendingResetLink": "Link wird gesendet …",
+        "resendLink": "Link erneut senden",
+        "resendCountdown": "Erneut senden in {seconds} Sek.",
+        "backToSignIn": "Zurück zur Anmeldung",
+        "setNewPassword": "Neues Passwort festlegen",
+        "savingPassword": "Passwort wird gespeichert …",
+        "showPassword": "Anzeigen",
+        "hidePassword": "Ausblenden",
+        "requestNewLink": "Neuen Link anfordern",
+        "createAccount": "Konto erstellen",
+        "creatingAccount": "Konto wird erstellt …",
+        "goToRegister": "Konto erstellen",
+        "noAccount": "Noch kein Konto?",
+        "haveAccount": "Schon ein Konto?",
+        "resendVerification": "Bestätigungslink erneut senden",
+        "sendingVerification": "Bestätigungslink wird gesendet …"
+      },
+      "fields": {
+        "email": {
+          "label": "E-Mail",
+          "placeholder": "you@example.com"
+        },
+        "password": {
+          "label": "Passwort",
+          "placeholder": "Passwort eingeben"
+        },
+        "newPassword": {
+          "label": "Neues Passwort",
+          "placeholder": "Neues Passwort festlegen"
+        },
+        "confirmPassword": {
+          "label": "Neues Passwort bestätigen",
+          "placeholder": "Neues Passwort wiederholen"
+        },
+        "firstName": {
+          "label": "Vorname (optional)",
+          "placeholder": "Vorname"
+        },
+        "lastName": {
+          "label": "Nachname (optional)",
+          "placeholder": "Nachname"
+        },
+        "accountType": {
+          "label": "Kontoart",
+          "hint": "Damit legen Sie nur Ihren ersten Arbeitsbereich fest. Kostenpflichtige Erweiterungen wählen Sie separat.",
+          "trial": {
+            "title": "Professioneller Testzugang",
+            "copy": "Für alle, die astrologisch beraten oder einen Arbeitsbereich für ihre Praxis ausprobieren möchten.",
+            "badge": "5 Horoskope"
+          },
+          "solo": {
+            "title": "Einsteiger",
+            "copy": "Zum Lernen oder für den Einstieg in die Beratungspraxis: Horoskope speichern, Profile verwalten und Synastrien berechnen.",
+            "badge": "Horoskope und Synastrie"
+          }
+        },
+        "registerPassword": {
+          "placeholder": "Passwort festlegen (Buchstaben und Zahlen)"
+        }
+      },
+      "views": {
+        "login": {
+          "title": "Sicher anmelden",
+          "subtitle": "Mit Google oder mit E-Mail-Adresse und Passwort fortfahren."
+        },
+        "forgot": {
+          "title": "Passwort zurücksetzen",
+          "subtitle": "Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen einmal verwendbaren Link zum Zurücksetzen."
+        },
+        "checkEmail": {
+          "title": "Prüfen Sie Ihr Postfach",
+          "subtitle": "Öffnen Sie den Link in der E-Mail, um fortzufahren.",
+          "body": "Wenn diese Adresse bei Steliara registriert ist, erhalten Sie in Kürze einen Link zum Zurücksetzen.",
+          "bodyWithEmail": "Wenn {email} bei Steliara registriert ist, erhalten Sie in Kürze einen Link zum Zurücksetzen."
+        },
+        "reset": {
+          "title": "Neues Passwort festlegen",
+          "subtitle": "Wählen Sie ein Passwort, das Sie hier noch nicht verwendet haben."
+        },
+        "success": {
+          "title": "Passwort geändert",
+          "subtitle": "Sie können sich jetzt mit Ihrem neuen Passwort anmelden.",
+          "body": "Ihr Passwort wurde geändert. Alle bestehenden Sitzungen wurden abgemeldet."
+        },
+        "invalid": {
+          "title": "Link nicht verfügbar",
+          "subtitle": "Mit diesem Link lässt sich Ihr Passwort nicht zurücksetzen.",
+          "bodyInvalid": "Dieser Link ist ungültig. Fordern Sie einen neuen an und versuchen Sie es erneut.",
+          "bodyExpired": "Dieser Link ist abgelaufen. Fordern Sie einen neuen an, um fortzufahren.",
+          "bodyUsed": "Dieser Link wurde bereits verwendet. Fordern Sie einen neuen an, um fortzufahren."
+        },
+        "register": {
+          "title": "Konto erstellen",
+          "subtitle": "Registrieren Sie sich mit E-Mail-Adresse und Passwort, um Steliara für Ihre astrologische Arbeit zu nutzen."
+        },
+        "verifyCheckEmail": {
+          "title": "Prüfen Sie Ihr Postfach",
+          "subtitle": "Öffnen Sie Ihr Postfach und bestätigen Sie Ihre E-Mail-Adresse, um fortzufahren.",
+          "body": "Wir haben Ihnen einen Bestätigungslink geschickt. Öffnen Sie ihn, um Ihr Konto zu aktivieren.",
+          "bodyWithEmail": "Wir haben einen Bestätigungslink an {email} geschickt. Öffnen Sie ihn, um Ihr Konto zu aktivieren."
+        },
+        "verifyLoading": {
+          "title": "E-Mail-Adresse wird bestätigt",
+          "subtitle": "Bitte warten Sie einen Moment, während wir Ihre E-Mail-Adresse bestätigen.",
+          "body": "Bestätigung läuft …"
+        },
+        "verifySuccess": {
+          "title": "E-Mail-Adresse bestätigt",
+          "subtitle": "Ihre E-Mail-Adresse ist bestätigt. Sie können sich jetzt anmelden.",
+          "body": "Die Bestätigung ist abgeschlossen. Fahren Sie mit der Anmeldung fort."
+        },
+        "verifyInvalid": {
+          "title": "Bestätigungslink nicht verfügbar",
+          "subtitle": "Mit diesem Link lässt sich Ihre E-Mail-Adresse nicht bestätigen.",
+          "bodyInvalid": "Dieser Bestätigungslink ist ungültig. Fordern Sie einen neuen an und versuchen Sie es erneut.",
+          "bodyExpired": "Dieser Bestätigungslink ist abgelaufen. Fordern Sie einen neuen an, um fortzufahren.",
+          "bodyUsed": "Dieser Bestätigungslink wurde bereits verwendet. Fordern Sie einen neuen an, um fortzufahren."
+        }
+      },
+      "validation": {
+        "emailRequired": "Geben Sie Ihre E-Mail-Adresse ein.",
+        "emailInvalid": "Geben Sie eine gültige E-Mail-Adresse ein.",
+        "passwordRequired": "Geben Sie Ihr Passwort ein.",
+        "passwordMinLength": "Verwenden Sie mindestens 8 Zeichen.",
+        "confirmPasswordRequired": "Bestätigen Sie Ihr neues Passwort.",
+        "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+        "passwordPolicy": "Verwenden Sie Buchstaben und Zahlen.",
+        "nameTooLong": "Verwenden Sie höchstens 100 Zeichen.",
+        "accountTypeInvalid": "Wählen Sie eine gültige Kontoart."
+      },
+      "errors": {
+        "invalidCredentials": "E-Mail-Adresse oder Passwort ist falsch.",
+        "accountInactive": "Dieses Konto ist nicht aktiv.",
+        "rateLimited": "Zu viele Versuche. Warten Sie kurz und versuchen Sie es erneut.",
+        "loginFailed": "Die Anmeldung ist derzeit nicht möglich.",
+        "googleFailed": "Die Anmeldung mit Google konnte nicht abgeschlossen werden.",
+        "googleUnavailable": "Die Anmeldung mit Google ist derzeit nicht verfügbar.",
+        "forgotFailed": "Der Link zum Zurücksetzen kann derzeit nicht gesendet werden.",
+        "resetFailed": "Das Passwort kann derzeit nicht geändert werden.",
+        "initFailed": "Die Anmeldeseite konnte nicht geladen werden.",
+        "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+        "emailNotVerified": "Bestätigen Sie vor der Anmeldung Ihre E-Mail-Adresse.",
+        "registerFailed": "Das Konto kann derzeit nicht erstellt werden.",
+        "verifyFailed": "Ihre E-Mail-Adresse kann derzeit nicht bestätigt werden.",
+        "resendVerificationFailed": "Der Bestätigungslink kann derzeit nicht erneut gesendet werden."
+      }
+    },
+    "clientNotes": {
+      "title": "Notizen",
+      "open": "Notizen öffnen",
+      "dockTabs": "Assistent und Notizen",
+      "sourceTabs": "Quelle der Notiz",
+      "actionLabel": "Notiz hinzufügen",
+      "tabs": {
+        "notes": "Notizen",
+        "consultations": "Aus Beratungen"
+      },
+      "placeholder": "Notiz zu diesem Profil hinzufügen …",
+      "add": "Hinzufügen",
+      "emptyNotes": "Noch keine Notizen.",
+      "emptyConsultations": "Noch keine Beratungsnotizen.",
+      "confirmDelete": "Diese Notiz löschen?",
+      "origin": {
+        "manual": "Manuell",
+        "assistant_text": "Assistent",
+        "assistant_voice": "Spracheingabe",
+        "consultation_ai": "Aus der Beratung"
+      },
+      "context": {
+        "partner": "Partnerperson: {name}"
+      },
+      "method": {
+        "natal": "Radix",
+        "transit": "Transit",
+        "progression": "Progression",
+        "direction": "Direktion",
+        "solar_return": "Solar",
+        "synastry_partner": "Synastrie"
+      },
+      "toast": {
+        "added": "Notiz hinzugefügt",
+        "updated": "Notiz aktualisiert",
+        "deleted": "Notiz gelöscht"
+      },
+      "errors": {
+        "noTarget": "Speichern Sie dieses Horoskop in einem Klientenprofil, bevor Sie Notizen hinzufügen.",
+        "loadFailed": "Die Notizen konnten nicht geladen werden.",
+        "saveFailed": "Die Notiz konnte nicht gespeichert werden.",
+        "deleteFailed": "Die Notiz konnte nicht gelöscht werden.",
+        "actionFailed": "Konnte nicht angewendet werden:"
+      }
+    },
+    "consultation": {
+      "title": "Beratung",
+      "back": "Zurück zum Klientenprofil",
+      "notFound": "Beratung nicht gefunden.",
+      "legacy": "Diese Beratung fand vor der Einführung strukturierter Zusammenfassungen statt.",
+      "summaryFailed": "Für diese Beratung konnte keine Zusammenfassung erstellt werden.",
+      "summary": {
+        "title": "Zusammenfassung",
+        "showDetailed": "Ausführliche Zusammenfassung anzeigen"
+      },
+      "report": {
+        "title": "Bericht für die Klientin oder den Klienten",
+        "reviewRequired": "Bitte prüfen",
+        "save": "Entwurf speichern",
+        "copy": "Bericht kopieren",
+        "unsaved": "Ungespeicherte Änderungen",
+        "saved": "Gespeichert",
+        "saveFailed": "Konnte nicht gespeichert werden",
+        "copied": "Bericht in die Zwischenablage kopiert",
+        "copyFailed": "Konnte nicht kopiert werden",
+        "sharedAt": "Geteilt"
+      },
+      "keyPoints": {
+        "title": "Kernaussagen"
+      },
+      "openQuestions": {
+        "title": "Offene Fragen",
+        "none": "Keine Unklarheiten vermerkt."
+      },
+      "memory": {
+        "title": "Klientenverlauf",
+        "empty": "Noch keine Einträge im Verlauf.",
+        "loadError": "Der Verlauf konnte nicht geladen werden.",
+        "aiSuggested": "KI-Vorschlag",
+        "byAstrologer": "Von Ihnen hinzugefügt",
+        "internal": "Nur intern sichtbar",
+        "confirmDelete": "Diesen Verlaufseintrag löschen?",
+        "deleted": "Eintrag gelöscht"
+      },
+      "consultationType": {
+        "natal": "Radix",
+        "synastry": "Synastrie",
+        "solar": "Solar",
+        "transits": "Transite",
+        "progressions": "Progressionen",
+        "relocation": "Relokation",
+        "rectification": "Geburtszeitkorrektur",
+        "horary": "Stundenastrologie",
+        "compatibility": "Kompatibilität",
+        "general_consultation": "Allgemein",
+        "other": "Sonstiges",
+        "unknown": "Unbekannt"
+      },
+      "mentionedBy": {
+        "client": "Klientin / Klient",
+        "astrologer": "Astrologin / Astrologe",
+        "both": "beide",
+        "unknown": "unbekannt"
+      },
+      "keyPointCategory": {
+        "client_question": "Frage der Klientin oder des Klienten",
+        "life_context": "Lebenssituation",
+        "astrological_focus": "Astrologischer Schwerpunkt",
+        "guidance_given": "Gegebene Hinweise",
+        "decision_or_plan": "Entscheidung oder Plan",
+        "follow_up": "Nachbereitung",
+        "sensitive": "Sensibel"
+      },
+      "memoryCategory": {
+        "relationship": "Beziehung",
+        "career": "Beruf",
+        "money": "Geld",
+        "family": "Familie",
+        "health_wellbeing": "Gesundheit und Wohlbefinden",
+        "relocation": "Umzug",
+        "education": "Bildung",
+        "spiritual_practice": "Spirituelle Praxis",
+        "timing": "Zeitplanung",
+        "follow_up": "Nachbereitung",
+        "other": "Sonstiges"
+      },
+      "openQuestionReason": {
+        "unclear_transcript_fragment": "Unklare Passage",
+        "ambiguous_statement": "Mehrdeutige Aussage",
+        "incomplete_context": "Unvollständiger Kontext",
+        "unresolved_topic": "Ungeklärtes Thema"
+      },
+      "requestFailed": "Die Anfrage ist fehlgeschlagen (HTTP {status})."
+    },
+    "pricing": {
+      "meta": {
+        "title": "Preise – Steliara"
+      },
+      "nav": {
+        "product": "Produkt",
+        "pricing": "Preise",
+        "signin": "Anmelden"
+      },
+      "hero": {
+        "kicker": "Preise",
+        "title": "Ein übersichtlicher Arbeitsbereich für Ihre astrologische Praxis",
+        "text": "Berechnen Sie Horoskope, bewahren Sie den Verlauf jeder Beratung an einem Ort auf und erhalten Sie während des Gesprächs schnelle Antworten aus den Daten. Wählen Sie einen Tarif und testen Sie ihn kostenlos."
+      },
+      "billing": {
+        "monthly": "Monatlich",
+        "annual": "Jährlich",
+        "save": "ca. 17 % sparen",
+        "ariaLabel": "Abrechnungszeitraum"
+      },
+      "period": "/ Monat",
+      "plans": {
+        "practitioner": {
+          "name": "Practitioner",
+          "tagline": "Alles, was Sie für eine professionelle astrologische Praxis brauchen.",
+          "cta": "Kostenlos testen",
+          "subMonthly": "Monatliche Abrechnung.",
+          "subAnnual": "Jährliche Abrechnung (240 USD/Jahr).",
+          "f1": "Präzise Radix- und Transithoroskope (Swiss Ephemeris)",
+          "f2": "Unbegrenzt viele Klientenprofile, Notizen und Aufnahmen",
+          "f3": "Prognosen als Zeitverlauf und Tabellen",
+          "f4": "Mehrere Häusersysteme",
+          "f5": "Support per E-Mail"
+        },
+        "studio": {
+          "tag": "Am beliebtesten",
+          "name": "Studio",
+          "tagline": "Für eine gut besuchte Praxis, in der Sie täglich mit Horoskopdaten arbeiten.",
+          "cta": "Kostenlos testen",
+          "subMonthly": "Monatliche Abrechnung.",
+          "subAnnual": "Jährliche Abrechnung (384 USD/Jahr).",
+          "f1": "Alle Funktionen des Practitioner-Tarifs",
+          "f2": "Schnelle Antworten aus den Horoskopdaten während der Beratung",
+          "f3": "Beratungszusammenfassungen und Gesprächsaufnahmen",
+          "f4": "Erweiterte Analyse: Asteroiden, Antiszien und Dominanten",
+          "f5": "Priorisierter Support"
+        }
+      },
+      "trialNote": "Jeder Tarif beginnt mit einer kostenlosen Testphase. Die erste Zahlung wird erst danach fällig. Sie können jederzeit kündigen.",
+      "faq": {
+        "title": "Fragen",
+        "q1": "Gibt es eine kostenlose Testphase?",
+        "a1": "Ja. Beide Tarife beginnen mit einer kostenlosen Testphase. So können Sie Ihren Arbeitsbereich einrichten und einige Horoskope berechnen, bevor die erste Zahlung fällig wird.",
+        "q2": "Kann ich zwischen monatlicher und jährlicher Abrechnung wechseln?",
+        "a2": "Jederzeit. Bei jährlicher Abrechnung erhalten Sie dieselben Funktionen zu einem günstigeren Preis – rund 17 % weniger als bei monatlicher Zahlung.",
+        "q3": "Kann ich kündigen?",
+        "a3": "Ja. Sie können jederzeit in Ihren Kontoeinstellungen kündigen. Ihr Zugang bleibt bis zum Ende des bereits bezahlten Zeitraums erhalten.",
+        "q4": "Wie wird die Zahlung abgewickelt?",
+        "a4": "Zahlungen und Rechnungsstellung werden sicher über Stripe abgewickelt. Bei Stripe Managed Payments ist Stripe der Verkäufer (Merchant of Record) und übernimmt Abrechnung, Steuern und Belege. Auf Ihrem Kontoauszug kann die Zahlung als „Sold through Link“ erscheinen. Link ist ein Unternehmen von Stripe.",
+        "q5": "Welche Währungen werden unterstützt?",
+        "a5": "Die Preise sind in USD angegeben. Stripe zeigt beim Bezahlen automatisch die passende lokale Währung und die anfallenden Steuern an."
+      },
+      "footer": {
+        "terms": "Nutzungsbedingungen",
+        "privacy": "Datenschutz",
+        "refund": "Erstattungen",
+        "contact": "Kontakt",
+        "copyright": "© 2026 Steliara. Zahlungsabwicklung durch Stripe als Merchant of Record (Stripe Managed Payments).",
+        "cloudSoftware": "Cloud-Software für Astrologie",
+        "workspace": "Arbeitsbereich für Astrologinnen und Astrologen",
+        "practiceManagement": "Praxisverwaltung"
+      }
+    },
+    "legal": {
+      "meta": {
+        "title": "Nutzungsbedingungen und Richtlinien – Steliara"
+      },
+      "title": "Nutzungsbedingungen und Richtlinien",
+      "updated": "Zuletzt aktualisiert: 19. Juni 2026",
+      "back": "← Zurück zu Steliara",
+      "nav": {
+        "pricing": "Preise"
+      },
+      "toc": {
+        "terms": "Nutzungsbedingungen",
+        "privacy": "Datenschutzerklärung",
+        "refund": "Erstattung und Kündigung",
+        "contact": "Kontakt"
+      },
+      "terms": {
+        "heading": "Nutzungsbedingungen",
+        "lead": "Diese Nutzungsbedingungen („Bedingungen“) regeln Ihren Zugang zu Steliara und dessen Nutzung („Dienst“). Steliara ist ein Arbeitsbereich für professionelle Astrologinnen und Astrologen mit Horoskopberechnung, Personenprofilen, Notizen, Aufnahmen und weiteren Werkzeugen. Mit dem Erstellen eines Kontos oder der Nutzung des Dienstes stimmen Sie diesen Bedingungen zu.",
+        "s1": "<h3>1. Wer wir sind</h3><p>Der Dienst wird von Steliara („Steliara“, „wir“, „uns“ oder „unser“) betrieben. Die vollständigen Angaben zum Rechtsträger und seinem eingetragenen Sitz finden Sie im Abschnitt <a href=\"#contact\">Kontakt</a>. Onlinezahlungen und die Abrechnung von Abonnements übernimmt unser Merchant of Record, <strong>Stripe</strong>, über Stripe Managed Payments. Käufe werden von <strong>Link, einem Unternehmen von Stripe</strong>, abgewickelt und können auf Ihrem Kontoauszug als „Sold through Link“ erscheinen. Für jeden Kauf gelten zusätzlich zu diesen Bedingungen die <a href=\"https://stripe.com/legal\" target=\"_blank\" rel=\"noopener\">Verbraucherbedingungen von Stripe</a>.</p>",
+        "s2": "<h3>2. Voraussetzungen und Konten</h3><ul><li>Sie müssen mindestens 18 Jahre alt und in der Lage sein, einen rechtsverbindlichen Vertrag abzuschließen.</li><li>Sie sind für die Sicherheit Ihrer Zugangsdaten und alle Aktivitäten über Ihr Konto verantwortlich.</li><li>Ihre Registrierungsangaben müssen richtig sein und aktuell gehalten werden.</li><li>Ohne unsere schriftliche Zustimmung dürfen Sie Ihr Konto nicht mit anderen teilen oder den Zugang weiterverkaufen.</li></ul>",
+        "s3": "<h3>3. Abonnements und Zahlung</h3><ul><li>Der Dienst wird im Abonnement angeboten. Tarifnamen, Preise, Abrechnungsintervalle und etwaige Bedingungen für eine kostenlose Testphase werden Ihnen vor der Bestätigung des Kaufs auf der Zahlungsseite angezeigt.</li><li>Abonnements verlängern sich am Ende jedes Abrechnungszeitraums automatisch, sofern sie nicht vorher gekündigt werden. Für den nächsten Zeitraum gilt der zum Zeitpunkt der Verlängerung angezeigte Preis.</li><li>Alle Zahlungen werden von Stripe als Merchant of Record abgewickelt. Stripe belastet Ihr Zahlungsmittel, stellt Rechnungen aus und erhebt anfallende Steuern, etwa Umsatzsteuer oder Sales Tax.</li><li>Ob die Preise Steuern enthalten, ist auf der Zahlungsseite angegeben. Die endgültige Steuer richtet sich nach Ihrem Rechnungsort.</li></ul>",
+        "s4": "<h3>4. Zulässige Nutzung</h3><p>Sie verpflichten sich, Folgendes zu unterlassen: (a) den Dienst für rechtswidrige Zwecke zu nutzen; (b) sich unbefugt Zugang zum Dienst oder seinen Systemen zu verschaffen; (c) den Dienst durch Reverse Engineering zu untersuchen, automatisiert auszulesen oder zu überlasten; (d) Inhalte hochzuladen, die rechtswidrig sind, Schutzrechte verletzen oder die Privatsphäre oder Rechte anderer beeinträchtigen; oder (e) den Dienst zum Versenden von Spam oder Schadcode zu verwenden.</p>",
+        "s5": "<h3>5. Ihre Inhalte und die Personen, mit denen Sie arbeiten</h3><p>Die Rechte an den Daten, die Sie zu Steliara hinzufügen, bleiben bei Ihnen. Dazu gehören Horoskope, Profile, Notizen und Aufnahmen („Ihre Inhalte“). Sie räumen uns ein begrenztes Recht ein, Ihre Inhalte ausschließlich zur Bereitstellung des Dienstes zu speichern, zu verarbeiten und anzuzeigen. Sie sind dafür verantwortlich, dass eine rechtliche Grundlage für die Speicherung von Informationen über die Personen besteht, mit denen Sie arbeiten, und dass Sie diese Personen entsprechend dem geltenden Recht informieren.</p>",
+        "s6": "<h3>6. Hinweise zu astrologischen Inhalten</h3><div class=\"callout\">Steliara bietet astrologische Berechnungen und Werkzeuge ausschließlich zu Informationszwecken und für die berufliche Beratungspraxis. Der Dienst erbringt keine medizinische, rechtliche, finanzielle oder psychologische Beratung. Ein bestimmtes Ergebnis wird nicht garantiert. Die Berechnungen beruhen auf Swiss Ephemeris und modernen astronomischen Standards.</div>",
+        "s7": "<h3>7. Verfügbarkeit und Änderungen des Dienstes</h3><p>Wir bemühen uns um die Verfügbarkeit des Dienstes, garantieren jedoch keinen unterbrechungsfreien Zugang. Wir können Funktionen ändern, aussetzen oder einstellen und diese Bedingungen aktualisieren. Über wesentliche Änderungen informieren wir Sie per E-Mail oder durch einen Hinweis in der Anwendung. Wenn Sie den Dienst nach Inkrafttreten der Änderungen weiter nutzen, gilt dies als Zustimmung.</p>",
+        "s8": "<h3>8. Beendigung</h3><p>Sie können jederzeit kündigen (siehe <a href=\"#refund\">Erstattung und Kündigung</a>). Wir können Ihr Konto sperren oder schließen, wenn Sie gegen diese Bedingungen verstoßen oder den Dienst so nutzen, dass uns oder anderen Nutzenden Schaden entsteht. Bei Beendigung können Sie den Zugang zu Ihren Inhalten verlieren. Wir empfehlen Ihnen, Daten zu exportieren, die Sie behalten möchten.</p>",
+        "s9": "<h3>9. Haftungsbeschränkung</h3><p>Soweit gesetzlich zulässig, wird der Dienst im vorhandenen Zustand und ohne Gewährleistungen jeglicher Art bereitgestellt. Wir haften nicht für mittelbare Schäden, beiläufig entstandene Schäden oder Folgeschäden sowie für Datenverlust oder entgangenen Gewinn. Unsere gesamte Haftung für einen Anspruch ist auf den Betrag begrenzt, den Sie in den 12 Monaten vor diesem Anspruch für den Dienst bezahlt haben.</p>",
+        "s10": "<h3>10. Anwendbares Recht</h3><p>Diese Bedingungen unterliegen dem Recht des Staates, in dem der Rechtsträger von Steliara eingetragen ist, unter Ausschluss der Kollisionsnormen. Zwingende Verbraucherrechte, die Ihnen nach Ihrem örtlichen Recht zustehen, werden durch diese Bedingungen nicht eingeschränkt.</p>"
+      },
+      "privacy": {
+        "heading": "Datenschutzerklärung",
+        "lead": "Diese Datenschutzerklärung erläutert, welche personenbezogenen Daten wir erheben, wofür wir sie verwenden und welche Rechte Sie haben. Für Kontodaten sind wir Verantwortlicher. Für Daten, die Sie über die Personen speichern, mit denen Sie arbeiten, handeln wir als Auftragsverarbeiter.",
+        "s1": "<h3>1. Welche Daten wir erheben</h3><ul><li><strong>Kontodaten:</strong> Name, E-Mail-Adresse, Passwort (als Hash gespeichert) und Kontoeinstellungen.</li><li><strong>Inhaltsdaten:</strong> Horoskope, Personenprofile, Geburtsdaten, Notizen und Aufnahmen, die Sie im Dienst erstellen.</li><li><strong>Abrechnungsdaten:</strong> Diese werden von Stripe und Link, einem Unternehmen von Stripe, als Merchant of Record verarbeitet. Wir erhalten begrenzte Transaktionsangaben, etwa Tarif, Status, Land und die letzten vier Ziffern, jedoch niemals Ihre vollständige Kartennummer.</li><li><strong>Nutzungsdaten:</strong> Protokolldaten, Geräte- und Browserinformationen, Prüfereignisse sowie – mit Ihrer Einwilligung – Ereignisse zur Produktanalyse wie Seitenaufrufe und Interaktionen. Diese Daten dienen dem Betrieb, der Sicherheit und der Verbesserung des Dienstes.</li></ul>",
+        "s2": "<h3>2. Wie wir Daten verwenden</h3><ul><li>Um den Dienst bereitzustellen, zu warten und zu verbessern.</li><li>Um Abonnements abzuwickeln und Betrug zu verhindern (über Stripe).</li><li>Um Sie über Ihr Konto, Sicherheitsfragen und Neuerungen des Dienstes zu informieren.</li><li>Um gesetzliche Pflichten zu erfüllen.</li></ul>",
+        "s3": "<h3>3. Rechtsgrundlagen (DSGVO)</h3><p>Wir verarbeiten personenbezogene Daten auf einer oder mehreren der folgenden Grundlagen: Vertragserfüllung (Bereitstellung des Dienstes), berechtigte Interessen (Sicherung und Verbesserung des Dienstes), rechtliche Verpflichtungen (Steuern und Buchhaltung) sowie Einwilligung, soweit erforderlich, etwa für optionale Mitteilungen.</p>",
+        "s4": "<h3>4. Weitergabe und Unterauftragsverarbeiter</h3><p><strong>Stripe</strong> und <strong>Link, ein Unternehmen von Stripe</strong>, handeln als unser Merchant of Record und als eigenständige Verantwortliche für Zahlungs- und Transaktionsdaten nach der <a href=\"https://stripe.com/privacy\" target=\"_blank\" rel=\"noopener\">Datenschutzerklärung von Stripe</a>. Wir geben Daten außerdem an Dienstleister weiter, die sie auf Grundlage geeigneter Vereinbarungen in unserem Auftrag verarbeiten. Dazu gehören <strong>PostHog</strong> (Produktanalyse, in der EU gehostet), unsere Hosting- und Datenbankanbieter sowie Anbieter für den E-Mail-Versand. Wir verkaufen Ihre personenbezogenen Daten nicht.</p>",
+        "s5": "<h3>5. Speicherdauer</h3><p>Wir speichern Konto- und Inhaltsdaten, solange Ihr Konto aktiv ist. Nach der Schließung des Kontos löschen oder anonymisieren wir die Daten innerhalb eines angemessenen Zeitraums, sofern sie nicht aus rechtlichen, steuerlichen oder Sicherheitsgründen aufbewahrt werden müssen.</p>",
+        "s6": "<h3>6. Internationale Datenübermittlungen</h3><p>Daten können in anderen Ländern als Ihrem eigenen verarbeitet werden. In diesem Fall stützen wir uns auf geeignete Schutzmaßnahmen, etwa Standardvertragsklauseln.</p>",
+        "s7": "<h3>7. Ihre Rechte</h3><p>Nach Maßgabe des geltenden Rechts können Sie Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung oder Übertragbarkeit Ihrer personenbezogenen Daten verlangen und bestimmten Verarbeitungen widersprechen. Nutzen Sie dafür die Angaben im Abschnitt <a href=\"#contact\">Kontakt</a>. Sie haben außerdem das Recht, sich bei Ihrer örtlichen Datenschutzaufsichtsbehörde zu beschweren.</p>",
+        "s8": "<h3>8. Sicherheit</h3><p>Wir verwenden branchenübliche Schutzmaßnahmen, darunter Verschlüsselung bei der Übertragung, gehashte Passwörter und Zugriffskontrollen. Keine Übertragungs- oder Speichermethode ist vollständig sicher. Wir arbeiten jedoch daran, Ihre Daten zu schützen.</p>",
+        "s9": "<h3>9. Cookies</h3><p>Wir verwenden unbedingt erforderliche Cookies, damit Sie angemeldet bleiben und der Dienst funktioniert. Stripe kann während des Bezahlvorgangs Cookies setzen, um Zahlungen sicher abzuwickeln. Mit Ihrer Einwilligung verwenden wir außerdem Analyse-Cookies über PostHog, um die Nutzung des Dienstes zu verstehen. Sie können diese im Einwilligungsbanner annehmen oder ablehnen. Die Analyse bleibt ausgeschaltet, bis Sie zustimmen.</p>"
+      },
+      "refund": {
+        "heading": "Erstattungs- und Kündigungsrichtlinie",
+        "lead": "Steliara soll Ihre Beratungspraxis unterstützen. Diese Richtlinie erklärt, wie Kündigungen und Erstattungen ablaufen. Zahlungen werden von Stripe als Merchant of Record verarbeitet und erscheinen als „Sold through Link“. Erstattungen erfolgen über Stripe/Link.",
+        "s1": "<h3>1. Ihr Abonnement kündigen</h3><ul><li>Sie können jederzeit in Ihren Kontoeinstellungen oder über den Link zum Abrechnungsportal in Ihrer Beleg-E-Mail von Link (Stripe Managed Payments) kündigen.</li><li>Nach der Kündigung bleibt Ihr Abonnement bis zum Ende des bereits bezahlten Zeitraums aktiv. Danach verlängert es sich nicht mehr.</li><li>Nach der Kündigung werden keine weiteren Zahlungen berechnet.</li></ul>",
+        "s2": "<h3>2. Erstattungen</h3><ul><li>Innerhalb von 14 Tagen nach Ihrem ersten Kauf können Sie eine vollständige Erstattung beantragen, sofern Sie den Dienst noch nicht wesentlich genutzt haben.</li><li>Zahlungen für Verlängerungen werden grundsätzlich nicht erstattet. Wurde Ihnen jedoch unerwartet ein Betrag berechnet, etwa weil Sie vor der Verlängerung kündigen wollten, kontaktieren Sie uns. Wir prüfen Ihre Anfrage fair.</li><li>Bei Problemen mit dem Dienst oder Abrechnungsfehlern können wir nach eigenem Ermessen Erstattungen gewähren.</li><li>Als Merchant of Record ermöglicht Stripe/Link auch Erstattungsanfragen über den Link-Support, in der Regel innerhalb von 60 Tagen nach der Transaktion.</li><li>Bewilligte Erstattungen werden von Stripe/Link auf Ihr ursprüngliches Zahlungsmittel zurückgezahlt, üblicherweise innerhalb von 5–10 Werktagen.</li></ul>",
+        "s3": "<h3>3. Gesetzliche Verbraucherrechte</h3><p>Wenn Sie Verbraucherin oder Verbraucher in der EU oder im Vereinigten Königreich sind, kann Ihnen innerhalb von 14 Tagen nach dem Kauf ein gesetzliches Widerrufsrecht zustehen. Wenn Sie einen digitalen Dienst innerhalb dieses Zeitraums nutzen, können Sie damit einem sofortigen Leistungsbeginn zustimmen. Dies kann Auswirkungen auf das Widerrufsrecht haben. Zwingende Rechte nach Ihrem örtlichen Recht bleiben durch diese Richtlinie unberührt.</p>",
+        "s4": "<h3>4. Eine Erstattung beantragen</h3><p>Schreiben Sie uns an die E-Mail-Adresse im Abschnitt <a href=\"#contact\">Kontakt</a>. Geben Sie die E-Mail-Adresse Ihres Kontos und die Beleg- oder Bestellnummer aus Ihrer Stripe/Link-Bestätigung an. Den Käufersupport von Stripe Managed Payments erreichen Sie auch über <a href=\"https://link.com\" target=\"_blank\" rel=\"noopener\">link.com</a>.</p>"
+      },
+      "contact": {
+        "heading": "Kontakt",
+        "intro": "Bei Fragen zu diesen Bedingungen, zum Datenschutz oder zur Abrechnung erreichen Sie uns hier:",
+        "list": "<ul><li><strong>Support-E-Mail:</strong> <a href=\"mailto:skak.igor@gmail.com\">skak.igor@gmail.com</a></li><li><strong>Dienst:</strong> Steliara – Arbeitsbereich für Astrologie</li><li><strong>Merchant of Record:</strong> Stripe über Stripe Managed Payments (Käufe werden von Link, einem Unternehmen von Stripe, abgewickelt)</li></ul>",
+        "operator": "<strong>Betreiber (Rechtsträger):</strong><br>Ihor Skakovskyi – Einzelunternehmer (OSVČ), eingetragen im tschechischen Gewerberegister<br>Unternehmens-ID (IČO): 17328691<br>Eingetragener Sitz: Ostrovského 1083/26, 150 00 Prague 5 – Smíchov, Czech Republic<br>Registerbehörde: Gewerbeamt des Stadtbezirks Prag 5 (Úřad městské části Praha 5)",
+        "paddle": "Bei Fragen zu Abrechnung und Zahlung können Sie Ihren Kauf auch über <a href=\"https://link.com\" target=\"_blank\" rel=\"noopener\">link.com</a> verwalten und den Support kontaktieren (Stripe Managed Payments / Link)."
+      },
+      "footer": "© 2026 Steliara. Astrologische Berechnungen auf Grundlage der Swiss Ephemeris und moderner astronomischer Standards."
+    },
+    "call": {
+      "title": "Beratungsgespräch – Steliara",
+      "connecting": "Verbindung wird hergestellt …",
+      "loadingClient": "Wird geladen …",
+      "back": "Zurück zur Praxis",
+      "status": {
+        "connecting": "Verbindung wird hergestellt",
+        "inCall": "Im Gespräch",
+        "otherLeft": "Die andere Person hat das Gespräch verlassen.",
+        "ended": "Gespräch beendet"
+      },
+      "rec": "REC",
+      "copyLink": "Einladungslink kopieren",
+      "copyLinkTitle": "Teilnahmelink für die Klientin oder den Klienten kopieren",
+      "copied": "Kopiert",
+      "tile": {
+        "you": "Sie",
+        "guest": "Gast",
+        "screenShare": "Bildschirmfreigabe"
+      },
+      "controls": {
+        "micTitle": "Mikrofon stummschalten / aktivieren",
+        "camTitle": "Kamera ein- / ausschalten",
+        "shareTitle": "Bildschirm teilen",
+        "pip": "Miniansicht",
+        "pipTitle": "Bild-in-Bild",
+        "pipExitTitle": "Bild-in-Bild beenden",
+        "record": "Aufnehmen",
+        "recordTitle": "Aufnahme starten",
+        "recordStop": "Aufnahme stoppen",
+        "recordStopTitle": "Aufnahme stoppen",
+        "endCall": "Gespräch beenden",
+        "endCallTitle": "Gespräch beenden"
+      },
+      "consent": {
+        "title": "Dieses Gespräch aufzeichnen?",
+        "body": "Es wird nur der Ton aufgenommen. Die Aufnahme wird sicher im Profil gespeichert und automatisch transkribiert. Bevor sie beginnt, müssen beide Personen zustimmen.",
+        "waitNote": "Wir warten auf die Zustimmung der anderen Person …",
+        "cancel": "Abbrechen",
+        "agree": "Zustimmen und andere Person fragen"
+      },
+      "endConfirm": "Die Beratung beenden? Das Gespräch wird für beide Personen geschlossen.",
+      "error": {
+        "title": "Gespräch nicht gefunden",
+        "connectionTitle": "Verbindung zum Gespräch nicht möglich",
+        "body": "Dieses Gespräch konnte nicht geladen werden.",
+        "noSession": "Es wurde kein Gespräch angegeben. Starten Sie das Gespräch bitte über die Profilseite.",
+        "tokenFailed": "Die Zugangsfreigabe für das Gespräch konnte nicht abgerufen werden.",
+        "connectFailed": "Die Verbindung zum Gespräch konnte nicht hergestellt werden.",
+        "back": "Zurück zur Praxis"
+      },
+      "ended": {
+        "title": "Gespräch beendet",
+        "duration": "Dauer: {duration}",
+        "note": "Die Aufnahme wird verarbeitet. Transkript und Zusammenfassung erscheinen in Kürze im Profil.",
+        "back": "Zurück zur Praxis",
+        "openProfile": "Profil öffnen"
+      }
+    },
+    "join": {
+      "title": "An der Beratung teilnehmen – Steliara",
+      "connecting": "Verbindung wird hergestellt …",
+      "error": {
+        "title": "Link nicht verfügbar",
+        "body": "Dieser Beratungslink ist nicht mehr gültig.",
+        "invalidTitle": "Ungültiger Link",
+        "invalidBody": "Dieser Beratungslink ist ungültig.",
+        "expired": "Dieser Gesprächslink ist ungültig oder abgelaufen."
+      },
+      "lobby": {
+        "sessionWith": "Beratung:",
+        "defaultAstrologer": "Ihre Astrologin oder Ihr Astrologe",
+        "subtitle": "Prüfen Sie Kamera und Mikrofon, bevor Sie am Gespräch teilnehmen.",
+        "cameraOff": "Kamera aus",
+        "mic": "Mikrofon",
+        "micTitle": "Mikrofon ein- oder ausschalten",
+        "camera": "Kamera",
+        "cameraTitle": "Kamera ein- oder ausschalten",
+        "join": "Am Gespräch teilnehmen",
+        "joining": "Teilnahme wird vorbereitet …"
+      },
+      "defaultAstrologerName": "Ihre Astrologin oder Ihr Astrologe",
+      "guide": "Astrologin / Astrologe",
+      "status": {
+        "inCall": "Im Gespräch",
+        "otherLeft": "Die andere Person hat das Gespräch verlassen."
+      },
+      "rec": "REC",
+      "tile": {
+        "you": "Sie",
+        "screenShare": "Bildschirmfreigabe"
+      },
+      "controls": {
+        "micTitle": "Mikrofon stummschalten / aktivieren",
+        "camTitle": "Kamera ein- / ausschalten",
+        "shareTitle": "Bildschirm teilen",
+        "pip": "Miniansicht",
+        "pipTitle": "Bild-in-Bild",
+        "pipExitTitle": "Bild-in-Bild beenden",
+        "leave": "Verlassen",
+        "leaveTitle": "Gespräch verlassen"
+      },
+      "consent": {
+        "title": "Zustimmung zur Aufnahme",
+        "body": "Ihre Astrologin oder Ihr Astrologe möchte dieses Gespräch aufzeichnen. <strong>Aufgenommen wird nur der Ton, kein Video.</strong> Aus der Aufnahme wird eine Zusammenfassung für Sie erstellt.",
+        "decline": "Ablehnen",
+        "accept": "Ich stimme zu"
+      },
+      "ended": {
+        "title": "Vielen Dank!",
+        "note": "Bis zum nächsten Mal."
+      }
+    }
+  },
+  "timezones": {
+    "label": {
+      "cityWithOffset": "{city} ({offset})",
+      "utc": "UTC (Koordinierte Weltzeit)"
+    },
+    "city": {
+      "kyiv": "Kyjiw",
+      "moscow": "Moskau",
+      "london": "London",
+      "paris": "Paris",
+      "berlin": "Berlin",
+      "rome": "Rom",
+      "madrid": "Madrid",
+      "warsaw": "Warschau",
+      "prague": "Prag",
+      "vienna": "Wien",
+      "athens": "Athen",
+      "istanbul": "Istanbul",
+      "helsinki": "Helsinki",
+      "stockholm": "Stockholm",
+      "amsterdam": "Amsterdam",
+      "brussels": "Brüssel",
+      "lisbon": "Lissabon",
+      "bucharest": "Bukarest",
+      "sofia": "Sofia",
+      "budapest": "Budapest",
+      "belgrade": "Belgrad",
+      "riga": "Riga",
+      "vilnius": "Vilnius",
+      "tallinn": "Tallinn",
+      "minsk": "Minsk",
+      "chisinau": "Chișinău",
+      "kaliningrad": "Kaliningrad",
+      "samara": "Samara",
+      "yekaterinburg": "Jekaterinburg",
+      "novosibirsk": "Nowosibirsk",
+      "krasnoyarsk": "Krasnojarsk",
+      "irkutsk": "Irkutsk",
+      "vladivostok": "Wladiwostok",
+      "almaty": "Almaty",
+      "tashkent": "Taschkent",
+      "baku": "Baku",
+      "tbilisi": "Tiflis",
+      "yerevan": "Jerewan",
+      "bishkek": "Bischkek",
+      "dushanbe": "Duschanbe",
+      "ashgabat": "Aschgabat",
+      "dubai": "Dubai",
+      "jerusalem": "Jerusalem",
+      "tehran": "Teheran",
+      "kolkata": "Kolkata",
+      "bangkok": "Bangkok",
+      "singapore": "Singapur",
+      "hong_kong": "Hongkong",
+      "beijing": "Peking",
+      "tokyo": "Tokio",
+      "seoul": "Seoul",
+      "new_york": "New York",
+      "chicago": "Chicago",
+      "denver": "Denver",
+      "los_angeles": "Los Angeles",
+      "toronto": "Toronto",
+      "vancouver": "Vancouver",
+      "mexico_city": "Mexiko-Stadt",
+      "sao_paulo": "São Paulo",
+      "buenos_aires": "Buenos Aires",
+      "sydney": "Sydney",
+      "melbourne": "Melbourne",
+      "perth": "Perth",
+      "auckland": "Auckland",
+      "cairo": "Kairo",
+      "johannesburg": "Johannesburg",
+      "lagos": "Lagos",
+      "utc": "UTC"
+    }
+  }
+}

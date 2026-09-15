@@ -1,21 +1,22 @@
 'use strict';
 
+const GERMAN_IDENTICAL_VALUE_KEYS = require('./i18n-known-identical-values.de.json');
+
 const KNOWN_HARDCODED_STRING_ALLOWLIST = [
-    { file: 'app/frontend/forecast.html', kind: 'html-text-node', includes: 'Save as account defaults' },
-    { file: 'app/frontend/forecast.html', kind: 'html-text-node', includes: 'Reset to defaults' },
-    { file: 'app/frontend/forecast.html', kind: 'html-text-node', includes: 'Bodies Matrix' },
-    { file: 'app/frontend/forecast.html', kind: 'html-text-node', includes: 'Aspect Types' },
-    { file: 'app/frontend/forecast.html', kind: 'html-text-node', includes: 'Aspect Scope' },
-    { file: 'app/frontend/forecast.html', kind: 'html-text-node', includes: 'Major' },
-    { file: 'app/frontend/forecast.html', kind: 'html-text-node', includes: 'Minor' },
-    { file: 'app/frontend/js/clients.js', kind: 'js-ui-sink', includes: 'Loading' },
-    { file: 'app/frontend/js/clients.js', kind: 'js-ui-sink', includes: 'Transcription in progress' },
-    { file: 'app/frontend/js/clients.js', kind: 'js-ui-sink', includes: 'Could not load recording:' },
-    { file: 'app/frontend/js/clients.js', kind: 'js-ui-sink', includes: 'Processing timed out. Retry' },
-    { file: 'app/frontend/js/clients.js', kind: 'js-ui-sink', includes: 'Starting' },
-    { file: 'app/frontend/js/clients.js', kind: 'js-ui-sink', includes: 'Start call' },
-    { file: 'app/frontend/js/chart.js', kind: 'js-user-error', includes: 'Account defaults are unavailable' },
-    { file: 'app/frontend/js/forecast.js', kind: 'js-user-error', includes: 'Account defaults are unavailable' },
+    // These exceptions are internal control-flow errors. Their callers either log
+    // them, ignore them, or replace them with catalog-backed UI copy.
+    { file: 'app/frontend/js/call-pip.js', kind: 'js-user-error', includes: 'No video stream available' },
+    { file: 'app/frontend/js/chart-config-presets.js', kind: 'js-user-error', includes: 'Preferences API is unavailable' },
+    { file: 'app/frontend/js/chat.js', kind: 'js-user-error', includes: 'table failed' },
+    { file: 'app/frontend/js/chat.js', kind: 'js-user-error', includes: 'list failed' },
+    { file: 'app/frontend/js/chat.js', kind: 'js-user-error', includes: 'load failed' },
+    { file: 'app/frontend/js/chat.js', kind: 'js-user-error', includes: 'delete failed' },
+    { file: 'app/frontend/js/consultation-call.js', kind: 'js-user-error', includes: 'Failed to submit consent' },
+    { file: 'app/frontend/js/forecast-new.js', kind: 'js-user-error', includes: 'Panel dialog is missing required controls' },
+    { file: 'app/frontend/js/i18n.js', kind: 'js-user-error', includes: 'catalog HTTP' },
+    { file: 'app/frontend/js/methodology-registry.js', kind: 'js-user-error', includes: 'Unknown methodology:' },
+    { file: 'app/frontend/js/place-autocomplete.js', kind: 'js-user-error', includes: 'Place search failed:' },
+    { file: 'app/frontend/js/save-chart-modal.js', kind: 'js-user-error', includes: 'HTTP' },
 ];
 
 const KNOWN_UNTRANSLATED_VALUE_KEYS = [
@@ -46,7 +47,12 @@ const KNOWN_UNTRANSLATED_VALUE_KEYS = [
     'page.index.foundation.items.ephemeris.title',
 ];
 
+const KNOWN_UNTRANSLATED_VALUE_KEYS_BY_LOCALE = {
+    de: GERMAN_IDENTICAL_VALUE_KEYS,
+};
+
 module.exports = {
     KNOWN_HARDCODED_STRING_ALLOWLIST,
     KNOWN_UNTRANSLATED_VALUE_KEYS,
+    KNOWN_UNTRANSLATED_VALUE_KEYS_BY_LOCALE,
 };

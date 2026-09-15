@@ -7,7 +7,7 @@
  * (window.AstroAPI, window.FrontendI18n). A page adopts this by including
  * css/app-nav.css + js/app-nav.js and removing its old top-bar chrome.
  *
- * Labels are self-contained (EN/UK/RU) so this needs no locale-file changes.
+ * Labels are self-contained so the drawer remains usable while catalogs load.
  */
 (function (global) {
     'use strict';
@@ -18,16 +18,17 @@
         { key: 'settings', href: '/account-settings.html', ico: '⚙', test: function (p) { return p.indexOf('/account-settings') === 0; } }
     ];
 
-    var LOCALES = ['en', 'uk', 'ru'];
+    var LOCALES = ['en', 'uk', 'ru', 'de'];
     var LABELS = {
-        en: { practice: 'Practice', calendar: 'Calendar', settings: 'Settings', logout: 'Log out', menu: 'Menu', lang: { en: 'EN', uk: 'УКР', ru: 'RU' } },
-        uk: { practice: 'Практика', calendar: 'Календар', settings: 'Налаштування', logout: 'Вийти', menu: 'Меню', lang: { en: 'EN', uk: 'УКР', ru: 'RU' } },
-        ru: { practice: 'Практика', calendar: 'Календарь', settings: 'Настройки', logout: 'Выйти', menu: 'Меню', lang: { en: 'EN', uk: 'УКР', ru: 'RU' } }
+        en: { practice: 'Practice', calendar: 'Calendar', settings: 'Settings', logout: 'Log out', menu: 'Menu', lang: { en: 'EN', uk: 'УКР', ru: 'RU', de: 'DE' } },
+        uk: { practice: 'Практика', calendar: 'Календар', settings: 'Налаштування', logout: 'Вийти', menu: 'Меню', lang: { en: 'EN', uk: 'УКР', ru: 'RU', de: 'DE' } },
+        ru: { practice: 'Практика', calendar: 'Календарь', settings: 'Настройки', logout: 'Выйти', menu: 'Меню', lang: { en: 'EN', uk: 'УКР', ru: 'RU', de: 'DE' } },
+        de: { practice: 'Praxis', calendar: 'Kalender', settings: 'Einstellungen', logout: 'Abmelden', menu: 'Menü', lang: { en: 'EN', uk: 'УКР', ru: 'RU', de: 'DE' } }
     };
 
     function locale() {
-        var l = (global.FrontendI18n && global.FrontendI18n.getLocale && global.FrontendI18n.getLocale()) || 'uk';
-        return LABELS[l] ? l : 'uk';
+        var l = (global.FrontendI18n && global.FrontendI18n.getLocale && global.FrontendI18n.getLocale()) || 'en';
+        return LABELS[l] ? l : 'en';
     }
 
     function currentPath() {
@@ -105,8 +106,11 @@
                     (active ? ' aria-current="page"' : '') + '><span class="ico" aria-hidden="true">' + item.ico +
                     '</span>' + L[item.key] + '</a>';
             }).join('');
-            var langHtml = LOCALES.map(function (code) {
-                return '<button type="button" class="' + (code === lc ? 'is-active' : '') + '" data-locale="' + code + '">' + L.lang[code] + '</button>';
+            var supportedLocales = global.FrontendI18n && Array.isArray(global.FrontendI18n.SUPPORTED_LOCALES)
+                ? global.FrontendI18n.SUPPORTED_LOCALES
+                : LOCALES;
+            var langHtml = supportedLocales.map(function (code) {
+                return '<button type="button" class="' + (code === lc ? 'is-active' : '') + '" data-locale="' + code + '">' + (L.lang[code] || code.toUpperCase()) + '</button>';
             }).join('');
             var email = accountEmail();
             var initial = email ? email.charAt(0).toUpperCase() : '●';

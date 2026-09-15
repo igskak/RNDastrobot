@@ -57,3 +57,45 @@ def test_mailer_requires_explicit_provider(monkeypatch):
     )
 
     assert delivered is False
+
+
+def test_password_reset_email_uses_formal_german_copy(monkeypatch):
+    captured = {}
+
+    def _capture(**kwargs):
+        captured.update(kwargs)
+        return True
+
+    monkeypatch.setattr(mailer, "_send_auth_email", _capture)
+
+    delivered = mailer.send_password_reset_email(
+        recipient="user@example.com",
+        reset_link="https://example.com/reset",
+        ttl_minutes=30,
+        locale="de-DE",
+    )
+
+    assert delivered is True
+    assert captured["subject"] == "AstroBot: Passwort zurücksetzen"
+    assert "Sie haben einen Link angefordert" in captured["body_text"]
+    assert "30 Minuten gültig" in captured["body_text"]
+
+
+def test_verification_email_uses_formal_german_copy(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(
+        mailer,
+        "_send_auth_email",
+        lambda **kwargs: captured.update(kwargs) is None,
+    )
+
+    delivered = mailer.send_email_verification_email(
+        recipient="user@example.com",
+        verify_link="https://example.com/verify",
+        ttl_hours=24,
+        locale="de",
+    )
+
+    assert delivered is True
+    assert captured["subject"] == "AstroBot: E-Mail-Adresse bestätigen"
+    assert "Bestätigen Sie Ihre E-Mail-Adresse" in captured["body_text"]

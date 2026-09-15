@@ -8,28 +8,15 @@ const {
 } = require('./i18n-known-issues.cjs');
 
 const DEFAULT_TARGET_FILES = [
-    'app/frontend/index.html',
-    'app/frontend/chart.html',
-    'app/frontend/forecast.html',
-    'app/frontend/clients.html',
-    'app/frontend/natal-full.html',
-    'app/frontend/login.html',
-    'app/frontend/calendar.html',
-    'app/frontend/js/form.js',
-    'app/frontend/js/clients.js',
-    'app/frontend/js/chart.js',
-    'app/frontend/js/chart-data.js',
-    'app/frontend/js/chart-layout.js',
-    'app/frontend/js/chart-wheel.js',
-    'app/frontend/js/forecast.js',
-    'app/frontend/js/forecast-timeline.js',
-    'app/frontend/js/forecast-biwheel.js',
-    'app/frontend/js/natal-full.js',
-    'app/frontend/js/login.js',
-    'app/frontend/js/calendar.js',
-    'app/frontend/js/api.js',
-    'app/frontend/js/timezones.js',
-];
+    'account-settings.html', 'calendar.html', 'client-profile.html', 'clients.html',
+    'consultation-call.html', 'consultation-join.html', 'consultation.html',
+    'forecast-new.html', 'forecast-tables.html', 'forecast-timeline.html',
+    'index.html', 'login.html', 'natal-full.html', 'pricing.html', 'terms.html',
+].map((name) => `app/frontend/${name}`).concat(
+    fs.readdirSync(path.join(__dirname, '..', 'frontend', 'js'))
+        .filter((name) => name.endsWith('.js') && !name.endsWith('.test.js'))
+        .map((name) => `app/frontend/js/${name}`),
+);
 
 function parseArgs(argv) {
     const parsed = {};
@@ -173,8 +160,10 @@ function scanHtmlFile(filePath, source, allowlist) {
     }
 
     const htmlForTextNodes = source
+        .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/<style[\s\S]*?<\/style>/gi, '')
-        .replace(/<script[\s\S]*?<\/script>/gi, '');
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<([a-z][a-z0-9-]*)\b[^>]*\bdata-i18n-html\s*=\s*"[^"]+"[^>]*>[\s\S]*?<\/\1>/gi, '');
 
     const textNodeRe = />([^<]+)</g;
     let textMatch;
@@ -217,6 +206,12 @@ function runHardcodedStringCheck(options = {}) {
     for (const relPath of targetFiles) {
         const absPath = path.resolve(repoRoot, relPath);
         if (!fs.existsSync(absPath)) {
+            violations.push({
+                file: toPosixPath(relPath),
+                line: 0,
+                kind: 'file-missing',
+                value: 'Required i18n scan target is missing',
+            });
             continue;
         }
         const source = fs.readFileSync(absPath, 'utf8');

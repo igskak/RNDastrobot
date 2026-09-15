@@ -126,7 +126,7 @@
             <h1 data-i18n="page.pricing.hero.title">A calm workspace for your astrology practice</h1>
             <p data-i18n="page.pricing.hero.text">Generate charts, keep every client&rsquo;s history in one place, and get fast answers from the data during a session. Pick a plan and start with a free trial.</p>
 
-            <div class="billing-toggle ui-segmented" role="group" aria-label="Billing period">
+            <div class="billing-toggle ui-segmented" role="group" aria-label="Billing period" data-i18n-aria-label="page.pricing.billing.ariaLabel">
                 <button id="monthlyBtn" class="active ui-segmented__item" type="button" data-i18n="page.pricing.billing.monthly">Monthly</button>
                 <button id="annualBtn" class="ui-segmented__item" type="button"><span data-i18n="page.pricing.billing.annual">Annual</span> <span class="save-badge" data-i18n="page.pricing.billing.save">save ~17%</span></button>
             </div>
@@ -184,9 +184,9 @@
 
         <footer class="site">
             <div style="margin-bottom:10px;">
-                <a href="/cloud-astrology-software">Cloud astrology software</a>
-                <a href="/astrologer-workspace">Astrologer workspace</a>
-                <a href="/astrology-practice-management">Practice management</a>
+                <a href="/cloud-astrology-software" data-i18n="page.pricing.footer.cloudSoftware">Cloud astrology software</a>
+                <a href="/astrologer-workspace" data-i18n="page.pricing.footer.workspace">Astrologer workspace</a>
+                <a href="/astrology-practice-management" data-i18n="page.pricing.footer.practiceManagement">Practice management</a>
             </div>
             <div>
                 <a href="terms.html#terms" data-i18n="page.pricing.footer.terms">Terms</a>
@@ -224,7 +224,7 @@
         annualBtn.addEventListener('click', () => { billingMode = 'annual'; applyBilling(); });
         // Re-apply current billing (price amounts + correct sub key) after each locale render.
         document.addEventListener('frontend:locale-changed', () => setTimeout(applyBilling, 0));
-        applyBilling();
+        Promise.resolve(window.FrontendI18n?.ready).catch(() => {}).then(applyBilling);
     </script>
 </body>
 </html>

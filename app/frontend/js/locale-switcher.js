@@ -99,6 +99,7 @@
             en: 'EN',
             uk: 'УКР',
             ru: 'RU',
+            de: 'DE',
         };
         return labels[locale] || String(locale || '').toUpperCase();
     }

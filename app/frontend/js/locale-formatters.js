@@ -15,6 +15,7 @@
             formatDate: api.formatDate,
             formatDateTime: api.formatDateTime,
             formatAstroCoordinate: api.formatAstroCoordinate,
+            toIntlLocale: api.toIntlLocale,
         };
     }
 })(function (root) {
@@ -23,6 +24,7 @@
     function toIntlLocale(locale) {
         if (locale === 'uk') return 'uk-UA';
         if (locale === 'ru') return 'ru-RU';
+        if (locale === 'de') return 'de-DE';
         return 'en-US';
     }
 

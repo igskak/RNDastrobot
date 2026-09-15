@@ -225,7 +225,8 @@
     "edit": "Edit",
     "delete": "Delete",
     "save": "Save",
-    "time": "Time"
+    "time": "Time",
+    "undo": "Undo"
   },
   "i18n": {
     "loading": "Loading...",
@@ -236,7 +237,8 @@
     "name": {
       "en": "English",
       "ru": "Russian",
-      "uk": "Ukrainian"
+      "uk": "Ukrainian",
+      "de": "German"
     }
   },
   "page": {
@@ -693,6 +695,83 @@
         "unavailable": "Add a solar return or partner chart to swap the charts",
         "chip": "Primary chart: {chart}",
         "baseTitle": "{chart} (primary)"
+      },
+      "emptyLayer": {
+        "title": "No layer selected",
+        "body": "Add a layer to calculate it"
+      },
+      "timeStepper": {
+        "date": "Date",
+        "time": "Time",
+        "birthDate": "Birth date",
+        "birthTime": "Birth time",
+        "resetCurrent": "Reset to the current date and time",
+        "resetBirth": "Reset to the birth date and time",
+        "customTooltip": "Custom step: {step}",
+        "customActions": "Move by a custom step",
+        "back": "Back by a custom step",
+        "forward": "Forward by a custom step",
+        "step": "Step",
+        "unit": "Unit",
+        "units": {
+          "second": "seconds",
+          "minute": "minutes",
+          "hour": "hours",
+          "day": "days",
+          "week": "weeks",
+          "month": "months",
+          "year": "years"
+        },
+        "segments": {
+          "yearThousands": {
+            "title": "Thousands of years"
+          },
+          "yearHundreds": {
+            "title": "Hundreds of years"
+          },
+          "yearTens": {
+            "title": "Decades"
+          },
+          "yearOnes": {
+            "title": "Years"
+          },
+          "monthTens": {
+            "title": "Ten months"
+          },
+          "monthOnes": {
+            "title": "Months"
+          },
+          "dayTens": {
+            "title": "Ten days"
+          },
+          "dayOnes": {
+            "title": "Days"
+          },
+          "hour": {
+            "title": "Hours"
+          },
+          "tenMinute": {
+            "title": "Ten minutes"
+          },
+          "minute": {
+            "title": "Minutes"
+          },
+          "tenSecond": {
+            "title": "Ten seconds"
+          },
+          "second": {
+            "title": "Seconds"
+          }
+        },
+        "unitsOne": {
+          "second": "second",
+          "minute": "minute",
+          "hour": "hour",
+          "day": "day",
+          "week": "week",
+          "month": "month",
+          "year": "year"
+        }
       }
     },
     "plan": {
@@ -1133,7 +1212,10 @@
         "correctionSubmit": "Submit",
         "correctionThanks": "Thank you for your feedback — we’ll take it into account.",
         "feedbackLike": "Mark this answer helpful",
-        "feedbackDislike": "Flag this answer for correction"
+        "feedbackDislike": "Flag this answer for correction",
+        "actionConfirmTitle": "Confirm: {action}",
+        "actionApply": "Apply",
+        "actionCancelled": "Cancelled: {action}"
       },
       "edit": {
         "errors": {
@@ -1313,7 +1395,9 @@
         "personPlaceholder": "Search for a person…",
         "personPrimary": "primary",
         "tagsLabel": "Tags",
-        "tagsPlaceholder": "New tag…"
+        "tagsPlaceholder": "New tag…",
+        "removeTag": "Remove {name}",
+        "removePerson": "Remove {name}"
       }
     },
     "chat": {
@@ -1598,7 +1682,8 @@
         "paidBadge": "Paid",
         "unpaidBadge": "Unpaid",
         "lastSession": "Last session:",
-        "nextSession": "Next:"
+        "nextSession": "Next:",
+        "startCall": "Start call"
       },
       "consultation": {
         "kicker": "Session history",
@@ -1649,7 +1734,8 @@
         "passed": "{days} days ago",
         "tomorrow": "Tomorrow",
         "openChart": "Open",
-        "noAlerts": "No notable events this month"
+        "noAlerts": "No notable events this month",
+        "passedOne": "1 day ago"
       }
     },
     "chartPicker": {
@@ -1717,7 +1803,16 @@
         "noData": "No recording data available yet.",
         "failed": "Processing failed.",
         "retry": "Retry processing",
-        "summaryFailed": "Transcript ready, but the summary could not be generated."
+        "summaryFailed": "Transcript ready, but the summary could not be generated.",
+        "loading": "Loading…",
+        "transcriptionInProgress": "Transcription in progress… This may take a few minutes.",
+        "couldNotLoad": "Could not load recording: {message}",
+        "processingTimedOut": "Processing timed out.",
+        "reprocessFailed": "Failed to start reprocessing",
+        "transcriptionInProgressShort": "Transcription in progress…",
+        "retryFailed": "Could not retry",
+        "audioUnsupported": "Your browser doesn't support audio playback.",
+        "startProcessing": "Start processing"
       },
       "solar": {
         "defaultName": "Solar return {year}",
@@ -1920,45 +2015,45 @@
         "openTitle": "How to read this page",
         "sections": {
           "activeNow": {
-            "text1": "Text1",
-            "text2": "Text2",
-            "text3": "Text3",
-            "title": "Title"
+            "text1": "The <strong>Active now</strong> section highlights events closest to today.",
+            "text2": "Labels show whether an event is exact today, was exact recently, or will become exact soon.",
+            "text3": "This gives you a quick overview of the current period.",
+            "title": "Active now"
           },
           "biwheel": {
-            "text1": "Text1",
-            "text2": "Text2",
-            "text3": "Text3",
-            "text4": "Text4",
-            "title": "Title"
+            "text1": "The double chart shows the natal chart together with transits, progressions, or directions.",
+            "text2": "Use the legend to turn individual layers on or off.",
+            "text3": "Settings let you adjust orientation and point size.",
+            "text4": "Expand the aspect and ingress tables to see the details.",
+            "title": "Double chart"
           },
           "principle": {
-            "text": "Text",
-            "title": "Title"
+            "text": "Choose a forecast method, period, and location, then click <strong>Calculate</strong>. Results are available as a timeline, table, double chart, and solar return.",
+            "title": "Getting started"
           },
           "solar": {
-            "text": "Text",
-            "title": "Title"
+            "text": "The solar return view shows the return chart, local and UTC times, and display settings. Use it to explore the themes of the year.",
+            "title": "Solar return"
           },
           "table": {
-            "text": "Text",
-            "title": "Title"
+            "text": "Sort and filter the table by type, aspect, orb, or search text to find the events you need.",
+            "title": "Event table"
           },
           "timeline": {
-            "text1": "Text1",
-            "text2": "Text2",
-            "text3": "Text3",
-            "text4": "Text4",
-            "text5": "Text5",
-            "text6": "Text6",
-            "title": "Title"
+            "text1": "The <strong>timeline</strong> shows events in chronological order.",
+            "text2": "Each entry includes the event type, date, and key details of the aspect or ingress.",
+            "text3": "Use the step and playback controls to move through the period gradually.",
+            "text4": "Hover over an entry to see more details.",
+            "text5": "The counter above shows how many events are displayed out of the full period.",
+            "text6": "If no events appear, check the date range and filters.",
+            "title": "Timeline"
           },
           "tips": {
-            "item1": "Item1",
-            "item2": "Item2",
-            "item3": "Item3",
-            "item4": "Item4",
-            "title": "Title"
+            "item1": "Start with a period of one to three months to keep the view manageable.",
+            "item2": "Use a maximum orb of 2–3.5 degrees to narrow the results.",
+            "item3": "Compare the timeline and double chart to check an event's context.",
+            "item4": "After filtering, open the forecast chat to ask questions about the events you found.",
+            "title": "Practical tips"
           }
         },
         "title": "Forecast guide"
@@ -2930,7 +3025,8 @@
         "ambiguous_statement": "Ambiguous statement",
         "incomplete_context": "Incomplete context",
         "unresolved_topic": "Unresolved topic"
-      }
+      },
+      "requestFailed": "The request failed (HTTP {status})."
     },
     "pricing": {
       "meta": {
@@ -2949,7 +3045,8 @@
       "billing": {
         "monthly": "Monthly",
         "annual": "Annual",
-        "save": "save ~17%"
+        "save": "save ~17%",
+        "ariaLabel": "Billing period"
       },
       "period": "/ month",
       "plans": {
@@ -2998,7 +3095,10 @@
         "privacy": "Privacy",
         "refund": "Refund policy",
         "contact": "Contact",
-        "copyright": "© 2026 Steliara. Payments processed by Stripe as merchant of record (Stripe Managed Payments)."
+        "copyright": "© 2026 Steliara. Payments processed by Stripe as merchant of record (Stripe Managed Payments).",
+        "cloudSoftware": "Cloud astrology software",
+        "workspace": "Astrologer workspace",
+        "practiceManagement": "Practice management"
       }
     },
     "legal": {

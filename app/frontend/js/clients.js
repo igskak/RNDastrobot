@@ -2623,7 +2623,7 @@ async function openCallRecording(sessionId, rowEl) {
     // Already loaded
     if (panel.dataset.loaded) return;
     panel.dataset.loaded = '1';
-    panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Loading…</div>`;
+    panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> ${escapeHtml(t('page.clientProfile.recordings.loading'))}</div>`;
 
     try {
         const csRes = await apiFetch(`${API_BASE}/call-sessions/${sessionId}`);
@@ -2631,7 +2631,7 @@ async function openCallRecording(sessionId, rowEl) {
 
         // Still processing — show spinner and start polling
         if (cs?.call_status === 'processing') {
-            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Transcription in progress… this may take a few minutes.</div>`;
+            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> ${escapeHtml(t('page.clientProfile.recordings.transcriptionInProgress'))}</div>`;
             pollProcessingSession(sessionId, panel, rowEl);
             return;
         }
@@ -2643,7 +2643,7 @@ async function openCallRecording(sessionId, rowEl) {
 
         panel.innerHTML = buildRecordingPanelHTML(cs, audio?.url || null, sessionId);
     } catch (err) {
-        panel.innerHTML = `<p class="cs-panel-error">Could not load recording: ${escapeHtml(err.message)}</p>`;
+        panel.innerHTML = `<p class="cs-panel-error">${escapeHtml(t('page.clientProfile.recordings.couldNotLoad', { message: err.message }))}</p>`;
     }
 }
 
@@ -2656,7 +2656,7 @@ function pollProcessingSession(sessionId, panel, rowEl) {
         attempts++;
         if (attempts > MAX_ATTEMPTS) {
             clearInterval(timer);
-            panel.innerHTML = `<div class="cs-panel-error">Processing timed out. <button class="btn-new btn-sm cs-retry-btn" data-action="retry-processing" data-session-id="${escapeHtml(sessionId)}">Retry</button></div>`;
+            panel.innerHTML = `<div class="cs-panel-error">${escapeHtml(t('page.clientProfile.recordings.processingTimedOut'))} <button class="btn-new btn-sm cs-retry-btn" data-action="retry-processing" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('common.retry'))}</button></div>`;
             return;
         }
         try {
@@ -2672,8 +2672,8 @@ function pollProcessingSession(sessionId, panel, rowEl) {
             const badge = rowEl.querySelector('.cs-status');
             if (badge) {
                 const STATUS_LABELS = {
-                    completed: { label: 'Completed', cls: 'cs-status--completed' },
-                    failed:    { label: 'Failed',    cls: 'cs-status--failed'    },
+                    completed: { label: t('page.clientProfile.callStatus.completed'), cls: 'cs-status--completed' },
+                    failed:    { label: t('page.clientProfile.callStatus.failed'),    cls: 'cs-status--failed'    },
                 };
                 const s = STATUS_LABELS[cs.call_status];
                 if (s) {
@@ -2700,9 +2700,9 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
             ? `<p class="cs-panel-error">${escapeHtml(cs.processing_error)}</p>`
             : '';
         return `<div class="cs-panel-inner">
-            <p class="cs-panel-error">Processing failed.</p>
+            <p class="cs-panel-error">${escapeHtml(t('page.clientProfile.recordings.failed'))}</p>
             ${errMsg}
-            <button class="btn-new btn-sm cs-retry-btn" data-action="retry-processing" data-session-id="${escapeHtml(sessionId)}">Retry processing</button>
+            <button class="btn-new btn-sm cs-retry-btn" data-action="retry-processing" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.retry'))}</button>
         </div>`;
     }
 
@@ -2713,7 +2713,7 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
         html += `
             <div class="cs-audio-wrap">
                 <audio class="cs-audio-player" controls preload="none" src="${escapeHtml(audioUrl)}">
-                    Your browser doesn't support audio playback.
+                    ${escapeHtml(t('page.clientProfile.recordings.audioUnsupported'))}
                 </audio>
             </div>`;
     }
@@ -2722,7 +2722,7 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
     if (cs?.summary_text) {
         html += `
             <div class="cs-summary">
-                <h5 class="cs-section-title">Summary</h5>
+                <h5 class="cs-section-title">${escapeHtml(t('page.clientProfile.recordings.summary'))}</h5>
                 <p class="cs-summary-text">${escapeHtml(cs.summary_text)}</p>
             </div>`;
     }
@@ -2732,7 +2732,7 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
         const items = cs.key_points.map(p => `<li>${escapeHtml(p)}</li>`).join('');
         html += `
             <div class="cs-key-points">
-                <h5 class="cs-section-title">Key points</h5>
+                <h5 class="cs-section-title">${escapeHtml(t('page.clientProfile.recordings.keyPoints'))}</h5>
                 <ul class="cs-key-points-list">${items}</ul>
             </div>`;
     }
@@ -2740,7 +2740,9 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
     // Transcript
     if (cs?.transcript_segments?.length) {
         const segs = cs.transcript_segments.map(seg => {
-            const speakerLabel = seg.speaker === 'A' ? 'Astrologer' : 'Guest';
+            const speakerLabel = seg.speaker === 'A'
+                ? t('page.clientProfile.recordings.speakerAstrologer')
+                : t('page.clientProfile.recordings.speakerGuest');
             const cls = seg.speaker === 'A' ? 'cs-seg--astrologer' : 'cs-seg--client';
             return `
                 <div class="cs-segment ${cls}">
@@ -2750,13 +2752,13 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
         }).join('');
         html += `
             <details class="cs-transcript-details">
-                <summary class="cs-transcript-toggle">Full transcript</summary>
+                <summary class="cs-transcript-toggle">${escapeHtml(t('page.clientProfile.recordings.fullTranscript'))}</summary>
                 <div class="cs-transcript">${segs}</div>
             </details>`;
     } else if (cs?.transcript_text) {
         html += `
             <details class="cs-transcript-details">
-                <summary class="cs-transcript-toggle">Full transcript</summary>
+                <summary class="cs-transcript-toggle">${escapeHtml(t('page.clientProfile.recordings.fullTranscript'))}</summary>
                 <p class="cs-transcript-plain">${escapeHtml(cs.transcript_text)}</p>
             </details>`;
     }
@@ -2765,34 +2767,34 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
     if (cs?.call_status === 'ended' && cs?.audio_storage_path) {
         html += `
             <div class="cs-reprocess-wrap">
-                <button class="btn-new btn-sm cs-retry-btn" data-action="retry-processing" data-session-id="${escapeHtml(sessionId)}">Start processing</button>
+                <button class="btn-new btn-sm cs-retry-btn" data-action="retry-processing" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.startProcessing'))}</button>
             </div>`;
     }
 
-    if (!html) html = `<p class="cs-panel-empty">No recording data available yet.</p>`;
+    if (!html) html = `<p class="cs-panel-empty">${escapeHtml(t('page.clientProfile.recordings.noData'))}</p>`;
     return `<div class="cs-panel-inner">${html}</div>`;
 }
 
 async function retryProcessing(sessionId, btn) {
     const orig = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Starting…';
+    btn.textContent = t('page.clients.detail.startingCall');
     try {
         const res = await apiFetch(`${API_BASE}/call-sessions/${sessionId}/reprocess`, { method: 'POST' });
         if (!res.ok) {
             const d = await res.json().catch(() => ({}));
-            throw new Error(d.detail || 'Failed to start reprocessing');
+            throw new Error(d.detail || t('page.clientProfile.recordings.reprocessFailed'));
         }
         // Reset the panel to polling state
         const panel = document.getElementById(`cs-panel-${sessionId}`);
         const row   = document.querySelector(`.cs-row--expandable[data-session-id="${sessionId}"]`);
         if (panel && row) {
             delete panel.dataset.loaded;
-            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Transcription in progress… this may take a few minutes.</div>`;
+            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> ${escapeHtml(t('page.clientProfile.recordings.transcriptionInProgress'))}</div>`;
             pollProcessingSession(sessionId, panel, row);
         }
     } catch (err) {
-        showToast(err.message || 'Could not retry', 'error');
+        showToast(err.message || t('page.clientProfile.recordings.retryFailed'), 'error');
         btn.disabled    = false;
         btn.textContent = orig;
     }
@@ -2814,7 +2816,7 @@ async function startCallSession(personId) {
     const btn = refs.tbody.querySelector(`button[data-action="start-call"][data-user-id="${personId}"]`);
     if (btn) {
         btn.disabled = true;
-        btn.textContent = 'Starting…';
+        btn.textContent = t('page.clients.detail.startingCall');
     }
     try {
         const res = await apiFetch(`${API_BASE}/call-sessions`, {
@@ -2833,7 +2835,8 @@ async function startCallSession(personId) {
         showToast(err.message || t('page.clients.detail.callStartFailed'), 'error');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Start call';
+            btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> '
+                + escapeHtml(t('page.clients.detail.startCall'));
         }
     }
 }
@@ -3011,6 +3014,7 @@ function buildSolarAlertRow(alert) {
     if (days === 0) timing = t('page.clients.alerts.today');
     else if (days === 1) timing = t('page.clients.alerts.tomorrow');
     else if (days > 0) timing = t('page.clients.alerts.daysUntil', { days });
+    else if (days === -1) timing = t('page.clients.alerts.passedOne');
     else timing = t('page.clients.alerts.passed', { days: Math.abs(days) });
 
     const dateStr = alert.solar_date ? formatDate(alert.solar_date) : '';

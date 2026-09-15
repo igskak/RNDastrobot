@@ -38,81 +38,105 @@ ERROR_MESSAGES: dict[str, dict[str, str]] = {
         "en": "Bad request.",
         "uk": "Некоректний запит.",
         "ru": "Некорректный запрос.",
+        "de": "Ungültige Anfrage.",
     },
     "UNAUTHORIZED": {
         "en": "Authentication is required.",
         "uk": "Потрібна автентифікація.",
         "ru": "Требуется аутентификация.",
+        "de": "Bitte melden Sie sich an.",
     },
     "FORBIDDEN": {
         "en": "Access denied.",
         "uk": "Доступ заборонено.",
         "ru": "Доступ запрещен.",
+        "de": "Zugriff verweigert.",
     },
     "NOT_FOUND": {
         "en": "Requested resource was not found.",
         "uk": "Запитаний ресурс не знайдено.",
         "ru": "Запрошенный ресурс не найден.",
+        "de": "Der gesuchte Inhalt wurde nicht gefunden.",
     },
     "REQUEST_TIMEOUT": {
         "en": "Request timed out.",
         "uk": "Час очікування запиту вичерпано.",
         "ru": "Превышено время ожидания запроса.",
+        "de": (
+            "Die Anfrage hat zu lange gedauert. Bitte versuchen Sie es erneut."
+        ),
     },
     "SERVICE_UNAVAILABLE": {
         "en": "Service is temporarily unavailable.",
         "uk": "Сервіс тимчасово недоступний.",
         "ru": "Сервис временно недоступен.",
+        "de": "Der Dienst ist vorübergehend nicht verfügbar.",
     },
     "VALIDATION_ERROR": {
         "en": "Validation error.",
         "uk": "Помилка валідації.",
         "ru": "Ошибка валидации.",
+        "de": "Bitte überprüfen Sie Ihre Eingaben.",
     },
     "INTERNAL_ERROR": {
         "en": "Internal server error.",
         "uk": "Внутрішня помилка сервера.",
         "ru": "Внутренняя ошибка сервера.",
+        "de": (
+            "Ein technischer Fehler ist aufgetreten. "
+            "Bitte versuchen Sie es erneut."
+        ),
     },
     "INVALID_USER_ID": {
         "en": "Invalid user_id format.",
         "uk": "Некоректний формат user_id.",
         "ru": "Некорректный формат user_id.",
+        "de": "Die Benutzer-ID hat ein ungültiges Format.",
     },
     "NATAL_CHART_NOT_FOUND": {
         "en": "Natal chart was not found.",
         "uk": "Натальну карту не знайдено.",
         "ru": "Натальная карта не найдена.",
+        "de": "Das Geburtshoroskop wurde nicht gefunden.",
     },
     "INTERPRETATION_NOT_FOUND": {
         "en": "Interpretation was not found.",
         "uk": "Інтерпретацію не знайдено.",
         "ru": "Интерпретация не найдена.",
+        "de": "Die Deutung wurde nicht gefunden.",
     },
     "USER_NOT_FOUND": {
         "en": "User was not found.",
         "uk": "Користувача не знайдено.",
         "ru": "Пользователь не найден.",
+        "de": "Das Profil wurde nicht gefunden.",
     },
     "ACCESS_DENIED": {
         "en": "Access denied.",
         "uk": "Доступ заборонено.",
         "ru": "Доступ запрещен.",
+        "de": "Zugriff verweigert.",
     },
     "ADMIN_ENDPOINTS_DISABLED": {
         "en": "Admin endpoints are disabled.",
         "uk": "Адмін-ендпоінти вимкнені.",
         "ru": "Админ-эндпоинты отключены.",
+        "de": "Die Admin-Schnittstellen sind deaktiviert.",
     },
     "GEOCODING_TIMEOUT": {
         "en": "Geocoding request timed out.",
         "uk": "Час очікування геокодування вичерпано.",
         "ru": "Превышено время ожидания геокодирования.",
+        "de": (
+            "Die Ortssuche hat zu lange gedauert. "
+            "Bitte versuchen Sie es erneut."
+        ),
     },
     "GEOCODING_UNAVAILABLE": {
         "en": "Geocoding service is temporarily unavailable.",
         "uk": "Сервіс геокодування тимчасово недоступний.",
         "ru": "Сервис геокодирования временно недоступен.",
+        "de": "Die Ortssuche ist vorübergehend nicht verfügbar.",
     },
 }
 

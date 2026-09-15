@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=a58bd9cdcbfd">
-    <link rel="stylesheet" href="/css/app-nav.css?v=a58bd9cdcbfd">
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=b92c860e3b1e">
+    <link rel="stylesheet" href="/css/app-nav.css?v=b92c860e3b1e">
     <!-- C2 (Фаза 3): символьные глифы (знаки/аспекты) появляются на колесе сразу;
          font-display:block делает их невидимыми до загрузки шрифта, поэтому прелоадим
          woff2-сабсеты (десятки КБ вместо 1.2 МБ ttf). crossorigin обязателен для шрифтов. -->
     <link rel="preload" href="/fonts/NotoSansSymbols.subset.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/NotoSansSymbols2.subset.woff2" as="font" type="font/woff2" crossorigin>
-    <script>window.__APP_BUILD_ID__ = 'a58bd9cdcbfd';</script>
+    <script>window.__APP_BUILD_ID__ = 'b92c860e3b1e';</script>
     <!-- A3 (Фаза 1): каталог локали грузится i18n.js в рантайме и это первый await
          bootstrap. Прогреваем HTTP-кэш нужной локали сразу из <head> (immutable-кэш в
          проде → i18n.js переиспользует ответ). Локаль резолвим тем же приоритетом, что
@@ -19,7 +19,7 @@
     <script>
         (function () {
             try {
-                var SUPPORTED = ['en', 'uk', 'ru'];
+                var SUPPORTED = ['en', 'uk', 'ru', 'de'];
                 function norm(value) {
                     if (!value || typeof value !== 'string') return null;
                     var base = value.trim().toLowerCase().replace(/_/g, '-').split('-', 1)[0];
@@ -53,8 +53,8 @@
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-75N2LNQG.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-DWCL6BXC.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-FINH6RT4.js">
-    <link rel="modulepreload" href="/js/bundles/chunks/chunk-HX7TNMQQ.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-IZUYVIPG.js">
+    <link rel="modulepreload" href="/js/bundles/chunks/chunk-JJNUPHMW.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-KKNUCR44.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-MTRUVDHY.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-NEFTZ6D5.js">
@@ -245,8 +245,7 @@
                         type="button"
                         class="panel-tab forecast-new-tabs-overflow-toggle"
                         data-tabs-overflow-toggle
-                        data-i18n-aria-label="page.forecastNew.tabsOverflowAria"
-                        aria-label="More tabs"
+                        aria-label="More tabs" data-i18n-aria-label="page.forecastNew.tabsOverflowAria"
                         aria-haspopup="true"
                         aria-expanded="false"
                     >▸</button>
@@ -324,9 +323,9 @@
             <div class="forecast-new-zoom-controls zoom-controls-float">
                 <button class="zoom-btn forecast-new-view-btn" id="forecastNewViewSingle" data-i18n-title="page.forecastNew.view.single" data-i18n-aria-label="page.forecastNew.view.single" title="Single wheel" aria-label="Single wheel">◯</button>
                 <button class="zoom-btn forecast-new-view-btn is-active" id="forecastNewViewMulti" data-i18n-title="page.forecastNew.view.multi" data-i18n-aria-label="page.forecastNew.view.multi" title="Multi-wheel" aria-label="Multi-wheel">◎</button>
-                <button class="zoom-btn forecast-new-swap-btn" id="forecastNewSwapCharts" type="button" disabled aria-pressed="false" data-i18n-aria-label="page.forecastNew.swap.label" title="Swap charts" aria-label="Swap charts">⇄</button>
-                <button class="zoom-btn" id="forecastNewZoomIn" title="Zoom in">+</button>
-                <button class="zoom-btn" id="forecastNewZoomOut" title="Zoom out">−</button>
+                <button class="zoom-btn forecast-new-swap-btn" id="forecastNewSwapCharts" type="button" disabled aria-pressed="false" data-i18n-title="page.forecastNew.swap.label" data-i18n-aria-label="page.forecastNew.swap.label" title="Swap charts" aria-label="Swap charts">⇄</button>
+                <button class="zoom-btn" id="forecastNewZoomIn" data-i18n-title="common.zoomIn" data-i18n-aria-label="common.zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+                <button class="zoom-btn" id="forecastNewZoomOut" data-i18n-title="common.zoomOut" data-i18n-aria-label="common.zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
                 <button class="zoom-btn forecast-new-settings-btn" id="forecastNewSettingsToggle" data-i18n-title="common.displaySettings" data-i18n-aria-label="common.displaySettings" title="Settings" aria-label="Settings" aria-expanded="false" aria-controls="forecastNewSettingsPanel">
                     <svg class="forecast-new-settings-gear" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
@@ -490,7 +489,7 @@
             <div class="forecast-new-side-head">
                 <div class="forecast-new-side-title-row">
                     <button type="button" class="forecast-new-moment-toggle" id="prognosticMomentToggle" aria-expanded="false" aria-controls="forecastNewMomentCard">
-                        <span class="forecast-new-moment-toggle-title" id="prognosticPanelTitle">Transits</span>
+                        <span class="forecast-new-moment-toggle-title" id="prognosticPanelTitle" data-i18n="common.method.transit">Transits</span>
                         <span class="forecast-new-moment-toggle-meta" id="prognosticPanelMeta"></span>
                     </button>
                     <div class="forecast-new-chart-library-actions">
@@ -586,8 +585,7 @@
                         type="button"
                         class="panel-tab forecast-new-tabs-overflow-toggle"
                         data-tabs-overflow-toggle
-                        data-i18n-aria-label="page.forecastNew.tabsOverflowAria"
-                        aria-label="More tabs"
+                        aria-label="More tabs" data-i18n-aria-label="page.forecastNew.tabsOverflowAria"
                         aria-haspopup="true"
                         aria-expanded="false"
                     >▸</button>
@@ -713,8 +711,8 @@
          поэтому window.__RUNTIME_CONFIG__ (runtime-config.js) готов до analytics.js и до
          модуля приложения. -->
     <script defer src="/runtime-config.js"></script>
-    <script defer src="/js/analytics.js?v=a58bd9cdcbfd"></script>
-    <script defer src="/js/app-nav.js?v=a58bd9cdcbfd"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=a58bd9cdcbfd"></script>
+    <script defer src="/js/analytics.js?v=b92c860e3b1e"></script>
+    <script defer src="/js/app-nav.js?v=b92c860e3b1e"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=b92c860e3b1e"></script>
 </body>
 </html>

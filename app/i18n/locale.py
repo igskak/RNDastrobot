@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi import Request
 
 
-SUPPORTED_LOCALES: Tuple[str, ...] = ("en", "uk", "ru")
+SUPPORTED_LOCALES: Tuple[str, ...] = ("en", "uk", "ru", "de")
 DEFAULT_LOCALE = "en"
 
 
@@ -60,9 +60,11 @@ def parse_accept_language(header_value: Optional[str]) -> Optional[str]:
                     quality = float(param.split("=", 1)[1])
                 except (TypeError, ValueError):
                     quality = 0.0
+                if quality < 0 or quality > 1:
+                    quality = 0.0
 
         normalized = normalize_locale(lang_part)
-        if normalized:
+        if normalized and quality > 0:
             weighted.append((quality, idx, normalized))
 
     if not weighted:

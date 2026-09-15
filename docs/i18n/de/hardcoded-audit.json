@@ -1,0 +1,2677 @@
+{
+  "status": "Heuristic candidates, not a confirmed defect count. Includes demos and legacy files; triage against live routes and imports.",
+  "ok": false,
+  "scannedFiles": [
+    "app/frontend/account-settings.html",
+    "app/frontend/astrologer-workspace.html",
+    "app/frontend/astrology-practice-management.html",
+    "app/frontend/calendar.html",
+    "app/frontend/client-profile.html",
+    "app/frontend/clients.html",
+    "app/frontend/cloud-astrology-software.html",
+    "app/frontend/consultation-call.html",
+    "app/frontend/consultation-join.html",
+    "app/frontend/consultation.html",
+    "app/frontend/entries/account-settings.entry.js",
+    "app/frontend/entries/calendar.entry.js",
+    "app/frontend/entries/client-profile.entry.js",
+    "app/frontend/entries/clients.entry.js",
+    "app/frontend/entries/consultation-call.entry.js",
+    "app/frontend/entries/consultation-join.entry.js",
+    "app/frontend/entries/consultation.entry.js",
+    "app/frontend/entries/forecast-new.entry.js",
+    "app/frontend/entries/forecast-tables.entry.js",
+    "app/frontend/entries/forecast-timeline.entry.js",
+    "app/frontend/entries/index.entry.js",
+    "app/frontend/entries/login.entry.js",
+    "app/frontend/entries/natal-full.entry.js",
+    "app/frontend/forecast-demo-wheel.js",
+    "app/frontend/forecast-new-aurora-demo.html",
+    "app/frontend/forecast-new-midnight-demo.html",
+    "app/frontend/forecast-new-studio-demo.html",
+    "app/frontend/forecast-new.html",
+    "app/frontend/forecast-tables.html",
+    "app/frontend/forecast-timeline.html",
+    "app/frontend/index.html",
+    "app/frontend/js/account-settings-model.js",
+    "app/frontend/js/account-settings.js",
+    "app/frontend/js/analytics.js",
+    "app/frontend/js/api.js",
+    "app/frontend/js/app-nav.js",
+    "app/frontend/js/aspect-phase.js",
+    "app/frontend/js/calendar.js",
+    "app/frontend/js/call-pip.js",
+    "app/frontend/js/chart-config-presets.js",
+    "app/frontend/js/chart-data.js",
+    "app/frontend/js/chart-picker.js",
+    "app/frontend/js/chart-source-panel.js",
+    "app/frontend/js/chat-visuals.test.js",
+    "app/frontend/js/chat.js",
+    "app/frontend/js/client-profile.js",
+    "app/frontend/js/clients.js",
+    "app/frontend/js/consultation-call.js",
+    "app/frontend/js/consultation-join.js",
+    "app/frontend/js/consultation.js",
+    "app/frontend/js/dispositor-chains.js",
+    "app/frontend/js/forecast-aspect-dynamics-modal.js",
+    "app/frontend/js/forecast-commands.js",
+    "app/frontend/js/forecast-commands.test.js",
+    "app/frontend/js/forecast-nav-menu.js",
+    "app/frontend/js/forecast-new-card-identity.js",
+    "app/frontend/js/forecast-new-card-identity.test.js",
+    "app/frontend/js/forecast-new-composite-wheel.test.js",
+    "app/frontend/js/forecast-new-deep-link.js",
+    "app/frontend/js/forecast-new-multi-layer.test.js",
+    "app/frontend/js/forecast-new-panel-layout.js",
+    "app/frontend/js/forecast-new-panel-layout.test.js",
+    "app/frontend/js/forecast-new-panel-render.test.js",
+    "app/frontend/js/forecast-new-state-storage.js",
+    "app/frontend/js/forecast-new-swap-roles.test.js",
+    "app/frontend/js/forecast-new.js",
+    "app/frontend/js/forecast-range-actions.js",
+    "app/frontend/js/forecast-range-data.js",
+    "app/frontend/js/forecast-source-utils.js",
+    "app/frontend/js/forecast-state-storage.js",
+    "app/frontend/js/forecast-tables-page.js",
+    "app/frontend/js/forecast-timeline-page.js",
+    "app/frontend/js/forecast-timeline-utils.js",
+    "app/frontend/js/forecast-timeline.js",
+    "app/frontend/js/form.js",
+    "app/frontend/js/i18n-ui.js",
+    "app/frontend/js/i18n.js",
+    "app/frontend/js/index-landing.js",
+    "app/frontend/js/locale-formatters.js",
+    "app/frontend/js/locale-switcher.js",
+    "app/frontend/js/login.js",
+    "app/frontend/js/methodology-registry.js",
+    "app/frontend/js/natal-full.js",
+    "app/frontend/js/natal-wheel-data.js",
+    "app/frontend/js/onboarding.js",
+    "app/frontend/js/place-autocomplete.js",
+    "app/frontend/js/planet-svg-icons.js",
+    "app/frontend/js/preferences.js",
+    "app/frontend/js/prognostic-layer-normalizer.js",
+    "app/frontend/js/prognostic-rings-wheel.js",
+    "app/frontend/js/quick-open-popover.js",
+    "app/frontend/js/related-people-ui.js",
+    "app/frontend/js/save-chart-modal.js",
+    "app/frontend/js/symbols.js",
+    "app/frontend/js/timezones.js",
+    "app/frontend/js/wheel-planet-annotations.js",
+    "app/frontend/login.html",
+    "app/frontend/natal-full.html",
+    "app/frontend/pricing.html",
+    "app/frontend/styleguide.html",
+    "app/frontend/terms.html"
+  ],
+  "violations": [
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 6,
+      "kind": "html-text-node",
+      "value": "Astrologer Workspace with Recorded Sessions | Steliara"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Steliara"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Practice tools"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Cloud software"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Pricing"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Sign in"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Start free"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Astrologer workspace"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "More than charts and a client list"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Other modern workspaces give you charts, a CRM, and an assistant. Steliara adds the one thing they do not: the consultation itself, recorded, transcribed, and summarized."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "Start free"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "See pricing"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "Free 14-day trial. No card needed."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "Is there astrology software that records and transcribes consultations?"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 26,
+      "kind": "html-text-node",
+      "value": "Yes. Steliara runs the consultation as a video call inside the workspace, records it, produces a transcript, and writes a short summary onto that person's profile. This replaces the usual arrangement of a chart program plus a separate video app plus a separate transcription service."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 27,
+      "kind": "html-text-node",
+      "value": "Astrologers already know sessions need recording: the standard advice to a client is to record on their phone, because they will only remember a fraction of a two-hour reading. What was missing was the recording the"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 28,
+      "kind": "html-text-node",
+      "value": "astrologer"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 28,
+      "kind": "html-text-node",
+      "value": "keeps, filed against the right person, searchable later."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 28,
+      "kind": "html-text-node",
+      "value": "The gap in chart-first workspaces"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 29,
+      "kind": "html-text-node",
+      "value": "Charts and a client list are table stakes now. But after the reading ends, the substance of the session still disappears, and you are back to typing notes from memory."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 29,
+      "kind": "html-text-node",
+      "value": "Steliara captures the consultation"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 35,
+      "kind": "html-text-node",
+      "value": "Run the session, record it, get a transcript and a short summary."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 39,
+      "kind": "html-text-node",
+      "value": "Every person's charts, notes, and past sessions sit together."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 43,
+      "kind": "html-text-node",
+      "value": "Ask the chart for facts (aspects, exact date windows, placements) in seconds. You interpret."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 49,
+      "kind": "html-text-node",
+      "value": "Mac, Windows, any browser."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 53,
+      "kind": "html-text-node",
+      "value": "Chart-first workspaces vs Steliara"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 54,
+      "kind": "html-text-node",
+      "value": "Chart-first workspaces"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 54,
+      "kind": "html-text-node",
+      "value": "Steliara"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 59,
+      "kind": "html-text-node",
+      "value": "Charts, transits, synastry"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 60,
+      "kind": "html-text-node",
+      "value": "Client profiles"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 61,
+      "kind": "html-text-node",
+      "value": "Records live consultations"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 61,
+      "kind": "html-text-node",
+      "value": "Transcribes and summarizes sessions"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 64,
+      "kind": "html-text-node",
+      "value": "What it costs"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 66,
+      "kind": "html-text-node",
+      "value": "Two paid plans, billed per astrologer. Recorded consultations with transcripts are included, so there is no separate transcription bill on top. Every account starts on a 14-day trial with every feature unlocked and no card required."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 72,
+      "kind": "html-text-node",
+      "value": "Practitioner"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 72,
+      "kind": "html-text-node",
+      "value": "/ month"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 72,
+      "kind": "html-text-node",
+      "value": "$20 per month billed annually. Charts, unlimited people profiles, notes, recordings, forecast timeline."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 74,
+      "kind": "html-text-node",
+      "value": "Studio"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 74,
+      "kind": "html-text-node",
+      "value": "/ month"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 74,
+      "kind": "html-text-node",
+      "value": "$32 per month billed annually. Everything in Practitioner, plus consultation summaries and fast answers from chart data during sessions."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 79,
+      "kind": "html-text-node",
+      "value": "AI will never read a chart for you. It just finds the facts faster: the aspects, the exact dates, where a planet sits. You stay the astrologer."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 84,
+      "kind": "html-text-node",
+      "value": "Questions"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 85,
+      "kind": "html-text-node",
+      "value": "Does it record client consultations?"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 85,
+      "kind": "html-text-node",
+      "value": "Yes. Run the session in Steliara and it records, transcribes, and leaves you a short summary."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 85,
+      "kind": "html-text-node",
+      "value": "Do I still need Zoom and a transcription tool?"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 85,
+      "kind": "html-text-node",
+      "value": "No. The call, the recording, the transcript and the summary all happen in Steliara, and the result is attached to the profile of the person you read for, next to their charts and your notes."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 86,
+      "kind": "html-text-node",
+      "value": "How much does Steliara cost?"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 86,
+      "kind": "html-text-node",
+      "value": "Practitioner is $24 per month, or $20 per month billed annually. Studio is $39 per month, or $32 per month billed annually. Every account starts with a 14-day full-feature trial and no card is required."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 87,
+      "kind": "html-text-node",
+      "value": "Will the AI interpret the chart for me?"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 87,
+      "kind": "html-text-node",
+      "value": "No. That is your craft. The assistant finds facts in the chart faster, such as aspects and exact date windows, while you interpret."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 88,
+      "kind": "html-text-node",
+      "value": "Is there a free trial?"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 88,
+      "kind": "html-text-node",
+      "value": "Yes, 14 days with full features and no card."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 93,
+      "kind": "html-text-node",
+      "value": "Capture the consultation, not just the chart"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 94,
+      "kind": "html-text-node",
+      "value": "Everything about every person you read for, in one place."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 96,
+      "kind": "html-text-node",
+      "value": "Start free, no card needed"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 97,
+      "kind": "html-text-node",
+      "value": "Last updated 6 August 2026."
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 99,
+      "kind": "html-text-node",
+      "value": "Terms"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 100,
+      "kind": "html-text-node",
+      "value": "Privacy"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 100,
+      "kind": "html-text-node",
+      "value": "Pricing"
+    },
+    {
+      "file": "app/frontend/astrologer-workspace.html",
+      "line": 101,
+      "kind": "html-text-node",
+      "value": "&copy; 2026 Steliara. Payments processed by Stripe as merchant of record (Stripe Managed Payments)."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 6,
+      "kind": "html-text-node",
+      "value": "Astrology Practice Management Software | Steliara"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Steliara"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Cloud software"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Recorded sessions"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Pricing"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Sign in"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Start free"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Astrology practice management"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Run your whole astrology practice in one place"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Charts, the people you read for, and the consultations themselves, recorded and summarized, so you never rebuild the context from memory before a session."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "Start free"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "See pricing"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "Free 14-day trial. No card needed."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "What is astrology practice management software?"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 26,
+      "kind": "html-text-node",
+      "value": "Astrology practice management software keeps a working astrologer's whole practice in one place: chart calculation, a profile for every person they read for, and a record of each consultation. It differs from a chart calculator, which computes charts accurately but has no memory of the people or the sessions."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 26,
+      "kind": "html-text-node",
+      "value": "Steliara is that second kind of tool. Charts run on the Swiss Ephemeris with an orb table tuned with a practising astrologer, every person you read for has a profile that holds their notes and history, and the consultation itself is recorded, transcribed, and summarized inside the app."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 28,
+      "kind": "html-text-node",
+      "value": "Built for the working day, not just the chart"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 29,
+      "kind": "html-text-node",
+      "value": "Calculate the chart in under a minute."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 30,
+      "kind": "html-text-node",
+      "value": "Keep everyone you read for in one place, with their notes, recordings, and history."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 31,
+      "kind": "html-text-node",
+      "value": "Run and record the consultation. Get a transcript and a summary."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 39,
+      "kind": "html-text-node",
+      "value": "Ask the chart for facts when you prep. You interpret, it digs."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 41,
+      "kind": "html-text-node",
+      "value": "Why astrologers choose it"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 45,
+      "kind": "html-text-node",
+      "value": "Nothing is lost after a session."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 51,
+      "kind": "html-text-node",
+      "value": "No re-assembling a person's story before each meeting."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 56,
+      "kind": "html-text-node",
+      "value": "Works anywhere, far simpler than the old desktop programs."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 61,
+      "kind": "html-text-node",
+      "value": "How the usual setups compare"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 62,
+      "kind": "html-text-node",
+      "value": "Most astrologers run one of three setups: a chart program on its own, a chart program plus a general CRM and a video call, or a single workspace that covers all of it. Only the third keeps what was actually said in the consultation."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 66,
+      "kind": "html-text-node",
+      "value": "Chart software alone"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 67,
+      "kind": "html-text-node",
+      "value": "Chart software + CRM + Zoom"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 67,
+      "kind": "html-text-node",
+      "value": "Steliara"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 71,
+      "kind": "html-text-node",
+      "value": "Chart calculation"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 71,
+      "kind": "html-text-node",
+      "value": "Yes, Swiss Ephemeris"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Profile per person you read for"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Yes, but separate from the charts"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Yes, with charts attached"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Runs the consultation"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "In a separate video app"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "In the same place"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Records the consultation"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 74,
+      "kind": "html-text-node",
+      "value": "Only if you set it up yourself"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 75,
+      "kind": "html-text-node",
+      "value": "Transcript and summary"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 75,
+      "kind": "html-text-node",
+      "value": "Needs a third tool"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 75,
+      "kind": "html-text-node",
+      "value": "Yes, automatically"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 75,
+      "kind": "html-text-node",
+      "value": "Tools to keep in sync"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 75,
+      "kind": "html-text-node",
+      "value": "Three or more"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 75,
+      "kind": "html-text-node",
+      "value": "Platform"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 76,
+      "kind": "html-text-node",
+      "value": "Often Windows-only desktop"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 78,
+      "kind": "html-text-node",
+      "value": "Mixed"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 79,
+      "kind": "html-text-node",
+      "value": "Any browser, Mac or Windows"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 81,
+      "kind": "html-text-node",
+      "value": "What it costs"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 81,
+      "kind": "html-text-node",
+      "value": "Two paid plans, billed per astrologer. Every account starts on a 14-day trial with every feature unlocked and no card required. When a trial ends without a subscription the account goes read-only rather than locking you out of your own data."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 82,
+      "kind": "html-text-node",
+      "value": "Practitioner"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 83,
+      "kind": "html-text-node",
+      "value": "/ month"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 83,
+      "kind": "html-text-node",
+      "value": "$20 per month billed annually. Charts, unlimited people profiles, notes, recordings, forecast timeline."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 84,
+      "kind": "html-text-node",
+      "value": "Studio"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 84,
+      "kind": "html-text-node",
+      "value": "/ month"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 84,
+      "kind": "html-text-node",
+      "value": "$32 per month billed annually. Everything in Practitioner, plus consultation summaries and fast answers from chart data during sessions."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 90,
+      "kind": "html-text-node",
+      "value": "AI will never read a chart for you. It just finds the facts faster: the aspects, the exact dates, where a planet sits. You stay the astrologer."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 91,
+      "kind": "html-text-node",
+      "value": "Questions"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 91,
+      "kind": "html-text-node",
+      "value": "Is there astrology software that records and transcribes consultations?"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 92,
+      "kind": "html-text-node",
+      "value": "Yes. Steliara runs the video consultation in the app, records it, transcribes it, and leaves a short summary attached to that person's profile. Most astrology tools stop at charts and a client list, so astrologers usually bolt a separate recorder or transcription service onto their chart software."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 93,
+      "kind": "html-text-node",
+      "value": "Will it interpret the chart for me?"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 93,
+      "kind": "html-text-node",
+      "value": "No, that is your craft. The assistant retrieves data and dates faster so you can focus on the reading."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 98,
+      "kind": "html-text-node",
+      "value": "Can I keep recordings of my consultations?"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 99,
+      "kind": "html-text-node",
+      "value": "Yes, with a transcript and a short summary of each session, stored on that person's profile."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 100,
+      "kind": "html-text-node",
+      "value": "How much does Steliara cost?"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 100,
+      "kind": "html-text-node",
+      "value": "Practitioner is $24 per month, or $20 per month billed annually. Studio is $39 per month, or $32 per month billed annually. Every account starts with a 14-day full-feature trial and no card is required."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 103,
+      "kind": "html-text-node",
+      "value": "Does it work on a Mac?"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 103,
+      "kind": "html-text-node",
+      "value": "Yes. Steliara runs in the browser, so it works the same on macOS, Windows, or any other machine, with nothing to install."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 106,
+      "kind": "html-text-node",
+      "value": "Is there a free trial?"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 106,
+      "kind": "html-text-node",
+      "value": "Yes, 14 days, full features, no card."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 107,
+      "kind": "html-text-node",
+      "value": "Your whole practice, in one place"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 107,
+      "kind": "html-text-node",
+      "value": "Charts, the people you read for, and recorded consultations."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 108,
+      "kind": "html-text-node",
+      "value": "Start free, no card needed"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 109,
+      "kind": "html-text-node",
+      "value": "Last updated 6 August 2026."
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 110,
+      "kind": "html-text-node",
+      "value": "Terms"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 110,
+      "kind": "html-text-node",
+      "value": "Privacy"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 111,
+      "kind": "html-text-node",
+      "value": "Pricing"
+    },
+    {
+      "file": "app/frontend/astrology-practice-management.html",
+      "line": 111,
+      "kind": "html-text-node",
+      "value": "&copy; 2026 Steliara. Payments processed by Stripe as merchant of record (Stripe Managed Payments)."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 6,
+      "kind": "html-text-node",
+      "value": "Cloud Astrology Software for Mac &amp; Windows | Steliara"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Steliara"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Practice tools"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Recorded sessions"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Pricing"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Sign in"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Start free"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Cloud astrology software"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Your astrology practice, in any browser"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 22,
+      "kind": "html-text-node",
+      "value": "Leave the desktop-only programs behind. Steliara runs on Mac, Windows, and any browser, and keeps everything about every person you read for in one place."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "Start free"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "See pricing"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "Free 14-day trial. No card needed."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "What is cloud astrology software?"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 26,
+      "kind": "html-text-node",
+      "value": "Cloud astrology software runs in a web browser instead of being installed on one computer, so charts and client records live in your account rather than on a single machine. It works the same on macOS and Windows, updates itself, and is reachable from any device you sign in on."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 28,
+      "kind": "html-text-node",
+      "value": "Steliara is a cloud tool of this kind, built for professional practice rather than one-off charts: Swiss Ephemeris calculation, a profile for every person you read for, and consultations recorded and summarized in the same place."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 29,
+      "kind": "html-text-node",
+      "value": "Why astrologers move off desktop software"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 35,
+      "kind": "html-text-node",
+      "value": "It only runs on one machine, and often only on Windows."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 38,
+      "kind": "html-text-node",
+      "value": "The chart is all it knows. Your notes, recordings, and client history live in five other places."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 42,
+      "kind": "html-text-node",
+      "value": "Nothing from the actual consultation is captured."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 47,
+      "kind": "html-text-node",
+      "value": "What you get instead"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 52,
+      "kind": "html-text-node",
+      "value": "Everything about each person in one place: charts, notes, and recorded consultations."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 59,
+      "kind": "html-text-node",
+      "value": "Sessions recorded, transcribed, and summarized automatically, so nothing is lost."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 62,
+      "kind": "html-text-node",
+      "value": "Swiss Ephemeris accuracy, with a professional orb setup."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 69,
+      "kind": "html-text-node",
+      "value": "Works on Mac, Windows, and any browser. Nothing to install."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 71,
+      "kind": "html-text-node",
+      "value": "Desktop programs vs Steliara"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 71,
+      "kind": "html-text-node",
+      "value": "Desktop programs"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 71,
+      "kind": "html-text-node",
+      "value": "Steliara"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 72,
+      "kind": "html-text-node",
+      "value": "Platforms"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Windows-only / one machine"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Mac, Windows, any browser"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "The people you read for"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Not really"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Profiles with full history"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "Records the consultation"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 74,
+      "kind": "html-text-node",
+      "value": "Yes, with transcript and summary"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 77,
+      "kind": "html-text-node",
+      "value": "Setup"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 77,
+      "kind": "html-text-node",
+      "value": "Install and license"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 78,
+      "kind": "html-text-node",
+      "value": "Open a browser, free trial"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 79,
+      "kind": "html-text-node",
+      "value": "What it costs"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 79,
+      "kind": "html-text-node",
+      "value": "Two paid plans, billed per astrologer, with no perpetual licence and no per-machine install. Every account starts on a 14-day trial with every feature unlocked and no card required."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 80,
+      "kind": "html-text-node",
+      "value": "Practitioner"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 81,
+      "kind": "html-text-node",
+      "value": "/ month"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 81,
+      "kind": "html-text-node",
+      "value": "$20 per month billed annually. Charts, unlimited people profiles, notes, recordings, forecast timeline."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 82,
+      "kind": "html-text-node",
+      "value": "Studio"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 86,
+      "kind": "html-text-node",
+      "value": "/ month"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 87,
+      "kind": "html-text-node",
+      "value": "$32 per month billed annually. Everything in Practitioner, plus consultation summaries and fast answers from chart data during sessions."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 88,
+      "kind": "html-text-node",
+      "value": "AI will never read a chart for you. It just finds the facts faster: the aspects, the exact dates, where a planet sits. You stay the astrologer."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 89,
+      "kind": "html-text-node",
+      "value": "Questions"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 89,
+      "kind": "html-text-node",
+      "value": "Yes. Steliara runs in any browser, the same on Mac, Windows, or a borrowed laptop. Nothing to install."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 90,
+      "kind": "html-text-node",
+      "value": "Do I lose my charts if I switch?"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 90,
+      "kind": "html-text-node",
+      "value": "No. Your charts and the people you read for live in your account and stay there."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 91,
+      "kind": "html-text-node",
+      "value": "Is the calculation accurate?"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 91,
+      "kind": "html-text-node",
+      "value": "Yes. Calculations are based on Swiss Ephemeris with a professional orb setup."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 91,
+      "kind": "html-text-node",
+      "value": "How much does Steliara cost?"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 91,
+      "kind": "html-text-node",
+      "value": "Practitioner is $24 per month, or $20 per month billed annually. Studio is $39 per month, or $32 per month billed annually. Every account starts with a 14-day full-feature trial and no card is required."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 98,
+      "kind": "html-text-node",
+      "value": "Run your practice from anywhere"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 99,
+      "kind": "html-text-node",
+      "value": "Charts, the people you read for, and recorded consultations in one place."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 101,
+      "kind": "html-text-node",
+      "value": "Start free, no card needed"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 101,
+      "kind": "html-text-node",
+      "value": "Last updated 6 August 2026."
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 103,
+      "kind": "html-text-node",
+      "value": "Terms"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 103,
+      "kind": "html-text-node",
+      "value": "Privacy"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 104,
+      "kind": "html-text-node",
+      "value": "Pricing"
+    },
+    {
+      "file": "app/frontend/cloud-astrology-software.html",
+      "line": 108,
+      "kind": "html-text-node",
+      "value": "&copy; 2026 Steliara. Payments processed by Stripe as merchant of record (Stripe Managed Payments)."
+    },
+    {
+      "file": "app/frontend/consultation-join.html",
+      "line": 42,
+      "kind": "html-text-node",
+      "value": "Steliara"
+    },
+    {
+      "file": "app/frontend/consultation-join.html",
+      "line": 145,
+      "kind": "html-text-node",
+      "value": "The astrologer would like to record this session."
+    },
+    {
+      "file": "app/frontend/consultation-join.html",
+      "line": 145,
+      "kind": "html-text-node",
+      "value": "Only audio will be recorded — no video."
+    },
+    {
+      "file": "app/frontend/consultation-join.html",
+      "line": 146,
+      "kind": "html-text-node",
+      "value": "The recording will be used to prepare a summary for your records."
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 165,
+      "kind": "html-attribute",
+      "value": "aria-label=\"Back\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 170,
+      "kind": "html-attribute",
+      "value": "aria-label=\"Forecast layers\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 183,
+      "kind": "html-attribute",
+      "value": "aria-label=\"More\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 213,
+      "kind": "html-attribute",
+      "value": "aria-label=\"Chart wheel\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 216,
+      "kind": "html-attribute",
+      "value": "title=\"Single wheel\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 217,
+      "kind": "html-attribute",
+      "value": "title=\"Multi-wheel\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 219,
+      "kind": "html-attribute",
+      "value": "title=\"Zoom in\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 220,
+      "kind": "html-attribute",
+      "value": "title=\"Zoom out\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 221,
+      "kind": "html-attribute",
+      "value": "title=\"Reset\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 222,
+      "kind": "html-attribute",
+      "value": "title=\"Settings\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 234,
+      "kind": "html-attribute",
+      "value": "title=\"Saved charts\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 234,
+      "kind": "html-attribute",
+      "value": "aria-label=\"Saved charts\""
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 6,
+      "kind": "html-text-node",
+      "value": "Forecast · Soft Aurora"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 14,
+      "kind": "html-text-node",
+      "value": "Elena Voronova"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 15,
+      "kind": "html-text-node",
+      "value": "12 Mar 1991 · 04:20 · Kyiv"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 18,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 19,
+      "kind": "html-text-node",
+      "value": "Progressions"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 20,
+      "kind": "html-text-node",
+      "value": "Directions"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Solar return"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 22,
+      "kind": "html-text-node",
+      "value": "Synastry"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 24,
+      "kind": "html-text-node",
+      "value": "Wheel"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 24,
+      "kind": "html-text-node",
+      "value": "Table"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 25,
+      "kind": "html-text-node",
+      "value": "Timeline"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 32,
+      "kind": "html-text-node",
+      "value": "Natal"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 34,
+      "kind": "html-text-node",
+      "value": "12 Mar 1991, 04:20 · Kyiv"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 39,
+      "kind": "html-text-node",
+      "value": "Planets"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 39,
+      "kind": "html-text-node",
+      "value": "Houses"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 39,
+      "kind": "html-text-node",
+      "value": "Aspects"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 40,
+      "kind": "html-text-node",
+      "value": "Position"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 49,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 50,
+      "kind": "html-text-node",
+      "value": "6 Jun 2026 · Kyiv"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 57,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 57,
+      "kind": "html-text-node",
+      "value": "Progressions"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 58,
+      "kind": "html-text-node",
+      "value": "Directions"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 59,
+      "kind": "html-text-node",
+      "value": "Planets"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 59,
+      "kind": "html-text-node",
+      "value": "Houses"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 59,
+      "kind": "html-text-node",
+      "value": "Aspects"
+    },
+    {
+      "file": "app/frontend/forecast-new-aurora-demo.html",
+      "line": 61,
+      "kind": "html-text-node",
+      "value": "Position"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 6,
+      "kind": "html-text-node",
+      "value": "Forecast · Midnight Aurora (B)"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 14,
+      "kind": "html-text-node",
+      "value": "Elena Voronova"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 14,
+      "kind": "html-text-node",
+      "value": "12 Mar 1991 · 04:20 · Kyiv"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 16,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 17,
+      "kind": "html-text-node",
+      "value": "Progressions"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 18,
+      "kind": "html-text-node",
+      "value": "Directions"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 19,
+      "kind": "html-text-node",
+      "value": "Solar return"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 20,
+      "kind": "html-text-node",
+      "value": "Synastry"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 24,
+      "kind": "html-text-node",
+      "value": "Wheel"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 24,
+      "kind": "html-text-node",
+      "value": "Table"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 24,
+      "kind": "html-text-node",
+      "value": "Timeline"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 27,
+      "kind": "html-text-node",
+      "value": "Natal"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 27,
+      "kind": "html-text-node",
+      "value": "12 Mar 1991, 04:20 · Kyiv"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 29,
+      "kind": "html-text-node",
+      "value": "Planets"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 29,
+      "kind": "html-text-node",
+      "value": "Houses"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 29,
+      "kind": "html-text-node",
+      "value": "Aspects"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 30,
+      "kind": "html-text-node",
+      "value": "Position"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 35,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 35,
+      "kind": "html-text-node",
+      "value": "6 Jun 2026 · Kyiv"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 38,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 39,
+      "kind": "html-text-node",
+      "value": "Progressions"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 39,
+      "kind": "html-text-node",
+      "value": "Directions"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 41,
+      "kind": "html-text-node",
+      "value": "Planets"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 41,
+      "kind": "html-text-node",
+      "value": "Houses"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 41,
+      "kind": "html-text-node",
+      "value": "Aspects"
+    },
+    {
+      "file": "app/frontend/forecast-new-midnight-demo.html",
+      "line": 43,
+      "kind": "html-text-node",
+      "value": "Position"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 6,
+      "kind": "html-text-node",
+      "value": "Forecast · Clean Studio (C)"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 12,
+      "kind": "html-text-node",
+      "value": "Elena Voronova"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 13,
+      "kind": "html-text-node",
+      "value": "12 Mar 1991 · 04:20 · Kyiv"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 15,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 16,
+      "kind": "html-text-node",
+      "value": "Progressions"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 18,
+      "kind": "html-text-node",
+      "value": "Directions"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 19,
+      "kind": "html-text-node",
+      "value": "Solar return"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 20,
+      "kind": "html-text-node",
+      "value": "Synastry"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "Wheel"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 23,
+      "kind": "html-text-node",
+      "value": "Table"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 23,
+      "kind": "html-text-node",
+      "value": "Timeline"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 26,
+      "kind": "html-text-node",
+      "value": "Natal"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 27,
+      "kind": "html-text-node",
+      "value": "12 Mar 1991, 04:20 · Kyiv"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 31,
+      "kind": "html-text-node",
+      "value": "Planets"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 31,
+      "kind": "html-text-node",
+      "value": "Houses"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 32,
+      "kind": "html-text-node",
+      "value": "Aspects"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 32,
+      "kind": "html-text-node",
+      "value": "Position"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 39,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 40,
+      "kind": "html-text-node",
+      "value": "6 Jun 2026 · Kyiv"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 45,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 46,
+      "kind": "html-text-node",
+      "value": "Progressions"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 46,
+      "kind": "html-text-node",
+      "value": "Directions"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 47,
+      "kind": "html-text-node",
+      "value": "Planets"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 47,
+      "kind": "html-text-node",
+      "value": "Houses"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 48,
+      "kind": "html-text-node",
+      "value": "Aspects"
+    },
+    {
+      "file": "app/frontend/forecast-new-studio-demo.html",
+      "line": 48,
+      "kind": "html-text-node",
+      "value": "Position"
+    },
+    {
+      "file": "app/frontend/forecast-new.html",
+      "line": 249,
+      "kind": "html-attribute",
+      "value": "aria-label=\"More tabs\""
+    },
+    {
+      "file": "app/frontend/forecast-new.html",
+      "line": 327,
+      "kind": "html-attribute",
+      "value": "title=\"Swap charts\""
+    },
+    {
+      "file": "app/frontend/forecast-new.html",
+      "line": 328,
+      "kind": "html-attribute",
+      "value": "title=\"Zoom in\""
+    },
+    {
+      "file": "app/frontend/forecast-new.html",
+      "line": 329,
+      "kind": "html-attribute",
+      "value": "title=\"Zoom out\""
+    },
+    {
+      "file": "app/frontend/forecast-new.html",
+      "line": 590,
+      "kind": "html-attribute",
+      "value": "aria-label=\"More tabs\""
+    },
+    {
+      "file": "app/frontend/forecast-new.html",
+      "line": 16,
+      "kind": "html-text-node",
+      "value": "(immutable-кэш в проде → i18n.js переиспользует ответ). Локаль резолвим тем же приоритетом, что и i18n.js: ?locale/?lang → localStorage → cookie → navigator.languages → 'en'. -->"
+    },
+    {
+      "file": "app/frontend/forecast-new.html",
+      "line": 472,
+      "kind": "html-text-node",
+      "value": "Transits"
+    },
+    {
+      "file": "app/frontend/js/call-pip.js",
+      "line": 139,
+      "kind": "js-user-error",
+      "value": "No video stream available for picture-in-picture"
+    },
+    {
+      "file": "app/frontend/js/chart-config-presets.js",
+      "line": 44,
+      "kind": "js-user-error",
+      "value": "Preferences API is unavailable"
+    },
+    {
+      "file": "app/frontend/js/chat-visuals.test.js",
+      "line": 33,
+      "kind": "js-user-error",
+      "value": "method not found:"
+    },
+    {
+      "file": "app/frontend/js/chat.js",
+      "line": 558,
+      "kind": "js-user-error",
+      "value": "table failed"
+    },
+    {
+      "file": "app/frontend/js/chat.js",
+      "line": 1107,
+      "kind": "js-user-error",
+      "value": "list failed"
+    },
+    {
+      "file": "app/frontend/js/chat.js",
+      "line": 1180,
+      "kind": "js-user-error",
+      "value": "load failed"
+    },
+    {
+      "file": "app/frontend/js/chat.js",
+      "line": 1207,
+      "kind": "js-user-error",
+      "value": "delete failed"
+    },
+    {
+      "file": "app/frontend/js/chat.js",
+      "line": 1507,
+      "kind": "js-ui-sink",
+      "value": "Подтвердите:"
+    },
+    {
+      "file": "app/frontend/js/chat.js",
+      "line": 1515,
+      "kind": "js-ui-sink",
+      "value": "Применить"
+    },
+    {
+      "file": "app/frontend/js/chat.js",
+      "line": 1521,
+      "kind": "js-ui-sink",
+      "value": "Отмена"
+    },
+    {
+      "file": "app/frontend/js/client-profile.js",
+      "line": 1132,
+      "kind": "js-ui-sink",
+      "value": "Loading…"
+    },
+    {
+      "file": "app/frontend/js/client-profile.js",
+      "line": 1139,
+      "kind": "js-ui-sink",
+      "value": "Transcription in progress… this may take a few minutes."
+    },
+    {
+      "file": "app/frontend/js/client-profile.js",
+      "line": 1150,
+      "kind": "js-ui-sink",
+      "value": "Could not load recording:"
+    },
+    {
+      "file": "app/frontend/js/client-profile.js",
+      "line": 1163,
+      "kind": "js-ui-sink",
+      "value": "Processing timed out. Retry"
+    },
+    {
+      "file": "app/frontend/js/client-profile.js",
+      "line": 1283,
+      "kind": "js-ui-sink",
+      "value": "Starting…"
+    },
+    {
+      "file": "app/frontend/js/client-profile.js",
+      "line": 1294,
+      "kind": "js-ui-sink",
+      "value": "Transcription in progress…"
+    },
+    {
+      "file": "app/frontend/js/consultation-call.js",
+      "line": 339,
+      "kind": "js-user-error",
+      "value": "Failed to submit consent"
+    },
+    {
+      "file": "app/frontend/js/consultation.js",
+      "line": 106,
+      "kind": "js-user-error",
+      "value": "HTTP"
+    },
+    {
+      "file": "app/frontend/js/consultation.js",
+      "line": 292,
+      "kind": "js-user-error",
+      "value": "HTTP"
+    },
+    {
+      "file": "app/frontend/js/consultation.js",
+      "line": 318,
+      "kind": "js-user-error",
+      "value": "HTTP"
+    },
+    {
+      "file": "app/frontend/js/forecast-commands.test.js",
+      "line": 173,
+      "kind": "js-user-error",
+      "value": "UI boom"
+    },
+    {
+      "file": "app/frontend/js/forecast-new.js",
+      "line": 4991,
+      "kind": "js-ui-sink",
+      "value": "— партнёр —"
+    },
+    {
+      "file": "app/frontend/js/forecast-new.js",
+      "line": 6456,
+      "kind": "js-ui-sink",
+      "value": "Слой не выбран"
+    },
+    {
+      "file": "app/frontend/js/forecast-new.js",
+      "line": 6457,
+      "kind": "js-ui-sink",
+      "value": "Добавьте слой для расчёта"
+    },
+    {
+      "file": "app/frontend/js/forecast-new.js",
+      "line": 8337,
+      "kind": "js-user-error",
+      "value": "Panel dialog is missing required controls"
+    },
+    {
+      "file": "app/frontend/js/forecast-new.js",
+      "line": 10737,
+      "kind": "js-ui-sink",
+      "value": "Отменить"
+    },
+    {
+      "file": "app/frontend/js/i18n.js",
+      "line": 376,
+      "kind": "js-user-error",
+      "value": "catalog HTTP"
+    },
+    {
+      "file": "app/frontend/js/methodology-registry.js",
+      "line": 106,
+      "kind": "js-user-error",
+      "value": "Unknown methodology:"
+    },
+    {
+      "file": "app/frontend/js/place-autocomplete.js",
+      "line": 32,
+      "kind": "js-user-error",
+      "value": "Place search failed:"
+    },
+    {
+      "file": "app/frontend/js/save-chart-modal.js",
+      "line": 42,
+      "kind": "js-user-error",
+      "value": "HTTP"
+    },
+    {
+      "file": "app/frontend/js/save-chart-modal.js",
+      "line": 204,
+      "kind": "js-ui-sink",
+      "value": "Remove"
+    },
+    {
+      "file": "app/frontend/js/save-chart-modal.js",
+      "line": 292,
+      "kind": "js-ui-sink",
+      "value": "Remove"
+    },
+    {
+      "file": "app/frontend/pricing.html",
+      "line": 129,
+      "kind": "html-attribute",
+      "value": "aria-label=\"Billing period\""
+    },
+    {
+      "file": "app/frontend/pricing.html",
+      "line": 138,
+      "kind": "html-text-node",
+      "value": "Cloud astrology software"
+    },
+    {
+      "file": "app/frontend/pricing.html",
+      "line": 138,
+      "kind": "html-text-node",
+      "value": "Astrologer workspace"
+    },
+    {
+      "file": "app/frontend/pricing.html",
+      "line": 140,
+      "kind": "html-text-node",
+      "value": "Practice management"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 132,
+      "kind": "html-attribute",
+      "value": "placeholder=\"name@example.com\""
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 166,
+      "kind": "html-attribute",
+      "value": "aria-label=\"toggle\""
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 170,
+      "kind": "html-attribute",
+      "value": "aria-label=\"toggle\""
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 7,
+      "kind": "html-text-node",
+      "value": "Steliara UI kit — styleguide"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 12,
+      "kind": "html-text-node",
+      "value": "apply with"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 12,
+      "kind": "html-text-node",
+      "value": "classes · flat treatment · tokens from styles.css"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 13,
+      "kind": "html-text-node",
+      "value": "Steliara UI kit"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 13,
+      "kind": "html-text-node",
+      "value": "Shared flat components + tokens. Use these"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 14,
+      "kind": "html-text-node",
+      "value": "classes instead of hand-rolling styles so every page reads as one system. Namespaced so it coexists safely with existing classes. Source:"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 15,
+      "kind": "html-text-node",
+      "value": "css/design-kit.css"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 17,
+      "kind": "html-text-node",
+      "value": "Color tokens"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 17,
+      "kind": "html-text-node",
+      "value": "bg-primary"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 19,
+      "kind": "html-text-node",
+      "value": "bg-secondary"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 19,
+      "kind": "html-text-node",
+      "value": "#FFFFFF"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 20,
+      "kind": "html-text-node",
+      "value": "bg-tertiary"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 21,
+      "kind": "html-text-node",
+      "value": "accent (navy)"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 24,
+      "kind": "html-text-node",
+      "value": "accent-light"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 26,
+      "kind": "html-text-node",
+      "value": "gold"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 27,
+      "kind": "html-text-node",
+      "value": "text-muted"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 29,
+      "kind": "html-text-node",
+      "value": "success"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 34,
+      "kind": "html-text-node",
+      "value": "error"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 35,
+      "kind": "html-text-node",
+      "value": "Spacing scale"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 36,
+      "kind": "html-text-node",
+      "value": "4px base. Use"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 36,
+      "kind": "html-text-node",
+      "value": "--space-1 … --space-8"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 36,
+      "kind": "html-text-node",
+      "value": "for page margins/padding/gaps."
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 44,
+      "kind": "html-text-node",
+      "value": "Type scale"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 44,
+      "kind": "html-text-node",
+      "value": "6 steps. Cormorant (display) only at h2/h1; DM Sans for h3 and below."
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 46,
+      "kind": "html-text-node",
+      "value": "h1 · 40 · Cormorant"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 46,
+      "kind": "html-text-node",
+      "value": "--font-size-h1"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 47,
+      "kind": "html-text-node",
+      "value": "h2 · 28 · Cormorant"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 47,
+      "kind": "html-text-node",
+      "value": "--font-size-h2"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 48,
+      "kind": "html-text-node",
+      "value": "h3 · 20 · DM Sans"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 48,
+      "kind": "html-text-node",
+      "value": "--font-size-h3"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 48,
+      "kind": "html-text-node",
+      "value": "body · 16 · DM Sans"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 49,
+      "kind": "html-text-node",
+      "value": "--font-size-body"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 49,
+      "kind": "html-text-node",
+      "value": "label · 14 · DM Sans"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 50,
+      "kind": "html-text-node",
+      "value": "--font-size-label"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 50,
+      "kind": "html-text-node",
+      "value": "caption · 12 · DM Sans"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 52,
+      "kind": "html-text-node",
+      "value": "--font-size-caption"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 57,
+      "kind": "html-text-node",
+      "value": "Buttons"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 59,
+      "kind": "html-text-node",
+      "value": "Primary"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 59,
+      "kind": "html-text-node",
+      "value": "Secondary"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 60,
+      "kind": "html-text-node",
+      "value": "Ghost"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 61,
+      "kind": "html-text-node",
+      "value": "Danger"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 62,
+      "kind": "html-text-node",
+      "value": "Disabled"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 64,
+      "kind": "html-text-node",
+      "value": "Small primary"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 65,
+      "kind": "html-text-node",
+      "value": "Small secondary"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 70,
+      "kind": "html-text-node",
+      "value": "Segmented control"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 72,
+      "kind": "html-text-node",
+      "value": ".ui-segmented"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 73,
+      "kind": "html-text-node",
+      "value": "One selected among equals: date presets, view switchers, toggles. Active = light pill on a tinted track (navy fill is reserved for primary buttons). Mark active with"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 75,
+      "kind": "html-text-node",
+      "value": ".is-selected"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 75,
+      "kind": "html-text-node",
+      "value": "[aria-selected=\"true\"]"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 75,
+      "kind": "html-text-node",
+      "value": ". Keep any JS-hook class (e.g."
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 76,
+      "kind": "html-text-node",
+      "value": ".preset-btn"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 76,
+      "kind": "html-text-node",
+      "value": ") alongside"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 76,
+      "kind": "html-text-node",
+      "value": ".ui-segmented__item"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 82,
+      "kind": "html-text-node",
+      "value": "Прогноз"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 86,
+      "kind": "html-text-node",
+      "value": "Таблиці"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 87,
+      "kind": "html-text-node",
+      "value": "Таймлайн"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 89,
+      "kind": "html-text-node",
+      "value": "Input"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 90,
+      "kind": "html-text-node",
+      "value": ".ui-input"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 93,
+      "kind": "html-text-node",
+      "value": "Місто народження"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 96,
+      "kind": "html-text-node",
+      "value": "Ел. пошта"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 103,
+      "kind": "html-text-node",
+      "value": "Card"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 103,
+      "kind": "html-text-node",
+      "value": ".ui-card"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 103,
+      "kind": "html-text-node",
+      "value": "Олена Коваленко"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 103,
+      "kind": "html-text-node",
+      "value": "14.03.1990 · Київ · Placidus"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 104,
+      "kind": "html-text-node",
+      "value": "Table"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 105,
+      "kind": "html-text-node",
+      "value": ".ui-table.ui-table--rows"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 108,
+      "kind": "html-text-node",
+      "value": "Дата народження"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 108,
+      "kind": "html-text-node",
+      "value": "Олена Коваленко"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 110,
+      "kind": "html-text-node",
+      "value": "Андрій Мельник"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 115,
+      "kind": "html-text-node",
+      "value": "Settings row + toggle"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 115,
+      "kind": "html-text-node",
+      "value": ".ui-settings-row · .ui-toggle"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 122,
+      "kind": "html-text-node",
+      "value": "Сповіщення на пошту"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 126,
+      "kind": "html-text-node",
+      "value": "Система домів"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 127,
+      "kind": "html-text-node",
+      "value": "Застосовується до всіх нових карт"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 132,
+      "kind": "html-text-node",
+      "value": "Empty state"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 134,
+      "kind": "html-text-node",
+      "value": ".ui-empty-state"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 141,
+      "kind": "html-text-node",
+      "value": "Інсайтів поки немає"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 141,
+      "kind": "html-text-node",
+      "value": "Вони формуються із записів дзвінків після обробки ШІ."
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 142,
+      "kind": "html-text-node",
+      "value": "Записати консультацію"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 148,
+      "kind": "html-text-node",
+      "value": "Dialog"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 148,
+      "kind": "html-text-node",
+      "value": ".ui-dialog"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 152,
+      "kind": "html-text-node",
+      "value": "Видалити профіль?"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 153,
+      "kind": "html-text-node",
+      "value": "Цю дію не можна скасувати. Усі карти та записи буде видалено."
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 160,
+      "kind": "html-text-node",
+      "value": "Скасувати"
+    },
+    {
+      "file": "app/frontend/styleguide.html",
+      "line": 162,
+      "kind": "html-text-node",
+      "value": "Видалити"
+    }
+  ]
+}

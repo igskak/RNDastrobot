@@ -98,7 +98,7 @@ function parseLocales(rawLocales) {
 function runMissingKeyCheck(options = {}) {
     const localesDir = path.resolve(options.localesDir || path.join(__dirname, '..', 'frontend', 'locales'));
     const baselineLocale = options.baselineLocale || 'en';
-    const locales = options.locales || ['uk', 'ru'];
+    const locales = options.locales || ['uk', 'ru', 'de'];
 
     const baselinePath = path.join(localesDir, `${baselineLocale}.json`);
     if (!fs.existsSync(baselinePath)) {
@@ -172,7 +172,7 @@ function parseArgs(argv) {
 
 function main() {
     const args = parseArgs(process.argv.slice(2));
-    const locales = args.locales ? parseLocales(args.locales) : ['uk', 'ru'];
+    const locales = args.locales ? parseLocales(args.locales) : ['uk', 'ru', 'de'];
 
     const result = runMissingKeyCheck({
         localesDir: args['locales-dir'],

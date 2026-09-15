@@ -3,8 +3,10 @@ const assert = require('node:assert/strict');
 
 const {
     createI18n,
+    parseAcceptLanguage,
     resolveLocaleFromSources,
 } = require('../frontend/js/i18n.js');
+const { toIntlLocale } = require('../frontend/js/locale-formatters.js');
 
 function makeStorage(initial = {}) {
     const map = new Map(Object.entries(initial));
@@ -48,6 +50,12 @@ const TEST_CATALOGS = {
     ru: {
         app: { language: 'Язык' },
     },
+    de: {
+        app: { language: 'Sprache' },
+        msg: {
+            hello: 'Hallo, {name}!',
+        },
+    },
 };
 
 test('setLocale/getLocale persists locale and falls back to en on invalid locale', async () => {
@@ -76,7 +84,8 @@ test('setLocale/getLocale persists locale and falls back to en on invalid locale
     assert.deepEqual(writes[0], ['astrobot_locale', 'uk']);
 
     await i18n.setLocale('de');
-    assert.equal(i18n.getLocale(), 'en');
+    assert.equal(i18n.getLocale(), 'de');
+    assert.equal(storage.getItem('astrobot_locale'), 'de');
 });
 
 test('locale source priority uses query > storage > browser > en', () => {
@@ -88,7 +97,7 @@ test('locale source priority uses query > storage > browser > en', () => {
     assert.deepEqual(resolvedFromQuery, { locale: 'ru', source: 'query' });
 
     const resolvedFromStorage = resolveLocaleFromSources({
-        queryLocale: 'de',
+        queryLocale: 'fr',
         storedLocale: 'uk',
         browserLocale: 'ru-RU',
     });
@@ -102,11 +111,23 @@ test('locale source priority uses query > storage > browser > en', () => {
     assert.deepEqual(resolvedFromBrowser, { locale: 'ru', source: 'browser' });
 
     const fallback = resolveLocaleFromSources({
-        queryLocale: 'de',
+        queryLocale: 'fr',
         storedLocale: 'it',
         browserLocale: 'fr-FR',
     });
     assert.deepEqual(fallback, { locale: 'en', source: 'default' });
+});
+
+test('German region tags resolve and q=0 languages are ignored', () => {
+    assert.equal(parseAcceptLanguage('de-DE,de;q=0.9,en;q=0.8'), 'de');
+    assert.equal(parseAcceptLanguage('de;q=0,en;q=0.8'), 'en');
+    assert.equal(parseAcceptLanguage('de;q=0'), null);
+    assert.equal(parseAcceptLanguage('de;q=2,en;q=0.8'), 'en');
+});
+
+test('German uses German regional date and number formatting', () => {
+    assert.equal(toIntlLocale('de'), 'de-DE');
+    assert.equal(new Intl.NumberFormat(toIntlLocale('de')).format(12.5), '12,5');
 });
 
 test('createI18n applies source priority from query/localStorage/browser', () => {
@@ -122,7 +143,7 @@ test('createI18n applies source priority from query/localStorage/browser', () =>
     const fromStorage = createI18n({
         catalogs: TEST_CATALOGS,
         storage: makeStorage({ astrobot_locale: 'uk' }),
-        queryString: '?locale=de',
+        queryString: '?locale=fr',
         browserLocale: 'ru-RU',
         fetchFn: null,
     });

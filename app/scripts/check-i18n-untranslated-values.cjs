@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {
     KNOWN_UNTRANSLATED_VALUE_KEYS,
+    KNOWN_UNTRANSLATED_VALUE_KEYS_BY_LOCALE,
 } = require('./i18n-known-issues.cjs');
 
 const DEFAULT_ALLOWLIST = [
@@ -70,8 +71,9 @@ function isLikelyEnglish(value) {
 function runUntranslatedValueCheck(options = {}) {
     const localesDir = path.resolve(options.localesDir || path.join(__dirname, '..', 'frontend', 'locales'));
     const baselineLocale = options.baselineLocale || 'en';
-    const locales = options.locales || ['uk', 'ru'];
-    const allowlist = new Set(options.allowlist || DEFAULT_ALLOWLIST);
+    const locales = options.locales || ['uk', 'ru', 'de'];
+    const sharedAllowlist = new Set(options.allowlist || DEFAULT_ALLOWLIST);
+    const allowlistByLocale = options.allowlistByLocale || KNOWN_UNTRANSLATED_VALUE_KEYS_BY_LOCALE;
 
     const baselinePath = path.join(localesDir, `${baselineLocale}.json`);
     if (!fs.existsSync(baselinePath)) {
@@ -85,6 +87,10 @@ function runUntranslatedValueCheck(options = {}) {
     let issuesCount = 0;
 
     for (const locale of locales) {
+        const allowlist = new Set([
+            ...sharedAllowlist,
+            ...(allowlistByLocale[locale] || []),
+        ]);
         const localePath = path.join(localesDir, `${locale}.json`);
         if (!fs.existsSync(localePath)) {
             report[locale] = {
@@ -115,7 +121,8 @@ function runUntranslatedValueCheck(options = {}) {
         baselineLocale,
         locales,
         localesDir,
-        allowlist: [...allowlist],
+        allowlist: [...sharedAllowlist],
+        allowlistByLocale,
         report,
     };
 }
@@ -139,7 +146,7 @@ function formatReport(result) {
 
 function main() {
     const args = parseArgs(process.argv.slice(2));
-    const locales = args.locales ? parseLocales(args.locales) : ['uk', 'ru'];
+    const locales = args.locales ? parseLocales(args.locales) : ['uk', 'ru', 'de'];
     const allowlist = parseAllowlist(args.allowlist);
 
     const result = runUntranslatedValueCheck({

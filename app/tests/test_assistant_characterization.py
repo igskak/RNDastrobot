@@ -384,6 +384,8 @@ def test_locale_instruction_maps_codes():
     assert "English" in svc._locale_instruction("en")
     assert "Russian" in svc._locale_instruction("ru")
     assert "Ukrainian" in svc._locale_instruction("uk")
+    assert "German" in svc._locale_instruction("de")
+    assert "Sie" in svc._locale_instruction("de")
     assert svc._locale_instruction(None) is None
     assert svc._locale_instruction("") is None
 

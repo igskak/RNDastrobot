@@ -1504,7 +1504,7 @@ class ChatWidget {
         content.className = 'message-content';
 
         const label = document.createElement('div');
-        label.textContent = `Подтвердите: ${actionLabel(action)}`;
+        label.textContent = t('page.chart.chat.actionConfirmTitle', { action: actionLabel(action) });
 
         const buttons = document.createElement('div');
         buttons.className = 'chat-action-buttons';
@@ -1512,13 +1512,13 @@ class ChatWidget {
 
         const applyBtn = document.createElement('button');
         applyBtn.type = 'button';
-        applyBtn.textContent = 'Применить';
+        applyBtn.textContent = t('page.chart.chat.actionApply');
         applyBtn.style.cssText = 'border:0;border-radius:8px;padding:5px 12px;cursor:pointer;'
             + 'background:#3b6cff;color:#fff;font:inherit';
 
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
-        cancelBtn.textContent = 'Отмена';
+        cancelBtn.textContent = t('common.cancel');
         cancelBtn.style.cssText = 'border:0;border-radius:8px;padding:5px 12px;cursor:pointer;'
             + 'background:rgba(0,0,0,0.08);font:inherit';
 
@@ -1529,7 +1529,7 @@ class ChatWidget {
             wrap.remove();
         });
         cancelBtn.addEventListener('click', () => {
-            this.addActionNote(`Отменено: ${actionLabel(action)}`);
+            this.addActionNote(t('page.chart.chat.actionCancelled', { action: actionLabel(action) }));
             wrap.remove();
         });
 

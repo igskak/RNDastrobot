@@ -110,19 +110,19 @@
         'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
     ]);
     const TIME_STEPPER_SEGMENTS = [
-        { key: 'yearThousands', label: '1000л', title: 'Тысячи лет', unit: 'year', amount: 1000 },
-        { key: 'yearHundreds', label: '100л', title: 'Сотни лет', unit: 'year', amount: 100 },
-        { key: 'yearTens', label: '10л', title: 'Десятки лет', unit: 'year', amount: 10 },
-        { key: 'yearOnes', label: 'Год', title: 'Годы', unit: 'year', amount: 1 },
-        { key: 'monthTens', label: '10мес', title: 'Десятки месяцев', unit: 'month', amount: 10 },
-        { key: 'monthOnes', label: 'Мес', title: 'Месяцы', unit: 'month', amount: 1 },
-        { key: 'dayTens', label: '10д', title: 'Десятки дней', unit: 'day', amount: 10 },
-        { key: 'dayOnes', label: 'День', title: 'Дни', unit: 'day', amount: 1 },
-        { key: 'hour', label: 'Час', title: 'Часы', unit: 'hour', amount: 1 },
-        { key: 'tenMinute', label: '10м', title: 'Десятки минут', unit: 'minute', amount: 10 },
-        { key: 'minute', label: 'Мин', title: 'Минуты', unit: 'minute', amount: 1 },
-        { key: 'tenSecond', label: '10с', title: 'Десятки секунд', unit: 'second', amount: 10 },
-        { key: 'second', label: 'Сек', title: 'Секунды', unit: 'second', amount: 1 },
+        { key: 'yearThousands', unit: 'year', amount: 1000 },
+        { key: 'yearHundreds', unit: 'year', amount: 100 },
+        { key: 'yearTens', unit: 'year', amount: 10 },
+        { key: 'yearOnes', unit: 'year', amount: 1 },
+        { key: 'monthTens', unit: 'month', amount: 10 },
+        { key: 'monthOnes', unit: 'month', amount: 1 },
+        { key: 'dayTens', unit: 'day', amount: 10 },
+        { key: 'dayOnes', unit: 'day', amount: 1 },
+        { key: 'hour', unit: 'hour', amount: 1 },
+        { key: 'tenMinute', unit: 'minute', amount: 10 },
+        { key: 'minute', unit: 'minute', amount: 1 },
+        { key: 'tenSecond', unit: 'second', amount: 10 },
+        { key: 'second', unit: 'second', amount: 1 },
     ];
     const TIME_STEPPER_SEGMENT_BY_KEY = new Map(TIME_STEPPER_SEGMENTS.map((segment) => [segment.key, segment]));
     const TIME_STEPPER_WHEEL_DELTA_THRESHOLD = 48;
@@ -131,13 +131,13 @@
     const TIME_STEPPER_SWIPE_AXIS_BIAS_PX = 6;
     const TIME_STEPPER_WHEEL_DELTAS = new WeakMap();
     const CUSTOM_STEP_UNITS = [
-        { value: 'second', label: 'секунд' },
-        { value: 'minute', label: 'минут' },
-        { value: 'hour', label: 'часов' },
-        { value: 'day', label: 'дней' },
-        { value: 'week', label: 'недель' },
-        { value: 'month', label: 'месяцев' },
-        { value: 'year', label: 'лет' },
+        { value: 'second' },
+        { value: 'minute' },
+        { value: 'hour' },
+        { value: 'day' },
+        { value: 'week' },
+        { value: 'month' },
+        { value: 'year' },
     ];
 
     const refs = {};
@@ -2962,28 +2962,29 @@
         const values = getTimeStepperSegmentValues(getDisplayedMomentDateTime());
         const customStep = normalizeCustomStep(state.customStep);
         const customStepLabel = formatCustomStepLabel(customStep);
-        const customStepTooltip = `Кастомный шаг: ${customStepLabel}`;
+        const customStepTooltip = t('page.forecastNew.timeStepper.customTooltip', { step: customStepLabel });
         const customStepUnitOptions = CUSTOM_STEP_UNITS.map((unit) => `
-            <option value="${unit.value}" ${unit.value === customStep.unit ? 'selected' : ''}>${escapeHtml(unit.label)}</option>
+            <option value="${unit.value}" ${unit.value === customStep.unit ? 'selected' : ''}>${escapeHtml(t(`page.forecastNew.timeStepper.units.${unit.value}`))}</option>
         `).join('');
         const segmentMarkup = (segmentKey) => {
             const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === segmentKey);
             const value = values[segmentKey] ?? '';
             if (!segment) return '';
+            const title = t(`page.forecastNew.timeStepper.segments.${segment.key}.title`);
             return `
-                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--${segment.key}" data-time-step-key="${segment.key}" tabindex="0" role="spinbutton" aria-label="${escapeHtml(segment.title)}" aria-valuetext="${escapeHtml(value)}" title="${escapeHtml(segment.title)}">
-                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up" data-time-step-segment="${segment.key}" data-time-step-direction="1" aria-label="${escapeHtml(segment.title)} +1"></button>
+                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--${segment.key}" data-time-step-key="${segment.key}" tabindex="0" role="spinbutton" aria-label="${escapeHtml(title)}" aria-valuetext="${escapeHtml(value)}" title="${escapeHtml(title)}">
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up" data-time-step-segment="${segment.key}" data-time-step-direction="1" aria-label="${escapeHtml(title)} +1"></button>
                     <span class="forecast-new-time-stepper-value">${escapeHtml(value)}</span>
-                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down" data-time-step-segment="${segment.key}" data-time-step-direction="-1" aria-label="${escapeHtml(segment.title)} -1"></button>
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down" data-time-step-segment="${segment.key}" data-time-step-direction="-1" aria-label="${escapeHtml(title)} -1"></button>
                 </span>
             `;
         };
 
         refs.forecastNewTimeStepper.innerHTML = `
             <span class="forecast-new-time-stepper-display">
-                ${buildStepperDateGroup(segmentMarkup, 'Дата')}
+                ${buildStepperDateGroup(segmentMarkup, t('page.forecastNew.timeStepper.date'))}
                 <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время">
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.time'))}">
                     ${segmentMarkup('hour')}
                     <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
                     <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
@@ -2992,7 +2993,7 @@
                 </span>
             </span>
             <span class="forecast-new-time-stepper-actions">
-                <button type="button" class="forecast-new-stepper-action" data-reset-moment="prognostic" title="Вернуть текущие дату и время" aria-label="Вернуть текущие дату и время">↺</button>
+                <button type="button" class="forecast-new-stepper-action" data-reset-moment="prognostic" title="${escapeHtml(t('page.forecastNew.timeStepper.resetCurrent'))}" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.resetCurrent'))}">↺</button>
                 <span class="forecast-new-custom-step ${state.isCustomStepOpen ? 'is-open' : ''}">
                 <button
                     type="button"
@@ -3006,16 +3007,16 @@
                     <span aria-hidden="true">⇄</span>
                 </button>
                 <span class="forecast-new-custom-step-popover ${state.isCustomStepOpen ? '' : 'hidden'}" id="forecastNewCustomStepPopover">
-                    <span class="forecast-new-custom-step-actions" aria-label="Переход по пользовательскому шагу">
-                        <button type="button" data-custom-step-direction="-1" aria-label="Назад на пользовательский шаг">&larr;</button>
-                        <button type="button" data-custom-step-direction="1" aria-label="Вперед на пользовательский шаг">&rarr;</button>
+                    <span class="forecast-new-custom-step-actions" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.customActions'))}">
+                        <button type="button" data-custom-step-direction="-1" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.back'))}">&larr;</button>
+                        <button type="button" data-custom-step-direction="1" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.forward'))}">&rarr;</button>
                     </span>
                     <label class="forecast-new-custom-step-field forecast-new-custom-step-field--amount">
-                        <span>Шаг</span>
+                        <span>${escapeHtml(t('page.forecastNew.timeStepper.step'))}</span>
                         <input type="number" min="1" max="9999" step="1" value="${customStep.amount}" data-custom-step-input="amount">
                     </label>
                     <label class="forecast-new-custom-step-field forecast-new-custom-step-field--unit">
-                        <span>Ед.</span>
+                        <span>${escapeHtml(t('page.forecastNew.timeStepper.unit'))}</span>
                         <select data-custom-step-input="unit">${customStepUnitOptions}</select>
                     </label>
                 </span>
@@ -3064,28 +3065,29 @@
         const values = getTimeStepperSegmentValues(state.natalSelectedDateTime);
         const customStep = normalizeCustomStep(state.natalCustomStep);
         const customStepLabel = formatCustomStepLabel(customStep);
-        const customStepTooltip = `Кастомный шаг: ${customStepLabel}`;
+        const customStepTooltip = t('page.forecastNew.timeStepper.customTooltip', { step: customStepLabel });
         const customStepUnitOptions = CUSTOM_STEP_UNITS.map((unit) => `
-            <option value="${unit.value}" ${unit.value === customStep.unit ? 'selected' : ''}>${escapeHtml(unit.label)}</option>
+            <option value="${unit.value}" ${unit.value === customStep.unit ? 'selected' : ''}>${escapeHtml(t(`page.forecastNew.timeStepper.units.${unit.value}`))}</option>
         `).join('');
         const segmentMarkup = (segmentKey) => {
             const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === segmentKey);
             const value = values[segmentKey] ?? '';
             if (!segment) return '';
+            const title = t(`page.forecastNew.timeStepper.segments.${segment.key}.title`);
             return `
-                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--${segment.key}" data-time-step-key="${segment.key}" tabindex="0" role="spinbutton" aria-label="${escapeHtml(segment.title)}" aria-valuetext="${escapeHtml(value)}" title="${escapeHtml(segment.title)}">
-                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up" data-time-step-segment="${segment.key}" data-time-step-direction="1" aria-label="${escapeHtml(segment.title)} +1"></button>
+                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--${segment.key}" data-time-step-key="${segment.key}" tabindex="0" role="spinbutton" aria-label="${escapeHtml(title)}" aria-valuetext="${escapeHtml(value)}" title="${escapeHtml(title)}">
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up" data-time-step-segment="${segment.key}" data-time-step-direction="1" aria-label="${escapeHtml(title)} +1"></button>
                     <span class="forecast-new-time-stepper-value">${escapeHtml(value)}</span>
-                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down" data-time-step-segment="${segment.key}" data-time-step-direction="-1" aria-label="${escapeHtml(segment.title)} -1"></button>
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down" data-time-step-segment="${segment.key}" data-time-step-direction="-1" aria-label="${escapeHtml(title)} -1"></button>
                 </span>
             `;
         };
 
         refs.forecastNewNatalTimeStepper.innerHTML = `
             <span class="forecast-new-time-stepper-display">
-                ${buildStepperDateGroup(segmentMarkup, 'Дата рождения')}
+                ${buildStepperDateGroup(segmentMarkup, t('page.forecastNew.timeStepper.birthDate'))}
                 <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время рождения">
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.birthTime'))}">
                     ${segmentMarkup('hour')}
                     <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
                     <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
@@ -3094,7 +3096,7 @@
                 </span>
             </span>
             <span class="forecast-new-time-stepper-actions">
-                <button type="button" class="forecast-new-stepper-action" data-reset-moment="natal" title="Вернуть дату и время рождения" aria-label="Вернуть дату и время рождения">↺</button>
+                <button type="button" class="forecast-new-stepper-action" data-reset-moment="natal" title="${escapeHtml(t('page.forecastNew.timeStepper.resetBirth'))}" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.resetBirth'))}">↺</button>
                 <span class="forecast-new-custom-step ${state.natalIsCustomStepOpen ? 'is-open' : ''}">
                 <button
                     type="button"
@@ -3108,16 +3110,16 @@
                     <span aria-hidden="true">⇄</span>
                 </button>
                 <span class="forecast-new-custom-step-popover ${state.natalIsCustomStepOpen ? '' : 'hidden'}" id="forecastNewNatalCustomStepPopover">
-                    <span class="forecast-new-custom-step-actions" aria-label="Переход по пользовательскому шагу">
-                        <button type="button" data-custom-step-direction="-1" aria-label="Назад на пользовательский шаг">&larr;</button>
-                        <button type="button" data-custom-step-direction="1" aria-label="Вперед на пользовательский шаг">&rarr;</button>
+                    <span class="forecast-new-custom-step-actions" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.customActions'))}">
+                        <button type="button" data-custom-step-direction="-1" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.back'))}">&larr;</button>
+                        <button type="button" data-custom-step-direction="1" aria-label="${escapeHtml(t('page.forecastNew.timeStepper.forward'))}">&rarr;</button>
                     </span>
                     <label class="forecast-new-custom-step-field forecast-new-custom-step-field--amount">
-                        <span>Шаг</span>
+                        <span>${escapeHtml(t('page.forecastNew.timeStepper.step'))}</span>
                         <input type="number" min="1" max="9999" step="1" value="${customStep.amount}" data-custom-step-input="amount">
                     </label>
                     <label class="forecast-new-custom-step-field forecast-new-custom-step-field--unit">
-                        <span>Ед.</span>
+                        <span>${escapeHtml(t('page.forecastNew.timeStepper.unit'))}</span>
                         <select data-custom-step-input="unit">${customStepUnitOptions}</select>
                     </label>
                 </span>
@@ -3171,7 +3173,9 @@
         });
         const toggle = refs.forecastNewNatalTimeStepper?.querySelector('[data-custom-step-toggle]');
         if (toggle) {
-            const tooltip = `Кастомный шаг: ${formatCustomStepLabel(state.natalCustomStep)}`;
+            const tooltip = t('page.forecastNew.timeStepper.customTooltip', {
+                step: formatCustomStepLabel(state.natalCustomStep),
+            });
             toggle.setAttribute('title', tooltip);
             toggle.setAttribute('aria-label', tooltip);
         }
@@ -3723,7 +3727,9 @@
         });
         const toggle = refs.forecastNewTimeStepper?.querySelector('[data-custom-step-toggle]');
         if (toggle) {
-            const tooltip = `Кастомный шаг: ${formatCustomStepLabel(state.customStep)}`;
+            const tooltip = t('page.forecastNew.timeStepper.customTooltip', {
+                step: formatCustomStepLabel(state.customStep),
+            });
             toggle.setAttribute('title', tooltip);
             toggle.setAttribute('aria-label', tooltip);
         }
@@ -4988,7 +4994,7 @@
                 })
                 .filter(Boolean)
                 .join('');
-            select.innerHTML = `<option value="">— партнёр —</option>${options}`;
+            select.innerHTML = `<option value="">${escapeHtml(t('page.forecastNew.synastry.partnerOption'))}</option>${options}`;
             if (state.synastryPartnerId) select.value = state.synastryPartnerId;
             if (select.value !== state.synastryPartnerId) state.synastryPartnerId = select.value || '';
         } catch {
@@ -6453,8 +6459,8 @@
         }
         const method = selectedRightMethod();
         if (!method) {
-            refs.prognosticPanelTitle.textContent = 'Слой не выбран';
-            refs.prognosticPanelMeta.textContent = 'Добавьте слой для расчёта';
+            refs.prognosticPanelTitle.textContent = t('page.forecastNew.emptyLayer.title');
+            refs.prognosticPanelMeta.textContent = t('page.forecastNew.emptyLayer.body');
             if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
             if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = '';
             state.prognosticRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
@@ -10290,7 +10296,11 @@
     function formatCustomStepLabel(value) {
         const step = normalizeCustomStep(value);
         const unit = CUSTOM_STEP_UNITS.find((item) => item.value === step.unit);
-        return `${step.amount} ${unit?.label || 'дней'}`;
+        const unitGroup = step.amount === 1 ? 'unitsOne' : 'units';
+        const unitLabel = unit
+            ? t(`page.forecastNew.timeStepper.${unitGroup}.${unit.value}`)
+            : t(`page.forecastNew.timeStepper.${unitGroup}.day`);
+        return `${step.amount} ${unitLabel}`;
     }
 
     function addDateTimeUnit(value, unit, amount) {
@@ -10734,7 +10744,7 @@
         const undo = document.createElement('button');
         undo.type = 'button';
         undo.setAttribute('data-cmd-toast-undo', '');
-        undo.textContent = 'Отменить';
+        undo.textContent = t('common.undo');
         undo.style.cssText = 'border:0;background:rgba(255,255,255,0.16);color:#fff;'
             + 'border-radius:8px;padding:5px 10px;cursor:pointer;font:inherit';
         undo.addEventListener('click', async () => {

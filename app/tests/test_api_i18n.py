@@ -92,6 +92,44 @@ def test_locale_priority_accept_language_when_no_explicit(client, monkeypatch):
     assert payload["message"] == "Натальну карту не знайдено."
 
 
+def test_german_locale_from_region_tag_localizes_api_error(client, monkeypatch):
+    monkeypatch.setattr(locale_dependency, "resolve_user_preference_locale", lambda _user_id: None)
+
+    user_id = uuid4()
+    response = client.get(
+        f"/api/v1/natal/{user_id}",
+        headers={"Accept-Language": "de-DE,de;q=0.9,en;q=0.8"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["message"] == "Das Geburtshoroskop wurde nicht gefunden."
+
+
+def test_accept_language_ignores_languages_with_zero_quality(client, monkeypatch):
+    monkeypatch.setattr(locale_dependency, "resolve_user_preference_locale", lambda _user_id: None)
+
+    user_id = uuid4()
+    response = client.get(
+        f"/api/v1/natal/{user_id}",
+        headers={"Accept-Language": "de;q=0,en;q=0.8"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["message"] == "Natal chart was not found."
+
+
+def test_accept_language_ignores_invalid_quality(client, monkeypatch):
+    monkeypatch.setattr(locale_dependency, "resolve_user_preference_locale", lambda _user_id: None)
+
+    response = client.get(
+        f"/api/v1/natal/{uuid4()}",
+        headers={"Accept-Language": "de;q=2,en;q=0.8"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["message"] == "Natal chart was not found."
+
+
 def test_fallback_to_en_when_translation_missing(client, monkeypatch):
     monkeypatch.setattr(locale_dependency, "resolve_user_preference_locale", lambda _user_id: "uk")
 
@@ -163,3 +201,7 @@ def test_frontend_locale_catalogs_are_served(client, monkeypatch):
     payload = response.json()
     assert isinstance(payload, dict)
     assert payload
+
+    german_response = client.get("/locales/de.json")
+    assert german_response.status_code == 200
+    assert german_response.json()["app"]["language"] == "Sprache"

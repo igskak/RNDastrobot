@@ -1,0 +1,1013 @@
+{
+  "status": "Reviewed exact-key exceptions for this draft, not installed in runtime checkers",
+  "entries": [
+    {
+      "locale": "de",
+      "key": "astro.aspect.Opposition",
+      "value": "Opposition",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "astro.aspect.Nonagon",
+      "value": "Nonagon",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "astro.aspect.Binonagon",
+      "value": "Binonagon",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "astro.aspect.Sentagon",
+      "value": "Sentagon",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "astro.configuration.Yod",
+      "value": "Yod",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "astro.dignity.fall",
+      "value": "Fall",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "astro.feature.short.out_of_bounds",
+      "value": "OOB",
+      "reason": "Brand, abbreviation or format token"
+    },
+    {
+      "locale": "de",
+      "key": "astro.houseSystem.campanus",
+      "value": "Campanus",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.houseSystem.koch",
+      "value": "Koch",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.houseSystem.placidus",
+      "value": "Placidus",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.houseSystem.regiomontanus",
+      "value": "Regiomontanus",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.Chiron",
+      "value": "Chiron",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.IC",
+      "value": "Imum Coeli",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.Jupiter",
+      "value": "Jupiter",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.Mars",
+      "value": "Mars",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.Pluto",
+      "value": "Pluto",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.Proserpina",
+      "value": "Proserpina",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.Saturn",
+      "value": "Saturn",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.Uranus",
+      "value": "Uranus",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.Venus",
+      "value": "Venus",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "astro.planet.Vertex",
+      "value": "Vertex",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "common.month.long.april",
+      "value": "April",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "common.month.long.august",
+      "value": "August",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "common.month.long.november",
+      "value": "November",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "common.month.long.september",
+      "value": "September",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "common.pause",
+      "value": "Pause",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "common.planet",
+      "value": "Planet",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "common.position",
+      "value": "Position",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "common.direction.northShort",
+      "value": "N",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "common.direction.southShort",
+      "value": "S",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "common.direction.westShort",
+      "value": "W",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "common.brandName",
+      "value": "Steliara",
+      "reason": "Brand, abbreviation or format token"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.resultViews.phase",
+      "value": "Phase",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.unknownClient",
+      "value": "",
+      "reason": "Intentional empty source value"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.direction.naibod",
+      "value": "Naibod",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.solar.chartTitlePrefix",
+      "value": "Solar",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.matrix.aspectingShort",
+      "value": "A",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.eclipses.maximum",
+      "value": "Maximum",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.eclipses.classes.total",
+      "value": "total",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.eclipses.classes.hybrid",
+      "value": "hybrid",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.zodiac.ayanamsha.lahiri",
+      "value": "Lahiri",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.zodiac.ayanamsha.fagan_bradley",
+      "value": "Fagan-Bradley",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.zodiac.ayanamsha.krishnamurti",
+      "value": "Krishnamurti",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.zodiac.ayanamsha.raman",
+      "value": "Raman",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.zodiac.ayanamsha.de_luce",
+      "value": "De Luce",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecastNew.composite.davison",
+      "value": "Davison",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.plan.names.standard",
+      "value": "Standard",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "page.plan.names.pro",
+      "value": "Pro",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "page.accountSettings.creation.timezoneLabelFormatOptions.gmt",
+      "value": "GMT",
+      "reason": "Brand, abbreviation or format token"
+    },
+    {
+      "locale": "de",
+      "key": "page.accountSettings.creation.timezoneLabelFormatOptions.utc",
+      "value": "UTC",
+      "reason": "Brand, abbreviation or format token"
+    },
+    {
+      "locale": "de",
+      "key": "page.accountSettings.dignities.columns.planet",
+      "value": "Planet",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.accountSettings.methodology.balances.columns.planet",
+      "value": "Planet",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.accountSettings.tables.columns.solar",
+      "value": "Solar",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.accountSettings.tables.notAvailable",
+      "value": "—",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.accountSettings.visual.columns.element",
+      "value": "Element",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.accountSettings.visual.columns.planet",
+      "value": "Planet",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.balances.brahma",
+      "value": "Brahma",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.balances.quadrant1",
+      "value": "I",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.balances.quadrant2",
+      "value": "II",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.balances.quadrant3",
+      "value": "III",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.balances.quadrant4",
+      "value": "IV",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.balances.vishnu",
+      "value": "Vishnu",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.balances.shiva",
+      "value": "Shiva",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.rulers.chainModes.fall",
+      "value": "Fall",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.legend.neutral",
+      "value": "Neutral",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.table.planets.symbol",
+      "value": "Element",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.chart.saveModal.tagsLabel",
+      "value": "Tags",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.calendar.dialog.client",
+      "value": "Person",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.profile.signedInAs",
+      "value": "{email}",
+      "reason": "Shared notation/placeholder structure; any visible term is valid German"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.chartKinds.test",
+      "value": "Test",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.tagFilter.label",
+      "value": "Tag",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.table.tags",
+      "value": "Tags",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.table.name",
+      "value": "Name",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.crm.emailPlaceholder",
+      "value": "client@example.com",
+      "reason": "Preserved example email address"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.crm.phonePlaceholder",
+      "value": "+1 234 567 890",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.crm.messenger",
+      "value": "Messenger",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.crm.tags",
+      "value": "Tags",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.consultation.status",
+      "value": "Status",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clients.consultation.durationPlaceholder",
+      "value": "60",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.clientProfile.savedCharts.defaultProgressionName",
+      "value": "Progression",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clientProfile.savedCharts.types.progression",
+      "value": "Progression",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.synastry.headerTitle",
+      "value": "{client} × {partner}",
+      "reason": "Shared notation/placeholder structure; any visible term is valid German"
+    },
+    {
+      "locale": "de",
+      "key": "page.synastry.phase",
+      "value": "Phase",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.summary.chips.status",
+      "value": "Status",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.scale.range",
+      "value": "{start} - {end} ({count})",
+      "reason": "Shared notation/placeholder structure; any visible term is valid German"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.solar.nameLabel",
+      "value": "Name",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.table.columns.methodShort",
+      "value": "M",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.table.columns.transitShort",
+      "value": "T",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.table.columns.transitSort",
+      "value": "Transit ⇅",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.table.eclipses.maximum",
+      "value": "Maximum",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.table.eclipses.position",
+      "value": "Position",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.table.eclipses.classes.total",
+      "value": "total",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.table.eclipses.classes.hybrid",
+      "value": "hybrid",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.timeline.eclipses.maximum",
+      "value": "Maximum",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.timeline.eclipses.classes.total",
+      "value": "total",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.forecast.timeline.eclipses.classes.hybrid",
+      "value": "hybrid",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.index.form.birthDate.monthPlaceholder",
+      "value": "MM",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.index.form.birthTime.hoursPlaceholder",
+      "value": "HH",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.index.form.birthTime.minutesPlaceholder",
+      "value": "MM",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.index.logo",
+      "value": "Steliara",
+      "reason": "Brand, abbreviation or format token"
+    },
+    {
+      "locale": "de",
+      "key": "page.index.preview.modes.chat",
+      "value": "Chat",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.index.preview.context.personLabel",
+      "value": "Person",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.index.foundation.items.ephemeris.title",
+      "value": "Swiss Ephemeris",
+      "reason": "Brand, abbreviation or format token"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.balances.brahma",
+      "value": "Brahma",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.balances.vishnu",
+      "value": "Vishnu",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.balances.shiva",
+      "value": "Shiva",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.balances.quadrant1",
+      "value": "I",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.balances.quadrant2",
+      "value": "II",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.balances.quadrant3",
+      "value": "III",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.balances.quadrant4",
+      "value": "IV",
+      "reason": "Numeric example, abbreviation, symbol or Roman numeral"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.config.stellium",
+      "value": "Stellium: {location}",
+      "reason": "Shared notation/placeholder structure; any visible term is valid German"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.legend.dignity.fall",
+      "value": "Fall",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.legend.features.almuten",
+      "value": "Almuten",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.legend.features.anareta",
+      "value": "Anareta",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.legend.features.cazimi",
+      "value": "Cazimi",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.legend.features.doryphoros",
+      "value": "Doryphoros",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.table.planets.karma",
+      "value": "Status",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.table.planets.planet",
+      "value": "Planet",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.table.planets.position",
+      "value": "Position",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.natalFull.table.specialPoints.position",
+      "value": "Position",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.login.fields.email.placeholder",
+      "value": "you@example.com",
+      "reason": "Preserved example email address"
+    },
+    {
+      "locale": "de",
+      "key": "page.clientNotes.method.transit",
+      "value": "Transit",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clientNotes.method.progression",
+      "value": "Progression",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.clientNotes.method.solar_return",
+      "value": "Solar",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.consultation.consultationType.solar",
+      "value": "Solar",
+      "reason": "Established German term or shared domain/proper name; reviewed in context"
+    },
+    {
+      "locale": "de",
+      "key": "page.pricing.plans.practitioner.name",
+      "value": "Practitioner",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "page.pricing.plans.studio.name",
+      "value": "Studio",
+      "reason": "Proper name or preserved product/method name"
+    },
+    {
+      "locale": "de",
+      "key": "page.call.rec",
+      "value": "REC",
+      "reason": "Brand, abbreviation or format token"
+    },
+    {
+      "locale": "de",
+      "key": "page.join.rec",
+      "value": "REC",
+      "reason": "Brand, abbreviation or format token"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.label.cityWithOffset",
+      "value": "{city} ({offset})",
+      "reason": "Shared notation/placeholder structure; any visible term is valid German"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.london",
+      "value": "London",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.paris",
+      "value": "Paris",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.berlin",
+      "value": "Berlin",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.madrid",
+      "value": "Madrid",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.istanbul",
+      "value": "Istanbul",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.helsinki",
+      "value": "Helsinki",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.stockholm",
+      "value": "Stockholm",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.amsterdam",
+      "value": "Amsterdam",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.sofia",
+      "value": "Sofia",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.budapest",
+      "value": "Budapest",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.riga",
+      "value": "Riga",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.vilnius",
+      "value": "Vilnius",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.tallinn",
+      "value": "Tallinn",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.minsk",
+      "value": "Minsk",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.kaliningrad",
+      "value": "Kaliningrad",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.samara",
+      "value": "Samara",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.irkutsk",
+      "value": "Irkutsk",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.almaty",
+      "value": "Almaty",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.baku",
+      "value": "Baku",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.dubai",
+      "value": "Dubai",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.jerusalem",
+      "value": "Jerusalem",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.kolkata",
+      "value": "Kolkata",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.bangkok",
+      "value": "Bangkok",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.seoul",
+      "value": "Seoul",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.new_york",
+      "value": "New York",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.chicago",
+      "value": "Chicago",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.denver",
+      "value": "Denver",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.los_angeles",
+      "value": "Los Angeles",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.toronto",
+      "value": "Toronto",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.vancouver",
+      "value": "Vancouver",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.buenos_aires",
+      "value": "Buenos Aires",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.sydney",
+      "value": "Sydney",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.melbourne",
+      "value": "Melbourne",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.perth",
+      "value": "Perth",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.auckland",
+      "value": "Auckland",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.johannesburg",
+      "value": "Johannesburg",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.lagos",
+      "value": "Lagos",
+      "reason": "Proper place name or UTC label"
+    },
+    {
+      "locale": "de",
+      "key": "timezones.city.utc",
+      "value": "UTC",
+      "reason": "Proper place name or UTC label"
+    }
+  ]
+}

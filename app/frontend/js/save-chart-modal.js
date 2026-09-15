@@ -201,7 +201,7 @@
             const del = document.createElement('button');
             del.type = 'button';
             del.className = 'scm-tag-chip-del';
-            del.setAttribute('aria-label', 'Remove ' + tag);
+            del.setAttribute('aria-label', t('page.chart.saveModal.removeTag', { name: tag }));
             del.textContent = '×';
             del.addEventListener('click', () => { _tags.splice(i, 1); renderTagChips(); renderTagSuggestions(); });
             chip.append(name, del);
@@ -289,7 +289,7 @@
             const del = document.createElement('button');
             del.type = 'button';
             del.className = 'scm-tag-chip-del';
-            del.setAttribute('aria-label', 'Remove ' + person.name);
+            del.setAttribute('aria-label', t('page.chart.saveModal.removePerson', { name: person.name }));
             del.textContent = '×';
             del.addEventListener('click', () => { _persons.splice(i, 1); renderPersonChips(); });
             chip.append(name, del);

@@ -1,0 +1,248 @@
+[
+  {
+    "key": "astro.configuration.Chariot",
+    "before": "Wagen",
+    "after": "Wagen (geschlossener Briefumschlag)",
+    "reason": "Keep custom Chariot distinct from Mystic_Rectangle; clarify geometric name from seed."
+  },
+  {
+    "key": "astro.configuration.Open_Envelope",
+    "before": "Offener Umschlag",
+    "after": "Offener Briefumschlag",
+    "reason": "Explicit aspect-pattern label, not a vague envelope."
+  },
+  {
+    "key": "astro.configuration.Skewed_Sail",
+    "before": "Schiefes Segel",
+    "after": "Schräges Segel",
+    "reason": "Idiomatic description of custom shape, without merging distinct algorithmic IDs."
+  },
+  {
+    "key": "astro.feature.short.elevated",
+    "before": "erhöht",
+    "after": "eleviert",
+    "reason": "Elevation is not exaltation/Erhöhung; verified against service definition and German terminology."
+  },
+  {
+    "key": "astro.feature.short.jubilee",
+    "before": "Jubiläum",
+    "after": "Jubiläumsgrad",
+    "reason": "This feature is a critical degree, not a celebration."
+  },
+  {
+    "key": "astro.feature.short.middle",
+    "before": "Mitte",
+    "after": "Mittelgrad",
+    "reason": "This feature denotes a degree, not generic middle."
+  },
+  {
+    "key": "astro.feature.short.under_rays",
+    "before": "unter Strahlen",
+    "after": "unter Sonnenstrahlen",
+    "reason": "Make astrological reference explicit."
+  },
+  {
+    "key": "astro.pattern.Splash",
+    "before": "Verstreut",
+    "after": "Streuform",
+    "reason": "Use a noun parallel to other Jones pattern names."
+  },
+  {
+    "key": "astro.pattern.Splay",
+    "before": "Dreifuß",
+    "after": "Spreizform",
+    "reason": "Use German Jones name, not only the tripod analogy."
+  },
+  {
+    "key": "page.onboarding.forecast.text",
+    "before": "Die heutigen Transite sind bereits über dem Geburtshoroskop berechnet. Datum und Methode können Sie jederzeit ändern.",
+    "after": "Die heutigen Transite sind bereits für das Geburtshoroskop berechnet und eingeblendet. Datum und Methode können Sie jederzeit ändern.",
+    "reason": "Avoid literal calculated over the chart."
+  },
+  {
+    "key": "page.onboarding.multipleLayers.text",
+    "before": "Wählen Sie eine Ebene im Bereich aus. Horoskop, Tabellen, Aspekte und Assistent zeigen dann deren Daten. Mehrere Ebenen können gleichzeitig aktiv bleiben.",
+    "after": "Wählen Sie eine Ebene aus. Horoskop, Tabellen, Aspekte und Assistent zeigen dann deren Daten. Mehrere Ebenen können gleichzeitig aktiv bleiben.",
+    "reason": "Remove unnatural generic panel reference."
+  },
+  {
+    "key": "page.onboarding.assistant.contextual.transitNow",
+    "before": "Welche Transite sind jetzt der Exaktheit am nächsten?",
+    "after": "Welche Transite haben gerade den kleinsten Orbis?",
+    "reason": "Natural precise phrasing for most exact."
+  },
+  {
+    "key": "page.plan.usage.savedChartsUnlimited",
+    "before": "{current} Horoskope",
+    "after": "Horoskope: {current}",
+    "reason": "Grammatical for 0, 1 and plural without new keys."
+  },
+  {
+    "key": "page.plan.statusWithUnlimitedCharts",
+    "before": "{plan} · {current} Horoskope",
+    "after": "{plan} · Horoskope: {current}",
+    "reason": "Grammatical for 0, 1 and plural without new keys."
+  },
+  {
+    "key": "page.chart.presets.saveBtn",
+    "before": "Anordnung speichern",
+    "after": "Konfiguration speichern",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.pickerLabel",
+    "before": "Gespeicherte Anordnungen",
+    "after": "Gespeicherte Konfigurationen",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.pickerHeader",
+    "before": "Gespeicherte Anordnungen",
+    "after": "Gespeicherte Konfigurationen",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.emptyList",
+    "before": "Noch keine Anordnungen gespeichert",
+    "after": "Noch keine Konfigurationen gespeichert",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.promptName",
+    "before": "Name der Anordnung",
+    "after": "Name der Konfiguration",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.defaultName",
+    "before": "Meine Anordnung",
+    "after": "Meine Konfiguration",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.savedToast",
+    "before": "Anordnung gespeichert",
+    "after": "Konfiguration gespeichert",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.saveFailed",
+    "before": "Die Anordnung konnte nicht gespeichert werden.",
+    "after": "Die Konfiguration konnte nicht gespeichert werden.",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.applied",
+    "before": "Anordnung übernommen",
+    "after": "Konfiguration übernommen",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.applyFailed",
+    "before": "Die Anordnung konnte nicht übernommen werden.",
+    "after": "Die Konfiguration konnte nicht übernommen werden.",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.deleteConfirm",
+    "before": "Diese Anordnung löschen?",
+    "after": "Diese Konfiguration löschen?",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.deleteAria",
+    "before": "Anordnung löschen",
+    "after": "Konfiguration löschen",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.presets.deleteFailed",
+    "before": "Die Anordnung konnte nicht gelöscht werden.",
+    "after": "Die Konfiguration konnte nicht gelöscht werden.",
+    "reason": "Saved chart configuration includes more than panel arrangement; keep separate from panelEditor presets."
+  },
+  {
+    "key": "page.chart.chat.provenanceSummary",
+    "before": "Auf Daten zurückgeführt · {count} Werkzeuge ✓",
+    "after": "Mit Quelldaten verknüpft · {count} Werkzeuge ✓",
+    "reason": "More direct phrasing for traced-to-data metadata."
+  },
+  {
+    "key": "page.chart.chat.provenanceSummaryOne",
+    "before": "Auf Daten zurückgeführt · 1 Werkzeug ✓",
+    "after": "Mit Quelldaten verknüpft · 1 Werkzeug ✓",
+    "reason": "Consistent singular variant."
+  },
+  {
+    "key": "page.clientProfile.savedCharts.empty",
+    "before": "Noch keine Horoskope gespeichert. Speichern Sie ein Solar, eine Progression oder eine Direktion, damit sie hier erscheint.",
+    "after": "Noch keine Horoskope gespeichert. Speichern Sie ein Solar, eine Progression oder eine Direktion. Die gespeicherten Horoskope erscheinen anschließend hier.",
+    "reason": "Avoid feminine pronoun referring to mixed-gender objects."
+  },
+  {
+    "key": "page.forecast.summary.timelineReady",
+    "before": "Für diesen Zeitraum sind {count} Prognoseereignisse verfügbar.",
+    "after": "Prognoseereignisse in diesem Zeitraum: {count}.",
+    "reason": "Count-neutral summary handles 0 and 1 without grammar errors."
+  },
+  {
+    "key": "page.login.actions.haveAccount",
+    "before": "Sie haben bereits ein Konto?",
+    "after": "Schon ein Konto?",
+    "reason": "Natural concise login navigation."
+  },
+  {
+    "key": "page.consultation.memory.internal",
+    "before": "Nicht mit der Klientin oder dem Klienten geteilt",
+    "after": "Nur intern sichtbar",
+    "reason": "Concise label; unchanged sharing scope."
+  },
+  {
+    "key": "page.call.consent.waitNote",
+    "before": "Zustimmung der anderen Person wird abgewartet …",
+    "after": "Wir warten auf die Zustimmung der anderen Person …",
+    "reason": "Active natural progress sentence."
+  },
+  {
+    "key": "page.call.consent.agree",
+    "before": "Ich stimme zu – Zustimmung anfragen",
+    "after": "Zustimmen und andere Person fragen",
+    "reason": "Button preserves own agreement plus request to the other participant."
+  },
+  {
+    "key": "page.join.lobby.sessionWith",
+    "before": "Beratung mit",
+    "after": "Beratung:",
+    "reason": "Avoid dative mismatch when shared fallback name is inserted by JS."
+  },
+  {
+    "key": "page.join.lobby.defaultAstrologer",
+    "before": "Ihrer Astrologin oder Ihrem Astrologen",
+    "after": "Ihre Astrologin oder Ihr Astrologe",
+    "reason": "Matches standalone fallback and heading with colon."
+  },
+  {
+    "key": "page.join.guide",
+    "before": "Begleitung",
+    "after": "Astrologin / Astrologe",
+    "reason": "Role label, not an abstract guidance noun."
+  },
+  {
+    "key": "page.pricing.plans.practitioner.tagline",
+    "before": "Alles, was Sie für eine konzentrierte astrologische Beratungspraxis brauchen.",
+    "after": "Alles, was Sie für eine professionelle astrologische Praxis brauchen.",
+    "reason": "Natural German product copy; avoids a literal rendering of focused practice."
+  },
+  {
+    "key": "page.pricing.plans.studio.f1",
+    "before": "Alles aus Practitioner",
+    "after": "Alle Funktionen des Practitioner-Tarifs",
+    "reason": "Idiomatic German plan comparison."
+  },
+  {
+    "key": "page.pricing.plans.studio.f5",
+    "before": "Bevorzugter Support",
+    "after": "Priorisierter Support",
+    "reason": "Standard German SaaS terminology."
+  }
+]

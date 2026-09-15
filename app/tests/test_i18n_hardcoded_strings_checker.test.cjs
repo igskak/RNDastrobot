@@ -133,3 +133,20 @@ test('hardcoded checker allows throw new Error with i18n translation call', () =
         fs.rmSync(tempRoot, { recursive: true, force: true });
     }
 });
+
+test('hardcoded checker fails when a required target file is missing', () => {
+    const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'i18n-hardcoded-missing-'));
+
+    try {
+        const result = runHardcodedStringCheck({
+            repoRoot: tempRoot,
+            targetFiles: ['app/frontend/missing.html'],
+            allowlist: [],
+        });
+
+        assert.equal(result.ok, false);
+        assert.equal(result.violations[0].kind, 'file-missing');
+    } finally {
+        fs.rmSync(tempRoot, { recursive: true, force: true });
+    }
+});

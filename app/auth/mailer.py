@@ -170,6 +170,13 @@ def send_password_reset_email(*, recipient: str, reset_link: str, ttl_minutes: i
             "line3": f"Посилання діє {ttl_minutes} хв. і може бути використане лише один раз.",
             "line4": "Якщо це були не ви, просто проігноруйте цей лист.",
         },
+        "de": {
+            "subject": "AstroBot: Passwort zurücksetzen",
+            "line1": "Sie haben einen Link angefordert, um Ihr AstroBot-Passwort zurückzusetzen.",
+            "line2": f"Legen Sie über diesen Link ein neues Passwort fest: {reset_link}",
+            "line3": f"Dieser Link ist {ttl_minutes} Minuten gültig und kann nur einmal verwendet werden.",
+            "line4": "Falls die Anfrage nicht von Ihnen stammt, können Sie diese E-Mail ignorieren.",
+        },
     }.get(normalized_locale) or {
         "subject": "AstroBot password reset",
         "line1": "You requested a password reset for AstroBot.",
@@ -220,6 +227,13 @@ def send_email_verification_email(
             "line2": f"Відкрийте посилання, щоб підтвердити email: {verify_link}",
             "line3": f"Посилання діє {ttl_hours} год. і може бути використане лише один раз.",
             "line4": "Якщо ви не створювали акаунт, просто проігноруйте цей лист.",
+        },
+        "de": {
+            "subject": "AstroBot: E-Mail-Adresse bestätigen",
+            "line1": "Willkommen bei AstroBot.",
+            "line2": f"Bestätigen Sie Ihre E-Mail-Adresse über diesen Link: {verify_link}",
+            "line3": f"Dieser Link ist {ttl_hours} Stunden gültig und kann nur einmal verwendet werden.",
+            "line4": "Falls Sie dieses Konto nicht erstellt haben, können Sie diese E-Mail ignorieren.",
         },
     }.get(normalized_locale) or {
         "subject": "Verify your AstroBot email",

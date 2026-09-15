@@ -97,19 +97,21 @@ function goBack() {
     else window.history.back();
 }
 
-const SUPPORTED_LOCALES = ['en', 'uk', 'ru'];
+const SUPPORTED_LOCALES = ['en', 'uk', 'ru', 'de'];
 
 async function load() {
     try {
         const res = await apiFetch(`${API_BASE}/call-sessions/${state.sessionId}`);
         if (res.status === 404) { renderError(t('page.consultation.notFound')); return; }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(t('page.consultation.requestFailed', { status: res.status }));
         state.cs = await res.json();
         state.personId = state.cs.person_id;
         // A consultation is an output document: render its labels in the language the
         // call was conducted in, not the astrologer's global UI locale. persist:false
         // so this never overwrites the astrologer's own language preference.
-        const callLang = state.cs.summary_json?.session?.language;
+        const callLang = window.FrontendI18n?.normalizeLocale?.(
+            state.cs.summary_json?.session?.language,
+        );
         if (callLang && SUPPORTED_LOCALES.includes(callLang) && window.FrontendI18n?.setLocale) {
             try {
                 await window.FrontendI18n.setLocale(callLang, { persist: false, source: 'consultation-language' });
@@ -289,7 +291,7 @@ function wireReport() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: area.value }),
             });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) throw new Error(t('page.consultation.requestFailed', { status: res.status }));
             state.reportDirty = false;
             document.getElementById('reportStatus').innerHTML =
                 `<span class="consult-saved">${escapeHtml(t('page.consultation.report.saved'))}</span>`;
@@ -315,7 +317,7 @@ async function loadMemory() {
     if (!box || !state.userId) return;
     try {
         const res = await apiFetch(`${API_BASE}/clients/${state.userId}/memory`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(t('page.consultation.requestFailed', { status: res.status }));
         const data = await res.json();
         renderMemory(data.entries || []);
     } catch (err) {

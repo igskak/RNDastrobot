@@ -46,6 +46,7 @@ def test_answering_calls_use_the_answer_budget(monkeypatch):
 @pytest.mark.parametrize("text", [
     "Давай", "давайте", "Да", "ок", "Окей", "поехали", "продолжай",
     "yes", "Go ahead", "do it", "sure", "Start",
+    "Ja", "Ja, bitte", "Gerne", "Machen Sie weiter",
 ])
 def test_affirmatives_are_recognised(text):
     assert _is_affirmative(text)
@@ -78,6 +79,28 @@ def test_bare_agreement_after_an_offer_resumes_it():
     assert instruction is not None
     assert "2026-07-02" in instruction          # the offer is quoted back
     assert "do not re-ask" in instruction.lower()
+
+
+def test_german_bare_agreement_after_an_offer_resumes_it():
+    messages = [
+        {"role": "assistant", "content": "Möchten Sie die Transite für das nächste Jahr sehen?"},
+        {"role": "user", "content": "Ja, bitte"},
+    ]
+
+    instruction = _continuation_instruction(messages)
+
+    assert instruction is not None
+    assert "nächste Jahr" in instruction
+
+
+def test_german_workspace_intents_are_recognised():
+    assert svc._requested_wheel_view([
+        {"role": "user", "content": "Wechseln Sie zur Einzelansicht."},
+    ]) == "single"
+    assert svc._requested_wheel_view([
+        {"role": "user", "content": "Zeigen Sie mehrere Horoskopringe."},
+    ]) == "multi"
+    assert svc._explicit_layer_request("Fügen Sie einen Transit hinzu.") is True
 
 
 def test_agreement_without_a_preceding_offer_is_not_a_continuation():

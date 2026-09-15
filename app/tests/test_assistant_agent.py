@@ -403,6 +403,26 @@ def test_chat_coerces_multi_layer_mode_to_wheel_view(monkeypatch):
     assert result["tool_results"][0]["name"] == "add_layer"
 
 
+def test_chat_coerces_german_multi_ring_request_and_replies_formally(monkeypatch):
+    service = _service_with_fake_transits({})
+    scripted = [
+        _msg(tool_calls=[_tool_call("c1", "add_layer", '{"method":"transit"}')]),
+        _msg(content="Transite hinzugefügt."),
+    ]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+
+    result = service.chat(
+        uuid4(),
+        [{"role": "user", "content": "Zeigen Sie mehrere Horoskopringe."}],
+        locale="de",
+    )
+
+    assert result["actions"] == [
+        {"name": "set_wheel_view", "args": {"view": "multi"}, "confirm": "auto"}]
+    assert result["reply"] == "Zur Mehrfachansicht gewechselt."
+
+
 def test_chat_keeps_explicit_add_transit_layer(monkeypatch):
     service = _service_with_fake_transits({})
 

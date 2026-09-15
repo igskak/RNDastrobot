@@ -225,7 +225,8 @@
     "edit": "Изменить",
     "delete": "Удалить",
     "save": "Сохранить",
-    "time": "Время"
+    "time": "Время",
+    "undo": "Отменить действие"
   },
   "i18n": {
     "loading": "Загрузка...",
@@ -236,7 +237,8 @@
     "name": {
       "en": "Английский",
       "ru": "Русский",
-      "uk": "Украинский"
+      "uk": "Украинский",
+      "de": "Немецкий"
     }
   },
   "page": {
@@ -693,6 +695,83 @@
         "unavailable": "Добавьте соляр или карту партнёра, чтобы поменять карты местами",
         "chip": "Основная карта: {chart}",
         "baseTitle": "{chart} (основная)"
+      },
+      "emptyLayer": {
+        "title": "Слой не выбран",
+        "body": "Добавьте слой для расчёта"
+      },
+      "timeStepper": {
+        "date": "Дата",
+        "time": "Время",
+        "birthDate": "Дата рождения",
+        "birthTime": "Время рождения",
+        "resetCurrent": "Вернуть текущие дату и время",
+        "resetBirth": "Вернуть дату и время рождения",
+        "customTooltip": "Свой шаг: {step}",
+        "customActions": "Переход на свой шаг",
+        "back": "Назад на свой шаг",
+        "forward": "Вперёд на свой шаг",
+        "step": "Шаг",
+        "unit": "Ед.",
+        "units": {
+          "second": "секунд",
+          "minute": "минут",
+          "hour": "часов",
+          "day": "дней",
+          "week": "недель",
+          "month": "месяцев",
+          "year": "лет"
+        },
+        "segments": {
+          "yearThousands": {
+            "title": "Тысячи лет"
+          },
+          "yearHundreds": {
+            "title": "Сотни лет"
+          },
+          "yearTens": {
+            "title": "Десятки лет"
+          },
+          "yearOnes": {
+            "title": "Годы"
+          },
+          "monthTens": {
+            "title": "Десятки месяцев"
+          },
+          "monthOnes": {
+            "title": "Месяцы"
+          },
+          "dayTens": {
+            "title": "Десятки дней"
+          },
+          "dayOnes": {
+            "title": "Дни"
+          },
+          "hour": {
+            "title": "Часы"
+          },
+          "tenMinute": {
+            "title": "Десятки минут"
+          },
+          "minute": {
+            "title": "Минуты"
+          },
+          "tenSecond": {
+            "title": "Десятки секунд"
+          },
+          "second": {
+            "title": "Секунды"
+          }
+        },
+        "unitsOne": {
+          "second": "секунда",
+          "minute": "минута",
+          "hour": "час",
+          "day": "день",
+          "week": "неделя",
+          "month": "месяц",
+          "year": "год"
+        }
       }
     },
     "plan": {
@@ -1133,7 +1212,10 @@
         "correctionSubmit": "Отправить",
         "correctionThanks": "Спасибо за отзыв — мы его учтём.",
         "feedbackLike": "Отметить ответ полезным",
-        "feedbackDislike": "Отметить ответ для исправления"
+        "feedbackDislike": "Отметить ответ для исправления",
+        "actionConfirmTitle": "Подтвердите: {action}",
+        "actionApply": "Применить",
+        "actionCancelled": "Отменено: {action}"
       },
       "edit": {
         "errors": {
@@ -1313,7 +1395,9 @@
         "personPlaceholder": "Искать человека…",
         "personPrimary": "основной",
         "tagsLabel": "Теги",
-        "tagsPlaceholder": "Новый тег…"
+        "tagsPlaceholder": "Новый тег…",
+        "removeTag": "Удалить {name}",
+        "removePerson": "Удалить {name}"
       }
     },
     "chat": {
@@ -1598,7 +1682,8 @@
         "paidBadge": "Оплачено",
         "unpaidBadge": "Не оплачено",
         "lastSession": "Последняя:",
-        "nextSession": "Следующая:"
+        "nextSession": "Следующая:",
+        "startCall": "Начать звонок"
       },
       "consultation": {
         "kicker": "История встреч",
@@ -1649,7 +1734,8 @@
         "passed": "{days} дн. назад",
         "tomorrow": "Завтра",
         "openChart": "Открыть",
-        "noAlerts": "Нет событий в этом месяце"
+        "noAlerts": "Нет событий в этом месяце",
+        "passedOne": "1 день назад"
       }
     },
     "chartPicker": {
@@ -1717,7 +1803,16 @@
         "noData": "Пока нет данных записи.",
         "failed": "Обработка не удалась.",
         "retry": "Повторить",
-        "summaryFailed": "Расшифровка готова, но резюме не удалось сгенерировать."
+        "summaryFailed": "Расшифровка готова, но резюме не удалось сгенерировать.",
+        "loading": "Загрузка…",
+        "transcriptionInProgress": "Идёт расшифровка… Это может занять несколько минут.",
+        "couldNotLoad": "Не удалось загрузить запись: {message}",
+        "processingTimedOut": "Время обработки истекло.",
+        "reprocessFailed": "Не удалось запустить повторную обработку",
+        "transcriptionInProgressShort": "Идёт расшифровка…",
+        "retryFailed": "Не удалось повторить попытку",
+        "audioUnsupported": "Ваш браузер не поддерживает воспроизведение аудио.",
+        "startProcessing": "Начать обработку"
       },
       "solar": {
         "defaultName": "Соляр {year}",
@@ -2930,7 +3025,8 @@
         "ambiguous_statement": "Неоднозначное утверждение",
         "incomplete_context": "Неполный контекст",
         "unresolved_topic": "Нерешённая тема"
-      }
+      },
+      "requestFailed": "Не удалось выполнить запрос (HTTP {status})."
     },
     "pricing": {
       "meta": {
@@ -2949,7 +3045,8 @@
       "billing": {
         "monthly": "Помесячно",
         "annual": "Раз в год",
-        "save": "выгода ~17%"
+        "save": "выгода ~17%",
+        "ariaLabel": "Период оплаты"
       },
       "period": "/ мес",
       "plans": {
@@ -2998,7 +3095,10 @@
         "privacy": "Конфиденциальность",
         "refund": "Возвраты",
         "contact": "Контакты",
-        "copyright": "© 2026 Steliara. Платежи обрабатывает Stripe как merchant of record (Stripe Managed Payments)."
+        "copyright": "© 2026 Steliara. Платежи обрабатывает Stripe как merchant of record (Stripe Managed Payments).",
+        "cloudSoftware": "Облачная программа для астрологов",
+        "workspace": "Рабочее пространство астролога",
+        "practiceManagement": "Управление практикой"
       }
     },
     "legal": {

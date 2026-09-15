@@ -22,7 +22,7 @@
 })(function (root) {
     'use strict';
 
-    const SUPPORTED_LOCALES = ['en', 'uk', 'ru'];
+    const SUPPORTED_LOCALES = ['en', 'uk', 'ru', 'de'];
     const DEFAULT_LOCALE = 'en';
     const STORAGE_KEY = 'astrobot_locale';
     const DEFAULT_CATALOG_VERSION = 'i18n-v1';
@@ -41,6 +41,7 @@
                     en: 'English',
                     uk: 'Ukrainian',
                     ru: 'Russian',
+                    de: 'German',
                 },
             },
             i18n: {
@@ -60,6 +61,7 @@
                     en: 'Англійська',
                     uk: 'Українська',
                     ru: 'Російська',
+                    de: 'Німецька',
                 },
             },
             i18n: {
@@ -79,10 +81,31 @@
                     en: 'Английский',
                     uk: 'Украинский',
                     ru: 'Русский',
+                    de: 'Немецкий',
                 },
             },
             i18n: {
                 loading: 'Загрузка...',
+            },
+        },
+        de: {
+            app: {
+                language: 'Sprache',
+            },
+            common: {
+                loading: 'Wird geladen...',
+                monthLabel: 'Monat',
+            },
+            locale: {
+                name: {
+                    en: 'Englisch',
+                    uk: 'Ukrainisch',
+                    ru: 'Russisch',
+                    de: 'Deutsch',
+                },
+            },
+            i18n: {
+                loading: 'Wird geladen...',
             },
         },
     };
@@ -114,12 +137,12 @@
                 for (let j = 1; j < parts.length; j += 1) {
                     if (!parts[j].toLowerCase().startsWith('q=')) continue;
                     const parsed = Number.parseFloat(parts[j].slice(2));
-                    q = Number.isFinite(parsed) ? parsed : 0;
+                    q = Number.isFinite(parsed) && parsed >= 0 && parsed <= 1 ? parsed : 0;
                 }
             }
 
             const normalized = normalizeLocale(langPart);
-            if (normalized) {
+            if (normalized && q > 0) {
                 weighted.push({ locale: normalized, q, order: i });
             }
         }
