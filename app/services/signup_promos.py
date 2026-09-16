@@ -62,7 +62,7 @@ SIGNUP_PROMOS: Dict[str, SignupPromo] = {
         code="dav2026",
         trial_days=90,
         valid_until=_utc(2026, 11, 30),
-        max_redemptions=1000,
+        max_redemptions=100,
         message_key="page.login.promo.dav2026",
     ),
 }
