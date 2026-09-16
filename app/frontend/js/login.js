@@ -387,6 +387,18 @@
             render();
         }
 
+        // Keep the document's own locale prefix (/de/login.html) when rewriting the
+        // URL. The page is prerendered per locale and the URL now decides the
+        // language, so dropping the prefix would hand a German visitor an English
+        // address for the page they are looking at — and English on reload.
+        function localizeAuthUrl(url) {
+            const prefix = global.FrontendI18n?.parseLocaleFromPath?.(locationRef?.pathname || '');
+            if (!prefix) return url;
+            const [path, query] = url.split('?');
+            const localized = global.FrontendI18n?.localizePath?.(path, prefix) || path;
+            return query ? `${localized}?${query}` : localized;
+        }
+
         function setHistoryMode(mode) {
             if (!historyRef || typeof historyRef.replaceState !== 'function') return;
             let url = '/login.html';
@@ -403,7 +415,7 @@
             } else if (mode === 'verify-success') {
                 url = '/login.html?mode=verify-success';
             }
-            historyRef.replaceState({}, documentRef?.title || '', url);
+            historyRef.replaceState({}, documentRef?.title || '', localizeAuthUrl(url));
         }
 
         function setView(nextView, updates = {}) {

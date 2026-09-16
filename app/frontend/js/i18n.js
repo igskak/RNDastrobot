@@ -14,8 +14,12 @@
             createI18n: api.createI18n,
             normalizeLocale: api.normalizeLocale,
             parseAcceptLanguage: api.parseAcceptLanguage,
+            parseLocaleFromPath: api.parseLocaleFromPath,
+            stripLocaleFromPath: api.stripLocaleFromPath,
+            localizePath: api.localizePath,
             resolveLocaleFromSources: api.resolveLocaleFromSources,
             SUPPORTED_LOCALES: api.SUPPORTED_LOCALES,
+            PREFIXED_LOCALES: api.PREFIXED_LOCALES,
             DEFAULT_LOCALE: api.DEFAULT_LOCALE,
         };
     }
@@ -24,6 +28,9 @@
 
     const SUPPORTED_LOCALES = ['en', 'uk', 'ru', 'de'];
     const DEFAULT_LOCALE = 'en';
+    // Locales that live under a URL prefix (/de/pricing.html). The default locale keeps
+    // the bare URLs so existing links, ads and search results stay valid.
+    const PREFIXED_LOCALES = SUPPORTED_LOCALES.filter((locale) => locale !== DEFAULT_LOCALE);
     const STORAGE_KEY = 'astrobot_locale';
     const DEFAULT_CATALOG_VERSION = 'i18n-v1';
 
@@ -164,7 +171,50 @@
         return normalizeLocale(params.get('locale')) || normalizeLocale(params.get('lang'));
     }
 
+    function splitPathSuffix(value) {
+        const match = /^([^?#]*)([?#][\s\S]*)?$/.exec(String(value ?? ''));
+        let path = match?.[1] || '';
+        // Callers pass both site paths ("/pricing.html") and document-relative hrefs
+        // ("login.html?mode=register"); both mean the same page here, so normalize.
+        if (path && !path.startsWith('/')) path = `/${path}`;
+        return { path, suffix: match?.[2] || '' };
+    }
+
+    function parseLocaleFromPath(pathname) {
+        const { path } = splitPathSuffix(pathname);
+        const match = /^\/([A-Za-z]{2})(?=\/|$)/.exec(path);
+        if (!match) return null;
+        const candidate = match[1].toLowerCase();
+        return PREFIXED_LOCALES.includes(candidate) ? candidate : null;
+    }
+
+    function stripLocaleFromPath(pathname) {
+        const { path, suffix } = splitPathSuffix(pathname);
+        const locale = parseLocaleFromPath(path);
+        if (!locale) return `${path || '/'}${suffix}`;
+        const rest = path.slice(locale.length + 1);
+        return `${rest.startsWith('/') ? rest : `/${rest}`}${suffix}`;
+    }
+
+    function localizePath(pathname, locale) {
+        const bare = stripLocaleFromPath(pathname);
+        const { path, suffix } = splitPathSuffix(bare);
+        const normalized = normalizeLocale(locale);
+        if (!normalized || !PREFIXED_LOCALES.includes(normalized)) {
+            return `${path || '/'}${suffix}`;
+        }
+        const base = path === '/' || path === '' ? `/${normalized}/` : `/${normalized}${path}`;
+        return `${base}${suffix}`;
+    }
+
     function resolveLocaleFromSources(sources) {
+        // The URL path is the strongest signal: /de/pricing.html is a distinct, indexable
+        // document, so it must win over anything this browser remembers.
+        const fromPath = normalizeLocale(sources?.pathLocale);
+        if (fromPath) {
+            return { locale: fromPath, source: 'path' };
+        }
+
         const fromQuery = normalizeLocale(sources?.queryLocale);
         if (fromQuery) {
             return { locale: fromQuery, source: 'query' };
@@ -471,6 +521,18 @@
             return normalized;
         }
 
+        /**
+         * Records a language choice without re-rendering: the switcher calls this just
+         * before navigating to the other locale's URL, so the choice reaches the workspace
+         * the visitor signs in to.
+         */
+        function rememberLocale(nextLocale) {
+            const normalized = normalizeLocale(nextLocale);
+            if (!normalized) return null;
+            persistLocale(normalized);
+            return normalized;
+        }
+
         function withLocaleHeaders(headers = {}) {
             const locale = getLocale();
             return {
@@ -490,8 +552,37 @@
             return '';
         }
 
+        function getPathname() {
+            if (typeof options.pathname === 'string') {
+                return options.pathname;
+            }
+            if (typeof location !== 'undefined' && typeof location.pathname === 'string') {
+                return location.pathname;
+            }
+            return '';
+        }
+
+        /**
+         * True when this document is one of a set of prerendered translations (it lists
+         * them as <link rel="alternate" hreflang>). Such a page is served per locale, so
+         * its URL — including the unprefixed English one — defines which language it is,
+         * whatever this browser happens to remember.
+         */
+        function isTranslatedDocument() {
+            if (typeof options.translatedDocument === 'boolean') {
+                return options.translatedDocument;
+            }
+            if (!documentRef?.querySelector) return false;
+            return !!documentRef.querySelector('link[rel="alternate"][hreflang]');
+        }
+
+        function resolveDocumentLocale() {
+            return parseLocaleFromPath(getPathname()) || (isTranslatedDocument() ? DEFAULT_LOCALE : null);
+        }
+
         function resolveInitialLocale() {
             return resolveLocaleFromSources({
+                pathLocale: resolveDocumentLocale(),
                 queryLocale: parseQueryLocale(getQueryString()),
                 storedLocale: getStoredLocale(),
                 browserLocale: getBrowserLocale(),
@@ -502,6 +593,19 @@
         const resolved = resolveInitialLocale();
         state.currentLocale = resolved.locale;
         applyLocaleToDocument(state.currentLocale);
+
+        // A locale asked for by URL (a German ad landing on /de/, a legacy ?lang= link) is an
+        // explicit choice: remember it, or the very next in-app navigation drops back to the
+        // browser language and the visitor silently leaves the language they arrived in.
+        // The bare English URL is deliberately excluded: following one English link should
+        // not silently reset the language someone picked for their workspace.
+        const askedForByUrl = (
+            (resolved.source === 'path' && parseLocaleFromPath(getPathname()))
+            || resolved.source === 'query'
+        );
+        if (askedForByUrl) {
+            persistLocale(resolved.locale);
+        }
 
         const ready = loadCatalog(state.currentLocale)
             .catch(() => {
@@ -521,13 +625,18 @@
         return {
             STORAGE_KEY,
             SUPPORTED_LOCALES,
+            PREFIXED_LOCALES,
             DEFAULT_LOCALE,
             normalizeLocale,
             parseAcceptLanguage,
+            parseLocaleFromPath,
+            stripLocaleFromPath,
+            localizePath,
             resolveLocaleFromSources,
             createI18n,
             t,
             setLocale,
+            rememberLocale,
             getLocale,
             withLocaleHeaders,
             applyLocaleToDocument,

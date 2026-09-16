@@ -1,7 +1,7 @@
 """Signup promo codes — campaign links that grant a longer free trial.
 
 A promo is an *entitlement*, not analytics: it changes how long the new account's
-trial lasts. The code travels in the landing URL (`?promo=astro-de-2026`), is
+trial lasts. The code travels in the landing URL (`?promo=DAV2026`), is
 persisted client-side in its own `steliara_promo` cookie by analytics.js (90
 days, last-touch, written even when PostHog is blocked), and is read back here at
 signup. It deliberately does NOT ride the first-touch `steliara_attribution`
@@ -55,15 +55,15 @@ def _utc(year: int, month: int, day: int) -> datetime:
 
 SIGNUP_PROMOS: Dict[str, SignupPromo] = {
     # DAV-Kongress (Deutscher Astrologenverband), 2026. Printed as a QR code on
-    # the booklet. Adjust valid_until once the event dates are fixed — it should
-    # outlive the congress by a couple of weeks (people scan, then sign up at
-    # home) but not by a quarter.
-    "astro-de-2026": SignupPromo(
-        code="astro-de-2026",
+    # the booklet; the URL spells it DAV2026, which normalises to this code.
+    # valid_until outlives the congress so people can scan there and sign up at
+    # home, without the booklet handing out free quarters into next year.
+    "dav2026": SignupPromo(
+        code="dav2026",
         trial_days=90,
-        valid_until=_utc(2026, 12, 31),
+        valid_until=_utc(2026, 11, 30),
         max_redemptions=1000,
-        message_key="page.login.promo.astroDe2026",
+        message_key="page.login.promo.dav2026",
     ),
 }
 

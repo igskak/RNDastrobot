@@ -117,7 +117,7 @@
     }
 
     // --- Campaign promo code (entitlement, not analytics) --------------------
-    // A promo code in the landing URL (?promo=astro-de-2026, e.g. the conference
+    // A promo code in the landing URL (?promo=dav2026, e.g. the conference
     // booklet QR) grants a longer free trial. It is persisted in its own cookie
     // and read back server-side at /auth/register — including after the Google
     // OAuth round-trip, which strips the query string.

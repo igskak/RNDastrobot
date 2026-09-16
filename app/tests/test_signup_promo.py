@@ -40,7 +40,7 @@ from app.services import signup_promos  # noqa: E402
 from app.services.entitlements_service import TRIAL_PERIOD_DAYS  # noqa: E402
 
 
-PROMO_CODE = "astro-de-2026"
+PROMO_CODE = "dav2026"
 
 engine = create_engine("sqlite:///./_signup_promo_test.sqlite3", connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -220,7 +220,7 @@ def test_signup_promo_endpoint_reports_a_live_promo():
 
     assert payload["valid"] is True
     assert payload["trial_days"] == 90
-    assert payload["message_key"] == "page.login.promo.astroDe2026"
+    assert payload["message_key"] == "page.login.promo.dav2026"
 
 
 def test_signup_promo_endpoint_rejects_unknown_codes():
