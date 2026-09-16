@@ -54,9 +54,9 @@ def _utc(year: int, month: int, day: int) -> datetime:
 
 
 SIGNUP_PROMOS: Dict[str, SignupPromo] = {
-    # Astrology conference in Germany, autumn 2026. Printed as a QR code on the
-    # booklet. Adjust valid_until once the event dates are fixed — it should
-    # outlive the conference by a couple of weeks (people scan, then sign up at
+    # DAV-Kongress (Deutscher Astrologenverband), 2026. Printed as a QR code on
+    # the booklet. Adjust valid_until once the event dates are fixed — it should
+    # outlive the congress by a couple of weeks (people scan, then sign up at
     # home) but not by a quarter.
     "astro-de-2026": SignupPromo(
         code="astro-de-2026",
