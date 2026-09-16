@@ -2730,6 +2730,9 @@
         "emailDeliverySpamTitle": "Important",
         "emailDeliverySpam": "We're in the application launch stage, so emails can sometimes land in Spam. Please check your Spam folder."
       },
+      "promo": {
+        "astroDe2026": "Great to meet you at the conference. Your first 3 months are on us."
+      },
       "status": {
         "signingIn": "Signing in...",
         "googleRedirect": "Redirecting to Google...",

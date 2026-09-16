@@ -132,6 +132,24 @@
     color: #21476d;
 }
 
+/* Campaign welcome banner (conference QR code → extended free trial). */
+.promo-banner {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 18px;
+    padding: 13px 15px;
+    border-radius: 18px;
+    border: 1px solid rgba(197, 143, 58, 0.24);
+    background: rgba(197, 143, 58, 0.1);
+    color: #7a5312;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.promo-banner[hidden] {
+    display: none;
+}
+
 .auth-view[hidden] {
     display: none;
 }

@@ -354,6 +354,10 @@
             // hostname. This value is only used for validation and analytics.
             registerPlanCode: 'trial',
 
+            // Campaign promo resolved from the landing URL / promo cookie.
+            // Display only — the trial length is decided server-side at signup.
+            promo: null,
+
             statusText: '',
             statusTone: 'info',
             loadingAction: '',
@@ -510,6 +514,14 @@
 
             if (refs.authTitle) refs.authTitle.textContent = t(model.titleKey);
             if (refs.authSubtitle) refs.authSubtitle.textContent = t(model.subtitleKey);
+            if (refs.promoBanner) {
+                // Only on the signup form — the offer is for new accounts.
+                const showPromo = Boolean(state.promo) && model.view === 'register';
+                refs.promoBanner.hidden = !showPromo;
+                refs.promoBanner.textContent = showPromo
+                    ? t(state.promo.message_key, { days: state.promo.trial_days })
+                    : '';
+            }
             if (refs.statusBanner) {
                 refs.statusBanner.hidden = !state.statusText;
                 refs.statusBanner.dataset.tone = state.statusTone;
@@ -714,6 +726,43 @@
             if (!response.ok) return null;
             const payload = await response.json();
             return payload || null;
+        }
+
+        // Campaign promo (conference QR code): analytics.js has already stored the
+        // code from the landing URL. We only ask the backend whether it is still
+        // redeemable so the signup form can welcome the visitor by name of the
+        // campaign; the trial length itself is never decided here.
+        function currentPromoCode() {
+            try {
+                const fromUrl = new URLSearchParams(locationRef?.search || '').get('promo');
+                if (fromUrl) return String(fromUrl).trim().toLowerCase();
+            } catch (_error) { /* ignore */ }
+            try {
+                return global.AstroPromo?.code?.() || '';
+            } catch (_error) {
+                return '';
+            }
+        }
+
+        async function loadSignupPromo() {
+            const code = currentPromoCode();
+            // No promo in play — skip the request entirely on ordinary sign-ins.
+            if (!code || !fetchFn) return;
+            try {
+                const response = await apiFetch(
+                    `${API_BASE}/auth/signup-promo?code=${encodeURIComponent(code)}`,
+                    {},
+                    fetchFn
+                );
+                if (!response.ok) return;
+                const payload = await response.json();
+                if (payload?.valid && payload.message_key) {
+                    state.promo = payload;
+                    render();
+                }
+            } catch (_error) {
+                // A missing banner must never block signing up.
+            }
         }
 
         async function waitForSupabaseAccessToken(initialError = null) {
@@ -1310,6 +1359,7 @@
             refs.authTitle = documentRef.getElementById('authTitle');
             refs.authSubtitle = documentRef.getElementById('authSubtitle');
             refs.statusBanner = documentRef.getElementById('statusBanner');
+            refs.promoBanner = documentRef.getElementById('promoBanner');
             refs.googleLoginBtn = documentRef.getElementById('googleLoginBtn');
             refs.googleRegisterBtn = documentRef.getElementById('googleRegisterBtn');
             refs.passwordLoginForm = documentRef.getElementById('passwordLoginForm');
@@ -1410,6 +1460,8 @@
             if (await maybeRedirectAuthenticatedUser(route)) {
                 return;
             }
+
+            loadSignupPromo();
 
             state.supabaseConfig = await loadSupabaseConfig();
             state.soloMode = Boolean(state.supabaseConfig?.solo_mode);
