@@ -490,6 +490,10 @@
             text: 'Ми використовуємо аналітику й замаскований запис сесій, щоб покращувати продукт. Персональні дані маскуються.',
             accept: 'Прийняти', decline: 'Відхилити',
         },
+        de: {
+            text: 'Wir verwenden datenschutzfreundliche Analysen und maskierte Sitzungsaufzeichnungen, um das Produkt zu verbessern. Personenbezogene Daten werden maskiert.',
+            accept: 'Akzeptieren', decline: 'Ablehnen',
+        },
     };
     function renderConsentBanner(ph) {
         safe(function () {
