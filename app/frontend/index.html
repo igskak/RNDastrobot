@@ -3,11 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Crawler-facing SEO: the text content here is the English default that
-         Google indexes; data-i18n localizes it in the browser for ru/uk users.
+    <!-- Crawler-facing SEO: the text content here is the English copy served at this
+         URL. Other locales are prerendered into their own documents (/de/, /ru/, /uk/)
+         by app/scripts/build-localized-pages.mjs, which reads these same data-i18n keys.
          Keep the fallback text in sync with page.index.title in locales/en.json. -->
     <title data-i18n="page.index.title">Steliara — Astrology Software for Your Whole Practice</title>
-    <meta name="description" content="Charts, the people you read for, and your recorded consultations in one place. Steliara is a browser workspace for practicing astrologers. Free 14-day trial.">
+    <!-- hreflang:start -->
+    <link rel="alternate" hreflang="en" href="https://www.steliara.com/">
+    <link rel="alternate" hreflang="de" href="https://www.steliara.com/de/">
+    <link rel="alternate" hreflang="ru" href="https://www.steliara.com/ru/">
+    <link rel="alternate" hreflang="uk" href="https://www.steliara.com/uk/">
+    <link rel="alternate" hreflang="x-default" href="https://www.steliara.com/">
+    <!-- hreflang:end -->
+    <meta name="description" content="Charts, the people you read for, and your recorded consultations in one place. Steliara is a browser workspace for practicing astrologers. Free 14-day trial." data-i18n-content="page.index.meta.description">
     <link rel="canonical" href="https://www.steliara.com/">
     <meta property="og:title" content="Steliara — Astrology Software for Your Whole Practice">
     <meta property="og:description" content="Charts, the people you read for, and your recorded consultations in one place. A browser workspace for practicing astrologers.">
@@ -18,12 +26,12 @@
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","url":"https://www.steliara.com/","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","offers":{"@type":"Offer","price":"24","priceCurrency":"USD"},"description":"Browser workspace for practicing astrologers: charts, the people you read for, and recorded, transcribed, summarized consultations in one place."}
     </script>
-    <link rel="stylesheet" href="bundles/index.bundle.css?v=515d2148b232">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=515d2148b232">
+    <link rel="stylesheet" href="bundles/index.bundle.css?v=8d60c95d88a8">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=8d60c95d88a8">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '515d2148b232';</script>
+    <script>window.__APP_BUILD_ID__ = '8d60c95d88a8';</script>
 </head>
 <body class="index-page">
     <div class="page-loader" id="pageLoader">
@@ -294,9 +302,9 @@
         </footer>
     </div>
 
-    <script type="module" src="js/bundles/index.bundle.js?v=515d2148b232"></script>
+    <script type="module" src="js/bundles/index.bundle.js?v=8d60c95d88a8"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=515d2148b232"></script>
-    <script src="js/locale-switcher.js?v=515d2148b232"></script>
+    <script src="js/analytics.js?v=8d60c95d88a8"></script>
+    <script src="js/locale-switcher.js?v=8d60c95d88a8"></script>
 </body>
 </html>

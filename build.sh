@@ -24,6 +24,8 @@ echo "🧰 Installing frontend dependencies..."
 npm --prefix app ci
 echo "🎨 Building frontend bundles..."
 npm --prefix app run build:frontend
+echo "🌍 Prerendering localized pages..."
+npm --prefix app run build:localized
 
 # Build Swiss Ephemeris library
 echo "🌟 Building Swiss Ephemeris library..."

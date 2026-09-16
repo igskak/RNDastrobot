@@ -1,0 +1,238 @@
+<!DOCTYPE html><html lang="uk"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page.login.meta.title">Вхід до Steliara</title>
+    <!-- hreflang:start -->
+    <link rel="alternate" hreflang="en" href="https://www.steliara.com/login.html">
+    <link rel="alternate" hreflang="de" href="https://www.steliara.com/de/login.html">
+    <link rel="alternate" hreflang="ru" href="https://www.steliara.com/ru/login.html">
+    <link rel="alternate" hreflang="uk" href="https://www.steliara.com/uk/login.html">
+    <link rel="alternate" hreflang="x-default" href="https://www.steliara.com/login.html">
+    <!-- hreflang:end -->
+    <link rel="stylesheet" href="/bundles/login.bundle.css?v=695ba6ebe53c">
+    <script>window.__APP_BUILD_ID__ = '695ba6ebe53c';</script>
+
+    <link rel="canonical" href="https://www.steliara.com/uk/login.html">
+</head>
+<body class="login-page">
+    <main class="login-shell">
+        <section class="login-card" aria-labelledby="authTitle">
+            <div class="login-card-frame">
+                <div class="login-card-orbit" aria-hidden="true"></div>
+                <div class="login-card-glow" aria-hidden="true"></div>
+            </div>
+            <header class="login-header">
+                <p class="login-brand" data-i18n="common.brandName">Steliara</p>
+                <p class="login-kicker" data-i18n="page.login.hero.cardKicker">Безпечний доступ до акаунта</p>
+                <h1 id="authTitle" class="login-title"></h1>
+                <p id="authSubtitle" class="login-subtitle"></p>
+            </header>
+
+            <div id="statusBanner" class="status-banner" role="alert" hidden=""></div>
+
+            <section class="auth-view auth-view--form" data-view="login">
+                <form id="passwordLoginForm" novalidate="">
+                    <div class="ui-field">
+                        <label class="ui-label" for="email" data-i18n="page.login.fields.email.label">Електронна пошта</label>
+                        <input id="email" class="ui-input" name="email" type="email" required="" autocomplete="email" data-i18n-placeholder="page.login.fields.email.placeholder" aria-describedby="loginEmailError" placeholder="name@example.com">
+                        <p id="loginEmailError" class="field-error" role="alert" hidden=""></p>
+                    </div>
+
+                    <div class="ui-field">
+                        <div class="field-label-row">
+                            <label class="ui-label" for="password" data-i18n="page.login.fields.password.label">Пароль</label>
+                            <button id="showForgotBtn" class="link-btn" type="button" data-i18n="page.login.actions.forgotPassword">Забули пароль?</button>
+                        </div>
+                        <div class="password-input-wrap">
+                            <input id="password" class="ui-input" name="password" type="password" required="" autocomplete="current-password" data-i18n-placeholder="page.login.fields.password.placeholder" aria-describedby="loginPasswordError loginCapsHint" placeholder="Введіть пароль">
+                            <button id="toggleLoginPasswordBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="loginPasswordError" class="field-error" role="alert" hidden=""></p>
+                        <p id="loginCapsHint" class="field-hint" data-i18n="page.login.hints.capsLock" hidden="">Увімкнено Caps Lock.</p>
+                    </div>
+
+                    <button id="passwordLoginSubmit" class="ui-btn ui-btn--primary ui-btn--block" type="submit"></button>
+                </form>
+
+                <div class="login-secondary-auth">
+                    <div class="login-divider" aria-hidden="true">
+                        <span data-i18n="page.login.divider">або увійдіть через Google</span>
+                    </div>
+                    <button id="googleLoginBtn" class="ui-btn ui-btn--block btn-google" type="button"></button>
+                </div>
+
+                <div class="switch-auth-cta">
+                    <span data-i18n="page.login.actions.noAccount">Немає акаунта?</span>
+                    <button id="showRegisterBtn" class="link-btn" type="button" data-i18n="page.login.actions.goToRegister">Створити акаунт</button>
+                </div>
+            </section>
+
+            <section class="auth-view auth-view--form" data-view="register" hidden="">
+                <div class="register-login-cta">
+                    <span data-i18n="page.login.actions.haveAccount">Вже є акаунт?</span>
+                    <button class="ui-btn ui-btn--secondary ui-btn--block register-login-btn" type="button" data-action="back-login" data-i18n="page.login.actions.signIn">Увійти</button>
+                </div>
+
+                <div class="login-secondary-auth login-secondary-auth--register">
+                    <button id="googleRegisterBtn" class="ui-btn ui-btn--block btn-google" type="button"></button>
+                    <div class="login-divider" aria-hidden="true">
+                        <span data-i18n="page.login.dividerOr">або</span>
+                    </div>
+                </div>
+
+                <form id="registerForm" novalidate="">
+                    <div class="field-grid field-grid-2">
+                        <div class="ui-field">
+                            <label class="ui-label" for="registerFirstName" data-i18n="page.login.fields.firstName.label">Ім'я (необов'язково)</label>
+                            <input id="registerFirstName" class="ui-input" name="registerFirstName" type="text" autocomplete="given-name" data-i18n-placeholder="page.login.fields.firstName.placeholder" aria-describedby="registerFirstNameError" placeholder="Ім'я">
+                            <p id="registerFirstNameError" class="field-error" role="alert" hidden=""></p>
+                        </div>
+                        <div class="ui-field">
+                            <label class="ui-label" for="registerLastName" data-i18n="page.login.fields.lastName.label">Прізвище (необов'язково)</label>
+                            <input id="registerLastName" class="ui-input" name="registerLastName" type="text" autocomplete="family-name" data-i18n-placeholder="page.login.fields.lastName.placeholder" aria-describedby="registerLastNameError" placeholder="Прізвище">
+                            <p id="registerLastNameError" class="field-error" role="alert" hidden=""></p>
+                        </div>
+                    </div>
+
+                    <div class="ui-field">
+                        <label class="ui-label" for="registerEmail" data-i18n="page.login.fields.email.label">Електронна пошта</label>
+                        <input id="registerEmail" class="ui-input" name="registerEmail" type="email" required="" autocomplete="email" data-i18n-placeholder="page.login.fields.email.placeholder" aria-describedby="registerEmailError" placeholder="name@example.com">
+                        <p id="registerEmailError" class="field-error" role="alert" hidden=""></p>
+                    </div>
+
+                    <div class="ui-field">
+                        <label class="ui-label" for="registerPassword" data-i18n="page.login.fields.password.label">Пароль</label>
+                        <div class="password-input-wrap">
+                            <input id="registerPassword" class="ui-input" name="registerPassword" type="password" required="" autocomplete="new-password" data-i18n-placeholder="page.login.fields.registerPassword.placeholder" aria-describedby="registerPasswordError registerCapsHint" placeholder="Створіть пароль (літери та цифри)">
+                            <button id="toggleRegisterPasswordBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="registerPasswordError" class="field-error" role="alert" hidden=""></p>
+                        <p id="registerCapsHint" class="field-hint" data-i18n="page.login.hints.capsLock" hidden="">Увімкнено Caps Lock.</p>
+                    </div>
+
+                    <div class="ui-field">
+                        <label class="ui-label" for="registerPasswordConfirm" data-i18n="page.login.fields.confirmPassword.label">Підтвердьте новий пароль</label>
+                        <div class="password-input-wrap">
+                            <input id="registerPasswordConfirm" class="ui-input" name="registerPasswordConfirm" type="password" required="" autocomplete="new-password" data-i18n-placeholder="page.login.fields.confirmPassword.placeholder" aria-describedby="registerPasswordConfirmError" placeholder="Повторіть новий пароль">
+                            <button id="toggleRegisterPasswordConfirmBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="registerPasswordConfirmError" class="field-error" role="alert" hidden=""></p>
+                    </div>
+
+                    <button id="registerSubmit" class="ui-btn ui-btn--primary ui-btn--block" type="submit"></button>
+                </form>
+
+            </section>
+
+            <section class="auth-view auth-view--status" data-view="verify-check-email" hidden="">
+                <p id="verifyCheckEmailBody" class="view-message"></p>
+                <div class="delivery-warning" role="note" aria-live="polite">
+                    <p class="delivery-warning-title" data-i18n="page.login.hints.emailDeliverySpamTitle">Важливо</p>
+                    <p class="delivery-warning-text" data-i18n="page.login.hints.emailDeliverySpam">Зараз ми на етапі запуску застосунку, тому лист інколи може потрапляти до Спаму. Будь ласка, перевірте папку Спам.</p>
+                </div>
+                <div class="stack-actions">
+                    <button id="resendVerificationBtn" class="ui-btn ui-btn--secondary ui-btn--block" type="button"></button>
+                    <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn">Назад до входу</button>
+                </div>
+            </section>
+
+            <section class="auth-view auth-view--status" data-view="verify-loading" hidden="">
+                <p class="view-message" data-i18n="page.login.views.verifyLoading.body">Триває підтвердження email...</p>
+            </section>
+
+            <section class="auth-view auth-view--status" data-view="verify-success" hidden="">
+                <p class="view-message" data-i18n="page.login.views.verifySuccess.body">Email успішно підтверджено. Тепер можна увійти.</p>
+                <button class="ui-btn ui-btn--primary ui-btn--block" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn">Назад до входу</button>
+            </section>
+
+            <section class="auth-view auth-view--warning" data-view="verify-invalid" hidden="">
+                <p id="verifyInvalidBody" class="view-message"></p>
+                <form id="verifyResendForm" novalidate="">
+                    <div class="ui-field">
+                        <label class="ui-label" for="verifyResendEmail" data-i18n="page.login.fields.email.label">Електронна пошта</label>
+                        <input id="verifyResendEmail" class="ui-input" name="verifyResendEmail" type="email" required="" autocomplete="email" data-i18n-placeholder="page.login.fields.email.placeholder" aria-describedby="verifyResendEmailError" placeholder="name@example.com">
+                        <p id="verifyResendEmailError" class="field-error" role="alert" hidden=""></p>
+                    </div>
+                    <button id="verifyResendSubmit" class="ui-btn ui-btn--secondary ui-btn--block" type="submit"></button>
+                </form>
+                <div class="stack-actions compact">
+                    <button class="link-btn" id="openRegisterFromVerifyBtn" type="button" data-i18n="page.login.actions.goToRegister">Створити акаунт</button>
+                    <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn">Назад до входу</button>
+                </div>
+            </section>
+
+            <section class="auth-view auth-view--form" data-view="forgot" hidden="">
+                <form id="forgotPasswordForm" novalidate="">
+                    <div class="ui-field">
+                        <label class="ui-label" for="forgotEmail" data-i18n="page.login.fields.email.label">Електронна пошта</label>
+                        <input id="forgotEmail" class="ui-input" name="forgotEmail" type="email" required="" autocomplete="email" data-i18n-placeholder="page.login.fields.email.placeholder" aria-describedby="forgotEmailError" placeholder="name@example.com">
+                        <p id="forgotEmailError" class="field-error" role="alert" hidden=""></p>
+                    </div>
+
+                    <button id="forgotPasswordSubmit" class="ui-btn ui-btn--primary ui-btn--block" type="submit"></button>
+                </form>
+
+                <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn">Назад до входу</button>
+            </section>
+
+            <section class="auth-view auth-view--status" data-view="check-email" hidden="">
+                <p id="checkEmailBody" class="view-message"></p>
+                <div class="delivery-warning" role="note" aria-live="polite">
+                    <p class="delivery-warning-title" data-i18n="page.login.hints.emailDeliverySpamTitle">Важливо</p>
+                    <p class="delivery-warning-text" data-i18n="page.login.hints.emailDeliverySpam">Зараз ми на етапі запуску застосунку, тому лист інколи може потрапляти до Спаму. Будь ласка, перевірте папку Спам.</p>
+                </div>
+                <div class="stack-actions">
+                    <button id="resendResetLinkBtn" class="ui-btn ui-btn--secondary ui-btn--block" type="button"></button>
+                    <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn">Назад до входу</button>
+                </div>
+            </section>
+
+            <section class="auth-view auth-view--form" data-view="reset" hidden="">
+                <form id="resetPasswordForm" novalidate="">
+                    <div class="ui-field">
+                        <label class="ui-label" for="resetPassword" data-i18n="page.login.fields.newPassword.label">Новий пароль</label>
+                        <div class="password-input-wrap">
+                            <input id="resetPassword" class="ui-input" name="resetPassword" type="password" required="" autocomplete="new-password" data-i18n-placeholder="page.login.fields.newPassword.placeholder" aria-describedby="resetPasswordError resetCapsHint" placeholder="Створіть новий пароль">
+                            <button id="toggleResetPasswordBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="resetPasswordError" class="field-error" role="alert" hidden=""></p>
+                        <p id="resetCapsHint" class="field-hint" data-i18n="page.login.hints.capsLock" hidden="">Увімкнено Caps Lock.</p>
+                    </div>
+
+                    <div class="ui-field">
+                        <label class="ui-label" for="resetPasswordConfirm" data-i18n="page.login.fields.confirmPassword.label">Підтвердьте новий пароль</label>
+                        <div class="password-input-wrap">
+                            <input id="resetPasswordConfirm" class="ui-input" name="resetPasswordConfirm" type="password" required="" autocomplete="new-password" data-i18n-placeholder="page.login.fields.confirmPassword.placeholder" aria-describedby="resetPasswordConfirmError" placeholder="Повторіть новий пароль">
+                            <button id="toggleResetPasswordConfirmBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="resetPasswordConfirmError" class="field-error" role="alert" hidden=""></p>
+                    </div>
+
+                    <button id="resetPasswordSubmit" class="ui-btn ui-btn--primary ui-btn--block" type="submit"></button>
+                </form>
+
+                <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn">Назад до входу</button>
+            </section>
+
+            <section class="auth-view auth-view--status" data-view="reset-success" hidden="">
+                <p class="view-message" data-i18n="page.login.views.success.body">Пароль успішно змінено. Активні сесії було завершено.</p>
+                <button class="ui-btn ui-btn--primary ui-btn--block" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn">Назад до входу</button>
+            </section>
+
+            <section class="auth-view auth-view--warning" data-view="reset-invalid" hidden="">
+                <p id="resetInvalidBody" class="view-message"></p>
+                <div class="stack-actions">
+                    <button class="ui-btn ui-btn--secondary ui-btn--block" type="button" data-action="open-forgot" data-i18n="page.login.actions.requestNewLink">Запросити нове посилання</button>
+                    <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn">Назад до входу</button>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/runtime-config.js"></script>
+    <script src="/js/analytics.js?v=695ba6ebe53c"></script>
+    <script type="module" src="/js/bundles/login.bundle.js?v=695ba6ebe53c"></script>
+
+
+</body></html>

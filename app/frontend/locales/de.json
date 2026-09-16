@@ -2310,6 +2310,9 @@
       },
       "subtitle": "Arbeitsbereich für Astrologie",
       "title": "Steliara – Astrologiesoftware für Ihre gesamte Praxis",
+      "meta": {
+        "description": "Horoskope, die Menschen, mit denen Sie arbeiten, und Ihre aufgezeichneten Beratungen an einem Ort. Steliara ist Ihr Arbeitsbereich im Browser. 14 Tage kostenlos testen."
+      },
       "logo": "Steliara",
       "nav": {
         "faq": "Fragen",
@@ -3029,7 +3032,8 @@
     },
     "pricing": {
       "meta": {
-        "title": "Preise – Steliara"
+        "title": "Preise – Steliara",
+        "description": "Steliara Preise – ein professioneller Arbeitsbereich für Astrologinnen und Astrologen. Monats- und Jahrestarife, mit kostenloser Testphase."
       },
       "nav": {
         "product": "Produkt",
@@ -3102,7 +3106,8 @@
     },
     "legal": {
       "meta": {
-        "title": "Nutzungsbedingungen und Richtlinien – Steliara"
+        "title": "Nutzungsbedingungen und Richtlinien – Steliara",
+        "description": "Nutzungsbedingungen, Datenschutzerklärung sowie Erstattungs- und Kündigungsrichtlinie von Steliara."
       },
       "title": "Nutzungsbedingungen und Richtlinien",
       "updated": "Zuletzt aktualisiert: 19. Juni 2026",
