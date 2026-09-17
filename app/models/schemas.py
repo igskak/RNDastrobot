@@ -1,6 +1,7 @@
 """
 Pydantic модели для валидации данных API
 """
+from app.utils.timezones import resolve_timezone
 from pydantic import BaseModel, Field, field_validator, model_validator
 from datetime import date as date_type, datetime, time as time_type
 from typing import Any, Dict, List, Literal, Optional
@@ -109,7 +110,7 @@ class BirthDataInput(BaseModel):
         """Валидация временной зоны"""
         import pytz
         try:
-            pytz.timezone(v)
+            resolve_timezone(v)
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError(f'Неизвестная временная зона: {v}')
         return v

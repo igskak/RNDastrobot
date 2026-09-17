@@ -12,6 +12,7 @@ service re-exports every public name here for backward compatibility.
 """
 from __future__ import annotations
 
+from app.utils.timezones import resolve_timezone
 import math
 import re
 from datetime import date as date_type
@@ -107,7 +108,7 @@ def _valid_timezone(value) -> bool:
     if not isinstance(value, str) or not value.strip():
         return False
     try:
-        pytz.timezone(value.strip())
+        resolve_timezone(value.strip())
         return True
     except pytz.exceptions.UnknownTimeZoneError:
         return False

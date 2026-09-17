@@ -209,3 +209,43 @@ test('guessTimezone detects Lisbon, Porto and Rio de Janeiro variants', () => {
 
     delete global.window;
 });
+
+test('historical offsets retain seconds and survive select repopulation', () => {
+    global.window = {};
+    global.document = { createElement: () => ({ value: '', textContent: '' }) };
+    const tz = loadModule();
+    assert.equal(tz.getFixedOffsetSeconds('UTC+00:52:08'), 3128);
+    assert.equal(tz.getFixedOffsetSeconds('UTC-06:53:20'), -24800);
+    assert.equal(tz.getFixedOffsetSeconds('UTC-00:14:28'), -868);
+    assert.equal(tz.getTimezoneOffsetMinutes('UTC+00:52:08') * 60, 3128);
+    for (const bad of ['UTC+24:00', 'UTC+00:60', 'UTC+00:00:60', 'UTC+3:5']) {
+        assert.equal(tz.isValidTimezone(bad), false);
+    }
+    const select = createSelectWithPlaceholder();
+    tz.populateTimezones(select);
+    tz.selectTimezoneValue(select, 'UTC+00:52:08');
+    tz.populateTimezones(select);
+    assert.equal(select.value, 'UTC+00:52:08');
+    assert.equal(select.options.filter(o => o.value === select.value).length, 1);
+    assert.equal(select.options.find(o => o.value === select.value).textContent, 'UTC+00:52:08');
+    delete global.window;
+    delete global.document;
+});
+
+test('local moment conversion handles fixed seconds and named timezones', () => {
+    global.window = {};
+    const { getLocalIso } = loadModule();
+    assert.equal(getLocalIso(new Date('1889-04-20T17:37:51Z'), 'UTC+00:52:08'), '1889-04-20T18:29:59');
+    assert.equal(getLocalIso(new Date('1542-12-07T13:26:28Z'), 'UTC-00:14:28'), '1542-12-07T13:12:00');
+    assert.equal(getLocalIso(new Date('2026-07-15T22:00:00Z'), 'Europe/Madrid'), '2026-07-16T00:00:00');
+    delete global.window;
+});
+
+test('ISO timestamps with second-precision offsets are valid browser instants', () => {
+    global.window = {};
+    const { parseInstant } = loadModule();
+    assert.equal(parseInstant('1889-04-20T18:29:59+00:52:08').toISOString(), '1889-04-20T17:37:51.000Z');
+    assert.equal(parseInstant('1542-12-07T13:12:00-00:14:28').toISOString(), '1542-12-07T13:26:28.000Z');
+    assert.equal(parseInstant('2026-01-01T12:00:00+02:00').toISOString(), '2026-01-01T10:00:00.000Z');
+    delete global.window;
+});

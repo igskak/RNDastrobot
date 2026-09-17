@@ -1,6 +1,7 @@
 """
 API эндпоинты для работы с прогрессиями (Secondary Progressions)
 """
+from app.utils.timezones import resolve_timezone
 from fastapi import APIRouter, HTTPException, status, Depends, Query, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -50,7 +51,7 @@ class ProgressionRequest(BaseModel):
         if value in (None, ''):
             return None
         try:
-            pytz.timezone(value)
+            resolve_timezone(value)
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError(f"Unknown timezone: {value}")
         return value

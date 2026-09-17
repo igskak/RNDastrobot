@@ -5,6 +5,8 @@
 (function() {
     'use strict';
 
+    const parseInstant = (value) => globalThis.window?.Timezones?.parseInstant?.(value) || new Date(value);
+
     function parseDayStartMs(dateStr) {
         if (!dateStr || typeof dateStr !== 'string') return NaN;
         const ms = new Date(`${dateStr}T00:00:00`).getTime();
@@ -45,9 +47,9 @@
         let outOfRange = 0;
 
         (rawEvents || []).forEach((ev) => {
-            const enterMs = new Date(ev?.t_enter).getTime();
-            const exactMs = new Date(ev?.t_exact).getTime();
-            const leaveMs = new Date(ev?.t_leave).getTime();
+            const enterMs = parseInstant(ev?.t_enter).getTime();
+            const exactMs = parseInstant(ev?.t_exact).getTime();
+            const leaveMs = parseInstant(ev?.t_leave).getTime();
 
             if (!Number.isFinite(enterMs) || !Number.isFinite(exactMs) || !Number.isFinite(leaveMs)) {
                 invalid += 1;

@@ -4,6 +4,7 @@ Solar Return Service - расчёт соларной карты (годовой 
 Соляр — карта на момент точного возвращения Солнца на натальную позицию.
 Реализация по образцу ZET.
 """
+from app.utils.timezones import resolve_timezone
 from typing import Dict, List, Optional
 from uuid import UUID
 from datetime import date, time, datetime
@@ -64,7 +65,7 @@ class SolarReturnService:
         if not timezone:
             return None
         try:
-            pytz.timezone(timezone)
+            resolve_timezone(timezone)
         except Exception:
             return None
         return timezone
@@ -220,7 +221,7 @@ class SolarReturnService:
         utc_dt = datetime(year, month, day, hours, minutes, seconds, tzinfo=pytz.UTC)
         
         # Конвертируем в нужный timezone
-        tz = pytz.timezone(timezone)
+        tz = resolve_timezone(timezone)
         local_dt = utc_dt.astimezone(tz)
         
         return local_dt

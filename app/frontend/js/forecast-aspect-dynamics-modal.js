@@ -18,6 +18,8 @@
 })(function (root) {
     'use strict';
 
+    const parseInstant = (value) => root.Timezones?.parseInstant?.(value) || new Date(value);
+
     const DEFAULT_MAX_POINTS = 320;
     const PREVIEW_MAX_POINTS = 96;
     const MIN_DETAIL_POINTS = 160;
@@ -115,7 +117,7 @@
     function normalizeTime(value) {
         const raw = String(value || '').trim();
         if (!raw) return '12:00:00';
-        const clean = raw.replace(/Z$/, '').split(/[+-]\d{2}:?\d{2}$/)[0];
+        const clean = raw.replace(/Z$/, '').split(/[+-]\d{2}:?\d{2}(?::\d{2})?$/)[0];
         const parts = clean.split(':');
         const hh = parts[0] || '12';
         const mm = parts[1] || '00';
@@ -252,7 +254,7 @@
     }
 
     function msFromIso(value) {
-        const ms = new Date(value).getTime();
+        const ms = parseInstant(value).getTime();
         return Number.isFinite(ms) ? ms : null;
     }
 
@@ -1259,7 +1261,7 @@
 
     function formatDateTime(value) {
         if (!value) return tr('common.notAvailable', 'N/A');
-        const date = new Date(value);
+        const date = parseInstant(value);
         if (Number.isNaN(date.getTime())) return String(value);
         if (root.LocaleFormatters?.formatDateTime) {
             return root.LocaleFormatters.formatDateTime(date, { hour12: false });
@@ -1409,7 +1411,7 @@
     }
 
     function pointMs(point) {
-        const ms = new Date(point?.datetime).getTime();
+        const ms = parseInstant(point?.datetime).getTime();
         return Number.isFinite(ms) ? ms : null;
     }
 
@@ -1897,7 +1899,7 @@
         ctx.strokeStyle = '#1e3a5f';
         contacts.forEach((contact) => {
             (contact.passes || []).forEach((pass) => {
-                const ms = new Date(pass.date).getTime();
+                const ms = parseInstant(pass.date).getTime();
                 if (!Number.isFinite(ms)) return;
                 const x = xOf(ms);
                 if (x < pad.left || x > width - pad.right) return;
@@ -1911,7 +1913,7 @@
         ctx.textAlign = 'center';
         contacts.forEach((contact) => {
             (contact.stations || []).forEach((station) => {
-                const ms = new Date(station.date).getTime();
+                const ms = parseInstant(station.date).getTime();
                 if (!Number.isFinite(ms)) return;
                 const x = xOf(ms);
                 if (x < pad.left || x > width - pad.right) return;
@@ -1928,7 +1930,7 @@
     }
 
     function drawSelectedMarker(ctx, selected, xOf, yOf, pad, width, plotBottom) {
-        const ms = new Date(selected?.datetime).getTime();
+        const ms = parseInstant(selected?.datetime).getTime();
         const signed = Number(selected?.signed_orb);
         if (!Number.isFinite(ms) || !Number.isFinite(signed)) return;
         const x = xOf(ms);

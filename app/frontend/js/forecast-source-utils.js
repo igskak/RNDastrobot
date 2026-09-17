@@ -37,6 +37,8 @@
         const raw = String(value || '').trim();
         if (!raw) return '';
         const tz = timezones || {};
+        if (tz.isValid?.(raw)) return raw;
+        if (/^(?:(?:UTC|GMT)[+-]|[+-])/i.test(raw)) return '';
         const normalized = (tz.list || []).find((t) => t.value === raw)?.value;
         if (normalized) return normalized;
         const guessedByValue = tz.guess ? tz.guess(raw) : null;

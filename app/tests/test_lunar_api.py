@@ -62,3 +62,22 @@ def test_eclipse_period_route_requires_coordinate_pair():
     finally:
         app.dependency_overrides.clear()
     assert response.status_code == 422
+
+
+def test_eclipse_period_route_accepts_fixed_seconds(monkeypatch):
+    captured = {}
+
+    def _fake(self, start_utc, end_utc, **kwargs):
+        captured.update(start_utc=start_utc, end_utc=end_utc, **kwargs)
+        return {"events": [], "count": 0}
+
+    monkeypatch.setattr(LunarService, "eclipses_in_period", _fake)
+    app.dependency_overrides[require_auth] = _override_auth
+    try:
+        response = TestClient(app).get('/api/v1/lunar/eclipses', params={
+            'start_date': '2026-08-01', 'end_date': '2026-08-02', 'timezone': 'UTC+00:52:08',
+        })
+    finally:
+        app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert captured['start_utc'].isoformat() == '2026-07-31T23:07:52+00:00'

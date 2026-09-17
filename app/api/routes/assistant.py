@@ -9,6 +9,7 @@ only a missing natal chart is a 404, and internal errors never leak text.
 """
 from __future__ import annotations
 
+from app.utils.timezones import resolve_timezone
 from datetime import date as date_type
 from typing import Dict, List, Optional
 from uuid import UUID
@@ -176,7 +177,7 @@ class AspectPassesRequest(BaseModel):
     @classmethod
     def _validate_timezone(cls, v: str) -> str:
         try:
-            pytz.timezone(v)
+            resolve_timezone(v)
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError(f"Unknown timezone: {v}")
         return v
@@ -315,7 +316,7 @@ class ChatRequest(BaseModel):
     @classmethod
     def _validate_timezone(cls, v: str) -> str:
         try:
-            pytz.timezone(v)
+            resolve_timezone(v)
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError(f"Unknown timezone: {v}")
         return v

@@ -5,6 +5,7 @@ Transit Service - расчёт транзитов для сохранённых 
 1. Транзиты на момент времени (calculate_transits)
 2. Поиск транзитных событий на период (find_transit_events) — как в ZET Aspects Diagram
 """
+from app.utils.timezones import localize, resolve_timezone
 from typing import List, Dict, Optional, Tuple
 from uuid import UUID
 from datetime import date, time, datetime, timedelta
@@ -693,9 +694,9 @@ class TransitService:
         return False
 
     def _day_boundary_iso(self, target_date: date, timezone: str, is_end: bool) -> str:
-        tz = pytz.timezone(timezone)
+        tz = resolve_timezone(timezone)
         local_time = time(23, 59, 59) if is_end else time(0, 0, 0)
-        local_dt = tz.localize(datetime.combine(target_date, local_time))
+        local_dt = localize(datetime.combine(target_date, local_time), tz)
         return local_dt.isoformat(timespec='seconds')
 
     def _find_aspect_boundary_jd(
@@ -934,7 +935,7 @@ class TransitService:
         seconds = int(((hour_frac - hours) * 60 - minutes) * 60)
 
         utc_dt = datetime(year, month, day, hours, minutes, seconds, tzinfo=pytz.UTC)
-        target_tz = pytz.timezone(timezone)
+        target_tz = resolve_timezone(timezone)
         local_dt = utc_dt.astimezone(target_tz)
         return local_dt.isoformat(timespec='seconds')
 

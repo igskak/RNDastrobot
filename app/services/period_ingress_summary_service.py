@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.utils.timezones import resolve_timezone
 import copy
 import hashlib
 import json
@@ -765,7 +766,7 @@ class PeriodIngressSummaryService:
         try:
             import pytz
 
-            tz = pytz.timezone(timezone)
+            tz = resolve_timezone(timezone)
             utc_dt = datetime.utcfromtimestamp(value / 1000.0).replace(tzinfo=pytz.UTC)
             local_dt = utc_dt.astimezone(tz)
             return local_dt.date().isoformat()

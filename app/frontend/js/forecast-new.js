@@ -2404,7 +2404,7 @@
         renderOrUpdateNatalTimeStepper();
         updateNatalMomentControls();
         const momentPlace = getMomentPlaceView();
-        if (refs.timezoneInput) refs.timezoneInput.value = normalizeTimezoneValue(momentPlace.timezone, momentPlace.name) || '';
+        window.Timezones.selectValue(refs.timezoneInput, normalizeTimezoneValue(momentPlace.timezone, momentPlace.name));
         if (refs.locationInput) refs.locationInput.value = momentPlace.name || '';
         if (refs.latitudeInput) refs.latitudeInput.value = momentPlace.latitude ?? '';
         if (refs.longitudeInput) refs.longitudeInput.value = momentPlace.longitude ?? '';
@@ -2548,7 +2548,7 @@
         const selectedTimezone = normalizeTimezoneValue(refs.timezoneInput?.value || state.timezone, state.location?.name);
         window.Timezones?.populate?.(refs.timezoneInput);
         if (refs.timezoneInput && selectedTimezone) {
-            refs.timezoneInput.value = selectedTimezone;
+            window.Timezones.selectValue(refs.timezoneInput, selectedTimezone);
         }
         if (selectedTimezone) {
             state.timezone = selectedTimezone;
@@ -3252,7 +3252,7 @@
         const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
         if (refs.natalDateInput) refs.natalDateInput.value = date;
         if (refs.natalTimeInput) refs.natalTimeInput.value = time;
-        if (refs.natalTimezoneInput) refs.natalTimezoneInput.value = normalizeTimezoneValue(state.natalTimezone, state.natalLocation?.name) || '';
+        window.Timezones.selectValue(refs.natalTimezoneInput, normalizeTimezoneValue(state.natalTimezone, state.natalLocation?.name));
         if (refs.natalLocationInput) refs.natalLocationInput.value = state.natalLocation.name || '';
         if (refs.natalLatitudeInput) refs.natalLatitudeInput.value = state.natalLocation.latitude ?? '';
         if (refs.natalLongitudeInput) refs.natalLongitudeInput.value = state.natalLocation.longitude ?? '';
@@ -3263,7 +3263,7 @@
         const selectedTimezone = normalizeTimezoneValue(refs.natalTimezoneInput?.value || state.natalTimezone, state.natalLocation?.name);
         window.Timezones?.populate?.(refs.natalTimezoneInput);
         if (refs.natalTimezoneInput && selectedTimezone) {
-            refs.natalTimezoneInput.value = selectedTimezone;
+            window.Timezones.selectValue(refs.natalTimezoneInput, selectedTimezone);
         }
         if (selectedTimezone) {
             state.natalTimezone = selectedTimezone;
@@ -7724,12 +7724,16 @@
     function formatLunarMoment(iso, options = {}) {
         if (!iso) return '';
         try {
-            return new Date(iso).toLocaleString(undefined, {
+            const zone = state.timezone || state.natalTimezone;
+            const offset = window.Timezones.getFixedOffsetSeconds(zone);
+            const instant = window.Timezones.parseInstant(iso);
+            const displayDate = offset === null ? instant : new Date(instant.getTime() + offset * 1000);
+            return displayDate.toLocaleString(undefined, {
                 day: '2-digit',
                 month: 'short',
                 hour: '2-digit',
                 minute: '2-digit',
-                timeZone: state.timezone || state.natalTimezone || undefined,
+                timeZone: offset === null ? (zone || undefined) : 'UTC',
                 ...options,
             });
         } catch {
@@ -7846,7 +7850,7 @@
         state.lunarBoundaryTimer = null;
         const voc = snapshot?.void_of_course || {};
         const boundaries = [voc.starts_at, voc.ends_at, voc.egress_at]
-            .map((iso) => iso ? new Date(iso).getTime() : NaN)
+            .map((iso) => iso ? window.Timezones.parseInstant(iso).getTime() : NaN)
             .filter((time) => Number.isFinite(time) && time > Date.now());
         const next = Math.min(...boundaries);
         if (!Number.isFinite(next)) return;
@@ -8047,7 +8051,7 @@
     function formatHourRange(startIso, endIso) {
         const fmt = (iso) => {
             try {
-                return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                return window.Timezones.parseInstant(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
             } catch { return iso; }
         };
         return `${fmt(startIso)}–${fmt(endIso)}`;
@@ -10249,26 +10253,7 @@
     function getLocalNowIso(timezone) {
         const now = new Date();
         const resolvedTimezone = normalizeTimezoneValue(timezone) || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-            timeZone: resolvedTimezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-        });
-        const parts = formatter.formatToParts(now);
-        const byType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-        if (byType.year && byType.month && byType.day && byType.hour && byType.minute && byType.second) {
-            return `${byType.year}-${byType.month}-${byType.day}T${byType.hour}:${byType.minute}:${byType.second}`;
-        }
-        const date = todayIsoDate();
-        const time = [now.getHours(), now.getMinutes(), now.getSeconds()]
-            .map((part) => String(part).padStart(2, '0'))
-            .join(':');
-        return `${date}T${time}`;
+        return window.Timezones.getLocalIso(now, resolvedTimezone);
     }
 
     function addStep(value, mode, direction) {

@@ -66,3 +66,14 @@ test('normalizeTimezoneValue: falls back to guess-by-value then guess-by-place',
 test('normalizeTimezoneValue: no match returns empty string', () => {
     assert.equal(normalizeTimezoneValue('Mars/Olympus', 'Olympus', TZ), '');
 });
+
+test('exact offsets and unlisted IANA zones take precedence over place guesses', () => {
+    global.window = {};
+    const tz = require('../frontend/js/timezones.js');
+    const api = { isValid: tz.isValidTimezone, guess: () => 'Europe/Moscow' };
+    assert.equal(normalizeTimezoneValue('UTC+00:52:08', 'Moscow', api), 'UTC+00:52:08');
+    assert.equal(normalizeTimezoneValue('UTC-00:14:28', 'Moscow', api), 'UTC-00:14:28');
+    assert.equal(normalizeTimezoneValue('Etc/GMT-3', 'Moscow', api), 'Etc/GMT-3');
+    assert.equal(normalizeTimezoneValue('UTC+99:00', 'Moscow', api), '');
+    delete global.window;
+});

@@ -1284,12 +1284,7 @@ class NatalChartService:
         )
 
         # Вычисляем UTC время
-        from datetime import datetime
-        import pytz
-
-        local_tz = pytz.timezone(user.timezone)
-        local_dt = local_tz.localize(datetime.combine(user.birth_date, user.birth_time))
-        utc_dt = local_dt.astimezone(pytz.UTC)
+        utc_dt = self.time_service.to_utc(user.birth_date, user.birth_time, user.timezone)
         stationary_threshold_percent = self._resolve_stationary_threshold_percent(
             astrologer_id=user.astrologer_id,
             db_session=db_session,

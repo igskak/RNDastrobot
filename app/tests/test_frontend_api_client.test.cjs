@@ -440,3 +440,9 @@ test('AstroAPI preserves backend speed_percent when normalizing chart motion', (
     assert.equal(chart.planets[0].is_stationary, false);
     assert.equal(chart.planets[0].stationary_type, null);
 });
+
+test('formatTime retains seconds when editing an imported chart', () => {
+    const api = loadApiModule({ location: { hostname: 'localhost' } });
+    assert.equal(api.formatTime('18', '29', '59'), '18:29:59');
+    assert.equal(api.formatTime('12', '0'), '12:00:00');
+});

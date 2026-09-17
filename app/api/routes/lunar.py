@@ -2,7 +2,9 @@
 
 from datetime import date, datetime, time, timezone
 from typing import Any, Dict, Optional
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from zoneinfo import ZoneInfoNotFoundError
+from pytz import UnknownTimeZoneError
+from app.utils.timezones import resolve_zoneinfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from loguru import logger
@@ -60,8 +62,8 @@ def get_eclipses(
             detail="Для локального расчёта нужны и широта, и долгота",
         )
     try:
-        zone = ZoneInfo(timezone_name)
-    except ZoneInfoNotFoundError:
+        zone = resolve_zoneinfo(timezone_name)
+    except (ZoneInfoNotFoundError, UnknownTimeZoneError):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Неизвестная таймзона карты",

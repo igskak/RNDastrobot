@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.utils.timezones import resolve_timezone
 from collections import OrderedDict
 from copy import deepcopy
 from dataclasses import dataclass
@@ -1525,7 +1526,7 @@ class AspectDynamicsService:
 
     def _jd_to_iso(self, jd: float, timezone: str) -> str:
         try:
-            tz = pytz.timezone(timezone)
+            tz = resolve_timezone(timezone)
         except pytz.exceptions.UnknownTimeZoneError:
             tz = pytz.UTC
         return self._jd_to_datetime_utc(jd).astimezone(tz).isoformat()

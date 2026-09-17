@@ -764,7 +764,7 @@ function renderHeader(user) {
 
     const parts = [];
     if (user.birth_date) parts.push(formatDate(user.birth_date));
-    if (user.birth_time) parts.push(user.birth_time.slice(0, 5));
+    if (user.birth_time) parts.push(user.birth_time.slice(0, 8));
     if (user.birth_place) parts.push(user.birth_place);
     refs.profileBirth.textContent = parts.join(' · ');
     refs.profileTags.innerHTML = '';
@@ -954,7 +954,7 @@ function renderRelatedPeople(items) {
         const name = [person.first_name, person.last_name].filter(Boolean).join(' ') || t('common.notAvailable');
         const details = [];
         if (person.birth_date) details.push(formatDate(person.birth_date));
-        if (person.birth_time) details.push(String(person.birth_time).slice(0, 5));
+        if (person.birth_time) details.push(String(person.birth_time).slice(0, 8));
         if (person.birth_place) details.push(person.birth_place);
 
         return `
@@ -1879,7 +1879,7 @@ function renderLinkedChartsList(charts) {
     refs.linkedChartsEmpty?.classList.add('hidden');
     refs.linkedChartsList.innerHTML = charts.map((c) => {
         const date = c.date ? formatDate(c.date) : '';
-        const time = c.time ? String(c.time).slice(0, 5) : '';
+        const time = c.time ? String(c.time).slice(0, 8) : '';
         const place = c.place || '';
         const meta = [date, time, place].filter(Boolean).join(' · ');
         const isCurrentChart = String(c.chart_id) === String(primaryChartId);

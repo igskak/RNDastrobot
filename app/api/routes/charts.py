@@ -21,6 +21,8 @@ from app.services.geocoding_service import GeocodingServiceError, GeocodingTimeo
 from app.services.natal_chart_service import NatalChartService
 from app.services.person_profile_service import ensure_primary_chart
 from app.utils.ephemeris import get_ephemeris_path
+from app.utils.timezones import resolve_timezone
+from pytz import UnknownTimeZoneError
 
 
 router = APIRouter(prefix="/charts", tags=["Charts"])
@@ -107,6 +109,15 @@ class ChartCreateRequest(BaseModel):
     @classmethod
     def empty_string_to_none(cls, value):
         return _clean_optional_str(value) if isinstance(value, str) else value
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            resolve_timezone(value)
+        except UnknownTimeZoneError as exc:
+            raise ValueError(f"Unknown timezone: {value}") from exc
+        return value
 
     @field_validator("chart_kind")
     @classmethod

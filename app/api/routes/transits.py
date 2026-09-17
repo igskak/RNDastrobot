@@ -1,6 +1,7 @@
 """
 API эндпоинты для работы с транзитами
 """
+from app.utils.timezones import resolve_timezone
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -52,7 +53,7 @@ class TransitRequest(BaseModel):
     def validate_timezone(cls, v: str) -> str:
         import pytz
         try:
-            pytz.timezone(v)
+            resolve_timezone(v)
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError(f'Неизвестная временная зона: {v}')
         return v
@@ -140,7 +141,7 @@ class TransitPeriodRequest(BaseModel):
     def validate_timezone(cls, v: str) -> str:
         import pytz
         try:
-            pytz.timezone(v)
+            resolve_timezone(v)
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError(f'Неизвестная временная зона: {v}')
         return v
@@ -284,7 +285,7 @@ class AspectDynamicsRequest(BaseModel):
     def validate_timezone(cls, v: str) -> str:
         import pytz
         try:
-            pytz.timezone(v)
+            resolve_timezone(v)
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError(f'Неизвестная временная зона: {v}')
         return v

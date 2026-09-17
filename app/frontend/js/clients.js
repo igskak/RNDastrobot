@@ -1792,7 +1792,7 @@ async function openEditChartDialog(userId) {
         initEditPersons(chartMeta?.person_id || null, chartMeta?.linked_person_ids || []);
 
         window.Timezones?.populate?.(refs.editTimezone);
-        refs.editTimezone.value = formData.timezone || '';
+        window.Timezones.selectValue(refs.editTimezone, formData.timezone);
         refs.editTimezoneHint.textContent = '';
         refs.editTimezoneHint.style.color = '';
         refs.editError.classList.add('hidden');
@@ -2011,7 +2011,8 @@ async function handleEditClientSubmit(event) {
         first_name: refs.editFirstName.value.trim(),
         last_name: refs.editLastName.value.trim(),
         date: AstroAPI.formatDate(refs.editDay.value, refs.editMonth.value, refs.editYear.value),
-        time: AstroAPI.formatTime(refs.editHour.value, refs.editMinute.value),
+        time: AstroAPI.formatTime(refs.editHour.value, refs.editMinute.value,
+            editClientState.loadedChartData?.birth_data?.time?.split(':')[2] || '00'),
         timezone: refs.editTimezone.value,
         place,
         house_system: editClientState.loadedChartData?.birth_data?.house_system

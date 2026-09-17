@@ -1,6 +1,7 @@
 """
 Сервис для работы со временем и датами
 """
+from app.utils.timezones import localize, resolve_timezone
 import pytz
 from datetime import datetime, date, time
 import swisseph as swe
@@ -23,11 +24,11 @@ class TimeService:
         Returns:
             Datetime в UTC
         """
-        tz = pytz.timezone(timezone_str)
+        tz = resolve_timezone(timezone_str)
         dt = datetime.combine(local_date, local_time)
         
         # Локализуем время в указанной зоне
-        local_dt = tz.localize(dt)
+        local_dt = localize(dt, tz)
         
         # Конвертируем в UTC
         utc_dt = local_dt.astimezone(pytz.UTC)

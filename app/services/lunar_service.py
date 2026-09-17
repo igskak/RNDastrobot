@@ -14,7 +14,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone as _tz
 from typing import Dict, List, Optional
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from zoneinfo import ZoneInfoNotFoundError
+from pytz import UnknownTimeZoneError
+from app.utils.timezones import resolve_zoneinfo
 
 import swisseph as swe
 from loguru import logger
@@ -79,8 +81,8 @@ class LunarService:
     def _jd_to_local_iso(cls, jd: float, timezone_name: str) -> str:
         """Convert a Julian UT moment to the requested IANA timezone."""
         try:
-            zone = ZoneInfo(timezone_name or "UTC")
-        except ZoneInfoNotFoundError:
+            zone = resolve_zoneinfo(timezone_name or "UTC")
+        except (ZoneInfoNotFoundError, UnknownTimeZoneError):
             zone = _tz.utc
         return datetime.fromisoformat(cls._jd_to_iso(jd)).astimezone(zone).isoformat()
 

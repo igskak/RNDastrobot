@@ -215,7 +215,10 @@
         const [datePart, timePart] = String(s.datetime || '').split('T');
         if (d.dateInput) d.dateInput.value = datePart || '';
         if (d.timeInput) d.timeInput.value = (timePart || '').slice(0, 8);
-        if (d.timezoneInput) d.timezoneInput.value = s.timezone || '';
+        if (d.timezoneInput) {
+            if (globalThis.window?.Timezones?.selectValue) window.Timezones.selectValue(d.timezoneInput, s.timezone);
+            else d.timezoneInput.value = s.timezone || '';
+        }
         if (d.yearInput) d.yearInput.value = s.year != null ? String(s.year) : '';
         if (d.locationInput) d.locationInput.value = s.location.name || '';
         if (d.latitudeInput) d.latitudeInput.value = s.location.latitude != null ? String(s.location.latitude) : '';

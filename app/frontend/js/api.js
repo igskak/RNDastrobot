@@ -953,10 +953,10 @@
      * @param {number} minute
      * @returns {string} - Время в формате HH:MM:SS
      */
-    function formatTime(hour, minute) {
+    function formatTime(hour, minute, second = 0) {
         const h = String(hour).padStart(2, '0');
         const m = String(minute).padStart(2, '0');
-        return `${h}:${m}:00`;
+        return `${h}:${m}:${String(second).padStart(2, '0')}`;
     }
 
     const DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10;

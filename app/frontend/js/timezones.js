@@ -131,6 +131,57 @@ function normalizeOffsetPrefix(offset, prefix = 'UTC') {
     return `${normalizedPrefix}${rawOffset}`;
 }
 
+// Seconds matter for historical local mean time; never round to minutes.
+function getFixedOffsetSeconds(value) {
+    const match = String(value || '').trim().match(/^(?:UTC|GMT)?([+-])(\d{1,2})(?::([0-5]\d)(?::([0-5]\d))?)?$/i);
+    if (!match || Number(match[2]) > 23) return null;
+    return (Number(match[2]) * 3600 + Number(match[3] || 0) * 60 + Number(match[4] || 0))
+        * (match[1] === '-' ? -1 : 1);
+}
+
+function isValidTimezone(value) {
+    if (getFixedOffsetSeconds(value) !== null) return true;
+    if (/^(?:(?:UTC|GMT)[+-]|[+-])/i.test(String(value || '').trim())) return false;
+    try {
+        if (!String(value || '').trim()) return false;
+        new Intl.DateTimeFormat('en', { timeZone: value });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function selectTimezoneValue(selectElement, value) {
+    if (!selectElement) return;
+    const raw = String(value || '').trim();
+    if (raw && isValidTimezone(raw) && !Array.from(selectElement.options).some((option) => option.value === raw)) {
+        const option = document.createElement('option');
+        option.value = raw;
+        option.textContent = formatTimezoneOffsetLabel(raw);
+        selectElement.appendChild(option);
+    }
+    selectElement.value = raw;
+}
+
+function getLocalIso(instant, timezone) {
+    const offset = getFixedOffsetSeconds(timezone);
+    if (offset !== null) return new Date(instant.getTime() + offset * 1000).toISOString().slice(0, 19);
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    });
+    const p = Object.fromEntries(formatter.formatToParts(instant).map((part) => [part.type, part.value]));
+    return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`;
+}
+
+function parseInstant(value) {
+    // Date.parse does not accept Python's ISO offsets containing seconds.
+    const match = typeof value === 'string' && value.match(/^(.*T\d{2}:\d{2}:\d{2}(?:\.\d+)?)([+-]\d{2}:\d{2}:\d{2})$/);
+    if (!match) return new Date(value);
+    const offset = getFixedOffsetSeconds(match[2]);
+    return new Date(offset === null ? NaN : new Date(`${match[1]}Z`).getTime() - offset * 1000);
+}
+
 function parseTimezoneDateTime(options = {}) {
     const rawDatetime = String(options.datetime || options.dateTime || '').trim();
     if (rawDatetime) {
@@ -164,6 +215,8 @@ function parseTimezoneDateTime(options = {}) {
 }
 
 function getTimezoneOffsetMinutes(timezone, options = {}) {
+    const fixed = getFixedOffsetSeconds(timezone);
+    if (fixed !== null) return fixed / 60;
     const parts = parseTimezoneDateTime(options);
     if (!timezone || !parts) return null;
 
@@ -200,7 +253,7 @@ function getTimezoneOffsetMinutes(timezone, options = {}) {
                 Number(formatted.minute),
                 Number(formatted.second),
             );
-            const offsetMinutes = Math.round((localAsUtc - utcMs) / 60000);
+            const offsetMinutes = (localAsUtc - utcMs) / 60000;
             return Number.isFinite(offsetMinutes) ? offsetMinutes : null;
         };
         const initialOffset = offsetForInstant(wallTimeAsUtc);
@@ -219,10 +272,11 @@ function formatOffsetMinutes(offsetMinutes, prefix = 'UTC') {
     if (offsetMinutes === 0) return normalizedPrefix;
 
     const sign = offsetMinutes >= 0 ? '+' : '-';
-    const absoluteMinutes = Math.abs(offsetMinutes);
-    const hours = Math.floor(absoluteMinutes / 60);
-    const minutes = absoluteMinutes % 60;
-    return `${normalizedPrefix}${sign}${hours}${minutes ? `:${String(minutes).padStart(2, '0')}` : ''}`;
+    const absoluteSeconds = Math.round(Math.abs(offsetMinutes) * 60);
+    const hours = Math.floor(absoluteSeconds / 3600);
+    const minutes = Math.floor(absoluteSeconds / 60) % 60;
+    const seconds = absoluteSeconds % 60;
+    return `${normalizedPrefix}${sign}${hours}${minutes || seconds ? `:${String(minutes).padStart(2, '0')}` : ''}${seconds ? `:${String(seconds).padStart(2, '0')}` : ''}`;
 }
 
 function formatTimezoneOffsetLabel(value, options = {}) {
@@ -274,7 +328,7 @@ function populateTimezones(selectElement) {
     });
 
     if (currentValue) {
-        selectElement.value = currentValue;
+        selectTimezoneValue(selectElement, currentValue);
     }
 }
 
@@ -317,6 +371,11 @@ window.Timezones = {
     formatLabel: formatTimezoneLabel,
     formatOffsetLabel: formatTimezoneOffsetLabel,
     getOffsetMinutes: getTimezoneOffsetMinutes,
+    getFixedOffsetSeconds,
+    isValid: isValidTimezone,
+    selectValue: selectTimezoneValue,
+    getLocalIso,
+    parseInstant,
 };
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -327,5 +386,10 @@ if (typeof module !== 'undefined' && module.exports) {
         formatTimezoneLabel,
         formatTimezoneOffsetLabel,
         getTimezoneOffsetMinutes,
+        getFixedOffsetSeconds,
+        isValidTimezone,
+        selectTimezoneValue,
+        getLocalIso,
+        parseInstant,
     };
 }
