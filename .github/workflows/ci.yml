@@ -101,3 +101,23 @@ jobs:
 
       - name: Python regression suite (incl e2e smoke)
         run: python -m pytest -q app/tests
+
+      # Serves the branch and crawls it the way a search engine would. The unit tests
+      # cover the routing contract; this covers what the bytes actually say — a page
+      # whose copy only appears after JavaScript runs passes every other gate here.
+      - name: Organic surface audit (against this branch, served)
+        env:
+          DATABASE_URL: sqlite+pysqlite:///./_seo_ci.db
+          FRONTEND_BASE_URL: http://127.0.0.1:8099
+        run: |
+          nohup python -m uvicorn app.api.main:app --host 127.0.0.1 --port 8099 \
+            --log-level warning > /tmp/seo-ci-api.log 2>&1 &
+          for _ in $(seq 1 40); do
+            sleep 1
+            curl -sf -o /dev/null http://127.0.0.1:8099/robots.txt && break
+          done
+          curl -sf -o /dev/null http://127.0.0.1:8099/robots.txt \
+            || { echo "app did not come up"; cat /tmp/seo-ci-api.log; exit 1; }
+          python app/scripts/seo_audit.py \
+            --base http://127.0.0.1:8099 \
+            --canonical-base https://www.steliara.com
