@@ -3,6 +3,9 @@ name: CI
 on:
   push:
   pull_request:
+  # So the suite can be re-run against a branch without an empty commit, which is what
+  # you want the first few times after a workflow has been off for two months.
+  workflow_dispatch:
 
 jobs:
   # Split out of the main job on 2026-09-18. `make test` runs the vendored Swiss
