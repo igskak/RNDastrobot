@@ -1,0 +1,306 @@
+{
+  "by_day": [
+    {
+      "clicks": 0,
+      "date": "2026-08-18",
+      "impressions": 1,
+      "position": 95
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-19",
+      "impressions": 3,
+      "position": 2.333333333333333
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-20",
+      "impressions": 1,
+      "position": 60
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-21",
+      "impressions": 2,
+      "position": 2
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-22",
+      "impressions": 2,
+      "position": 51.5
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-23",
+      "impressions": 0,
+      "position": 0
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-24",
+      "impressions": 3,
+      "position": 5
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-25",
+      "impressions": 1,
+      "position": 71
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-26",
+      "impressions": 12,
+      "position": 21.166666666666668
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-27",
+      "impressions": 2,
+      "position": 6
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-28",
+      "impressions": 0,
+      "position": 0
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-29",
+      "impressions": 4,
+      "position": 60.25
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-30",
+      "impressions": 2,
+      "position": 15
+    },
+    {
+      "clicks": 0,
+      "date": "2026-08-31",
+      "impressions": 5,
+      "position": 2.4
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-01",
+      "impressions": 3,
+      "position": 2.666666666666667
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-02",
+      "impressions": 6,
+      "position": 28
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-03",
+      "impressions": 1,
+      "position": 8
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-04",
+      "impressions": 6,
+      "position": 28.666666666666668
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-05",
+      "impressions": 4,
+      "position": 50.25
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-06",
+      "impressions": 6,
+      "position": 39.166666666666664
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-07",
+      "impressions": 2,
+      "position": 18.5
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-08",
+      "impressions": 5,
+      "position": 18
+    },
+    {
+      "clicks": 1,
+      "date": "2026-09-09",
+      "impressions": 8,
+      "position": 3.125
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-10",
+      "impressions": 3,
+      "position": 2.333333333333333
+    },
+    {
+      "clicks": 1,
+      "date": "2026-09-11",
+      "impressions": 8,
+      "position": 5.875
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-12",
+      "impressions": 3,
+      "position": 7.333333333333333
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-13",
+      "impressions": 5,
+      "position": 10
+    },
+    {
+      "clicks": 0,
+      "date": "2026-09-14",
+      "impressions": 7,
+      "position": 4.571428571428571
+    }
+  ],
+  "delta": {
+    "clicks": 2,
+    "ctr": 0.019,
+    "impressions": 73,
+    "position": -6.52
+  },
+  "previous_totals": {
+    "clicks": 0,
+    "ctr": 0.0,
+    "impressions": 32,
+    "position": 25.62
+  },
+  "previous_window": {
+    "end": "2026-08-17",
+    "start": "2026-07-21"
+  },
+  "site": "sc-domain:steliara.com",
+  "top_pages": [
+    {
+      "clicks": 1,
+      "impressions": 29,
+      "page": "https://www.steliara.com/astrology-practice-management",
+      "position": 12.551724137931034
+    },
+    {
+      "clicks": 1,
+      "impressions": 28,
+      "page": "https://www.steliara.com/cloud-astrology-software",
+      "position": 16.25
+    },
+    {
+      "clicks": 0,
+      "impressions": 39,
+      "page": "https://www.steliara.com/",
+      "position": 14.76923076923077
+    },
+    {
+      "clicks": 0,
+      "impressions": 10,
+      "page": "https://www.steliara.com/astrologer-workspace",
+      "position": 13
+    },
+    {
+      "clicks": 0,
+      "impressions": 11,
+      "page": "https://www.steliara.com/index.html",
+      "position": 25.09090909090909
+    },
+    {
+      "clicks": 0,
+      "impressions": 9,
+      "page": "https://www.steliara.com/login.html",
+      "position": 48.22222222222222
+    },
+    {
+      "clicks": 0,
+      "impressions": 6,
+      "page": "https://www.steliara.com/pricing.html",
+      "position": 14.833333333333334
+    }
+  ],
+  "top_queries": [
+    {
+      "clicks": 0,
+      "impressions": 1,
+      "position": 65,
+      "query": "astrolara"
+    },
+    {
+      "clicks": 0,
+      "impressions": 6,
+      "position": 12.333333333333334,
+      "query": "cloud astrology"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
+      "position": 3,
+      "query": "mac astrology software"
+    },
+    {
+      "clicks": 0,
+      "impressions": 2,
+      "position": 72.5,
+      "query": "skelara"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
+      "position": 69,
+      "query": "steara"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
+      "position": 68,
+      "query": "stelaria"
+    },
+    {
+      "clicks": 0,
+      "impressions": 2,
+      "position": 5,
+      "query": "stelira"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
+      "position": 64,
+      "query": "stellera"
+    },
+    {
+      "clicks": 0,
+      "impressions": 5,
+      "position": 41,
+      "query": "stephilara"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
+      "position": 65,
+      "query": "tislitsara"
+    }
+  ],
+  "totals": {
+    "clicks": 2,
+    "ctr": 0.019,
+    "impressions": 105,
+    "position": 19.1
+  },
+  "window": {
+    "days": 28,
+    "end": "2026-09-14",
+    "start": "2026-08-18"
+  }
+}
