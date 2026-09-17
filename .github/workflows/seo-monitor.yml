@@ -72,6 +72,28 @@ jobs:
             | tee .seo/report.txt
           echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
+      - name: Pull Search Console
+        id: gsc
+        # What we serve is measured above. This is what Google does with it: impressions,
+        # position and queries — the half of the picture GA4 cannot see, because GA4 only
+        # ever sees the clicks that already happened.
+        #
+        # No-ops with a notice when GSC_SERVICE_ACCOUNT is unset, so this shipped before
+        # the credential existed. PyJWT is read out of app/requirements.txt rather than
+        # pinned again here, so the two cannot drift.
+        if: always()
+        env:
+          GSC_SERVICE_ACCOUNT: ${{ secrets.GSC_SERVICE_ACCOUNT }}
+        run: |
+          mkdir -p .seo
+          pip install --quiet --disable-pip-version-check $(grep -E '^PyJWT' app/requirements.txt)
+          set +e
+          python app/scripts/gsc_report.py \
+            --json .seo/gsc.json \
+            --fail-on-impression-drop 0.5 \
+            | tee .seo/gsc.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
       - name: Record the measurement
         # Runs even when the audit failed: a bad day is still a data point, and the trend
         # is the whole reason for keeping a history.
@@ -80,6 +102,10 @@ jobs:
           mkdir -p .metrics/history
           cp .seo/report.json .metrics/latest.json
           cp .seo/report.json ".metrics/history/$(date -u +%Y-%m-%d).json"
+          if [ -s .seo/gsc.json ]; then
+            cp .seo/gsc.json .metrics/latest-gsc.json
+            cp .seo/gsc.json ".metrics/history/$(date -u +%Y-%m-%d)-gsc.json"
+          fi
           git -C .metrics config user.name "seo-monitor[bot]"
           git -C .metrics config user.email "seo-monitor@users.noreply.github.com"
           git -C .metrics add -A
@@ -88,18 +114,28 @@ jobs:
           git -C .metrics push --quiet origin "HEAD:$METRICS_BRANCH"
 
       - name: File or update the regression issue
-        if: always() && steps.audit.outputs.exit_code != '0'
+        if: always() && (steps.audit.outputs.exit_code != '0' || steps.gsc.outputs.exit_code != '0')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           BODY_FILE="$(mktemp)"
           {
-            echo "The daily audit of the live site failed."
+            if [ "${{ steps.audit.outputs.exit_code }}" != "0" ]; then
+              echo "The daily audit of the live site failed."
+            else
+              echo "The site audit was clean, but Search Console impressions collapsed."
+            fi
             echo
             echo '```'
             cat .seo/report.txt
             echo '```'
             echo
+            if [ -s .seo/gsc.txt ]; then
+              echo '```'
+              cat .seo/gsc.txt
+              echo '```'
+              echo
+            fi
             echo "Reproduce locally: \`python app/scripts/seo_audit.py\`"
             echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           } > "$BODY_FILE"
@@ -132,7 +168,7 @@ jobs:
             || echo "::warning::IndexNow submission failed. INDEXNOW_KEY is most likely set in repo secrets but not on the Render web service, or the two values differ. The site audit itself was clean."
 
       - name: Close the regression issue once the site is clean again
-        if: always() && steps.audit.outputs.exit_code == '0'
+        if: always() && steps.audit.outputs.exit_code == '0' && steps.gsc.outputs.exit_code == '0'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -150,6 +186,6 @@ jobs:
           path: .seo/
           retention-days: 90
 
-      - name: Fail the run when the audit failed
-        if: steps.audit.outputs.exit_code != '0'
+      - name: Fail the run when something regressed
+        if: steps.audit.outputs.exit_code != '0' || steps.gsc.outputs.exit_code != '0'
         run: exit 1

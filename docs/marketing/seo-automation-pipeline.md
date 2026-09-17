@@ -17,6 +17,7 @@ indexed app shells were doing to us before today.
 | | What it does | When | Output |
 | --- | --- | --- | --- |
 | `seo-monitor.yml` | Crawls production like a search engine and fails on regressions | Daily 06:20 UTC | A GitHub issue when broken, closed automatically when fixed |
+| `seo-monitor.yml` | Pulls Search Console: impressions, position, top queries and pages, against the previous equal window | Daily 06:20 UTC | Recorded to `seo-metrics`; an issue if impressions halve |
 | `seo-monitor.yml` | Pushes the sitemap to IndexNow (Bing, Yandex, Copilot) | Daily, only on a clean audit | Re-crawl in minutes instead of weeks |
 | `seo-monitor.yml` | Commits the measurement to the `seo-metrics` branch | Daily | `latest.json` + `history/YYYY-MM-DD.json` for trends |
 | `ci.yml` | Boots the branch and audits it before merge | Every push and PR | Red CI, so the regression cannot ship |
@@ -80,13 +81,34 @@ in plaintext regardless of tooling.
    name exactly `ANTHROPIC_API_KEY`. Without it the content agent idles with a notice
    every Monday instead of failing. Billed on API rates, separately from a Claude
    subscription. Budget roughly one medium coding session a week.
-2. **Connect Google Search Console to this pipeline.** The domain property is already
-   verified by DNS TXT, but nothing here can read it, which is the single biggest hole in
-   the audit: impressions, average position, index coverage and crawl errors are all
-   invisible. Create a service account, grant it read access to the property, and put the
-   JSON in a `GSC_SERVICE_ACCOUNT` secret. Tell me when it exists and I will add the
-   Search Console pull to the daily monitor — that is what turns "we rank nowhere" from
-   an inference into a number.
+2. **Connect Google Search Console.** The code is written and wired into the daily
+   monitor (`app/scripts/gsc_report.py`); it no-ops with a notice until the credential
+   exists. Four steps, all in a browser, once:
+
+   1. **Google Cloud project** — [console.cloud.google.com](https://console.cloud.google.com/projectcreate).
+      Any name. An existing project is fine too.
+   2. **Enable the API** — APIs & Services → Library → "Google Search Console API" →
+      Enable. (It is listed under this name; the endpoints still say `webmasters/v3`.)
+   3. **Service account** — IAM & Admin → Service Accounts → Create. No project role is
+      needed: the permission that matters is granted in Search Console, not in GCP. Then
+      Keys → Add key → Create new key → **JSON**, and copy the downloaded file's
+      `client_email` — it looks like `something@project-id.iam.gserviceaccount.com`.
+   4. **Grant it the property, then store the key**:
+      - [Search Console](https://search.google.com/search-console) → pick the
+        `steliara.com` domain property → Settings → Users and permissions → Add user →
+        paste that `client_email` → permission **Restricted** (read is all it needs).
+      - `github.com/igskak/RNDastrobot/settings/secrets/actions` → New repository secret,
+        name `GSC_SERVICE_ACCOUNT`, value = **the entire contents of the JSON file**,
+        pasted as-is including the braces.
+
+   Skipping step 4's first half is the usual mistake: the credential authenticates fine
+   and every query comes back 403. The script detects that case specifically and prints
+   the fix rather than a raw API error.
+
+   Check it locally before trusting the workflow:
+   ```bash
+   GSC_SERVICE_ACCOUNT=~/Downloads/your-key.json python app/scripts/gsc_report.py
+   ```
 3. **Bing Webmaster Tools** — free, five minutes, and Bing is where we already rank #2 for
    the category term. Import from GSC rather than re-verifying.
 4. **`INDEXNOW_KEY`** — any 8–128 character hex string, the *same value* in **two**
