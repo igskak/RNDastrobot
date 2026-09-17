@@ -249,6 +249,8 @@ class Astrologer(Base):
     # Campaign promo code redeemed at signup (see services/signup_promos.py).
     # Drives the extended trial window and caps how often a printed code is used.
     signup_promo_code = Column(String(64))
+    marketing_email_consent = Column(Boolean, nullable=False, default=False, server_default='false')
+    marketing_email_consent_at = Column(DateTime)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

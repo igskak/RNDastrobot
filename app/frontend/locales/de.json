@@ -2794,6 +2794,9 @@
           "label": "Nachname (optional)",
           "placeholder": "Nachname"
         },
+        "marketingConsent": {
+          "label": "Ich stimme zu, Marketingmitteilungen an die bei der Registrierung angegebene E-Mail-Adresse zu erhalten."
+        },
         "accountType": {
           "label": "Kontoart",
           "hint": "Damit legen Sie nur Ihren ersten Arbeitsbereich fest. Kostenpflichtige Erweiterungen wählen Sie separat.",

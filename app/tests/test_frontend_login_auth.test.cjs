@@ -108,10 +108,12 @@ test('validateRegistrationPayload enforces registration fields and policy', () =
         firstName: 'Ihor',
         lastName: 'Skakovskyi',
         planCode: 'solo',
+        marketingEmailConsent: true,
     });
     assert.equal(valid.valid, true);
     assert.deepEqual(valid.errors, {});
     assert.equal(valid.values.planCode, 'solo');
+    assert.equal(valid.values.marketingEmailConsent, true);
 
     const defaultPlan = AstroLogin.validateRegistrationPayload({
         email: 'trial@example.com',
@@ -120,6 +122,7 @@ test('validateRegistrationPayload enforces registration fields and policy', () =
     });
     assert.equal(defaultPlan.valid, true);
     assert.equal(defaultPlan.values.planCode, 'trial');
+    assert.equal(defaultPlan.values.marketingEmailConsent, false);
 });
 
 test('new auth copy is localized for en, ru, uk', async () => {

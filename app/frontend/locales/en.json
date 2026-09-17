@@ -2795,6 +2795,9 @@
           "label": "Last name (optional)",
           "placeholder": "Last name"
         },
+        "marketingConsent": {
+          "label": "I agree to receive marketing communications at the email address used for registration."
+        },
         "accountType": {
           "label": "Account type",
           "hint": "This only sets the starting workspace. Paid upgrades will be handled separately.",

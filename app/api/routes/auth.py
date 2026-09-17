@@ -142,6 +142,7 @@ class RegisterRequest(BaseModel):
     last_name: Optional[str] = None
     locale: Optional[str] = None
     plan_code: Optional[str] = None
+    marketing_email_consent: bool = False
 
     @field_validator("email")
     @classmethod
@@ -714,6 +715,8 @@ def register(
         plan_code=registration_plan,
         plan_expires_at=_trial_expiry(registration_plan, promo=promo),
         signup_promo_code=promo.code if promo else None,
+        marketing_email_consent=payload.marketing_email_consent,
+        marketing_email_consent_at=utcnow() if payload.marketing_email_consent else None,
     )
     db.add(astrologer)
     try:

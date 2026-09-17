@@ -265,6 +265,7 @@
         const firstName = String(payload.firstName || '').trim();
         const lastName = String(payload.lastName || '').trim();
         const planCode = String(payload.planCode || 'trial').trim().toLowerCase();
+        const marketingEmailConsent = payload.marketingEmailConsent === true;
         const errors = {};
 
         if (!email) {
@@ -299,7 +300,7 @@
 
         return {
             valid: Object.keys(errors).length === 0,
-            values: { email, password, confirmPassword, firstName, lastName, planCode },
+            values: { email, password, confirmPassword, firstName, lastName, planCode, marketingEmailConsent },
             errors,
         };
     }
@@ -682,6 +683,7 @@
                 firstName: refs.registerFirstName?.value,
                 lastName: refs.registerLastName?.value,
                 planCode: state.registerPlanCode,
+                marketingEmailConsent: refs.registerMarketingConsent?.checked === true,
             });
 
             setFieldError(refs.registerEmail, refs.registerEmailError, result.errors.email || '');
@@ -958,6 +960,7 @@
                         first_name: values.firstName || null,
                         last_name: values.lastName || null,
                         locale: getCurrentLocale(),
+                        marketing_email_consent: values.marketingEmailConsent,
                     }),
                 }, fetchFn);
                 if (!response.ok) {
@@ -978,6 +981,7 @@
                 refs.password.value = '';
                 refs.registerPassword.value = '';
                 refs.registerPasswordConfirm.value = '';
+                refs.registerMarketingConsent.checked = false;
                 setView('login');
                 setStatus('page.login.status.accountReady', 'success');
             } catch (error) {
@@ -1406,6 +1410,7 @@
             refs.registerPasswordConfirm = documentRef.getElementById('registerPasswordConfirm');
             refs.registerFirstName = documentRef.getElementById('registerFirstName');
             refs.registerLastName = documentRef.getElementById('registerLastName');
+            refs.registerMarketingConsent = documentRef.getElementById('registerMarketingConsent');
             refs.verifyResendEmail = documentRef.getElementById('verifyResendEmail');
 
             refs.loginEmailError = documentRef.getElementById('loginEmailError');
