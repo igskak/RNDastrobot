@@ -145,8 +145,12 @@ results page. Only the quoted `"steliara"` returns us, at #1.
 
 Nothing in this pipeline addresses that, because it is an entity-recognition problem, not
 a content one. The lever is external corroboration: Crunchbase, LinkedIn, Product Hunt,
-G2, Wikidata — enough independent sources naming "Steliara" as a software product that
-engines stop treating it as a misspelling. That is a reason to prioritise item 3 above,
+G2 — enough independent sources naming "Steliara" as a software product, in identical
+words, that engines stop treating it as a misspelling. The mechanism is consistency
+rather than volume, so the copy is fixed in
+[`wave2-directory-kit.md`](wave2-directory-kit.md) and should be pasted from there.
+Search Console now makes the result measurable: the misspelling queries currently sitting
+at positions 41-72 should fade. That is a reason to prioritise item 3 above,
 not a reason to consider renaming; it is a tax on brand marketing, not a wall.
 
 ---
