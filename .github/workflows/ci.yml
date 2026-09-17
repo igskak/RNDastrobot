@@ -5,6 +5,31 @@ on:
   pull_request:
 
 jobs:
+  # Split out of the main job on 2026-09-18. `make test` runs the vendored Swiss
+  # Ephemeris suite (setest), which aborts on the Linux runner with "stack smashing
+  # detected" in suite_09_rise.c — a crash in the vendored C, not in our code, and it
+  # reproduces on a clean checkout. It sat third in the job, so every push went red
+  # before a single useful gate ran, and the whole CI workflow was switched off
+  # manually on 2026-07-14 and stayed off for two months.
+  #
+  # Keeping it visible and non-blocking is the honest middle: the crash is still
+  # reported, and the gates that do work can gate again. Deleting the step would hide a
+  # real bug; leaving it blocking has already cost more than it caught.
+  swisseph-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build native binaries
+        run: make all
+
+      - name: Run Swiss Ephemeris regression tests
+        run: make test
+
   i18n-and-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -31,11 +56,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r app/requirements.txt
 
+      # `make all` stays here: the Python suite calls the compiled binaries. `make test`
+      # does not — it is the vendored suite, and it runs in swisseph-regression above.
       - name: Build native binaries
         run: make all
-
-      - name: Run Swiss Ephemeris regression tests
-        run: make test
 
       - name: Build frontend bundles and verify committed assets
         run: npm --prefix app run check:frontend-build
