@@ -118,10 +118,18 @@ jobs:
       - name: Push the sitemap to the IndexNow engines
         # Only on a clean audit: there is no point telling Bing to re-crawl a page we
         # already know is broken. No-ops when INDEXNOW_KEY is unset.
+        #
+        # A failed submission is a warning, not a failed run. The key has to be set in
+        # two places (repo secrets and the Render service env) and the half-configured
+        # state is the likely one; a red daily job for a config gap would train everyone
+        # to ignore the job that exists to report real breakage.
         if: steps.audit.outputs.exit_code == '0'
         env:
           INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
-        run: python app/scripts/indexnow_ping.py --base "${{ github.event.inputs.base || 'https://www.steliara.com' }}"
+        run: |
+          python app/scripts/indexnow_ping.py \
+            --base "${{ github.event.inputs.base || 'https://www.steliara.com' }}" \
+            || echo "::warning::IndexNow submission failed. INDEXNOW_KEY is most likely set in repo secrets but not on the Render web service, or the two values differ. The site audit itself was clean."
 
       - name: Close the regression issue once the site is clean again
         if: always() && steps.audit.outputs.exit_code == '0'

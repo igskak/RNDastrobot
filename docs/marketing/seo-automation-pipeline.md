@@ -68,10 +68,18 @@ with no PR and a clear reason is a good week.
 Four things, all in a browser, maybe an hour total. I cannot do these: they need account
 creation or credentials.
 
-1. **`ANTHROPIC_API_KEY`** in repo Settings → Secrets → Actions. Without it the content
-   agent idles with a notice every Monday instead of failing. Billed on API rates,
-   separately from a Claude subscription. Budget roughly one medium coding session a
-   week.
+All four are browser work. The `gh` PAT on this machine gets HTTP 403 on
+`/actions/secrets` and the Render CLI is not logged in, so none of it can be scripted
+from here even in principle — and an Anthropic API key is a credential I will not handle
+in plaintext regardless of tooling.
+
+1. **`ANTHROPIC_API_KEY`** — create at
+   [console.anthropic.com](https://console.anthropic.com/settings/keys) → Create Key,
+   then paste it at
+   `github.com/igskak/RNDastrobot/settings/secrets/actions` → New repository secret,
+   name exactly `ANTHROPIC_API_KEY`. Without it the content agent idles with a notice
+   every Monday instead of failing. Billed on API rates, separately from a Claude
+   subscription. Budget roughly one medium coding session a week.
 2. **Connect Google Search Console to this pipeline.** The domain property is already
    verified by DNS TXT, but nothing here can read it, which is the single biggest hole in
    the audit: impressions, average position, index coverage and crawl errors are all
@@ -81,9 +89,19 @@ creation or credentials.
    an inference into a number.
 3. **Bing Webmaster Tools** — free, five minutes, and Bing is where we already rank #2 for
    the category term. Import from GSC rather than re-verifying.
-4. **`INDEXNOW_KEY`** — any 8–128 character hex string, set in *two* places: the Render
-   web service env (so `/indexnow-<key>.txt` serves it) and repo secrets (so the monitor
-   can submit). Until both exist the ping step no-ops quietly.
+4. **`INDEXNOW_KEY`** — any 8–128 character hex string, the *same value* in **two**
+   places, or it does nothing:
+   - Render dashboard → the `astrobot` service → Environment → Add Environment Variable,
+     key `INDEXNOW_KEY`. This is what makes `/indexnow-<key>.txt` answer, which is how
+     the engines verify we own the origin. Saving it redeploys the service, so do it
+     *after* the prerender PR is merged — the route does not exist on production until
+     then.
+   - `github.com/igskak/RNDastrobot/settings/secrets/actions` → New repository secret,
+     same name, same value. This is what lets the daily monitor submit.
+
+   It is not a credential: it grants nothing and is served publicly at that URL. It is a
+   secret only in repo-settings terminology. With one side set and not the other the
+   daily monitor emits a warning annotation and carries on.
 
 ### Things that will never be automated here, on purpose
 
