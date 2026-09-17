@@ -116,6 +116,33 @@
         return undefined;
     }
 
+    // --- Campaign promo code (entitlement, not analytics) --------------------
+    // A promo code in the landing URL (?promo=dav2026, e.g. the conference
+    // booklet QR) grants a longer free trial. It is persisted in its own cookie
+    // and read back server-side at /auth/register — including after the Google
+    // OAuth round-trip, which strips the query string.
+    //
+    // Deliberately NOT part of the first-touch attribution cookie: that one is
+    // never overwritten, so a visitor who had already arrived from an ad would
+    // silently lose the offer. Captured here, before the PostHog bail-out, so it
+    // also works when analytics is unconfigured or blocked.
+    var PROMO_COOKIE = 'steliara_promo';
+    var PROMO_CODE_RE = /^[a-z0-9][a-z0-9_-]{1,63}$/;
+    function capturePromo() {
+        safe(function () {
+            var params = new URLSearchParams(window.location.search || '');
+            var code = String(params.get('promo') || '').trim().toLowerCase();
+            // Last-touch: the most recently scanned offer wins.
+            if (code && PROMO_CODE_RE.test(code)) setCookie(PROMO_COOKIE, code, 90);
+        });
+    }
+    function storedPromo() {
+        var code = getCookie(PROMO_COOKIE);
+        return code && PROMO_CODE_RE.test(code) ? code : null;
+    }
+    capturePromo();
+    window.AstroPromo = { code: storedPromo };
+
     // If analytics is not configured, expose a safe no-op surface and bail.
     if (!POSTHOG_KEY) {
         window.AstroAnalytics = {
@@ -345,7 +372,7 @@
             // Only persist if there's a real signal (campaign, ad click, or
             // external referrer) — never overwrite a first-touch on later visits.
             var hasSignal = Object.keys(attr).some(function (k) {
-                return k.indexOf('utm_') === 0 || k === 'referrer'
+                return k.indexOf('utm_') === 0 || k === 'referrer' || k === 'promo'
                     || k === 'gclid' || k === 'gbraid' || k === 'wbraid';
             });
             if (hasSignal) {
@@ -364,12 +391,18 @@
     // --- Attribution readback (for signup events + person $set_once) ----------
     var ATTRIBUTION_PARAM_KEYS = [
         'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
-        'gclid', 'gbraid', 'wbraid',
+        'gclid', 'gbraid', 'wbraid', 'promo',
     ];
     function storedAttribution() {
         var raw = getCookie('steliara_attribution');
-        if (!raw) return {};
-        try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+        var attr = {};
+        if (raw) {
+            try { attr = JSON.parse(raw) || {}; } catch (e) { attr = {}; }
+        }
+        // The promo lives in its own (last-touch) cookie — see capturePromo.
+        var promo = storedPromo();
+        if (promo) attr.promo = promo;
+        return attr;
     }
     // Campaign/click props to attach to conversion events.
     function attributionEventProps() {
@@ -456,6 +489,10 @@
         uk: {
             text: 'Ми використовуємо аналітику й замаскований запис сесій, щоб покращувати продукт. Персональні дані маскуються.',
             accept: 'Прийняти', decline: 'Відхилити',
+        },
+        de: {
+            text: 'Wir verwenden datenschutzfreundliche Analysen und maskierte Sitzungsaufzeichnungen, um das Produkt zu verbessern. Personenbezogene Daten werden maskiert.',
+            accept: 'Akzeptieren', decline: 'Ablehnen',
         },
     };
     function renderConsentBanner(ph) {

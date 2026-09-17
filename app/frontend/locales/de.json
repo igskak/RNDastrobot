@@ -2310,6 +2310,9 @@
       },
       "subtitle": "Arbeitsbereich für Astrologie",
       "title": "Steliara – Astrologiesoftware für Ihre gesamte Praxis",
+      "meta": {
+        "description": "Horoskope, die Menschen, mit denen Sie arbeiten, und Ihre aufgezeichneten Beratungen an einem Ort. Steliara ist Ihr Arbeitsbereich im Browser. 14 Tage kostenlos testen."
+      },
       "logo": "Steliara",
       "nav": {
         "faq": "Fragen",
@@ -2729,6 +2732,9 @@
         "emailDeliverySpamTitle": "Hinweis",
         "emailDeliverySpam": "Steliara befindet sich in der Startphase. Unsere E-Mails landen daher manchmal im Spamordner. Bitte sehen Sie auch dort nach."
       },
+      "promo": {
+        "dav2026": "Schön, Sie auf dem DAV-Kongress zu treffen. Ihre ersten 3 Monate sind kostenlos."
+      },
       "status": {
         "signingIn": "Anmeldung läuft …",
         "googleRedirect": "Weiterleitung zu Google …",
@@ -3029,7 +3035,8 @@
     },
     "pricing": {
       "meta": {
-        "title": "Preise – Steliara"
+        "title": "Preise – Steliara",
+        "description": "Steliara Preise – ein professioneller Arbeitsbereich für Astrologinnen und Astrologen. Monats- und Jahrestarife, mit kostenloser Testphase."
       },
       "nav": {
         "product": "Produkt",
@@ -3102,7 +3109,8 @@
     },
     "legal": {
       "meta": {
-        "title": "Nutzungsbedingungen und Richtlinien – Steliara"
+        "title": "Nutzungsbedingungen und Richtlinien – Steliara",
+        "description": "Nutzungsbedingungen, Datenschutzerklärung sowie Erstattungs- und Kündigungsrichtlinie von Steliara."
       },
       "title": "Nutzungsbedingungen und Richtlinien",
       "updated": "Zuletzt aktualisiert: 19. Juni 2026",

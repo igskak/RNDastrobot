@@ -108,6 +108,31 @@
         return window.FrontendI18n?.t?.(`locale.name.${locale}`) || getLocaleShortLabel(locale);
     }
 
+    /**
+     * Prerendered pages advertise their translations as <link rel="alternate" hreflang>.
+     * Where one exists, each locale is its own indexable URL, so switching must navigate
+     * instead of swapping text in place — otherwise the address bar lies about the page.
+     */
+    function findLocalizedHref(locale) {
+        const link = document.querySelector(`link[rel="alternate"][hreflang="${locale}"]`);
+        const href = link?.getAttribute?.('href');
+        if (!href) return null;
+
+        try {
+            // Only the path is taken from the alternate: its href is the canonical
+            // production URL, and following it verbatim would throw a visitor on
+            // localhost or a staging host out of the environment they are in.
+            const { pathname } = new URL(href, window.location.href);
+            const target = new URL(pathname, window.location.origin);
+            // Ad and analytics params (gclid, utm_*) and the current anchor must survive.
+            target.search = window.location.search || '';
+            target.hash = window.location.hash || '';
+            return target.toString();
+        } catch {
+            return null;
+        }
+    }
+
     function buildLocaleButton(locale) {
         const active = locale === window.FrontendI18n.getLocale();
         return `
@@ -148,6 +173,16 @@
             if (!button) return;
             const locale = button.dataset.locale;
             if (!locale || locale === window.FrontendI18n.getLocale()) return;
+
+            const localizedHref = findLocalizedHref(locale);
+            if (localizedHref) {
+                // The next document resolves its own locale from the URL; remembering the
+                // choice here is what carries it into the workspace after sign-in.
+                window.FrontendI18n.rememberLocale?.(locale);
+                window.location.assign(localizedHref);
+                return;
+            }
+
             await window.FrontendI18n.setLocale(locale, { source: 'switcher' });
         });
 

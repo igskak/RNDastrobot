@@ -195,7 +195,7 @@ test('i18n-ui waits for FrontendI18n.ready before first applyI18n', async () => 
     delete global.FrontendI18n;
 });
 
-test('i18n-ui fallback uses en, missing key does not crash and returns key', () => {
+test('i18n-ui fallback uses en, and an unresolved key leaves the existing markup in place', () => {
     const warnings = [];
     const catalogs = {
         en: { page: { clients: { title: 'Client database' } } },
@@ -217,12 +217,13 @@ test('i18n-ui fallback uses en, missing key does not crash and returns key', () 
 
     const fromFallback = createNode({ i18n: 'page.clients.title' });
     const missingEverywhere = createNode({ i18n: 'page.unknown.key' });
+    missingEverywhere.textContent = 'Prerendered copy';
     const doc = createFakeDocument([fromFallback, missingEverywhere]);
 
     i18nUi.applyI18n(doc);
 
     assert.equal(fromFallback.textContent, 'Client database');
-    assert.equal(missingEverywhere.textContent, 'page.unknown.key');
+    assert.equal(missingEverywhere.textContent, 'Prerendered copy', 'a missing key must not wipe the text that is already there');
     assert.ok(warnings.some((line) => line.includes('missing_translation') && line.includes('page.clients.title')));
     assert.ok(warnings.some((line) => line.includes('missing_key') && line.includes('page.unknown.key')));
 

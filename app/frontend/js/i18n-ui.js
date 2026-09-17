@@ -21,11 +21,22 @@
         return String(key);
     }
 
+    /**
+     * t() echoes the key back when nothing resolves (missing key, or a catalog that failed
+     * to load). Writing that dotted key into the document destroys the copy already there —
+     * on a prerendered page that copy is the only text the visitor would ever see — so an
+     * unresolved key leaves the markup alone. t() still reports it through diagnostics.
+     */
+    function translated(key) {
+        const value = t(key);
+        return !value || value === key ? null : value;
+    }
+
     function applyDocumentTitle(documentRef) {
         if (!documentRef?.querySelector) return;
         const titleEl = documentRef.querySelector('title[data-i18n]');
         if (!titleEl) return;
-        const nextTitle = t(titleEl.dataset.i18n);
+        const nextTitle = translated(titleEl.dataset.i18n);
         if (nextTitle) {
             titleEl.textContent = nextTitle;
             documentRef.title = nextTitle;
@@ -36,17 +47,20 @@
         if (!element?.dataset) return;
 
         if (element.dataset.i18n) {
-            element.textContent = t(element.dataset.i18n);
+            const value = translated(element.dataset.i18n);
+            if (value !== null) element.textContent = value;
         }
 
         if (element.dataset.i18nHtml) {
-            element.innerHTML = t(element.dataset.i18nHtml);
+            const value = translated(element.dataset.i18nHtml);
+            if (value !== null) element.innerHTML = value;
         }
 
         DATA_ATTRIBUTE_BINDINGS.forEach(([datasetKey, attributeName]) => {
             const translationKey = element.dataset[datasetKey];
             if (!translationKey) return;
-            element.setAttribute(attributeName, t(translationKey));
+            const value = translated(translationKey);
+            if (value !== null) element.setAttribute(attributeName, value);
         });
     }
 

@@ -3,6 +3,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { PREFIXED_LOCALES } = require('../frontend/js/i18n.js');
 
 function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -30,7 +31,9 @@ function walkFrontendSource(frontendDir) {
             const stat = fs.statSync(fullPath);
 
             if (stat.isDirectory()) {
-                if (name === 'locales' || name === 'bundles') continue;
+                // Generated locale trees (de/, ru/, uk/) are copies of the sources already
+                // walked here, so scanning them would only duplicate every finding.
+                if (name === 'locales' || name === 'bundles' || PREFIXED_LOCALES.includes(name)) continue;
                 walk(fullPath);
                 continue;
             }

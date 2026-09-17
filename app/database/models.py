@@ -246,6 +246,9 @@ class Astrologer(Base):
     # signup_attribution keeps the full utm/referrer/click-id snapshot.
     signup_gclid = Column(String(512))
     signup_attribution = Column(JSONB)
+    # Campaign promo code redeemed at signup (see services/signup_promos.py).
+    # Drives the extended trial window and caps how often a printed code is used.
+    signup_promo_code = Column(String(64))
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

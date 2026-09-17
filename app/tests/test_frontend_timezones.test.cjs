@@ -218,7 +218,7 @@ test('historical offsets retain seconds and survive select repopulation', () => 
     assert.equal(tz.getFixedOffsetSeconds('UTC-06:53:20'), -24800);
     assert.equal(tz.getFixedOffsetSeconds('UTC-00:14:28'), -868);
     assert.equal(tz.getTimezoneOffsetMinutes('UTC+00:52:08') * 60, 3128);
-    for (const bad of ['UTC+24:00', 'UTC+00:60', 'UTC+00:00:60', 'UTC+3:5']) {
+    for (const bad of ['UTC+24:00', 'UTC+00:60', 'UTC+00:00:60', 'UTC+3:5', '+0300']) {
         assert.equal(tz.isValidTimezone(bad), false);
     }
     const select = createSelectWithPlaceholder();

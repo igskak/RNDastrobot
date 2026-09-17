@@ -47,6 +47,13 @@ from app.database.connection import get_db
 from app.database.models import AdConversion, Astrologer, EmailVerificationToken, PasswordResetToken
 from app.i18n.locale import normalize_locale
 from app.services.billing_service import get_billing_summary, get_effective_plan_code
+from app.services.signup_promos import (
+    SignupPromo,
+    get_promo,
+    is_redeemable,
+    read_promo_code,
+    resolve_signup_promo,
+)
 from app.services.entitlements_service import (
     PLAN_PRO,
     PLAN_SOLO,
@@ -275,6 +282,18 @@ class FrontendAuthConfig(BaseModel):
     solo_mode: bool = False
 
 
+class SignupPromoResponse(BaseModel):
+    """Whether a campaign promo code still grants its extended trial.
+
+    Powers the welcome banner on the signup form; the trial length itself is
+    always decided server-side at registration.
+    """
+    code: Optional[str] = None
+    valid: bool = False
+    trial_days: Optional[int] = None
+    message_key: Optional[str] = None
+
+
 class GenericAuthResponse(BaseModel):
     status: str
     message: str
@@ -347,13 +366,26 @@ def _mark_email_verified(astrologer: Astrologer) -> None:
         astrologer.email_verified_at = utcnow()
 
 
-def _trial_expiry(plan_code: str) -> Optional[datetime]:
+def _trial_expiry(plan_code: str, *, promo: Optional[SignupPromo] = None) -> Optional[datetime]:
     """New trial accounts get a TRIAL_PERIOD_DAYS window, after which the account
-    drops to read-only (PLAN_EXPIRED). Paid plans chosen at signup have no trial
-    deadline."""
+    drops to read-only (PLAN_EXPIRED). A campaign promo (conference QR code)
+    stretches that window. Paid plans chosen at signup have no trial deadline."""
     if normalize_plan_code(plan_code) == PLAN_TRIAL:
-        return utcnow() + timedelta(days=TRIAL_PERIOD_DAYS)
+        days = promo.trial_days if promo else TRIAL_PERIOD_DAYS
+        return utcnow() + timedelta(days=days)
     return None
+
+
+def _signup_event_properties(
+    request: Request,
+    promo: Optional[SignupPromo] = None,
+) -> Optional[Dict[str, Any]]:
+    """Campaign context stored on the registration audit event (and mirrored to
+    PostHog): first-touch utm/click ids plus the redeemed promo code, if any."""
+    properties = dict(read_attribution(request) or {})
+    if promo is not None:
+        properties["promo"] = promo.code
+    return properties or None
 
 
 def _display_name(astrologer: Astrologer) -> Optional[str]:
@@ -616,6 +648,36 @@ def get_frontend_auth_config(request: Request):
     )
 
 
+@router.get("/signup-promo", response_model=SignupPromoResponse)
+def get_signup_promo(
+    request: Request,
+    code: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Look up a campaign promo code for the signup form's welcome banner.
+
+    Falls back to the promo cookie when no code is passed, so the banner also
+    shows after the visitor navigates away from the QR landing URL.
+    """
+    promo = get_promo(code) if code else get_promo(read_promo_code(request))
+    if promo is None:
+        return SignupPromoResponse(valid=False)
+    try:
+        redeemable = is_redeemable(db, promo)
+    except Exception:
+        # Fail closed: a missing banner is better than a broken signup page.
+        logger.exception("Failed to check promo redeemability for %s", promo.code)
+        redeemable = False
+    if not redeemable:
+        return SignupPromoResponse(code=promo.code, valid=False)
+    return SignupPromoResponse(
+        code=promo.code,
+        valid=True,
+        trial_days=promo.trial_days,
+        message_key=promo.message_key,
+    )
+
+
 @router.post("/register", response_model=GenericAuthResponse)
 def register(
     payload: RegisterRequest,
@@ -639,6 +701,7 @@ def register(
         return _neutral_register_response()
 
     registration_plan = PLAN_SOLO if is_solo_request(request) else PLAN_TRIAL
+    promo = resolve_signup_promo(db, request, plan_code=registration_plan)
     astrologer = Astrologer(
         email=email,
         first_name=payload.first_name,
@@ -649,7 +712,8 @@ def register(
         is_active=True,
         email_verified_at=utcnow(),
         plan_code=registration_plan,
-        plan_expires_at=_trial_expiry(registration_plan),
+        plan_expires_at=_trial_expiry(registration_plan, promo=promo),
+        signup_promo_code=promo.code if promo else None,
     )
     db.add(astrologer)
     try:
@@ -679,7 +743,7 @@ def register(
         resource_type="astrologer",
         resource_id=email,
         result="success",
-        properties=read_attribution(request),
+        properties=_signup_event_properties(request, promo),
     )
     return _neutral_register_response()
 
@@ -1052,7 +1116,11 @@ def google_login(
     )
 
     is_new_user = astrologer is None
+    promo: Optional[SignupPromo] = None
     if astrologer is None:
+        # The promo cookie survives the Google OAuth round-trip (the URL param
+        # does not), so QR-code signups work through this path too.
+        promo = resolve_signup_promo(db, request, plan_code=PLAN_TRIAL)
         astrologer = Astrologer(
             email=identity.email,
             password_hash=None,
@@ -1061,7 +1129,8 @@ def google_login(
             is_active=True,
             email_verified_at=utcnow(),
             plan_code=PLAN_TRIAL,
-            plan_expires_at=_trial_expiry(PLAN_TRIAL),
+            plan_expires_at=_trial_expiry(PLAN_TRIAL, promo=promo),
+            signup_promo_code=promo.code if promo else None,
         )
         db.add(astrologer)
         db.flush()
@@ -1098,7 +1167,7 @@ def google_login(
         resource_id=identity.email,
         result="success",
         # First-touch campaign context belongs to the registration only.
-        properties=read_attribution(request) if is_new_user else None,
+        properties=_signup_event_properties(request, promo) if is_new_user else None,
     )
     return _build_me_response(db, astrologer, is_new_user=is_new_user)
 

@@ -4,7 +4,11 @@ const assert = require('node:assert/strict');
 const {
     createI18n,
     parseAcceptLanguage,
+    parseLocaleFromPath,
+    stripLocaleFromPath,
+    localizePath,
     resolveLocaleFromSources,
+    PREFIXED_LOCALES,
 } = require('../frontend/js/i18n.js');
 const { toIntlLocale } = require('../frontend/js/locale-formatters.js');
 
@@ -390,4 +394,145 @@ test('builtin catalogs provide common.loading before remote preload completes', 
 
     assert.equal(i18n.t('common.loading'), 'Завантаження...');
     assert.equal(warnings.length, 0);
+});
+
+test('prefixed locales cover every supported locale except the default one', () => {
+    assert.deepEqual([...PREFIXED_LOCALES].sort(), ['de', 'ru', 'uk']);
+});
+
+test('locale path helpers map between prefixed and bare URLs', () => {
+    assert.equal(parseLocaleFromPath('/de/pricing.html'), 'de');
+    assert.equal(parseLocaleFromPath('/de'), 'de');
+    assert.equal(parseLocaleFromPath('/uk/terms.html?a=1#b'), 'uk');
+    assert.equal(parseLocaleFromPath('/pricing.html'), null);
+    assert.equal(parseLocaleFromPath('/delivery/x'), null, 'a path that merely starts with the letters is not a locale');
+    assert.equal(parseLocaleFromPath('/fr/pricing.html'), null, 'unsupported locale prefixes stay unrecognized');
+
+    assert.equal(stripLocaleFromPath('/de/pricing.html'), '/pricing.html');
+    assert.equal(stripLocaleFromPath('/de'), '/');
+    assert.equal(stripLocaleFromPath('/pricing.html'), '/pricing.html');
+
+    assert.equal(localizePath('/', 'de'), '/de/');
+    assert.equal(localizePath('/pricing.html', 'de'), '/de/pricing.html');
+    assert.equal(localizePath('login.html?mode=register', 'de'), '/de/login.html?mode=register');
+    assert.equal(localizePath('index.html#solution', 'uk'), '/uk/index.html#solution');
+    assert.equal(localizePath('/de/pricing.html', 'ru'), '/ru/pricing.html');
+    assert.equal(localizePath('/de/pricing.html', 'en'), '/pricing.html', 'the default locale has no prefix');
+});
+
+test('locale source priority puts the URL path above query, storage and browser', () => {
+    assert.deepEqual(
+        resolveLocaleFromSources({
+            pathLocale: 'de',
+            queryLocale: 'ru',
+            storedLocale: 'uk',
+            browserLocale: 'en-US',
+        }),
+        { locale: 'de', source: 'path' },
+    );
+
+    assert.deepEqual(
+        resolveLocaleFromSources({
+            pathLocale: null,
+            queryLocale: 'ru',
+            storedLocale: 'uk',
+        }),
+        { locale: 'ru', source: 'query' },
+    );
+});
+
+test('createI18n reads the locale from the URL path and remembers it', () => {
+    const storage = makeStorage({ astrobot_locale: 'uk' });
+    const i18n = createI18n({
+        catalogs: TEST_CATALOGS,
+        storage,
+        pathname: '/de/pricing.html',
+        queryString: '',
+        browserLocale: 'en-US',
+        fetchFn: null,
+    });
+
+    assert.equal(i18n.getLocale(), 'de');
+    // Without persisting, the next in-app navigation would fall back to 'uk' and the
+    // visitor would silently leave the language they arrived in.
+    assert.equal(storage.getItem('astrobot_locale'), 'de');
+});
+
+test('createI18n persists a locale asked for by query string', () => {
+    const storage = makeStorage();
+    const i18n = createI18n({
+        catalogs: TEST_CATALOGS,
+        storage,
+        pathname: '/',
+        queryString: '?lang=de',
+        browserLocale: 'en-US',
+        fetchFn: null,
+    });
+
+    assert.equal(i18n.getLocale(), 'de');
+    assert.equal(storage.getItem('astrobot_locale'), 'de');
+});
+
+test('createI18n does not persist a locale merely inferred from the browser', () => {
+    const storage = makeStorage();
+    const i18n = createI18n({
+        catalogs: TEST_CATALOGS,
+        storage,
+        pathname: '/',
+        queryString: '',
+        browserLocale: 'de-DE',
+        fetchFn: null,
+    });
+
+    assert.equal(i18n.getLocale(), 'de');
+    assert.equal(storage.getItem('astrobot_locale'), null, 'an inferred locale is not a choice the visitor made');
+});
+
+test('on a translated page the URL decides the language, not what the browser remembers', () => {
+    const storage = makeStorage({ astrobot_locale: 'de' });
+    const i18n = createI18n({
+        catalogs: TEST_CATALOGS,
+        storage,
+        pathname: '/pricing.html',
+        queryString: '',
+        translatedDocument: true,
+        browserLocale: 'de-DE',
+        fetchFn: null,
+    });
+
+    // The English URL is the English document; serving German text there would make the
+    // canonical page disagree with its own address.
+    assert.equal(i18n.getLocale(), 'en');
+    assert.equal(storage.getItem('astrobot_locale'), 'de', 'passing through an English page is not a language choice');
+});
+
+test('pages outside the translated set still follow the remembered locale', () => {
+    const storage = makeStorage({ astrobot_locale: 'de' });
+    const i18n = createI18n({
+        catalogs: TEST_CATALOGS,
+        storage,
+        pathname: '/clients.html',
+        queryString: '',
+        translatedDocument: false,
+        browserLocale: 'en-US',
+        fetchFn: null,
+    });
+
+    assert.equal(i18n.getLocale(), 'de');
+});
+
+test('rememberLocale stores a choice without re-rendering the current page', () => {
+    const storage = makeStorage();
+    const i18n = createI18n({
+        catalogs: TEST_CATALOGS,
+        storage,
+        pathname: '/de/pricing.html',
+        queryString: '',
+        fetchFn: null,
+    });
+
+    assert.equal(i18n.rememberLocale('en'), 'en');
+    assert.equal(storage.getItem('astrobot_locale'), 'en');
+    assert.equal(i18n.getLocale(), 'de', 'the document keeps rendering the locale it was served as');
+    assert.equal(i18n.rememberLocale('fr'), null);
 });

@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.login.meta.title">Steliara login</title>
-    <link rel="stylesheet" href="bundles/login.bundle.css?v=2fafba9a7ecd">
-    <script>window.__APP_BUILD_ID__ = '2fafba9a7ecd';</script>
+    <!-- hreflang:start -->
+    <link rel="alternate" hreflang="en" href="https://www.steliara.com/login.html">
+    <link rel="alternate" hreflang="de" href="https://www.steliara.com/de/login.html">
+    <link rel="alternate" hreflang="ru" href="https://www.steliara.com/ru/login.html">
+    <link rel="alternate" hreflang="uk" href="https://www.steliara.com/uk/login.html">
+    <link rel="alternate" hreflang="x-default" href="https://www.steliara.com/login.html">
+    <!-- hreflang:end -->
+    <link rel="stylesheet" href="bundles/login.bundle.css?v=cbb6f7c35b69">
+    <script>window.__APP_BUILD_ID__ = 'cbb6f7c35b69';</script>
 </head>
 <body class="login-page">
     <main class="login-shell">
@@ -20,6 +27,8 @@
                 <h1 id="authTitle" class="login-title"></h1>
                 <p id="authSubtitle" class="login-subtitle"></p>
             </header>
+
+            <p id="promoBanner" class="promo-banner" hidden></p>
 
             <div id="statusBanner" class="status-banner" role="alert" hidden></div>
 
@@ -321,7 +330,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=2fafba9a7ecd"></script>
-    <script type="module" src="js/bundles/login.bundle.js?v=2fafba9a7ecd"></script>
+    <script src="js/analytics.js?v=cbb6f7c35b69"></script>
+    <script type="module" src="js/bundles/login.bundle.js?v=cbb6f7c35b69"></script>
 </body>
 </html>

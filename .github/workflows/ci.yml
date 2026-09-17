@@ -40,6 +40,9 @@ jobs:
       - name: Build frontend bundles and verify committed assets
         run: npm --prefix app run check:frontend-build
 
+      - name: Prerender localized pages and verify committed output
+        run: npm --prefix app run check:localized-pages
+
       - name: Python syntax smoke checks
         run: python -m compileall -q app/api app/database app/services app/models app/utils app/i18n
 
@@ -75,6 +78,8 @@ jobs:
           node --test \
             app/tests/test_frontend_i18n.test.cjs \
             app/tests/test_frontend_i18n_ui.test.cjs \
+            app/tests/test_locale_switcher_navigation.test.cjs \
+            app/tests/test_localized_pages_build.test.cjs \
             app/tests/test_frontend_api_client.test.cjs \
             app/tests/test_frontend_timezones.test.cjs \
             app/tests/test_forecast_timeline_utils.test.cjs
