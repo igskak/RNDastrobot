@@ -6,8 +6,13 @@
  * moment later — and a crawler must find German content at a German URL it can index.
  *
  * English keeps the bare URLs (/pricing.html); every other locale lives under its own
- * prefix (/de/pricing.html). Output is committed; `npm run check:localized` fails the
- * build when it drifts from the sources or the catalogs.
+ * prefix (/de/pricing.html). English is prerendered too, back over its own source file —
+ * before that, `/` shipped 126 empty data-i18n nodes and one word of body text while
+ * /de/ shipped 859, so the highest-priority URL on the site was blank to any crawler
+ * that does not run JavaScript, which is most of the AI crawlers robots.txt invites in.
+ *
+ * Output is committed; `npm run check:localized-pages` fails the build when it drifts
+ * from the sources or the catalogs, which also pins this script's idempotency.
  */
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -246,7 +251,26 @@ function localizeDocument(document, { page, locale, translate }) {
 
     if (description) localizeJsonLd(document, { locale, description });
 
-    document.head.appendChild(document.createTextNode('\n'));
+    // English is prerendered back over its own source file, so every pass has to land on
+    // a fixed point. Left alone, both of these grow by one blank line per build (the head
+    // from the append below, the body from the newline that ends the file and that the
+    // parser moves inside </body>), which would break `check:localized-pages` on the
+    // second run.
+    endWithSingleNewline(document.head);
+    endWithSingleNewline(document.body);
+}
+
+/** Collapses a node's trailing whitespace into exactly one newline, so rebuilds converge. */
+function endWithSingleNewline(parent) {
+    const TEXT_NODE = 3;
+    while (
+        parent.lastChild
+        && parent.lastChild.nodeType === TEXT_NODE
+        && !parent.lastChild.textContent.trim()
+    ) {
+        parent.removeChild(parent.lastChild);
+    }
+    parent.appendChild(parent.ownerDocument.createTextNode('\n'));
 }
 
 export async function buildLocalizedPages({ write = true } = {}) {
@@ -264,16 +288,19 @@ export async function buildLocalizedPages({ write = true } = {}) {
     for (const page of LOCALIZED_PAGES) {
         const sourcePath = path.join(frontendRoot, page);
         const source = syncSourceAlternates(await readFile(sourcePath, 'utf8'), page);
-        outputs.set(path.join(frontendRoot, page), source);
 
-        for (const locale of TRANSLATED_LOCALES) {
+        for (const locale of [DEFAULT_LOCALE, ...TRANSLATED_LOCALES]) {
             const dom = new JSDOM(source);
             localizeDocument(dom.window.document, {
                 page,
                 locale,
                 translate: createTranslator(catalogs[locale], page, locale),
             });
-            outputs.set(path.join(frontendRoot, locale, page), `${dom.serialize()}\n`);
+            // English keeps the bare URL, so its prerendered document *is* the source
+            // file. The data-i18n attributes survive, so the browser can still switch
+            // locales in place; it just no longer has to fill in an empty page first.
+            const target = locale === DEFAULT_LOCALE ? sourcePath : path.join(frontendRoot, locale, page);
+            outputs.set(target, `${dom.serialize()}\n`);
         }
     }
 
@@ -292,5 +319,8 @@ export async function buildLocalizedPages({ write = true } = {}) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
     const outputs = await buildLocalizedPages();
-    console.log(`[localized-pages] wrote ${outputs.size} files for locales: ${TRANSLATED_LOCALES.join(', ')}`);
+    console.log(
+        `[localized-pages] wrote ${outputs.size} files for locales: `
+        + [DEFAULT_LOCALE, ...TRANSLATED_LOCALES].join(', '),
+    );
 }

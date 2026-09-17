@@ -1,0 +1,137 @@
+name: SEO content agent
+
+# Builds one page from docs/marketing/seo-backlog.yml a week and opens a pull request.
+#
+# It never merges. The gate is deliberate: a thin or wrong page on a domain this small
+# costs more than the week it saves, and a competitor claim written from memory goes
+# stale without anyone noticing. A human reads the PR description — which carries the
+# live SERP check and the source URL behind every competitor claim — and merges.
+#
+# The agent's actual instructions live in docs/marketing/seo-agent-brief.md so they can
+# be edited and reviewed without touching CI.
+#
+# Requires the ANTHROPIC_API_KEY repository secret. Without it the job exits cleanly
+# with a note rather than failing every Monday.
+
+on:
+  schedule:
+    # Monday 07:00 UTC — the PR is waiting at the start of the week.
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      item:
+        description: "Backlog item id to build (default: the first one marked todo)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: seo-content-agent
+  cancel-in-progress: false
+
+jobs:
+  build-one-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check the agent is configured
+        id: config
+        run: |
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "ANTHROPIC_API_KEY is not set — add it in Settings > Secrets > Actions."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Is there anything queued?
+        id: queue
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          if grep -q "status: todo" docs/marketing/seo-backlog.yml; then
+            echo "queued=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "The backlog is empty. Nothing to build."
+            echo "queued=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Python
+        if: steps.queue.outputs.queued == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node
+        if: steps.queue.outputs.queued == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        if: steps.queue.outputs.queued == 'true'
+        run: |
+          npm ci --prefix app
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt
+
+      - name: Start the app so the agent can audit its own page
+        if: steps.queue.outputs.queued == 'true'
+        env:
+          DATABASE_URL: sqlite+pysqlite:///./_seo_agent.db
+          FRONTEND_BASE_URL: http://127.0.0.1:8099
+        run: |
+          nohup python -m uvicorn app.api.main:app --host 127.0.0.1 --port 8099 \
+            --log-level warning > /tmp/seo-agent-api.log 2>&1 &
+          for _ in $(seq 1 40); do
+            sleep 1
+            curl -sf -o /dev/null http://127.0.0.1:8099/robots.txt && break
+          done
+          curl -sf -o /dev/null http://127.0.0.1:8099/robots.txt \
+            || { echo "app did not come up"; cat /tmp/seo-agent-api.log; exit 1; }
+
+      - name: Build the next page
+        if: steps.queue.outputs.queued == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          claude_args: |
+            --max-turns 120
+          prompt: |
+            Read docs/marketing/seo-agent-brief.md and follow it exactly. It is your
+            complete operating brief: which item to take, what "finished" means, which
+            gates must pass, how to write, and when to stop instead of shipping.
+
+            ${{ github.event.inputs.item && format('Build backlog item "{0}" instead of the first todo item.', github.event.inputs.item) || '' }}
+
+            The application is already running at http://127.0.0.1:8099 for the
+            seo_audit.py gate. Use --canonical-base https://www.steliara.com with it,
+            because canonicals are baked in with the production origin.
+
+            Restart the app after changing app/api/main.py, or the audit will check the
+            old routes:
+              pkill -f "uvicorn app.api.main" || true
+              DATABASE_URL=sqlite+pysqlite:///./_seo_agent.db \
+              FRONTEND_BASE_URL=http://127.0.0.1:8099 \
+              nohup python -m uvicorn app.api.main:app --host 127.0.0.1 --port 8099 \
+                --log-level warning > /tmp/seo-agent-api.log 2>&1 &
+
+            Open the pull request against main with the label seo-agent. Do not merge it
+            and do not push to main.
+
+      - name: Say nothing happened, and why
+        if: steps.config.outputs.ready != 'true' || steps.queue.outputs.queued == 'false'
+        run: |
+          if [ "${{ steps.config.outputs.ready }}" != "true" ]; then
+            echo "::notice::SEO content agent is idle: ANTHROPIC_API_KEY is not configured."
+          else
+            echo "::notice::SEO content agent is idle: every backlog item is shipped or dropped."
+          fi

@@ -233,6 +233,4 @@
         document.addEventListener('frontend:locale-changed', () => setTimeout(applyBilling, 0));
         Promise.resolve(window.FrontendI18n?.ready).catch(() => {}).then(applyBilling);
     </script>
-
-
 </body></html>

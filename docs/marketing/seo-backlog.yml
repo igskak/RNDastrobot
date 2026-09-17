@@ -1,0 +1,155 @@
+# Ordered queue of organic pages to build. The weekly SEO agent takes the first item
+# whose status is `todo`, builds exactly that one, and opens a PR.
+#
+# Order is priority. Everything here came out of the 2026-09-17 audit
+# (docs/marketing/seo-audit-2026-09.md) with a measured reason attached, so an item
+# can be argued with rather than just believed.
+#
+# Statuses: todo | in_progress | shipped | dropped
+# `pr` is filled in by the agent so a half-finished item is visible.
+
+meta:
+  owner: seo-content-agent
+  source_of_truth:
+    - .agents/product-marketing.md          # positioning, voice, what we may claim
+    - docs/marketing/wave2-conquest-landings.md  # worked examples of the page format
+    - docs/marketing/seo-audit-2026-09.md   # why each item is here
+  rules:
+    - English first. RU/UK/DE mirrors are a separate item, never bundled in.
+    - Every factual claim about Steliara must be traceable to product-marketing.md.
+    - Competitor comparisons must be checkable and fair. No claim about a competitor
+      that is not verifiable on their public pricing or feature page today.
+    - No em dashes in visitor-facing copy (house voice).
+    - A page is not done until it is routed, in the sitemap, and covered by a test.
+
+items:
+  - id: record-astrology-consultations
+    status: todo
+    type: category-landing
+    slug: /record-astrology-consultations
+    target_queries:
+      - astrology software that records client sessions
+      - record astrology consultation
+      - transcribe astrology reading
+      - astrology session notes software
+    why: >
+      This is our hero claim and we do not rank for it at all. On 2026-09-17
+      astrologerapp.org held both #1 and #2 on Bing/DDG for "astrology software that
+      records client sessions", one of them a dedicated /sessions-scheduling page.
+      /astrologer-workspace buries the recording story under "More than charts and a
+      client list" and is 548 words. This is the highest-value page on the list.
+    must_cover:
+      - The job: a two-hour reading, and by next session neither side remembers it.
+      - What actually happens: record, transcribe, summarize, filed against the person.
+      - Why the client recording on their phone is not the same thing.
+      - Privacy and consent, plainly stated.
+      - Comparison with taking notes by hand and with a generic meeting recorder.
+      - FAQ with FAQPage schema.
+    acceptance:
+      min_words: 800
+      schema: [SoftwareApplication, FAQPage]
+      internal_links_from: [/astrologer-workspace, /astrology-practice-management, /]
+
+  - id: solar-fire-alternative
+    status: todo
+    type: alternative-page
+    slug: /solar-fire-alternative
+    target_queries:
+      - solar fire alternative
+      - solar fire for mac
+      - alternative to solar fire astrology
+    why: >
+      Named in the GTM plan as P1 and never built. Solar Fire is the incumbent the
+      cloud pitch is aimed at (Windows-only, one machine), and alternative queries are
+      the cheapest qualified traffic in the category: the searcher has already decided
+      to leave.
+    must_cover:
+      - Honest account of what Solar Fire is genuinely good at.
+      - The three switch reasons: platform, the people you read for, the consultation.
+      - What you give up by switching, stated without spin.
+      - Migration: what you bring over and what you re-enter.
+    acceptance:
+      min_words: 700
+      schema: [SoftwareApplication, FAQPage]
+      internal_links_from: [/cloud-astrology-software, /astrology-practice-management]
+
+  - id: astrolium-alternative
+    status: todo
+    type: alternative-page
+    slug: /astrolium-alternative
+    target_queries:
+      - astrolium alternative
+      - astrolium vs
+      - astrolium pricing
+    why: >
+      Astrolium is the key English-language competitor (see the competitor note in the
+      GTM plan) and owns the "astrologer workspace + AI" sentence. An alternative page
+      is where we say what they cannot: the consultation itself is recorded.
+    must_cover:
+      - Where Astrolium is the better pick. Say it and mean it.
+      - The recorded-consultation gap as the single decisive difference.
+      - Price comparison, checked against their live pricing page on the build date.
+    acceptance:
+      min_words: 700
+      schema: [SoftwareApplication, FAQPage]
+      internal_links_from: [/astrology-practice-management, /record-astrology-consultations]
+
+  - id: cloud-astrology-software-rebuild
+    status: todo
+    type: rewrite
+    slug: /cloud-astrology-software
+    target_queries:
+      - cloud astrology software
+      - web based astrology software
+      - astrology software for mac
+    why: >
+      511 words against lunaastrology.com, which holds #1 and #2 for the head term.
+      The sister page /astrology-practice-management is #2 for its own head term on
+      690 words, so the format works and this page is simply too thin to win.
+    must_cover:
+      - A real feature table, not a bullet list.
+      - The Mac question answered directly, because that is what the query means.
+      - Offline, data ownership and export, which is the objection to cloud.
+    acceptance:
+      min_words: 900
+      schema: [SoftwareApplication, FAQPage]
+
+  - id: ai-answer-pages
+    status: todo
+    type: answer-pages
+    slug: /answers/
+    target_queries:
+      - what software do professional astrologers use
+      - how do astrologers keep client notes
+      - best astrology software for a professional practice
+    why: >
+      Perplexity baseline 2026-08-06: brand queries cite us, category queries never do.
+      Answer pages are short, factual and heavily structured so an engine can lift a
+      paragraph and attribute it. The homepage prerender fix is a prerequisite and
+      landed 2026-09-17.
+    must_cover:
+      - One question per page, answered in the first 40 words.
+      - Named alternatives including competitors, because an answer that only names
+        one product does not get cited.
+      - A dated "last reviewed" line. Engines weight recency.
+    acceptance:
+      min_words: 400
+      schema: [FAQPage]
+      notes: Ship three pages in one PR; they are short and share a template.
+
+  - id: pricing-title-and-schema
+    status: todo
+    type: technical
+    slug: /pricing.html
+    target_queries:
+      - steliara pricing
+      - astrology software pricing
+    why: >
+      The pricing pages carry an 18-character title ("Pricing — Steliara") and no
+      JSON-LD at all, while the conquest pages carry three blocks each. Cheapest
+      remaining on-page win.
+    must_cover:
+      - Title that states the category and the price point.
+      - Product/Offer schema matching the live plans.
+    acceptance:
+      schema: [Product, Offer]

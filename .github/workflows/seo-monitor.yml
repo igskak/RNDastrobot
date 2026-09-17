@@ -1,0 +1,155 @@
+name: SEO monitor
+
+# Watches the live organic surface every morning and shouts when it breaks.
+#
+# This exists because the English home page shipped one word of body text for months and
+# nothing noticed: there was no test that could fail. Now there is, and it runs against
+# production rather than against a build, because production is what crawlers read.
+#
+# Nothing here touches main. Measurements land on the orphan `seo-metrics` branch, and
+# anything that needs a decision is filed as an issue.
+
+on:
+  schedule:
+    # 06:20 UTC daily — after Render's overnight deploys, before the working day.
+    - cron: "20 6 * * *"
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Origin to audit"
+        required: false
+        default: "https://www.steliara.com"
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: seo-monitor
+  cancel-in-progress: false
+
+env:
+  METRICS_BRANCH: seo-metrics
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Clone the measurement history
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          rm -rf .metrics
+          if ! git clone --quiet --depth=1 --branch "$METRICS_BRANCH" "$REMOTE" .metrics 2>/dev/null; then
+            echo "No $METRICS_BRANCH yet — starting the history."
+            git clone --quiet --depth=1 "$REMOTE" .metrics
+            git -C .metrics checkout --quiet --orphan "$METRICS_BRANCH"
+            git -C .metrics rm -rqf . || true
+          fi
+
+      - name: Audit production
+        id: audit
+        run: |
+          mkdir -p .seo
+          BASE="${{ github.event.inputs.base || 'https://www.steliara.com' }}"
+          BASELINE=""
+          if [ -s .metrics/latest.json ]; then
+            BASELINE="--baseline .metrics/latest.json"
+          fi
+          set +e
+          python app/scripts/seo_audit.py --base "$BASE" --json .seo/report.json $BASELINE \
+            | tee .seo/report.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Record the measurement
+        # Runs even when the audit failed: a bad day is still a data point, and the trend
+        # is the whole reason for keeping a history.
+        if: always() && hashFiles('.seo/report.json') != ''
+        run: |
+          mkdir -p .metrics/history
+          cp .seo/report.json .metrics/latest.json
+          cp .seo/report.json ".metrics/history/$(date -u +%Y-%m-%d).json"
+          git -C .metrics config user.name "seo-monitor[bot]"
+          git -C .metrics config user.email "seo-monitor@users.noreply.github.com"
+          git -C .metrics add -A
+          git -C .metrics diff --cached --quiet \
+            || git -C .metrics commit --quiet -m "seo: measurement for $(date -u +%Y-%m-%d)"
+          git -C .metrics push --quiet origin "HEAD:$METRICS_BRANCH"
+
+      - name: File or update the regression issue
+        if: always() && steps.audit.outputs.exit_code != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BODY_FILE="$(mktemp)"
+          {
+            echo "The daily audit of the live site failed."
+            echo
+            echo '```'
+            cat .seo/report.txt
+            echo '```'
+            echo
+            echo "Reproduce locally: \`python app/scripts/seo_audit.py\`"
+            echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } > "$BODY_FILE"
+
+          gh label create seo-monitor --color BFD4F2 \
+            --description "Automated organic-surface checks" 2>/dev/null || true
+          EXISTING="$(gh issue list --label seo-monitor --state open --limit 1 \
+            --json number --jq '.[0].number // empty')"
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body-file "$BODY_FILE"
+          else
+            gh issue create --title "SEO monitor: production regressions" \
+              --label seo-monitor --body-file "$BODY_FILE"
+          fi
+
+      - name: Push the sitemap to the IndexNow engines
+        # Only on a clean audit: there is no point telling Bing to re-crawl a page we
+        # already know is broken. No-ops when INDEXNOW_KEY is unset.
+        #
+        # A failed submission is a warning, not a failed run. The key has to be set in
+        # two places (repo secrets and the Render service env) and the half-configured
+        # state is the likely one; a red daily job for a config gap would train everyone
+        # to ignore the job that exists to report real breakage.
+        if: steps.audit.outputs.exit_code == '0'
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: |
+          python app/scripts/indexnow_ping.py \
+            --base "${{ github.event.inputs.base || 'https://www.steliara.com' }}" \
+            || echo "::warning::IndexNow submission failed. INDEXNOW_KEY is most likely set in repo secrets but not on the Render web service, or the two values differ. The site audit itself was clean."
+
+      - name: Close the regression issue once the site is clean again
+        if: always() && steps.audit.outputs.exit_code == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING="$(gh issue list --label seo-monitor --state open --limit 1 \
+            --json number --jq '.[0].number // empty')"
+          if [ -n "$EXISTING" ]; then
+            gh issue close "$EXISTING" --comment "Clean audit on $(date -u +%Y-%m-%d). Closing."
+          fi
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-report
+          path: .seo/
+          retention-days: 90
+
+      - name: Fail the run when the audit failed
+        if: steps.audit.outputs.exit_code != '0'
+        run: exit 1

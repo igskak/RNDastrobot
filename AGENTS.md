@@ -52,6 +52,7 @@ Non-gating for now (track as TODO):
 - `app/models/*`: request/response/domain schemas.
 - `app/frontend/*`: UI only; backend logic must not be duplicated here.
 - Generated artifacts must not be edited manually: change frontend sources under `app/frontend/js`, `app/frontend/entries`, `app/frontend/entries-css`, `app/frontend/css` and then rebuild bundles; treat `app/frontend/js/bundles/**`, `app/frontend/bundles/**`, and compiled `swisseph/bin/**` as build outputs.
+- The visitor-facing text inside `app/frontend/{index,pricing,terms,login}.html` is also build output. `build-localized-pages.mjs` prerenders English over those files from `locales/en.json`, the same way it writes `de/`, `ru/` and `uk/`, so that crawlers get real text instead of empty `data-i18n` slots. Edit the copy in the catalog and rebuild; edit the structure in the HTML. `npm --prefix app run check:localized-pages` fails on drift.
 - Avoid circular imports between `api`, `services`, and `database`.
 
 ## Database and Migrations

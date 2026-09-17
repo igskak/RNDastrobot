@@ -217,6 +217,27 @@ async def redirect_legacy_locale_query(request: Request, call_next):
 
 
 @app.middleware("http")
+async def noindex_app_documents(request: Request, call_next):
+    """Keep application screens out of search indexes.
+
+    A robots.txt `Disallow` stops a crawl but cannot remove anything from an index, and
+    Bing proves it: /login.html, /calendar and /account-settings.html are all indexed
+    today, the settings page with a snippet lifted off its own form. Only a response
+    header deindexes a URL — and the crawler has to be allowed in to read it, which is
+    why these paths stay crawlable on purpose.
+
+    `follow` rather than `noindex, nofollow`: these pages still link to the marketing
+    pages, and there is no reason to throw that away.
+    """
+    response = await call_next(request)
+    if request.url.path in _INDEXABLE_DOCUMENT_PATHS:
+        return response
+    if response.headers.get("content-type", "").startswith("text/html"):
+        response.headers["X-Robots-Tag"] = "noindex, follow"
+    return response
+
+
+@app.middleware("http")
 async def static_cache_headers(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
@@ -375,9 +396,15 @@ _AI_SEARCH_BOTS = (
 )
 
 # Paths that hold, or can expose, someone else's chart and consultation data.
+#
+# /account-settings used to be listed here and no longer is. Blocking the crawl is what
+# let Bing index it from external signals alone, snippet and all, with no way for us to
+# say "drop this" — a Disallow hides a page from us, not from the index. It is served as
+# an empty client-rendered shell with no personal data in the HTML, so letting crawlers
+# read the `X-Robots-Tag: noindex` on it (see noindex_app_documents) is both safe and
+# the only thing that actually removes it.
 _CRAWLER_DISALLOW = (
     "/api/",
-    "/account-settings",
     "/client/",
     "/consultation/",
     "/call/",
@@ -414,7 +441,35 @@ _SITEMAP_PAGES = (
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-09-16"
+_SITEMAP_LASTMOD = "2026-09-17"
+
+
+def _indexable_document_paths() -> frozenset:
+    """Every URL we actually want in a search index, in every published language.
+
+    Derived from the sitemap rather than listed separately, so the two can't disagree:
+    a page is indexable because we advertise it, not because nobody remembered to
+    exclude it. Everything else — app screens, demos, the login page — is private by
+    default, including screens that do not exist yet.
+    """
+    paths = {"/index.html"}
+    for path, _priority in _SITEMAP_PAGES:
+        paths.add(path)
+        # The conquest landings answer on both /x and /x.html and the document
+        # canonicalises to /x. Noindexing the other spelling would hand search engines
+        # two contradictory instructions about the same page.
+        if path != "/" and not path.endswith(".html"):
+            paths.add(f"{path}.html")
+        if path in LOCALIZABLE_BARE_PATHS:
+            paths.update(localized_path_for(path, locale) for locale in PREFIXED_LOCALES)
+    # localized_path_for collapses /index.html onto /de/, so the second spelling of a
+    # localized home page has to be spelled out. It canonicalises to /de/, same as
+    # /index.html does to /.
+    paths.update(f"/{locale}/index.html" for locale in PREFIXED_LOCALES)
+    return frozenset(paths)
+
+
+_INDEXABLE_DOCUMENT_PATHS = _indexable_document_paths()
 
 
 def _sitemap_alternates(base: str, path: str) -> str:
@@ -559,6 +614,29 @@ applied at checkout.
 Last updated: {_SITEMAP_LASTMOD}
 """
     return Response(content=body, media_type="text/markdown; charset=utf-8", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/indexnow-{token}.txt", include_in_schema=False)
+async def indexnow_key_file(token: str):
+    """Ownership proof for IndexNow (Bing, Yandex, Seznam, and Copilot behind Bing).
+
+    IndexNow is a push: we tell the engines a URL changed instead of waiting weeks for
+    a crawl. It is worth having because Bing is where we already rank — #2 for
+    "astrology practice management software" on 2026-09-17 — so a new page reaching
+    that index in minutes rather than weeks is the cheapest indexing win available.
+
+    The key is a secret only in the sense that it proves control of the origin: set
+    INDEXNOW_KEY to any 8-128 character hex string and use the same value when
+    submitting. Unset, this 404s and app/scripts/indexnow_ping.py does nothing.
+    """
+    expected = os.getenv("INDEXNOW_KEY", "").strip()
+    if not expected or expected != token:
+        raise HTTPException(status_code=404, detail="Not found")
+    return Response(
+        content=expected,
+        media_type="text/plain",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @app.get("/google{token}.html", include_in_schema=False)
