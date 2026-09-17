@@ -1,0 +1,254 @@
+{
+  "app_screens": {
+    "/account-settings.html": {
+      "status": 200,
+      "x_robots_tag": "noindex, follow"
+    },
+    "/calendar": {
+      "status": 200,
+      "x_robots_tag": "noindex, follow"
+    },
+    "/forecast-new.html": {
+      "status": 200,
+      "x_robots_tag": "noindex, follow"
+    },
+    "/login.html": {
+      "status": 200,
+      "x_robots_tag": "noindex, follow"
+    },
+    "/natal-full.html": {
+      "status": 200,
+      "x_robots_tag": "noindex, follow"
+    },
+    "/new": {
+      "status": 200,
+      "x_robots_tag": "noindex, follow"
+    }
+  },
+  "base": "https://www.steliara.com",
+  "date": "2026-09-17",
+  "errors": 0,
+  "findings": [
+    {
+      "check": "page.description-length",
+      "detail": "168 chars (want 70-165)",
+      "level": "warning",
+      "url": "https://www.steliara.com/de/"
+    }
+  ],
+  "pages": {
+    "https://www.steliara.com/": {
+      "body_words": 843,
+      "bytes": 28503,
+      "canonical": "https://www.steliara.com/",
+      "description_length": 157,
+      "empty_i18n_nodes": 0,
+      "h1": "Your whole practice in one system",
+      "hreflang_count": 5,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Steliara — Astrology Software for Your Whole Practice",
+      "title_length": 53,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/astrologer-workspace": {
+      "body_words": 548,
+      "bytes": 12902,
+      "canonical": "https://www.steliara.com/astrologer-workspace",
+      "description_length": 149,
+      "empty_i18n_nodes": 0,
+      "h1": "More than charts and a client list",
+      "hreflang_count": 0,
+      "jsonld_blocks": 3,
+      "status": 200,
+      "title": "Astrologer Workspace with Recorded Sessions | Steliara",
+      "title_length": 54,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/astrology-practice-management": {
+      "body_words": 686,
+      "bytes": 15072,
+      "canonical": "https://www.steliara.com/astrology-practice-management",
+      "description_length": 143,
+      "empty_i18n_nodes": 0,
+      "h1": "Run your whole astrology practice in one place",
+      "hreflang_count": 0,
+      "jsonld_blocks": 3,
+      "status": 200,
+      "title": "Astrology Practice Management Software | Steliara",
+      "title_length": 49,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/cloud-astrology-software": {
+      "body_words": 511,
+      "bytes": 12861,
+      "canonical": "https://www.steliara.com/cloud-astrology-software",
+      "description_length": 149,
+      "empty_i18n_nodes": 0,
+      "h1": "Your astrology practice, in any browser",
+      "hreflang_count": 0,
+      "jsonld_blocks": 3,
+      "status": 200,
+      "title": "Cloud Astrology Software for Mac & Windows | Steliara",
+      "title_length": 53,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/de/": {
+      "body_words": 836,
+      "bytes": 29604,
+      "canonical": "https://www.steliara.com/de/",
+      "description_length": 168,
+      "empty_i18n_nodes": 0,
+      "h1": "Ihre gesamte Praxis in einem System",
+      "hreflang_count": 5,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Steliara – Astrologiesoftware für Ihre gesamte Praxis",
+      "title_length": 53,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/de/pricing.html": {
+      "body_words": 326,
+      "bytes": 19910,
+      "canonical": "https://www.steliara.com/de/pricing.html",
+      "description_length": 139,
+      "empty_i18n_nodes": 0,
+      "h1": "Ein übersichtlicher Arbeitsbereich für Ihre astrologische Praxis",
+      "hreflang_count": 5,
+      "jsonld_blocks": 0,
+      "status": 200,
+      "title": "Preise – Steliara",
+      "title_length": 17,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/de/terms.html": {
+      "body_words": 1541,
+      "bytes": 22536,
+      "canonical": "https://www.steliara.com/de/terms.html",
+      "description_length": 99,
+      "empty_i18n_nodes": 0,
+      "h1": "Nutzungsbedingungen und Richtlinien",
+      "hreflang_count": 5,
+      "jsonld_blocks": 0,
+      "status": 200,
+      "title": "Nutzungsbedingungen und Richtlinien – Steliara",
+      "title_length": 46,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/pricing.html": {
+      "body_words": 313,
+      "bytes": 19275,
+      "canonical": "https://www.steliara.com/pricing.html",
+      "description_length": 105,
+      "empty_i18n_nodes": 0,
+      "h1": "A calm workspace for your astrology practice",
+      "hreflang_count": 5,
+      "jsonld_blocks": 0,
+      "status": 200,
+      "title": "Pricing — Steliara",
+      "title_length": 18,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/ru/": {
+      "body_words": 771,
+      "bytes": 33544,
+      "canonical": "https://www.steliara.com/ru/",
+      "description_length": 149,
+      "empty_i18n_nodes": 0,
+      "h1": "Вся практика — в одной системе",
+      "hreflang_count": 5,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Steliara — астрологический софт для всей практики",
+      "title_length": 49,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/ru/pricing.html": {
+      "body_words": 291,
+      "bytes": 21185,
+      "canonical": "https://www.steliara.com/ru/pricing.html",
+      "description_length": 131,
+      "empty_i18n_nodes": 0,
+      "h1": "Спокойное рабочее пространство для вашей астрологической практики",
+      "hreflang_count": 5,
+      "jsonld_blocks": 0,
+      "status": 200,
+      "title": "Тарифы — Steliara",
+      "title_length": 17,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/ru/terms.html": {
+      "body_words": 1384,
+      "bytes": 28938,
+      "canonical": "https://www.steliara.com/ru/terms.html",
+      "description_length": 106,
+      "empty_i18n_nodes": 0,
+      "h1": "Условия и политики",
+      "hreflang_count": 5,
+      "jsonld_blocks": 0,
+      "status": 200,
+      "title": "Условия и политики — Steliara",
+      "title_length": 29,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/terms.html": {
+      "body_words": 1556,
+      "bytes": 20171,
+      "canonical": "https://www.steliara.com/terms.html",
+      "description_length": 76,
+      "empty_i18n_nodes": 0,
+      "h1": "Terms & Policies",
+      "hreflang_count": 5,
+      "jsonld_blocks": 0,
+      "status": 200,
+      "title": "Terms & Policies — Steliara",
+      "title_length": 27,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/uk/": {
+      "body_words": 711,
+      "bytes": 32765,
+      "canonical": "https://www.steliara.com/uk/",
+      "description_length": 143,
+      "empty_i18n_nodes": 0,
+      "h1": "Уся практика — в одній системі",
+      "hreflang_count": 5,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Steliara — астрологічний софт для всієї практики",
+      "title_length": 48,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/uk/pricing.html": {
+      "body_words": 282,
+      "bytes": 21066,
+      "canonical": "https://www.steliara.com/uk/pricing.html",
+      "description_length": 121,
+      "empty_i18n_nodes": 0,
+      "h1": "Спокійний робочий простір для вашої астрологічної практики",
+      "hreflang_count": 5,
+      "jsonld_blocks": 0,
+      "status": 200,
+      "title": "Тарифи — Steliara",
+      "title_length": 17,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/uk/terms.html": {
+      "body_words": 1368,
+      "bytes": 28237,
+      "canonical": "https://www.steliara.com/uk/terms.html",
+      "description_length": 105,
+      "empty_i18n_nodes": 0,
+      "h1": "Умови та політики",
+      "hreflang_count": 5,
+      "jsonld_blocks": 0,
+      "status": 200,
+      "title": "Умови та політики — Steliara",
+      "title_length": 28,
+      "x_robots_tag": ""
+    }
+  },
+  "regressions": [],
+  "sitemap_url_count": 15,
+  "warnings": 1
+}
