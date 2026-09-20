@@ -247,8 +247,16 @@
         "kicker": "Step 1 of 3",
         "title": "Start with one person",
         "text": "Create a profile and chart so forecasts, notes, and session history stay together.",
-        "primary": "Add your first client",
+        "primary": "Create your first chart",
         "skip": "Set up later"
+      },
+      "importOffer": {
+        "kicker": "Getting started",
+        "title": "Already have charts in another program?",
+        "text": "Move them here so you do not have to enter everything again.",
+        "primary": "Import charts",
+        "skip": "Create a chart manually",
+        "later": "You can do this later in Settings → Import charts."
       },
       "dock": {
         "title": "Getting started",
@@ -835,8 +843,56 @@
         "ariaLabel": "Settings sections",
         "chart": "Chart settings",
         "formats": "Formats",
+        "import": "Import charts",
         "billing": "Billing & plan",
         "account": "Account"
+      },
+      "import": {
+        "title": "Import charts",
+        "subtitle": "Move source chart data from another astrology program.",
+        "steps": { "ariaLabel": "Chart import steps", "file": "File", "review": "Review", "save": "Save" },
+        "file": {
+          "title": "Drop a file here", "copy": "or choose it from your computer", "choose": "Choose file",
+          "supported": "Supports ZET (.zbs) and AAF (.aaf or .txt), up to 5 MiB and 2,000 records.",
+          "instructionsTitle": "How do I export my charts?",
+          "instructions": "In ZET, export the database as a .zbs file. On Astro.com, open your stored data list, select “aaf”, and save the resulting text as an .aaf or .txt file.",
+          "reading": "Reading and checking the file…"
+        },
+        "review": {
+          "select": "Select", "selectChart": "Select chart {name}", "chart": "Chart", "localTime": "Local date and time", "place": "Place", "status": "Status",
+          "summary": "Total: {total}. Ready: {ready}. Warnings: {warnings}. Errors: {errors}.",
+          "continue": "Continue", "continueCount": "Continue with selected ({count})"
+        },
+        "utc": {
+          "title": "What UTC offset means",
+          "copy": "This is the difference between local time and the shared world time. For example, UTC+3 means that when world time is 9:00, local time is 12:00. The value on the event date matters because clock rules changed over time. We use the value stored in the source file."
+        },
+        "destination": {
+          "title": "Where should the charts be saved?",
+          "libraryTitle": "Separate charts",
+          "libraryCopy": "Each record will appear as a separate chart in your library. This suits files containing different people or events. You can add shared tags (labels used to find charts by topic).",
+          "profileTitle": "All charts in one profile",
+          "profileCopy": "A profile keeps several charts together, such as a person's birth chart and charts for important life events.",
+          "chooseProfile": "Choose a profile", "newProfile": "Create a new profile", "profileName": "Profile name",
+          "tags": "Tags (labels)", "tagsPlaceholder": "For example: Work, Relationships, Study", "tagsHelp": "Separate labels with commas. They make related charts easier to find.",
+          "calculation": "We will move the source data and calculate the charts with the selected house system.",
+          "profileSummary": "{count} charts will be added to the “{name}” profile.",
+          "librarySummary": "{count} separate charts will be added to the library. Tags: {tags}.", "noTags": "none"
+        },
+        "actions": { "importCount": "Import {count} charts", "pause": "Pause" },
+        "progress": { "saving": "Saving charts…", "count": "{current} of {total}", "paused": "Import paused. You can continue it here later." },
+        "result": { "title": "Import complete", "copy": "Charts added: {imported}. Could not add: {failed}.", "library": "Open library", "again": "Import another file" },
+        "recent": { "title": "Unfinished imports", "continue": "Continue" },
+        "status": { "ready": "Ready", "warning": "Review needed", "possible_duplicate": "Possible duplicate", "selected": "Selected", "failed": "Could not save", "skipped": "Skipped" },
+        "issues": {
+          "CHART_KIND_NOT_PROVIDED": "Chart type is missing; it will be saved as Other",
+          "PROSERPINA_EPHEMERIS_UNAVAILABLE": "Proserpina is unavailable for this date; other objects will be calculated",
+          "ALREADY_IMPORTED": "Already imported", "POSSIBLE_DUPLICATE_IN_FILE": "Possible duplicate in the file", "POSSIBLE_DUPLICATE_IN_LIBRARY": "A similar chart already exists in the library", "ZET_NOT_ENOUGH_FIELDS": "The record is missing data",
+          "INVALID_UTC_OFFSET": "The difference from world time could not be read", "INVALID_COORDINATE": "The coordinates could not be read",
+          "AAF_REQUIRED_FIELDS_MISSING": "The AAF record is missing required data", "AAF_JULIAN_CALENDAR_UNSUPPORTED": "Julian calendar dates are not supported yet", "AAF_JULIAN_DAY_CONFLICT": "The AAF date and time conflict with its calculation instant",
+          "AAF_TIME_TYPE_UNSUPPORTED": "This AAF time type is not supported yet", "AAF_CHART_TYPE_UNSUPPORTED": "This AAF chart type is not supported yet", "UNSUPPORTED_AAF_TIMEZONE": "The AAF time could not be read unambiguously", "unknown": "This record needs review"
+        },
+        "errors": { "read": "The file could not be read.", "load": "The import could not be loaded.", "save": "The import could not be completed.", "profileName": "Enter a name for the new profile." }
       },
       "groups": {
         "display": "Display"

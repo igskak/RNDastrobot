@@ -247,8 +247,16 @@
         "kicker": "Schritt 1 von 3",
         "title": "Beginnen Sie mit einer Person",
         "text": "Legen Sie ein Profil mit Horoskop an. So bleiben Prognosen, Notizen und bisherige Beratungen an einem Ort.",
-        "primary": "Erstes Klientenprofil anlegen",
+        "primary": "Erstes Horoskop erstellen",
         "skip": "Später einrichten"
+      },
+      "importOffer": {
+        "kicker": "Erste Schritte",
+        "title": "Haben Sie bereits Horoskope in einem anderen Programm?",
+        "text": "Übertragen Sie sie hierher, damit Sie nicht alles neu eingeben müssen.",
+        "primary": "Horoskope importieren",
+        "skip": "Horoskop manuell erstellen",
+        "later": "Dies ist später unter Einstellungen → Horoskope importieren möglich."
       },
       "dock": {
         "title": "Erste Schritte",
@@ -835,8 +843,52 @@
         "ariaLabel": "Einstellungsbereiche",
         "chart": "Horoskopeinstellungen",
         "formats": "Formate",
+        "import": "Horoskope importieren",
         "billing": "Abrechnung und Tarif",
         "account": "Konto"
+      },
+      "import": {
+        "title": "Horoskope importieren",
+        "subtitle": "Übertragen Sie die Ausgangsdaten aus einem anderen Astrologieprogramm.",
+        "steps": { "ariaLabel": "Schritte des Horoskopimports", "file": "Datei", "review": "Prüfung", "save": "Speichern" },
+        "file": {
+          "title": "Datei hier ablegen", "copy": "oder vom Computer auswählen", "choose": "Datei auswählen",
+          "supported": "Unterstützt werden ZET (.zbs) und AAF (.aaf oder .txt), bis 5 MiB und 2.000 Einträge.",
+          "instructionsTitle": "Wie exportiere ich meine Horoskope?",
+          "instructions": "Exportieren Sie in ZET die Datenbank als .zbs-Datei. Öffnen Sie bei Astro.com die Liste gespeicherter Daten, wählen Sie „aaf“ und speichern Sie den Text als .aaf- oder .txt-Datei.",
+          "reading": "Datei wird gelesen und geprüft…"
+        },
+        "review": {
+          "select": "Auswählen", "selectChart": "Horoskop {name} auswählen", "chart": "Horoskop", "localTime": "Lokales Datum und Uhrzeit", "place": "Ort", "status": "Zustand",
+          "summary": "Gesamt: {total}. Bereit: {ready}. Hinweise: {warnings}. Fehler: {errors}.",
+          "continue": "Weiter", "continueCount": "Mit Auswahl fortfahren ({count})"
+        },
+        "utc": {
+          "title": "Was der UTC-Abstand bedeutet",
+          "copy": "Das ist der Unterschied zwischen der Ortszeit und der gemeinsamen Weltzeit. UTC+3 bedeutet zum Beispiel: Wenn die Weltzeit 9:00 Uhr ist, ist es vor Ort 12:00 Uhr. Für ein Horoskop zählt der Wert am Ereignisdatum, da sich Zeitregeln geändert haben. Wir verwenden den Wert aus der Quelldatei."
+        },
+        "destination": {
+          "title": "Wo sollen die Horoskope gespeichert werden?", "libraryTitle": "Einzelne Horoskope",
+          "libraryCopy": "Jeder Eintrag erscheint als eigenes Horoskop in Ihrer Bibliothek. Das passt zu Dateien mit verschiedenen Personen oder Ereignissen. Sie können gemeinsame Tags hinzufügen (Markierungen zum Finden nach Thema).",
+          "profileTitle": "Alle Horoskope in einem Profil", "profileCopy": "Ein Profil bündelt mehrere Horoskope, etwa das Geburtshoroskop einer Person und wichtige Lebensereignisse.",
+          "chooseProfile": "Profil auswählen", "newProfile": "Neues Profil erstellen", "profileName": "Profilname",
+          "tags": "Tags (Markierungen)", "tagsPlaceholder": "Zum Beispiel: Arbeit, Beziehungen, Studium", "tagsHelp": "Trennen Sie Markierungen mit Kommas. So lassen sich zusammengehörige Horoskope leichter finden.",
+          "calculation": "Wir übertragen die Ausgangsdaten und berechnen die Horoskope mit dem gewählten Häusersystem.",
+          "profileSummary": "{count} Horoskope werden dem Profil „{name}“ hinzugefügt.", "librarySummary": "{count} einzelne Horoskope werden der Bibliothek hinzugefügt. Tags: {tags}.", "noTags": "keine"
+        },
+        "actions": { "importCount": "{count} Horoskope importieren", "pause": "Pausieren" },
+        "progress": { "saving": "Horoskope werden gespeichert…", "count": "{current} von {total}", "paused": "Import pausiert. Sie können ihn später hier fortsetzen." },
+        "result": { "title": "Import abgeschlossen", "copy": "Hinzugefügt: {imported}. Nicht hinzugefügt: {failed}.", "library": "Bibliothek öffnen", "again": "Weitere Datei importieren" },
+        "recent": { "title": "Unvollständige Importe", "continue": "Fortsetzen" },
+        "status": { "ready": "Bereit", "warning": "Prüfung nötig", "possible_duplicate": "Mögliches Duplikat", "selected": "Ausgewählt", "failed": "Speichern fehlgeschlagen", "skipped": "Übersprungen" },
+        "issues": {
+          "CHART_KIND_NOT_PROVIDED": "Horoskoptyp fehlt; der Eintrag wird als „Andere“ gespeichert", "PROSERPINA_EPHEMERIS_UNAVAILABLE": "Proserpina ist für dieses Datum nicht verfügbar; andere Objekte werden berechnet",
+          "ALREADY_IMPORTED": "Bereits importiert", "POSSIBLE_DUPLICATE_IN_FILE": "Mögliches Duplikat in der Datei", "POSSIBLE_DUPLICATE_IN_LIBRARY": "Ein ähnliches Horoskop ist bereits in der Bibliothek", "ZET_NOT_ENOUGH_FIELDS": "Im Eintrag fehlen Daten",
+          "INVALID_UTC_OFFSET": "Der Unterschied zur Weltzeit konnte nicht gelesen werden", "INVALID_COORDINATE": "Die Koordinaten konnten nicht gelesen werden",
+          "AAF_REQUIRED_FIELDS_MISSING": "Im AAF-Eintrag fehlen Pflichtdaten", "AAF_JULIAN_CALENDAR_UNSUPPORTED": "Julianische Kalenderdaten werden noch nicht unterstützt", "AAF_JULIAN_DAY_CONFLICT": "AAF-Datum und -Uhrzeit widersprechen dem angegebenen Berechnungszeitpunkt",
+          "AAF_TIME_TYPE_UNSUPPORTED": "Dieser AAF-Zeittyp wird noch nicht unterstützt", "AAF_CHART_TYPE_UNSUPPORTED": "Dieser AAF-Horoskoptyp wird noch nicht unterstützt", "UNSUPPORTED_AAF_TIMEZONE": "Die AAF-Zeit konnte nicht eindeutig gelesen werden", "unknown": "Dieser Eintrag muss geprüft werden"
+        },
+        "errors": { "read": "Die Datei konnte nicht gelesen werden.", "load": "Der Import konnte nicht geladen werden.", "save": "Der Import konnte nicht abgeschlossen werden.", "profileName": "Geben Sie einen Namen für das neue Profil ein." }
       },
       "groups": {
         "display": "Anzeige"

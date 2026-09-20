@@ -94,6 +94,7 @@ class SwissEphemerisEngine:
         jd: float,
         zodiac: str = 'tropical',
         ayanamsha: str = DEFAULT_AYANAMSHA,
+        include_proserpina: bool = True,
     ) -> List[Dict]:
         """
         Расчёт позиций планет
@@ -119,6 +120,8 @@ class SwissEphemerisEngine:
         obliquity = self.calculate_obliquity(jd)
 
         for planet_id, planet_name in PLANETS.items():
+            if planet_id == 1000 and not include_proserpina:
+                continue
             # Прозерпина (ID=1000) рассчитывается отдельно методом интерполяции
             if planet_id == 1000:
                 trop_lon = SpecialPointsService.calculate_proserpina(jd)

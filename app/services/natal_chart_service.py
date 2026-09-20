@@ -117,6 +117,7 @@ class NatalChartService:
         last_name: Optional[str] = None,
         zodiac: str = 'tropical',
         ayanamsha: str = 'lahiri',
+        allow_missing_proserpina: bool = False,
     ) -> Dict:
         """
         Расчёт полной натальной карты
@@ -149,7 +150,16 @@ class NatalChartService:
         )
         
         # 3. Рассчитываем планеты
-        planets = self.swisseph_engine.calculate_planets(jd, zodiac=zodiac, ayanamsha=ayanamsha)
+        include_proserpina = True
+        if allow_missing_proserpina:
+            year = birth_date.year
+            include_proserpina = SpecialPointsService.has_proserpina_for_year(year)
+        planets = self.swisseph_engine.calculate_planets(
+            jd,
+            zodiac=zodiac,
+            ayanamsha=ayanamsha,
+            include_proserpina=include_proserpina,
+        )
 
         # 4. Рассчитываем дома и углы
         houses, angles = self.swisseph_engine.calculate_houses(

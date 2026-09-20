@@ -1,0 +1,317 @@
+.chart-import {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.chart-import-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.chart-import-steps li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+}
+
+.chart-import-steps li > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+}
+
+.chart-import-steps li.is-active,
+.chart-import-steps li.is-complete {
+    color: var(--text-primary);
+}
+
+.chart-import-steps li.is-active > span:first-child,
+.chart-import-steps li.is-complete > span:first-child {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+}
+
+.chart-import-dropzone {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border: 1px dashed var(--border-focus);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    text-align: center;
+    cursor: pointer;
+}
+
+.chart-import-dropzone.is-dragging {
+    border-style: solid;
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.chart-import-dropzone:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.chart-import-dropzone-title {
+    font-size: var(--font-size-h3);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.chart-import-dropzone-copy,
+.chart-import-help,
+.chart-import-help-details,
+.chart-import-fields p,
+.chart-import-calculation p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-caption);
+    line-height: 1.5;
+}
+
+.chart-import-help-details summary {
+    width: fit-content;
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.chart-import-error,
+.chart-import-status {
+    min-height: 0;
+}
+
+.chart-import-error {
+    padding: var(--space-3);
+    border: 1px solid var(--danger, #d04848);
+    border-radius: var(--radius-sm);
+    color: var(--danger, #d04848);
+    background: var(--bg-primary);
+}
+
+.chart-import-status:empty,
+.chart-import-error.hidden {
+    display: none;
+}
+
+.chart-import-summary,
+.chart-import-final-summary {
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-size: var(--font-size-label);
+}
+
+.chart-import-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    margin-top: var(--space-3);
+}
+
+.chart-import-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-caption);
+}
+
+.chart-import-table th,
+.chart-import-table td {
+    padding: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.chart-import-table th {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.chart-import-table input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+.chart-import-time {
+    white-space: nowrap;
+}
+
+.chart-import-offset {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+}
+
+.chart-import-tooltip {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: help;
+}
+
+.chart-import-tooltip-copy {
+    max-width: 420px;
+    margin-top: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.chart-import-fieldset {
+    display: grid;
+    gap: var(--space-2);
+    padding: 0;
+    border: 0;
+}
+
+.chart-import-fieldset legend {
+    margin-bottom: var(--space-2);
+    font-weight: 600;
+}
+
+.chart-import-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.chart-import-choice:has(input:checked) {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.chart-import-choice input {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+}
+
+.chart-import-choice span {
+    display: grid;
+    gap: 4px;
+}
+
+.chart-import-choice small {
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+.chart-import-fields,
+.chart-import-calculation {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+.chart-import-input {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.chart-import-input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.chart-import-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+.chart-import-progress {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+}
+
+.chart-import-progress > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.chart-import-progress progress {
+    width: 100%;
+    height: 10px;
+}
+
+.chart-import-recent {
+    margin-top: var(--space-5);
+}
+
+.chart-import-recent-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.chart-import-result {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+}
+
+.chart-import-result h3,
+.chart-import-result p {
+    width: 100%;
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .chart-import-steps li > span:last-child {
+        font-size: 11px;
+    }
+
+    .chart-import-table th:nth-child(4),
+    .chart-import-table td:nth-child(4) {
+        display: none;
+    }
+
+    .chart-import-actions .ui-btn {
+        flex: 1 1 140px;
+    }
+}

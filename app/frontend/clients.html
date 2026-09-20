@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=d125a65e53d7">
-    <link rel="stylesheet" href="css/app-nav.css?v=d125a65e53d7">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=51ad9e10b694">
+    <link rel="stylesheet" href="css/app-nav.css?v=51ad9e10b694">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'd125a65e53d7';</script>
+    <script>window.__APP_BUILD_ID__ = '51ad9e10b694';</script>
     <style>
         /* Chip multi-select for linking people to a chart (edit dialog) */
         #editChartPersonWrap { position: relative; }
@@ -111,12 +111,24 @@
                         <span id="emptyStateNewBtnLabel" data-i18n="page.clients.createFirstCard"></span>
                     </button>
                     <div id="onboardingWelcome" class="onboarding-welcome onboarding-hidden">
-                        <p class="onboarding-kicker" data-i18n="page.onboarding.welcome.kicker"></p>
-                        <h3 class="state-title" data-i18n="page.onboarding.welcome.title"></h3>
-                        <p class="state-copy" data-i18n="page.onboarding.welcome.text"></p>
-                        <div class="onboarding-actions">
-                            <button id="onboardingWelcomePrimary" class="ui-btn ui-btn--primary state-cta" type="button" data-i18n="page.onboarding.welcome.primary"></button>
-                            <button id="onboardingWelcomeSkip" class="onboarding-secondary" type="button" data-i18n="page.onboarding.welcome.skip"></button>
+                        <div id="onboardingImportOffer">
+                            <p class="onboarding-kicker" data-i18n="page.onboarding.importOffer.kicker"></p>
+                            <h3 class="state-title" data-i18n="page.onboarding.importOffer.title"></h3>
+                            <p class="state-copy" data-i18n="page.onboarding.importOffer.text"></p>
+                            <div class="onboarding-actions">
+                                <button id="onboardingImportPrimary" class="ui-btn ui-btn--primary state-cta" type="button" data-i18n="page.onboarding.importOffer.primary"></button>
+                                <button id="onboardingImportSkip" class="onboarding-secondary" type="button" data-i18n="page.onboarding.importOffer.skip"></button>
+                            </div>
+                            <p class="state-copy" data-i18n="page.onboarding.importOffer.later"></p>
+                        </div>
+                        <div id="onboardingFirstChart" class="onboarding-hidden">
+                            <p class="onboarding-kicker" data-i18n="page.onboarding.welcome.kicker"></p>
+                            <h3 class="state-title" data-i18n="page.onboarding.welcome.title"></h3>
+                            <p class="state-copy" data-i18n="page.onboarding.welcome.text"></p>
+                            <div class="onboarding-actions">
+                                <button id="onboardingWelcomePrimary" class="ui-btn ui-btn--primary state-cta" type="button" data-i18n="page.onboarding.welcome.primary"></button>
+                                <button id="onboardingWelcomeSkip" class="onboarding-secondary" type="button" data-i18n="page.onboarding.welcome.skip"></button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -528,9 +540,9 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=d125a65e53d7"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=51ad9e10b694"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=d125a65e53d7"></script>
-    <script src="js/app-nav.js?v=d125a65e53d7"></script>
+    <script src="js/analytics.js?v=51ad9e10b694"></script>
+    <script src="js/app-nav.js?v=51ad9e10b694"></script>
 </body>
 </html>

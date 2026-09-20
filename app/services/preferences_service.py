@@ -107,6 +107,7 @@ def build_default_preferences(default_house_system: str = 'P') -> Dict[str, Any]
             'started_at': None,
             'dismissed_at': None,
             'completed_at': None,
+            'import_offer': 'not_seen',
         },
     }
 

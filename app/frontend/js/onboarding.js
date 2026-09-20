@@ -24,6 +24,7 @@
             started_at: null,
             dismissed_at: null,
             completed_at: null,
+            import_offer: 'not_seen',
         };
     }
 
@@ -37,6 +38,9 @@
             ? input.status
             : 'not_started';
         const completed = new Set(Array.isArray(input.completed_steps) ? input.completed_steps : []);
+        const importOffer = ['not_seen', 'skipped', 'started', 'completed'].includes(input.import_offer)
+            ? input.import_offer
+            : 'not_seen';
         return {
             version: VERSION,
             status,
@@ -44,6 +48,7 @@
             started_at: input.started_at || null,
             dismissed_at: input.dismissed_at || null,
             completed_at: input.completed_at || null,
+            import_offer: importOffer,
         };
     }
 
@@ -312,6 +317,57 @@
         return snapshot();
     }
 
+    async function setImportOffer(value, source = 'onboarding') {
+        if (!['not_seen', 'skipped', 'started', 'completed'].includes(value)) return snapshot();
+        if (!initialized) {
+            try {
+                const preferences = await root.AstroAPI?.getAccountPreferences?.();
+                state = normalizeState(preferences?.onboarding);
+                initialized = true;
+            } catch (_error) {
+                // Keep the local default and persist when the API becomes available.
+            }
+        }
+        if (state.import_offer === value) return snapshot();
+        state = normalizeState({ ...state, import_offer: value });
+        track('onboarding_control_used', { control: 'chart_import_offer', value, source });
+        announce();
+        await persist();
+        return snapshot();
+    }
+
+    async function recordImportedChart(source = 'chart_import') {
+        if (!initialized) {
+            try {
+                const preferences = await root.AstroAPI?.getAccountPreferences?.();
+                state = normalizeState(preferences?.onboarding);
+                initialized = true;
+            } catch (_error) {
+                // Keep the local default and persist when the API becomes available.
+            }
+        }
+        const cameFromOnboarding = state.import_offer === 'started';
+        const alreadyCompletedStep = state.completed_steps.includes('profile_chart');
+        const shouldCompleteStep = !TERMINAL_STATUSES.has(state.status)
+            && (eligible || state.status === 'active' || cameFromOnboarding);
+        state = normalizeState({
+            ...state,
+            status: shouldCompleteStep ? 'active' : state.status,
+            started_at: shouldCompleteStep ? (state.started_at || nowIso()) : state.started_at,
+            completed_steps: shouldCompleteStep
+                ? [...new Set([...state.completed_steps, 'profile_chart'])]
+                : state.completed_steps,
+            import_offer: 'completed',
+        });
+        track('onboarding_control_used', { control: 'chart_import_offer', value: 'completed', source });
+        if (shouldCompleteStep && !alreadyCompletedStep) {
+            track('onboarding_step_completed', { step: 'profile_chart', source });
+        }
+        announce();
+        await persist();
+        return snapshot();
+    }
+
     async function reset() {
         if (!context) {
             context = {
@@ -340,6 +396,8 @@
         init,
         start,
         completeStep,
+        setImportOffer,
+        recordImportedChart,
         dismiss,
         reset,
         trackLearning,

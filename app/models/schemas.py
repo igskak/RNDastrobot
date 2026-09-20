@@ -654,6 +654,7 @@ class ErrorResponse(BaseModel):
 
 OnboardingStatus = Literal['not_started', 'active', 'dismissed', 'completed']
 OnboardingStep = Literal['profile_chart', 'forecast_ready', 'assistant_answer']
+OnboardingImportOffer = Literal['not_seen', 'skipped', 'started', 'completed']
 ONBOARDING_STEP_ORDER = ('profile_chart', 'forecast_ready', 'assistant_answer')
 
 
@@ -665,6 +666,7 @@ class OnboardingPreferences(BaseModel):
     started_at: Optional[datetime] = None
     dismissed_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    import_offer: OnboardingImportOffer = 'not_seen'
 
     @field_validator('completed_steps')
     @classmethod

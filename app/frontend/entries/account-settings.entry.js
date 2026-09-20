@@ -5,6 +5,7 @@ import '../js/api.js';
 import '../js/preferences.js';
 import '../js/account-settings-model.js';
 import '../js/onboarding.js';
+import '../js/chart-import.js';
 import '../js/symbols.js';
 import '../js/planet-svg-icons.js';
 import '../js/account-settings.js';

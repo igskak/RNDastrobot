@@ -33,6 +33,12 @@ class SpecialPointsService:
 
         return cls._proserpina_ephemeris
 
+    @classmethod
+    def has_proserpina_for_year(cls, year: int) -> bool:
+        """Return whether interpolation has both endpoints for a calendar year."""
+        ephemeris = cls._load_proserpina_ephemeris()
+        return str(year) in ephemeris and str(year + 1) in ephemeris
+
     @staticmethod
     def calculate_proserpina(jd: float) -> float:
         """
@@ -274,4 +280,3 @@ class SpecialPointsService:
             'FateCross1': normalize_longitude(north_node_lon + 90),
             'FateCross2': normalize_longitude(north_node_lon + 270),
         }
-

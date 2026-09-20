@@ -37,7 +37,7 @@
     let accountPreferences = null;
     let persistedMethodologyBaseline = null;
     let formBaseline = null;
-    let activeSettingsTab = 'chart';
+    let activeSettingsTab = new URLSearchParams(window.location.search).get('tab') || 'chart';
     let preferencesMetadata = null;
     let toastTimer = null;
     let pollTimer = null;
@@ -1398,6 +1398,10 @@
             panel.hidden = !isActive;
             panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
         });
+        const url = new URL(window.location.href);
+        if (tabId === 'chart') url.searchParams.delete('tab');
+        else url.searchParams.set('tab', tabId);
+        window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
     }
 
     // Dirty-state save bar: compare the live form against the clean baseline

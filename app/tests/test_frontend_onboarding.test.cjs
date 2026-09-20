@@ -170,3 +170,51 @@ test('learning analytics deduplicate milestones without storing PII', async () =
     assert.equal(harness.onboarding.trackLearning('unknown_event', {}), false);
     assert.equal(harness.events.filter((event) => event.name === 'onboarding_control_used').length, 1);
 });
+
+test('skipping the import offer keeps the rest of onboarding active', async () => {
+    const { onboarding, patches } = createHarness();
+    await onboarding.init({
+        astrologer: { id: 'a', plan_code: 'trial', created_at: '2026-07-10T00:00:00Z' },
+        charts: [],
+        surface: 'clients',
+    });
+    const state = await onboarding.setImportOffer('skipped', 'test');
+    assert.equal(state.import_offer, 'skipped');
+    assert.notEqual(state.status, 'dismissed');
+    assert.equal(patches.at(-1).onboarding.import_offer, 'skipped');
+});
+
+test('successful import resumes onboarding journey and completes first chart step', async () => {
+    const { onboarding, patches } = createHarness({
+        preferences: {
+            onboarding: {
+                version: 1,
+                status: 'not_started',
+                completed_steps: [],
+                import_offer: 'started',
+            },
+        },
+    });
+    const state = await onboarding.recordImportedChart('test');
+    assert.equal(state.status, 'active');
+    assert.equal(state.import_offer, 'completed');
+    assert.deepEqual(Array.from(state.completed_steps), ['profile_chart']);
+    assert.equal(patches.at(-1).onboarding.import_offer, 'completed');
+});
+
+test('settings import does not reactivate dismissed onboarding', async () => {
+    const { onboarding } = createHarness({
+        preferences: {
+            onboarding: {
+                version: 1,
+                status: 'dismissed',
+                completed_steps: [],
+                import_offer: 'skipped',
+            },
+        },
+    });
+    const state = await onboarding.recordImportedChart('test');
+    assert.equal(state.status, 'dismissed');
+    assert.equal(state.import_offer, 'completed');
+    assert.deepEqual(Array.from(state.completed_steps), []);
+});

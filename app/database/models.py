@@ -141,6 +141,74 @@ class Person(Base):
     )
 
 
+class ChartImportBatch(Base):
+    """Short-lived, owner-scoped preview and progress for a chart import."""
+    __tablename__ = 'chart_import_batches'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    source_format = Column(String(16), nullable=False)
+    parser_version = Column(Integer, nullable=False, default=1, server_default='1')
+    file_digest = Column(String(64), nullable=False)
+    original_filename = Column(String(255), nullable=False)
+    source_encoding = Column(String(32), nullable=False)
+    status = Column(String(24), nullable=False, default='preview', server_default='preview')
+    configuration = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    destination_person_id = Column(UUID(as_uuid=True), ForeignKey('persons.person_id', ondelete='SET NULL'))
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+
+    items = relationship(
+        "ChartImportItem",
+        back_populates="batch",
+        cascade="all, delete-orphan",
+        order_by="ChartImportItem.source_index",
+    )
+
+    __table_args__ = (
+        CheckConstraint("source_format IN ('zet', 'aaf')", name='valid_chart_import_format'),
+        CheckConstraint(
+            "status IN ('preview', 'confirmed', 'processing', 'paused', 'completed', 'expired')",
+            name='valid_chart_import_batch_status',
+        ),
+        Index('idx_chart_import_batches_owner_updated', 'astrologer_id', 'updated_at'),
+        Index('idx_chart_import_batches_expires', 'expires_at'),
+    )
+
+
+class ChartImportItem(Base):
+    """One normalized source record and its idempotent import receipt."""
+    __tablename__ = 'chart_import_items'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    batch_id = Column(UUID(as_uuid=True), ForeignKey('chart_import_batches.id', ondelete='CASCADE'), nullable=False)
+    source_index = Column(Integer, nullable=False)
+    source_line = Column(Integer, nullable=False)
+    fingerprint = Column(String(64))
+    normalized_payload = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    issues = Column(JSONB, nullable=False, default=list, server_default='[]')
+    status = Column(String(24), nullable=False, default='ready', server_default='ready')
+    selected = Column(Boolean, nullable=False, default=False, server_default='false')
+    resulting_chart_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='SET NULL'))
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    batch = relationship("ChartImportBatch", back_populates="items")
+
+    __table_args__ = (
+        UniqueConstraint('batch_id', 'source_index', name='uq_chart_import_item_source'),
+        CheckConstraint(
+            "status IN ('ready', 'warning', 'error', 'possible_duplicate', "
+            "'already_imported', 'selected', 'importing', 'imported', 'failed', 'skipped')",
+            name='valid_chart_import_item_status',
+        ),
+        Index('idx_chart_import_items_batch_status', 'batch_id', 'status'),
+        Index('idx_chart_import_items_fingerprint', 'fingerprint'),
+        Index('idx_chart_import_items_result', 'resulting_chart_id'),
+    )
+
+
 class ClientRelationship(Base):
     """Directed link between one client and another client for repeat synastry work."""
     __tablename__ = 'client_relationships'

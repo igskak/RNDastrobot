@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=3ffc46ca481b">
-    <link rel="stylesheet" href="css/app-nav.css?v=3ffc46ca481b">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=a60beac82963">
+    <link rel="stylesheet" href="css/app-nav.css?v=a60beac82963">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '3ffc46ca481b';</script>
+    <script>window.__APP_BUILD_ID__ = 'a60beac82963';</script>
 </head>
 <body class="account-settings-page workspace-compact" data-defer-loader>
     <div class="page-loader" id="pageLoader">
@@ -34,6 +34,7 @@
         <nav class="account-settings-tabs" role="tablist" data-i18n-aria-label="page.accountSettings.tabs.ariaLabel">
             <button type="button" class="account-settings-tab is-active" id="accountSettingsTabChart" data-settings-tab="chart" role="tab" aria-selected="true" aria-controls="accountSettingsPanelChart" tabindex="0" data-i18n="page.accountSettings.tabs.chart"></button>
             <button type="button" class="account-settings-tab" id="accountSettingsTabFormats" data-settings-tab="formats" role="tab" aria-selected="false" aria-controls="accountSettingsPanelFormats" tabindex="-1" data-i18n="page.accountSettings.tabs.formats"></button>
+            <button type="button" class="account-settings-tab" id="accountSettingsTabImport" data-settings-tab="import" role="tab" aria-selected="false" aria-controls="accountSettingsPanelImport" tabindex="-1" data-i18n="page.accountSettings.tabs.import"></button>
             <button type="button" class="account-settings-tab" id="accountSettingsTabBilling" data-settings-tab="billing" role="tab" aria-selected="false" aria-controls="accountSettingsPanelBilling" tabindex="-1" data-i18n="page.accountSettings.tabs.billing" hidden></button>
             <button type="button" class="account-settings-tab" id="accountSettingsTabAccount" data-settings-tab="account" role="tab" aria-selected="false" aria-controls="accountSettingsPanelAccount" tabindex="-1" data-i18n="page.accountSettings.tabs.account"></button>
         </nav>
@@ -587,6 +588,125 @@
                 </section>
             </section>
 
+            <!-- ============ Импорт карт ============ -->
+            <section class="account-settings-panel hidden" id="accountSettingsPanelImport" data-settings-panel="import" role="tabpanel" aria-labelledby="accountSettingsTabImport" hidden>
+                <section class="account-settings-card chart-import" id="chartImportRoot">
+                    <div class="account-settings-card-head account-settings-card-head--compact">
+                        <div>
+                            <h2 class="account-settings-section-title" data-i18n="page.accountSettings.import.title"></h2>
+                            <p class="account-settings-section-copy" data-i18n="page.accountSettings.import.subtitle"></p>
+                        </div>
+                    </div>
+
+                    <ol class="chart-import-steps" aria-label="" data-i18n-aria-label="page.accountSettings.import.steps.ariaLabel">
+                        <li class="is-active" data-import-step-indicator="file"><span>1</span><span data-i18n="page.accountSettings.import.steps.file"></span></li>
+                        <li data-import-step-indicator="review"><span>2</span><span data-i18n="page.accountSettings.import.steps.review"></span></li>
+                        <li data-import-step-indicator="save"><span>3</span><span data-i18n="page.accountSettings.import.steps.save"></span></li>
+                    </ol>
+
+                    <div id="chartImportError" class="chart-import-error hidden" role="alert" tabindex="-1"></div>
+                    <div id="chartImportStatus" class="chart-import-status" role="status" aria-live="polite"></div>
+
+                    <section data-import-step="file">
+                        <label id="chartImportDropzone" class="chart-import-dropzone" for="chartImportFile">
+                            <span class="chart-import-dropzone-title" data-i18n="page.accountSettings.import.file.title"></span>
+                            <span class="chart-import-dropzone-copy" data-i18n="page.accountSettings.import.file.copy"></span>
+                            <span class="ui-btn ui-btn--secondary" data-i18n="page.accountSettings.import.file.choose"></span>
+                            <input id="chartImportFile" type="file" accept=".zbs,.aaf,.txt" hidden>
+                        </label>
+                        <p class="chart-import-help" data-i18n="page.accountSettings.import.file.supported"></p>
+                        <details class="chart-import-help-details">
+                            <summary data-i18n="page.accountSettings.import.file.instructionsTitle"></summary>
+                            <p data-i18n="page.accountSettings.import.file.instructions"></p>
+                        </details>
+                        <div id="chartImportRecent" class="chart-import-recent hidden">
+                            <h3 data-i18n="page.accountSettings.import.recent.title"></h3>
+                            <div id="chartImportRecentList"></div>
+                        </div>
+                    </section>
+
+                    <section class="hidden" data-import-step="review">
+                        <div id="chartImportSummary" class="chart-import-summary"></div>
+                        <div class="chart-import-table-wrap">
+                            <table class="chart-import-table">
+                                <thead><tr>
+                                    <th><span class="sr-only" data-i18n="page.accountSettings.import.review.select"></span></th>
+                                    <th data-i18n="page.accountSettings.import.review.chart"></th>
+                                    <th data-i18n="page.accountSettings.import.review.localTime"></th>
+                                    <th data-i18n="page.accountSettings.import.review.place"></th>
+                                    <th data-i18n="page.accountSettings.import.review.status"></th>
+                                </tr></thead>
+                                <tbody id="chartImportRows"></tbody>
+                            </table>
+                        </div>
+                        <div class="chart-import-actions">
+                            <button type="button" class="ui-btn ui-btn--ghost" data-import-back data-i18n="common.back"></button>
+                            <button type="button" class="ui-btn ui-btn--primary" id="chartImportReviewContinue" data-i18n="page.accountSettings.import.review.continue"></button>
+                        </div>
+                    </section>
+
+                    <section class="hidden" data-import-step="save">
+                        <fieldset class="chart-import-fieldset">
+                            <legend data-i18n="page.accountSettings.import.destination.title"></legend>
+                            <label class="chart-import-choice">
+                                <input type="radio" name="chartImportPlacement" value="library" checked>
+                                <span><strong data-i18n="page.accountSettings.import.destination.libraryTitle"></strong><small data-i18n="page.accountSettings.import.destination.libraryCopy"></small></span>
+                            </label>
+                            <label class="chart-import-choice">
+                                <input type="radio" name="chartImportPlacement" value="profile">
+                                <span><strong data-i18n="page.accountSettings.import.destination.profileTitle"></strong><small data-i18n="page.accountSettings.import.destination.profileCopy"></small></span>
+                            </label>
+                        </fieldset>
+
+                        <div id="chartImportProfileFields" class="chart-import-fields hidden">
+                            <label for="chartImportProfileSelect" data-i18n="page.accountSettings.import.destination.chooseProfile"></label>
+                            <select id="chartImportProfileSelect" class="account-settings-select"><option value="new" data-i18n="page.accountSettings.import.destination.newProfile"></option></select>
+                            <div id="chartImportNewProfileField">
+                                <label for="chartImportProfileName" data-i18n="page.accountSettings.import.destination.profileName"></label>
+                                <input id="chartImportProfileName" class="chart-import-input" maxlength="200">
+                            </div>
+                        </div>
+
+                        <div class="chart-import-fields">
+                            <label for="chartImportTags" data-i18n="page.accountSettings.import.destination.tags"></label>
+                            <input id="chartImportTags" class="chart-import-input" data-i18n-placeholder="page.accountSettings.import.destination.tagsPlaceholder">
+                            <p data-i18n="page.accountSettings.import.destination.tagsHelp"></p>
+                        </div>
+
+                        <div class="chart-import-calculation">
+                            <p data-i18n="page.accountSettings.import.destination.calculation"></p>
+                            <label for="chartImportHouseSystem" data-i18n="page.accountSettings.creation.houseSystem"></label>
+                            <select id="chartImportHouseSystem" class="account-settings-select account-settings-select--compact">
+                                <option value="P" data-i18n="astro.houseSystem.placidus"></option>
+                                <option value="K" data-i18n="astro.houseSystem.koch"></option>
+                                <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
+                                <option value="E" data-i18n="astro.houseSystem.equal"></option>
+                                <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
+                                <option value="C" data-i18n="astro.houseSystem.campanus"></option>
+                            </select>
+                        </div>
+
+                        <div id="chartImportFinalSummary" class="chart-import-final-summary"></div>
+                        <div id="chartImportProgress" class="chart-import-progress hidden">
+                            <div><span id="chartImportProgressText"></span><span id="chartImportProgressCount"></span></div>
+                            <progress id="chartImportProgressBar" max="1" value="0"></progress>
+                        </div>
+                        <div class="chart-import-actions">
+                            <button type="button" class="ui-btn ui-btn--ghost" data-import-back-review data-i18n="common.back"></button>
+                            <button type="button" class="ui-btn ui-btn--secondary hidden" id="chartImportPause" data-i18n="page.accountSettings.import.actions.pause"></button>
+                            <button type="button" class="ui-btn ui-btn--primary" id="chartImportStart"></button>
+                        </div>
+                    </section>
+
+                    <section class="chart-import-result hidden" id="chartImportResult" tabindex="-1">
+                        <h3 data-i18n="page.accountSettings.import.result.title"></h3>
+                        <p id="chartImportResultCopy"></p>
+                        <a class="ui-btn ui-btn--primary" href="/clients.html" data-i18n="page.accountSettings.import.result.library"></a>
+                        <button type="button" class="ui-btn ui-btn--secondary" id="chartImportAgain" data-i18n="page.accountSettings.import.result.again"></button>
+                    </section>
+                </section>
+            </section>
+
             <!-- ============ Tab 3 · Оплата и план ============ -->
             <section class="account-settings-panel hidden" id="accountSettingsPanelBilling" data-settings-panel="billing" role="tabpanel" aria-labelledby="accountSettingsTabBilling" hidden>
                 <section class="account-plan-card" id="accountPlanCard" aria-labelledby="accountPlanTitle">
@@ -664,9 +784,9 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=3ffc46ca481b"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=a60beac82963"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=3ffc46ca481b"></script>
-    <script src="js/app-nav.js?v=3ffc46ca481b"></script>
+    <script src="js/analytics.js?v=a60beac82963"></script>
+    <script src="js/app-nav.js?v=a60beac82963"></script>
 </body>
 </html>

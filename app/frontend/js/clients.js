@@ -191,6 +191,10 @@ function cacheElements() {
     refs.loading = document.getElementById('loading');
     refs.emptyState = document.getElementById('emptyState');
     refs.onboardingWelcome = document.getElementById('onboardingWelcome');
+    refs.onboardingImportOffer = document.getElementById('onboardingImportOffer');
+    refs.onboardingImportPrimary = document.getElementById('onboardingImportPrimary');
+    refs.onboardingImportSkip = document.getElementById('onboardingImportSkip');
+    refs.onboardingFirstChart = document.getElementById('onboardingFirstChart');
     refs.onboardingWelcomePrimary = document.getElementById('onboardingWelcomePrimary');
     refs.onboardingWelcomeSkip = document.getElementById('onboardingWelcomeSkip');
     refs.noResultsState = document.getElementById('noResultsState');
@@ -499,6 +503,13 @@ function bindEvents() {
     refs.onboardingWelcomeSkip?.addEventListener('click', () => {
         window.AstroOnboarding?.dismiss?.('clients_welcome');
     });
+    refs.onboardingImportPrimary?.addEventListener('click', async () => {
+        await window.AstroOnboarding?.setImportOffer?.('started', 'clients_welcome');
+        window.location.href = '/account-settings.html?tab=import';
+    });
+    refs.onboardingImportSkip?.addEventListener('click', async () => {
+        await window.AstroOnboarding?.setImportOffer?.('skipped', 'clients_welcome');
+    });
     document.addEventListener('steliara:onboarding-state-changed', (event) => {
         renderClientsOnboarding(event.detail);
     });
@@ -607,6 +618,9 @@ function renderClientsOnboarding(onboardingState = window.AstroOnboarding?.getSt
     const showWelcome = onboardingState.eligible && state.charts.length === 0
         && !['dismissed', 'completed'].includes(onboardingState.status);
     refs.onboardingWelcome?.classList.toggle('onboarding-hidden', !showWelcome);
+    const showImportOffer = showWelcome && onboardingState.import_offer === 'not_seen';
+    refs.onboardingImportOffer?.classList.toggle('onboarding-hidden', !showImportOffer);
+    refs.onboardingFirstChart?.classList.toggle('onboarding-hidden', !showWelcome || showImportOffer);
     Array.from(refs.emptyState.children).forEach((child) => {
         if (child !== refs.onboardingWelcome) child.classList.toggle('onboarding-hidden', showWelcome);
     });

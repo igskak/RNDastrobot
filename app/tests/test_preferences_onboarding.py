@@ -60,7 +60,23 @@ def test_default_account_preferences_include_onboarding_state():
         'started_at': None,
         'dismissed_at': None,
         'completed_at': None,
+        'import_offer': 'not_seen',
     }
+
+
+def test_import_offer_can_be_skipped_without_dismissing_onboarding():
+    service, record, astrologer = _service_and_record()
+    payload = service.patch_account_preferences(astrologer, {
+        'onboarding': {
+            'version': 1,
+            'status': 'active',
+            'completed_steps': [],
+            'import_offer': 'skipped',
+        },
+    })
+    assert payload['onboarding']['status'] == 'active'
+    assert payload['onboarding']['import_offer'] == 'skipped'
+    assert record.onboarding['import_offer'] == 'skipped'
 
 
 def test_patch_account_preferences_persists_onboarding_without_touching_other_defaults():
@@ -107,4 +123,3 @@ def test_onboarding_migration_adds_non_null_jsonb_default():
     migration = Path('app/database/migrations/051_add_onboarding_preferences.sql').read_text()
     assert 'ADD COLUMN IF NOT EXISTS onboarding JSONB NOT NULL' in migration
     assert "DEFAULT '{}'::jsonb" in migration
-

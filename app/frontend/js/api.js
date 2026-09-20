@@ -661,6 +661,78 @@
         return response.json();
     }
 
+    async function listPeople(options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/persons`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load profiles'));
+        return response.json();
+    }
+
+    async function listChartImports(options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/chart-imports`, {
+            method: 'GET', headers: withLocaleHeaders(), signal: options.signal,
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load imports'));
+        return response.json();
+    }
+
+    async function previewChartImport(file, options = {}) {
+        const form = new FormData();
+        form.append('file', file);
+        const response = await apiFetch(`${API_BASE_URL}/chart-imports/preview`, {
+            method: 'POST', body: form, headers: withLocaleHeaders(), signal: options.signal,
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response, 'common.error', 'Failed to read the file'));
+        return response.json();
+    }
+
+    async function getChartImport(batchId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/chart-imports/${encodeURIComponent(batchId)}`, {
+            method: 'GET', headers: withLocaleHeaders(), signal: options.signal,
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load import'));
+        return response.json();
+    }
+
+    async function getChartImportItems(batchId, offset = 0, limit = 100, options = {}) {
+        const query = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+        const response = await apiFetch(`${API_BASE_URL}/chart-imports/${encodeURIComponent(batchId)}/items?${query}`, {
+            method: 'GET', headers: withLocaleHeaders(), signal: options.signal,
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load import records'));
+        return response.json();
+    }
+
+    async function confirmChartImport(batchId, payload, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/chart-imports/${encodeURIComponent(batchId)}/confirm`, {
+            method: 'POST',
+            headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(payload),
+            signal: options.signal,
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response, 'common.error', 'Failed to confirm import'));
+        return response.json();
+    }
+
+    async function commitChartImportItem(batchId, itemId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/chart-imports/${encodeURIComponent(batchId)}/items/${encodeURIComponent(itemId)}/commit`, {
+            method: 'POST', headers: withLocaleHeaders(), signal: options.signal,
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response, 'common.error', 'Failed to save chart'));
+        return response.json();
+    }
+
+    async function pauseChartImport(batchId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/chart-imports/${encodeURIComponent(batchId)}/pause`, {
+            method: 'POST', headers: withLocaleHeaders(), signal: options.signal,
+        });
+        if (!response.ok) throw new Error(await readErrorMessage(response, 'common.error', 'Failed to pause import'));
+        return response.json();
+    }
+
     async function getPreferencesMetadata(options = {}) {
         return cachedRead('preferences:metadata', options, async () => {
             const response = await apiFetch(`${API_BASE_URL}/preferences/metadata`, {
@@ -1309,6 +1381,14 @@
         reverseGeocode,
         getAccountPreferences,
         patchAccountPreferences,
+        listPeople,
+        listChartImports,
+        previewChartImport,
+        getChartImport,
+        getChartImportItems,
+        confirmChartImport,
+        commitChartImportItem,
+        pauseChartImport,
         getPreferencesMetadata,
         createPreferenceRecalcJob,
         getPreferenceRecalcJob,
