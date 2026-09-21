@@ -853,9 +853,13 @@
         "steps": { "ariaLabel": "Chart import steps", "file": "File", "review": "Review", "save": "Save" },
         "file": {
           "title": "Drop a file here", "copy": "or choose it from your computer", "choose": "Choose file",
-          "supported": "Supports ZET (.zbs) and AAF (.aaf or .txt), up to 5 MiB and 2,000 records.",
+          "supported": "Supports ZET (.zbs), Astro.com / AAF (.aaf), Solar Fire and Astro Gold (.SFcht), Astrolog (.as), and Solar Fire text (.txt). Up to 5 MiB and 2,000 records.",
           "instructionsTitle": "How do I export my charts?",
-          "instructions": "In ZET, export the database as a .zbs file. On Astro.com, open your stored data list, select “aaf”, and save the resulting text as an .aaf or .txt file.",
+          "zetInstructions": "ZET: export the database as a .zbs file.",
+          "astroInstructions": "Astro.com: select “aaf” in your stored data and save the text as .aaf or .txt.",
+          "solarInstructions": "Solar Fire or Astro Gold: save your .SFcht chart file and upload it directly.",
+          "solarTextInstructions": "Solar Fire without .SFcht: open the chart database → Send/Add → Email All Charts → Text File. Upload the resulting charts.txt.",
+          "astrologInstructions": "Astrolog: File → Other Formats → Save Chart List (.as). An individual saved .as chart also works.",
           "reading": "Reading and checking the file…"
         },
         "review": {
@@ -890,7 +894,19 @@
           "ALREADY_IMPORTED": "Already imported", "POSSIBLE_DUPLICATE_IN_FILE": "Possible duplicate in the file", "POSSIBLE_DUPLICATE_IN_LIBRARY": "A similar chart already exists in the library", "ZET_NOT_ENOUGH_FIELDS": "The record is missing data",
           "INVALID_UTC_OFFSET": "The difference from world time could not be read", "INVALID_COORDINATE": "The coordinates could not be read",
           "AAF_REQUIRED_FIELDS_MISSING": "The AAF record is missing required data", "AAF_JULIAN_CALENDAR_UNSUPPORTED": "Julian calendar dates are not supported yet", "AAF_JULIAN_DAY_CONFLICT": "The AAF date and time conflict with its calculation instant",
-          "AAF_TIME_TYPE_UNSUPPORTED": "This AAF time type is not supported yet", "AAF_CHART_TYPE_UNSUPPORTED": "This AAF chart type is not supported yet", "UNSUPPORTED_AAF_TIMEZONE": "The AAF time could not be read unambiguously", "unknown": "This record needs review"
+          "AAF_TIME_TYPE_UNSUPPORTED": "This AAF time type is not supported yet", "AAF_CHART_TYPE_UNSUPPORTED": "This AAF chart type is not supported yet", "UNSUPPORTED_AAF_TIMEZONE": "The AAF time could not be read unambiguously",
+          "SFCHT_SUBCHARTS_NOT_IMPORTED": "Subsidiary charts inside this record will not be moved; the main chart will be saved",
+          "SOURCE_CALCULATION_SETTINGS_NOT_IMPORTED": "Source calculation settings are not moved; this chart will be recalculated with your chosen settings",
+          "INVALID_SFCHT_RECORD": "This Solar Fire chart could not be read",
+          "HISTORICAL_CALENDAR_UNSUPPORTED": "The calendar cannot be determined safely for dates before 15 October 1582",
+          "ASTROLOG_REQUIRED_FIELDS_MISSING": "The Astrolog record is missing required data",
+          "ASTROLOG_TIME_UNSUPPORTED": "The Astrolog time could not be read unambiguously",
+          "ASTROLOG_TIMEZONE_UNSUPPORTED": "The Astrolog time zone could not be read unambiguously",
+          "ASTROLOG_DAYLIGHT_UNSUPPORTED": "The Astrolog daylight setting could not be read unambiguously",
+          "INVALID_ASTROLOG_RECORD": "The Astrolog record could not be read",
+          "SOLAR_FIRE_REQUIRED_FIELDS_MISSING": "The Solar Fire text record is missing required data",
+          "SOLAR_FIRE_CHART_TYPE_UNSUPPORTED": "This Solar Fire chart type is not supported yet",
+          "INVALID_SOLAR_FIRE_RECORD": "The Solar Fire text record could not be read", "unknown": "This record needs review"
         },
         "errors": { "read": "The file could not be read.", "load": "The import could not be loaded.", "save": "The import could not be completed.", "profileName": "Enter a name for the new profile." }
       },

@@ -81,9 +81,8 @@
     }
 
     function statusLabel(item) {
-        const issue = (item.issues || []).find((entry) => entry.severity === 'error')
-            || (item.issues || [])[0];
-        if (issue) return issueLabel(issue);
+        const issues = item.issues || [];
+        if (issues.length) return issues.map(issueLabel).join(' · ');
         return t(`page.accountSettings.import.status.${item.status}`);
     }
 

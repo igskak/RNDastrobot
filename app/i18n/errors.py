@@ -186,6 +186,69 @@ ERROR_MESSAGES: dict[str, dict[str, str]] = {
         "ru": "Текстовый файл не содержит записей AAF.",
         "de": "Die Textdatei enthält keine AAF-Einträge.",
     },
+    "UNSUPPORTED_SFCHT_VERSION": {
+        "en": (
+            "This Solar Fire or Astro Gold file version is not supported. "
+            "Export a text chart list instead."
+        ),
+        "uk": (
+            "Цю версію файла Solar Fire або Astro Gold не підтримано. "
+            "Експортуйте текстовий список карт."
+        ),
+        "ru": (
+            "Эта версия файла Solar Fire или Astro Gold не поддерживается. "
+            "Экспортируйте текстовый список карт."
+        ),
+        "de": (
+            "Diese Solar-Fire- oder Astro-Gold-Dateiversion wird nicht "
+            "unterstützt. Exportieren Sie eine Texthoroskopliste."
+        ),
+    },
+    "INVALID_SFCHT_FILE": {
+        "en": "The Solar Fire or Astro Gold file is damaged or incomplete.",
+        "uk": "Файл Solar Fire або Astro Gold пошкоджений або неповний.",
+        "ru": "Файл Solar Fire или Astro Gold повреждён или неполон.",
+        "de": (
+            "Die Solar-Fire- oder Astro-Gold-Datei ist beschädigt "
+            "oder unvollständig."
+        ),
+    },
+    "NOT_AN_ASTROLOG_FILE": {
+        "en": "This is not an Astrolog chart-info or chart-list file.",
+        "uk": "Це не файл карти чи списку карт Astrolog.",
+        "ru": "Это не файл карты или списка карт Astrolog.",
+        "de": "Dies ist keine Astrolog-Horoskop- oder Horoskoplistendatei.",
+    },
+    "ASTROLOG_UNSUPPORTED_SWITCH": {
+        "en": (
+            "The Astrolog file contains settings that could change chart "
+            "data. Export the chart list or AAF instead."
+        ),
+        "uk": (
+            "Файл Astrolog містить налаштування, що можуть змінити дані "
+            "карт. Експортуйте список карт або AAF."
+        ),
+        "ru": (
+            "В файле Astrolog есть настройки, которые могут изменить "
+            "данные карт. Экспортируйте список карт или AAF."
+        ),
+        "de": (
+            "Die Astrolog-Datei enthält Einstellungen, die Horoskopdaten "
+            "ändern können. Exportieren Sie die Horoskopliste oder AAF."
+        ),
+    },
+    "NOT_A_SOLAR_FIRE_TEXT_FILE": {
+        "en": (
+            "The text file is neither AAF nor a Solar Fire "
+            "chart-details export."
+        ),
+        "uk": "Цей текстовий файл не є експортом AAF або Solar Fire.",
+        "ru": "Этот текстовый файл не похож на экспорт AAF или Solar Fire.",
+        "de": (
+            "Die Textdatei ist weder ein AAF- noch ein "
+            "Solar-Fire-Horoskopexport."
+        ),
+    },
     "IMPORT_PARSE_FAILED": {
         "en": "The file could not be read.",
         "uk": "Не вдалося прочитати файл.",

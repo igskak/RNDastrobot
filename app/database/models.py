@@ -167,7 +167,7 @@ class ChartImportBatch(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("source_format IN ('zet', 'aaf')", name='valid_chart_import_format'),
+        CheckConstraint("source_format IN ('zet', 'aaf', 'sfcht', 'astrolog', 'solar_fire')", name='valid_chart_import_format'),
         CheckConstraint(
             "status IN ('preview', 'confirmed', 'processing', 'paused', 'completed', 'expired')",
             name='valid_chart_import_batch_status',

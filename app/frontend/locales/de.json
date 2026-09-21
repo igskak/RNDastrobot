@@ -853,9 +853,13 @@
         "steps": { "ariaLabel": "Schritte des Horoskopimports", "file": "Datei", "review": "Prüfung", "save": "Speichern" },
         "file": {
           "title": "Datei hier ablegen", "copy": "oder vom Computer auswählen", "choose": "Datei auswählen",
-          "supported": "Unterstützt werden ZET (.zbs) und AAF (.aaf oder .txt), bis 5 MiB und 2.000 Einträge.",
+          "supported": "Unterstützt werden ZET (.zbs), Astro.com / AAF (.aaf), Solar Fire und Astro Gold (.SFcht), Astrolog (.as) sowie Solar-Fire-Text (.txt). Bis 5 MiB und 2.000 Einträge.",
           "instructionsTitle": "Wie exportiere ich meine Horoskope?",
-          "instructions": "Exportieren Sie in ZET die Datenbank als .zbs-Datei. Öffnen Sie bei Astro.com die Liste gespeicherter Daten, wählen Sie „aaf“ und speichern Sie den Text als .aaf- oder .txt-Datei.",
+          "zetInstructions": "ZET: Exportieren Sie die Datenbank als .zbs-Datei.",
+          "astroInstructions": "Astro.com: Wählen Sie bei gespeicherten Daten „aaf“ und speichern Sie den Text als .aaf oder .txt.",
+          "solarInstructions": "Solar Fire oder Astro Gold: Speichern Sie die Horoskopdatei .SFcht und laden Sie sie direkt hoch.",
+          "solarTextInstructions": "Solar Fire ohne .SFcht: Horoskopdatenbank öffnen → Send/Add → Email All Charts → Text File. Laden Sie die erhaltene charts.txt hoch.",
+          "astrologInstructions": "Astrolog: File → Other Formats → Save Chart List (.as). Auch eine einzelne gespeicherte .as-Datei ist möglich.",
           "reading": "Datei wird gelesen und geprüft…"
         },
         "review": {
@@ -886,7 +890,19 @@
           "ALREADY_IMPORTED": "Bereits importiert", "POSSIBLE_DUPLICATE_IN_FILE": "Mögliches Duplikat in der Datei", "POSSIBLE_DUPLICATE_IN_LIBRARY": "Ein ähnliches Horoskop ist bereits in der Bibliothek", "ZET_NOT_ENOUGH_FIELDS": "Im Eintrag fehlen Daten",
           "INVALID_UTC_OFFSET": "Der Unterschied zur Weltzeit konnte nicht gelesen werden", "INVALID_COORDINATE": "Die Koordinaten konnten nicht gelesen werden",
           "AAF_REQUIRED_FIELDS_MISSING": "Im AAF-Eintrag fehlen Pflichtdaten", "AAF_JULIAN_CALENDAR_UNSUPPORTED": "Julianische Kalenderdaten werden noch nicht unterstützt", "AAF_JULIAN_DAY_CONFLICT": "AAF-Datum und -Uhrzeit widersprechen dem angegebenen Berechnungszeitpunkt",
-          "AAF_TIME_TYPE_UNSUPPORTED": "Dieser AAF-Zeittyp wird noch nicht unterstützt", "AAF_CHART_TYPE_UNSUPPORTED": "Dieser AAF-Horoskoptyp wird noch nicht unterstützt", "UNSUPPORTED_AAF_TIMEZONE": "Die AAF-Zeit konnte nicht eindeutig gelesen werden", "unknown": "Dieser Eintrag muss geprüft werden"
+          "AAF_TIME_TYPE_UNSUPPORTED": "Dieser AAF-Zeittyp wird noch nicht unterstützt", "AAF_CHART_TYPE_UNSUPPORTED": "Dieser AAF-Horoskoptyp wird noch nicht unterstützt", "UNSUPPORTED_AAF_TIMEZONE": "Die AAF-Zeit konnte nicht eindeutig gelesen werden",
+          "SFCHT_SUBCHARTS_NOT_IMPORTED": "Untergeordnete Horoskope in diesem Eintrag werden nicht übertragen; das Haupthoroskop wird gespeichert",
+          "SOURCE_CALCULATION_SETTINGS_NOT_IMPORTED": "Berechnungseinstellungen des Quellprogramms werden nicht übertragen; das Horoskop wird mit Ihren Einstellungen neu berechnet",
+          "INVALID_SFCHT_RECORD": "Dieses Solar-Fire-Horoskop konnte nicht gelesen werden",
+          "HISTORICAL_CALENDAR_UNSUPPORTED": "Für Daten vor dem 15. Oktober 1582 lässt sich der Kalender nicht eindeutig bestimmen",
+          "ASTROLOG_REQUIRED_FIELDS_MISSING": "Im Astrolog-Eintrag fehlen Pflichtdaten",
+          "ASTROLOG_TIME_UNSUPPORTED": "Die Astrolog-Uhrzeit konnte nicht eindeutig gelesen werden",
+          "ASTROLOG_TIMEZONE_UNSUPPORTED": "Die Astrolog-Zeitzone konnte nicht eindeutig gelesen werden",
+          "ASTROLOG_DAYLIGHT_UNSUPPORTED": "Die Astrolog-Sommerzeit konnte nicht eindeutig gelesen werden",
+          "INVALID_ASTROLOG_RECORD": "Der Astrolog-Eintrag konnte nicht gelesen werden",
+          "SOLAR_FIRE_REQUIRED_FIELDS_MISSING": "Im Solar-Fire-Texteintrag fehlen Pflichtdaten",
+          "SOLAR_FIRE_CHART_TYPE_UNSUPPORTED": "Dieser Solar-Fire-Horoskoptyp wird noch nicht unterstützt",
+          "INVALID_SOLAR_FIRE_RECORD": "Der Solar-Fire-Texteintrag konnte nicht gelesen werden", "unknown": "Dieser Eintrag muss geprüft werden"
         },
         "errors": { "read": "Die Datei konnte nicht gelesen werden.", "load": "Der Import konnte nicht geladen werden.", "save": "Der Import konnte nicht abgeschlossen werden.", "profileName": "Geben Sie einen Namen für das neue Profil ein." }
       },

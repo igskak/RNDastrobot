@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 
@@ -19,6 +19,12 @@ def canonical_fixed_timezone(offset_seconds: int) -> str:
 
 def utc_from_local(local: datetime, offset_seconds: int) -> datetime:
     return local - timedelta(seconds=offset_seconds)
+
+
+def require_unambiguous_calendar(local: datetime) -> None:
+    """Formats without a calendar flag cannot safely import earlier dates."""
+    if local.date() < date(1582, 10, 15):
+        raise ValueError("HISTORICAL_CALENDAR_UNSUPPORTED")
 
 
 def fingerprint_for(

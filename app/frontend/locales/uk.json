@@ -853,9 +853,13 @@
         "steps": { "ariaLabel": "Етапи імпорту карт", "file": "Файл", "review": "Перевірка", "save": "Збереження" },
         "file": {
           "title": "Перетягніть файл сюди", "copy": "або виберіть його на комп’ютері", "choose": "Вибрати файл",
-          "supported": "Підтримуються ZET (.zbs) та AAF (.aaf або .txt), до 5 МБ і 2000 записів.",
+          "supported": "Підтримуються ZET (.zbs), Astro.com / AAF (.aaf), Solar Fire й Astro Gold (.SFcht), Astrolog (.as) і текстовий експорт Solar Fire (.txt). До 5 МБ і 2000 записів.",
           "instructionsTitle": "Як вивантажити карти?",
-          "instructions": "У ZET експортуйте базу у файл .zbs. На Astro.com відкрийте список збережених даних, натисніть «aaf» і збережіть отриманий текст у файл .aaf або .txt.",
+          "zetInstructions": "ZET: експортуйте базу у файл .zbs.",
+          "astroInstructions": "Astro.com: у збережених даних натисніть «aaf» і збережіть текст як .aaf або .txt.",
+          "solarInstructions": "Solar Fire або Astro Gold: збережіть файл карт .SFcht і завантажте його напряму.",
+          "solarTextInstructions": "Solar Fire без .SFcht: відкрийте базу карт → Send/Add → Email All Charts → Text File. Завантажте отриманий charts.txt.",
+          "astrologInstructions": "Astrolog: File → Other Formats → Save Chart List (.as). Окремий збережений файл карти .as теж підходить.",
           "reading": "Читаємо й перевіряємо файл…"
         },
         "review": {
@@ -886,7 +890,19 @@
           "ALREADY_IMPORTED": "Уже імпортовано", "POSSIBLE_DUPLICATE_IN_FILE": "Можливий повтор у файлі", "POSSIBLE_DUPLICATE_IN_LIBRARY": "Схожа карта вже є в бібліотеці", "ZET_NOT_ENOUGH_FIELDS": "У записі бракує даних",
           "INVALID_UTC_OFFSET": "Не вдалося прочитати різницю зі світовим часом", "INVALID_COORDINATE": "Не вдалося прочитати координати",
           "AAF_REQUIRED_FIELDS_MISSING": "У записі AAF бракує обов’язкових даних", "AAF_JULIAN_CALENDAR_UNSUPPORTED": "Юліанський календар поки не підтримується", "AAF_JULIAN_DAY_CONFLICT": "Дата й час AAF не відповідають указаному моменту розрахунку",
-          "AAF_TIME_TYPE_UNSUPPORTED": "Цей тип часу AAF поки не підтримується", "AAF_CHART_TYPE_UNSUPPORTED": "Цей тип карти AAF поки не підтримується", "UNSUPPORTED_AAF_TIMEZONE": "Не вдалося однозначно прочитати час AAF", "unknown": "Запис потребує перевірки"
+          "AAF_TIME_TYPE_UNSUPPORTED": "Цей тип часу AAF поки не підтримується", "AAF_CHART_TYPE_UNSUPPORTED": "Цей тип карти AAF поки не підтримується", "UNSUPPORTED_AAF_TIMEZONE": "Не вдалося однозначно прочитати час AAF",
+          "SFCHT_SUBCHARTS_NOT_IMPORTED": "Додаткові карти всередині цього запису не буде перенесено; основну карту буде збережено",
+          "SOURCE_CALCULATION_SETTINGS_NOT_IMPORTED": "Налаштування розрахунку вихідної програми не переносяться; карту буде перераховано з вибраними налаштуваннями",
+          "INVALID_SFCHT_RECORD": "Не вдалося прочитати дані цієї карти Solar Fire",
+          "HISTORICAL_CALENDAR_UNSUPPORTED": "Для дати до 15 жовтня 1582 року неможливо однозначно визначити календар",
+          "ASTROLOG_REQUIRED_FIELDS_MISSING": "У записі Astrolog бракує обов’язкових даних",
+          "ASTROLOG_TIME_UNSUPPORTED": "Не вдалося однозначно прочитати час Astrolog",
+          "ASTROLOG_TIMEZONE_UNSUPPORTED": "Не вдалося однозначно прочитати часовий пояс Astrolog",
+          "ASTROLOG_DAYLIGHT_UNSUPPORTED": "Не вдалося однозначно прочитати літній час Astrolog",
+          "INVALID_ASTROLOG_RECORD": "Не вдалося прочитати запис Astrolog",
+          "SOLAR_FIRE_REQUIRED_FIELDS_MISSING": "У текстовому записі Solar Fire бракує обов’язкових даних",
+          "SOLAR_FIRE_CHART_TYPE_UNSUPPORTED": "Цей тип карти Solar Fire поки не підтримується",
+          "INVALID_SOLAR_FIRE_RECORD": "Не вдалося прочитати текстовий запис Solar Fire", "unknown": "Запис потребує перевірки"
         },
         "errors": { "read": "Не вдалося прочитати файл.", "load": "Не вдалося завантажити імпорт.", "save": "Не вдалося завершити імпорт.", "profileName": "Введіть назву нового профілю." }
       },

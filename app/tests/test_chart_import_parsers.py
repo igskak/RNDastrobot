@@ -1,10 +1,14 @@
 from datetime import datetime
+import struct
 
 import pytest
 
 from app.services.chart_import.parsers import (
     parse_aaf,
+    parse_astrolog,
     parse_chart_import,
+    parse_sfcht,
+    parse_solar_fire_text,
     parse_zet,
 )
 
@@ -146,12 +150,120 @@ def test_aaf_rejects_conflicting_source_julian_day():
     assert record.issues[0].code == "AAF_JULIAN_DAY_CONFLICT"
 
 
-@pytest.mark.parametrize("name", ["cards.csv", "cards.SFcht", "cards.bin"])
+@pytest.mark.parametrize("name", ["cards.csv", "cards.bin"])
 def test_dispatch_rejects_unsupported_formats(name):
     with pytest.raises(ValueError, match="UNSUPPORTED_IMPORT_FORMAT"):
         parse_chart_import(name, b"data")
 
 
-def test_aaf_txt_must_have_aaf_records():
-    with pytest.raises(ValueError, match="NOT_AN_AAF_FILE"):
+def test_unrecognized_txt_is_not_guessed_as_aaf_or_solar_fire():
+    with pytest.raises(ValueError, match="NOT_A_SOLAR_FIRE_TEXT_FILE"):
         parse_chart_import("cards.txt", b"plain text")
+
+
+def sfcht_record(name="Ana", *, offset_west=4.0, longitude_west=74.0, subchart=False):
+    record = bytearray(296)
+    record[0:2] = b"\x01\x01"
+    record[2:2 + len(name.encode("cp1252"))] = name.encode("cp1252")
+    record[52:60] = b"New York"
+    struct.pack_into("<f", record, 92, longitude_west)
+    struct.pack_into("<f", record, 96, 40.5)
+    struct.pack_into("<h", record, 100, 1980)
+    record[102:107] = bytes([5, 17, 11, 30, 45])
+    struct.pack_into("<f", record, 107, offset_west)
+    record[117] = 2
+    record[152] = 1  # Tropical zodiac.
+    record[157] = 1  # Geocentric coordinates.
+    struct.pack_into("<I", record, 292, int(subchart))
+    extra = b""
+    if subchart:
+        extra = bytes(115) + struct.pack("<I", 0)
+    note = b"birth certificate"
+    return bytes(record) + extra + struct.pack("<I", len(note)) + note
+
+
+def sfcht_file(*records):
+    header = bytearray(86)
+    header[:2] = b"\x03\x00"
+    struct.pack_into("<H", header, 82, len(records))
+    return bytes(header) + b"".join(records)
+
+
+def test_sfcht_reads_solar_fire_and_astro_gold_chart_collections():
+    content = sfcht_file(sfcht_record("Ana", subchart=True), sfcht_record("Zoë", offset_west=-5.75, longitude_west=-77))
+    parsed = parse_chart_import("family.SFcht", content)
+    assert parsed.source_format == "sfcht"
+    assert len(parsed.records) == 2
+    first, second = parsed.records
+    assert first.ready and second.ready
+    assert first.local_time.isoformat() == "11:30:45"
+    assert first.utc_datetime == datetime(1980, 5, 17, 15, 30, 45)
+    assert first.longitude == -74
+    assert first.chart_kind == "birth"
+    assert first.comments == "birth certificate"
+    assert first.issues[0].code == "SFCHT_SUBCHARTS_NOT_IMPORTED"
+    assert second.title == "Zoë"
+    assert second.timezone == "UTC+05:45"
+    assert second.longitude == 77
+
+
+def test_sfcht_rejects_unknown_version_and_truncated_records():
+    with pytest.raises(ValueError, match="UNSUPPORTED_SFCHT_VERSION"):
+        parse_sfcht(b"\x02\x00" + bytes(84))
+    with pytest.raises(ValueError, match="INVALID_SFCHT_FILE"):
+        parse_sfcht(sfcht_file(sfcht_record())[:-1])
+
+
+def test_sfcht_warns_when_sidereal_or_heliocentric_settings_are_not_imported():
+    record = bytearray(sfcht_record())
+    record[152] = 3  # Lahiri sidereal zodiac.
+    record[157] = 2  # Heliocentric coordinates.
+    parsed = parse_sfcht(sfcht_file(bytes(record)))
+    assert parsed.records[0].ready
+    assert [issue.code for issue in parsed.records[0].issues] == [
+        "SOURCE_CALCULATION_SETTINGS_NOT_IMPORTED"
+    ]
+
+
+def test_sfcht_marks_ambiguous_historical_calendar_per_chart():
+    record = bytearray(sfcht_record())
+    struct.pack_into("<h", record, 100, 1500)
+    parsed = parse_sfcht(sfcht_file(bytes(record)))
+    assert parsed.records[0].issues[0].code == "HISTORICAL_CALENDAR_UNSUPPORTED"
+
+
+def test_astrolog_reads_single_chart_and_bulk_chart_list_without_executing_switches():
+    single = b'@AI800 ; chart info\n/qb Nov 19 1971 11:01am ST +8:00 122:19:59W 47:36:35N\n/zi "Walter D. Pullen" "Seattle, WA, USA"\n'
+    record = parse_chart_import("walter.as", single).records[0]
+    assert record.title == "Walter D. Pullen"
+    assert record.place == "Seattle, WA, USA"
+    assert record.timezone == "UTC-08:00"
+    assert record.utc_datetime == datetime(1971, 11, 19, 19, 1)
+    bulk = b'@AL800\n/qcl Jan 1 2000 12:00pm DT +5:00 74:00W 40:30N "First" "New York"\n/qcl Jan 2 2000 12:00pm ST -5:45 77:00E 28:30N "Second" "Delhi"\n'
+    records = parse_astrolog(bulk).records
+    assert [r.title for r in records] == ["First", "Second"]
+    assert records[0].timezone == "UTC-04:00"
+    assert records[1].timezone == "UTC+05:45"
+    with pytest.raises(ValueError, match="ASTROLOG_UNSUPPORTED_SWITCH"):
+        parse_astrolog(single + b"/i other.as\n")
+
+
+def test_solar_fire_text_preserves_local_time_and_west_positive_zone():
+    content = b"\nMary Decker - Natal Chart\n4 Aug 1958, 2:59 am, EDT +4:00\nRaritan New Jersey, 40N34'10'', 074W38'\nGeocentric Tropical Zodiac\nRating: AA\n\nElection - Event Chart\n5 Sep 1987, 14:46, CEDT -2:00\nMonte Carlo, 43N45', 007E25'\n"
+    parsed = parse_chart_import("charts.txt", content)
+    assert parsed.source_format == "solar_fire"
+    assert len(parsed.records) == 2
+    assert parsed.records[0].ready
+    assert parsed.records[0].utc_datetime == datetime(1958, 8, 4, 6, 59)
+    assert parsed.records[0].chart_kind == "birth"
+    assert parsed.records[1].ready
+    assert parsed.records[1].timezone == "UTC+02:00"
+    assert parsed.records[1].chart_kind == "event"
+
+
+def test_solar_fire_text_does_not_hide_unsupported_chart_types():
+    content = b"First - Natal Chart\n4 Aug 1958, 2:59 am, EDT +4:00\nRaritan, 40N34', 074W38'\nSecond - Solar Return Chart\n5 Aug 2020, 11:00 am, EDT +4:00\nRaritan, 40N34', 074W38'\n"
+    records = parse_solar_fire_text(content).records
+    assert len(records) == 2
+    assert records[0].ready
+    assert records[1].issues[0].code == "SOLAR_FIRE_CHART_TYPE_UNSUPPORTED"

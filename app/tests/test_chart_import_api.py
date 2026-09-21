@@ -1,4 +1,5 @@
 import os
+import struct
 from datetime import datetime
 from types import SimpleNamespace
 from uuid import UUID
@@ -71,6 +72,23 @@ def _zet(*lines):
     return "\r\n".join(rows).encode("cp1251")
 
 
+def _sfcht(count=1):
+    header = bytearray(86)
+    header[:2] = b"\x03\x00"
+    struct.pack_into("<H", header, 82, count)
+    row = bytearray(296)
+    row[:2] = b"\x01\x01"
+    row[2:6] = b"Test"
+    row[52:56] = b"City"
+    struct.pack_into("<f", row, 92, -10.0)
+    struct.pack_into("<f", row, 96, 50.0)
+    struct.pack_into("<h", row, 100, 2000)
+    row[102:107] = bytes([4, 20, 16, 10, 20])
+    struct.pack_into("<f", row, 107, -5.5)
+    row[117] = 1
+    return bytes(header) + (bytes(row) + bytes(4)) * count
+
+
 def setup_function(_):
     reset_sqlite_schema(engine)
     app.dependency_overrides[get_db] = make_get_db_override(
@@ -116,6 +134,21 @@ def test_preview_is_owner_scoped_and_does_not_create_charts_or_profiles():
         assert (
             client.get(f"/api/v1/chart-imports/{batch_id}").status_code == 404
         )
+
+
+def test_sfcht_binary_preview_accepts_large_collection_without_text_line_limit():
+    owner_id = _owner("sfcht@example.com")
+    app.dependency_overrides[require_auth] = lambda: _auth(owner_id)
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/chart-imports/preview",
+            files={"file": ("charts.SFcht", _sfcht(220), "application/octet-stream")},
+        )
+        assert response.status_code == 201, response.text
+        payload = response.json()
+        assert payload["source_format"] == "sfcht"
+        assert payload["total"] == 220
+        assert payload["items"][0]["record"]["timezone"] == "UTC+05:30"
 
 
 def test_expired_preview_removes_temporary_birth_data():

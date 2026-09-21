@@ -13,7 +13,11 @@ test('chart import presents both save destinations and plain UTC help', () => {
     assert.match(html, /name="chartImportPlacement" value="library"/);
     assert.match(html, /name="chartImportPlacement" value="profile"/);
     assert.match(source, /page\.accountSettings\.import\.utc\.copy/);
-    assert.match(html, /accept="\.zbs,\.aaf,\.txt"/);
+    assert.match(html, /accept="\.zbs,\.aaf,\.sfcht,\.as,\.txt"/);
+    for (const source of ['zet', 'astro', 'solar', 'solarText', 'astrolog']) {
+        assert.match(html, new RegExp(`page\\.accountSettings\\.import\\.file\\.${source}Instructions`));
+    }
+    assert.match(source, /issues\.map\(issueLabel\)/);
 });
 
 test('chart import renders imported values as text and exposes resumable API calls', () => {

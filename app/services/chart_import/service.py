@@ -144,7 +144,9 @@ def create_preview(
             "The file is larger than 5 MiB.",
             status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
         )
-    if any(len(line) > 64 * 1024 for line in content.splitlines()):
+    if not filename.casefold().endswith(".sfcht") and any(
+        len(line) > 64 * 1024 for line in content.splitlines()
+    ):
         raise _error(
             "IMPORT_RECORD_TOO_LARGE",
             "One source record is larger than 64 KiB.",

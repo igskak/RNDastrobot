@@ -8,7 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 
-ImportFormat = Literal["zet", "aaf"]
+ImportFormat = Literal["zet", "aaf", "sfcht", "astrolog", "solar_fire"]
 ImportPlacement = Literal["library", "profile"]
 
 
