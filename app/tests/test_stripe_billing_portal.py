@@ -44,6 +44,20 @@ class _CustomerRow:
         self.email = None
 
 
+class _SubscriptionRow:
+    """A stored subscription, with the customer it is linked to (or none)."""
+
+    provider = "stripe"
+    status = "active"
+    access_until = None
+    current_period_end = None
+    cancel_at_period_end = False
+
+    def __init__(self, subscription_id="sub_stored", billing_customer=None):
+        self.provider_subscription_id = subscription_id
+        self.billing_customer = billing_customer
+
+
 class _Query:
     def __init__(self, result):
         self._result = result
@@ -57,16 +71,22 @@ class _Query:
     def first(self):
         return self._result
 
+    def all(self):
+        return [self._result] if self._result is not None else []
+
 
 class _DB:
-    """Just enough Session for a single-row read plus a write-back."""
+    """Just enough Session for the rows this path reads, plus a write-back."""
 
-    def __init__(self, customer_row=None):
+    def __init__(self, customer_row=None, subscription_row=None):
         self.customer_row = customer_row
+        self.subscription_row = subscription_row
         self.added = []
         self.flushes = 0
 
-    def query(self, *args, **kwargs):
+    def query(self, model, *args, **kwargs):
+        if getattr(model, "__name__", "") == "BillingSubscription":
+            return _Query(self.subscription_row)
         return _Query(self.customer_row)
 
     def add(self, obj):
@@ -118,6 +138,8 @@ def test_portal_reresolves_customer_unknown_to_current_key(monkeypatch):
 
     def handler(method, path, payload=None):
         calls.append((method, path, payload))
+        if path.startswith("/v1/subscriptions/sub_"):
+            return {}
         if path.startswith("/v1/subscriptions/search?"):
             return {"data": []}
         if path.startswith("/v1/customers?"):
@@ -144,6 +166,8 @@ def test_portal_reresolves_customer_unknown_to_current_key(monkeypatch):
 
 def test_portal_email_lookup_ignores_ambiguous_matches(monkeypatch):
     def handler(method, path, payload=None):
+        if path.startswith("/v1/subscriptions/sub_"):
+            return {}
         if path.startswith("/v1/subscriptions/search?"):
             return {"data": []}
         if path.startswith("/v1/customers?"):
@@ -166,6 +190,8 @@ def test_portal_email_lookup_ignores_ambiguous_matches(monkeypatch):
 
 def test_portal_without_any_customer_returns_actionable_conflict(monkeypatch):
     def handler(method, path, payload=None):
+        if path.startswith("/v1/subscriptions/sub_"):
+            return {}
         if path.startswith("/v1/subscriptions/search?"):
             return {"data": []}
         if path.startswith("/v1/customers?"):
@@ -265,6 +291,8 @@ def test_portal_opens_even_if_caching_the_repaired_id_fails(monkeypatch):
     from sqlalchemy.exc import IntegrityError
 
     def handler(method, path, payload=None):
+        if path.startswith("/v1/subscriptions/sub_"):
+            return {}
         if path.startswith("/v1/subscriptions/search?"):
             return {"data": []}
         if path.startswith("/v1/customers?"):
@@ -306,6 +334,8 @@ def test_portal_recovers_via_subscription_metadata_when_email_is_ambiguous(monke
 
     def handler(method, path, payload=None):
         calls.append(path)
+        if path.startswith("/v1/subscriptions/sub_"):
+            return {}
         if path.startswith("/v1/subscriptions/search?"):
             return {
                 "data": [
@@ -341,6 +371,8 @@ def test_subscription_lookup_refuses_a_non_uuid_astrologer_id(monkeypatch):
         email = "astrologer@example.com"
 
     def handler(method, path, payload=None):
+        if path.startswith("/v1/subscriptions/sub_"):
+            return {}
         if path.startswith("/v1/subscriptions/search?"):
             raise AssertionError("must not search with an unvalidated id")
         if path.startswith("/v1/customers?"):
@@ -353,3 +385,58 @@ def test_subscription_lookup_refuses_a_non_uuid_astrologer_id(monkeypatch):
         provider.create_customer_portal(_DB(None), astrologer=_OddAstro())
 
     assert exc_info.value.status_code == 409
+
+
+def test_portal_prefers_the_customer_that_owns_the_subscription(monkeypatch):
+    """The newest customer row is not necessarily the right one.
+
+    An account can carry several customer rows; ordering them by updated_at
+    handed the portal a customer unrelated to the subscription being managed.
+    """
+    seen = []
+
+    def handler(method, path, payload=None):
+        if path == "/v1/billing_portal/sessions":
+            seen.append(payload["customer"])
+            return {"url": "https://billing.stripe.com/p/session_owner"}
+        raise AssertionError(f"unexpected call {method} {path}")
+
+    provider = _provider(monkeypatch, handler)
+    owner = _CustomerRow("cus_owns_the_subscription")
+    db = _DB(
+        customer_row=_CustomerRow("cus_touched_most_recently"),
+        subscription_row=_SubscriptionRow(billing_customer=owner),
+    )
+
+    portal = provider.create_customer_portal(db, astrologer=_Astro())
+
+    assert portal.portal_url.endswith("session_owner")
+    assert seen == ["cus_owns_the_subscription"]
+
+
+def test_portal_falls_back_to_the_next_candidate_then_asks_stripe(monkeypatch):
+    """Every stored id can be stale; the stored subscription still names its owner."""
+    tried = []
+
+    def handler(method, path, payload=None):
+        if path == "/v1/subscriptions/sub_live":
+            return {"id": "sub_live", "customer": "cus_from_subscription"}
+        if path == "/v1/billing_portal/sessions":
+            tried.append(payload["customer"])
+            if payload["customer"] != "cus_from_subscription":
+                raise _missing_customer_error()
+            return {"url": "https://billing.stripe.com/p/session_from_sub"}
+        raise AssertionError(f"unexpected call {method} {path}")
+
+    provider = _provider(monkeypatch, handler)
+    row = _CustomerRow("cus_stale_b")
+    db = _DB(
+        customer_row=row,
+        subscription_row=_SubscriptionRow("sub_live", billing_customer=_CustomerRow("cus_stale_a")),
+    )
+
+    portal = provider.create_customer_portal(db, astrologer=_Astro())
+
+    assert portal.portal_url.endswith("session_from_sub")
+    assert tried == ["cus_stale_a", "cus_stale_b", "cus_from_subscription"]
+    assert row.provider_customer_id == "cus_from_subscription"

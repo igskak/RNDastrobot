@@ -235,6 +235,23 @@ def _stored_customer_id(db: Session, *, provider: str, astrologer: Astrologer) -
     return str(row.provider_customer_id) if row and row.provider_customer_id else None
 
 
+def _portal_subscription(db: Session, *, provider: str, astrologer_id) -> Optional[BillingSubscription]:
+    """The subscription a portal session is about: the one granting access,
+    else the most recently touched one for this provider."""
+    active = get_active_subscription(db, astrologer_id)
+    if active is not None and active.provider == provider:
+        return active
+    return (
+        db.query(BillingSubscription)
+        .filter(
+            BillingSubscription.provider == provider,
+            BillingSubscription.astrologer_id == astrologer_id,
+        )
+        .order_by(BillingSubscription.updated_at.desc().nullslast(), BillingSubscription.created_at.desc().nullslast())
+        .first()
+    )
+
+
 def get_effective_plan_code(db: Session, astrologer: Astrologer) -> str:
     active_subscription = get_active_subscription(db, astrologer.id)
     if active_subscription and active_subscription.plan_code in PAID_PLAN_CODES:
@@ -741,6 +758,24 @@ class StripeBillingProvider(BillingProvider):
     def _is_unknown_customer(exc: BillingProviderError) -> bool:
         return exc.code == "resource_missing" and (exc.param or "customer") == "customer"
 
+    def _lookup_customer_id_from_stored_subscription(self, subscription_id: str) -> Optional[str]:
+        """Ask Stripe who owns the subscription we already recorded.
+
+        Exact and free of metadata assumptions: if the stored subscription id is
+        one this key can read, its ``customer`` is the customer the portal needs.
+        """
+        if not subscription_id:
+            return None
+        try:
+            response = self._api_request("GET", f"/v1/subscriptions/{subscription_id}")
+        except BillingProviderError as exc:
+            if exc.code == "resource_missing":
+                return None
+            raise
+        customer = response.get("customer")
+        customer_id = customer.get("id") if isinstance(customer, dict) else customer
+        return str(customer_id) if customer_id else None
+
     def _lookup_customer_id_by_subscription(self, astrologer: Astrologer) -> Optional[str]:
         """Find the customer via a subscription that names this astrologer.
 
@@ -813,25 +848,38 @@ class StripeBillingProvider(BillingProvider):
         # NOTE: under Managed Payments, end-customer subscription management also
         # lives on the Link site (link.com). The Stripe Billing portal is offered
         # here as the in-app option; confirm it is enabled for the account.
+        subscription = _portal_subscription(db, provider=self.provider, astrologer_id=astrologer.id)
         customer = _customer_row(db, provider=self.provider, astrologer_id=astrologer.id)
-        stored_customer_id = str(customer.provider_customer_id) if customer and customer.provider_customer_id else None
 
-        if stored_customer_id:
+        # The customer that owns the subscription comes first. Picking the most
+        # recently touched customer row instead is what broke this: an account
+        # with more than one customer row hands the portal an id that has
+        # nothing to do with the subscription being managed.
+        candidates: List[str] = []
+        for row in (getattr(subscription, "billing_customer", None), customer):
+            candidate = str(getattr(row, "provider_customer_id", "") or "")
+            if candidate and candidate not in candidates:
+                candidates.append(candidate)
+
+        for candidate in candidates:
             try:
-                return self._open_portal(stored_customer_id)
+                return self._open_portal(candidate)
             except BillingProviderError as exc:
                 # Anything other than "this customer does not exist for my key"
                 # is a genuine provider failure — do not paper over it.
                 if not self._is_unknown_customer(exc):
                     raise provider_http_error(exc) from exc
                 logger.warning(
-                    "Stored Stripe customer {} is unknown to the current key; re-resolving by email",
-                    stored_customer_id,
+                    "Stripe customer {} is unknown to the current key; trying the next candidate",
+                    candidate,
                 )
 
         try:
             resolved_customer_id = (
-                self._lookup_customer_id_by_subscription(astrologer)
+                self._lookup_customer_id_from_stored_subscription(
+                    str(getattr(subscription, "provider_subscription_id", "") or "")
+                )
+                or self._lookup_customer_id_by_subscription(astrologer)
                 or self._lookup_customer_id_by_email(astrologer)
             )
         except BillingProviderError as exc:
