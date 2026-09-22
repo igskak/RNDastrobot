@@ -741,6 +741,39 @@ class StripeBillingProvider(BillingProvider):
     def _is_unknown_customer(exc: BillingProviderError) -> bool:
         return exc.code == "resource_missing" and (exc.param or "customer") == "customer"
 
+    def _lookup_customer_id_by_subscription(self, astrologer: Astrologer) -> Optional[str]:
+        """Find the customer via a subscription that names this astrologer.
+
+        This is the precise route: checkout writes astrologer_id into
+        ``subscription_data.metadata``, so a search in the mode the current key
+        talks to finds exactly this account's subscription — and with it the
+        customer id the portal needs. Customers created by Checkout carry no
+        metadata of their own, which is why the email route below cannot
+        disambiguate on its own.
+        """
+        astrologer_id = str(getattr(astrologer, "id", "") or "")
+        # The id goes into a Stripe search query string; only ever interpolate
+        # a value that cannot carry quotes.
+        try:
+            UUID(astrologer_id)
+        except (ValueError, AttributeError, TypeError):
+            return None
+        query = urlencode(
+            {"query": f"metadata['astrologer_id']:'{astrologer_id}'", "limit": 20}
+        )
+        response = self._api_request("GET", f"/v1/subscriptions/search?{query}")
+        items = [item for item in (response.get("data") or []) if isinstance(item, dict)]
+        if not items:
+            return None
+        # A live subscription that still grants access wins over a cancelled one.
+        items.sort(key=lambda item: 0 if str(item.get("status") or "") in ACCESS_STATUSES else 1)
+        for item in items:
+            customer = item.get("customer")
+            customer_id = customer.get("id") if isinstance(customer, dict) else customer
+            if customer_id:
+                return str(customer_id)
+        return None
+
     def _lookup_customer_id_by_email(self, astrologer: Astrologer) -> Optional[str]:
         """Find this astrologer's customer in the mode the current key talks to.
 
@@ -797,7 +830,10 @@ class StripeBillingProvider(BillingProvider):
                 )
 
         try:
-            resolved_customer_id = self._lookup_customer_id_by_email(astrologer)
+            resolved_customer_id = (
+                self._lookup_customer_id_by_subscription(astrologer)
+                or self._lookup_customer_id_by_email(astrologer)
+            )
         except BillingProviderError as exc:
             raise provider_http_error(exc) from exc
 

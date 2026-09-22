@@ -118,6 +118,8 @@ def test_portal_reresolves_customer_unknown_to_current_key(monkeypatch):
 
     def handler(method, path, payload=None):
         calls.append((method, path, payload))
+        if path.startswith("/v1/subscriptions/search?"):
+            return {"data": []}
         if path.startswith("/v1/customers?"):
             return {"data": [{"id": "cus_live_real", "metadata": {"astrologer_id": _Astro.id}}]}
         if path == "/v1/billing_portal/sessions":
@@ -142,6 +144,8 @@ def test_portal_reresolves_customer_unknown_to_current_key(monkeypatch):
 
 def test_portal_email_lookup_ignores_ambiguous_matches(monkeypatch):
     def handler(method, path, payload=None):
+        if path.startswith("/v1/subscriptions/search?"):
+            return {"data": []}
         if path.startswith("/v1/customers?"):
             # Two customers share the email and neither names the astrologer:
             # guessing here would hand someone else's billing account over.
@@ -162,6 +166,8 @@ def test_portal_email_lookup_ignores_ambiguous_matches(monkeypatch):
 
 def test_portal_without_any_customer_returns_actionable_conflict(monkeypatch):
     def handler(method, path, payload=None):
+        if path.startswith("/v1/subscriptions/search?"):
+            return {"data": []}
         if path.startswith("/v1/customers?"):
             return {"data": []}
         raise AssertionError(f"unexpected call {method} {path}")
@@ -259,6 +265,8 @@ def test_portal_opens_even_if_caching_the_repaired_id_fails(monkeypatch):
     from sqlalchemy.exc import IntegrityError
 
     def handler(method, path, payload=None):
+        if path.startswith("/v1/subscriptions/search?"):
+            return {"data": []}
         if path.startswith("/v1/customers?"):
             return {"data": [{"id": "cus_live_real", "metadata": {"astrologer_id": _Astro.id}}]}
         if path == "/v1/billing_portal/sessions":
@@ -285,3 +293,63 @@ def test_portal_opens_even_if_caching_the_repaired_id_fails(monkeypatch):
 
     assert portal.portal_url.endswith("session_recovered")
     assert db.rollbacks == 1
+
+
+def test_portal_recovers_via_subscription_metadata_when_email_is_ambiguous(monkeypatch):
+    """The real shape of the incident: the card is charged live, our row is not.
+
+    Checkout stamps astrologer_id onto the subscription, never onto the
+    customer, so several customers can share the email and the email route
+    alone would give up. The subscription search resolves it exactly.
+    """
+    calls = []
+
+    def handler(method, path, payload=None):
+        calls.append(path)
+        if path.startswith("/v1/subscriptions/search?"):
+            return {
+                "data": [
+                    {"id": "sub_cancelled", "status": "canceled", "customer": "cus_old"},
+                    {"id": "sub_live", "status": "active", "customer": "cus_live_real"},
+                ]
+            }
+        if path.startswith("/v1/customers?"):
+            raise AssertionError("must not fall back to email once the search resolved")
+        if path == "/v1/billing_portal/sessions":
+            if payload["customer"] == "cus_testmode":
+                raise _missing_customer_error()
+            return {"url": "https://billing.stripe.com/p/session_live"}
+        raise AssertionError(f"unexpected call {method} {path}")
+
+    provider = _provider(monkeypatch, handler)
+    row = _CustomerRow("cus_testmode")
+
+    portal = provider.create_customer_portal(_DB(row), astrologer=_Astro())
+
+    assert portal.portal_url.endswith("session_live")
+    # The paying subscription wins over a cancelled one.
+    assert row.provider_customer_id == "cus_live_real"
+    search = next(path for path in calls if path.startswith("/v1/subscriptions/search?"))
+    assert "astrologer_id" in search
+
+
+def test_subscription_lookup_refuses_a_non_uuid_astrologer_id(monkeypatch):
+    """Never interpolate an unvalidated value into a Stripe search query."""
+
+    class _OddAstro:
+        id = "x' OR metadata['astrologer_id']:'y"
+        email = "astrologer@example.com"
+
+    def handler(method, path, payload=None):
+        if path.startswith("/v1/subscriptions/search?"):
+            raise AssertionError("must not search with an unvalidated id")
+        if path.startswith("/v1/customers?"):
+            return {"data": []}
+        raise AssertionError(f"unexpected call {method} {path}")
+
+    provider = _provider(monkeypatch, handler)
+
+    with pytest.raises(HTTPException) as exc_info:
+        provider.create_customer_portal(_DB(None), astrologer=_OddAstro())
+
+    assert exc_info.value.status_code == 409
