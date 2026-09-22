@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from loguru import logger
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
@@ -130,6 +131,21 @@ async def _handle_billing_webhook(request: Request, db: Session, expected_provid
 
     raw_body = await request.body()
     payload = provider.verify_webhook(raw_body, dict(request.headers))
+
+    # A valid signature proves the provider sent it, not that it belongs to this
+    # environment: a test-mode event hitting the live deployment is signed with
+    # the same endpoint secret. Acknowledge it so the provider stops retrying,
+    # but never let it touch billing state.
+    ignore_reason = provider.should_ignore_event(payload)
+    if ignore_reason:
+        logger.warning(
+            "Ignoring {} webhook {}: {}",
+            provider.provider,
+            payload.get("id"),
+            ignore_reason,
+        )
+        return {"status": "ignored", "reason": ignore_reason}
+
     return process_billing_webhook(db, provider=provider, payload=payload)
 
 

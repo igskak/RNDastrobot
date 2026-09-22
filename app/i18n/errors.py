@@ -12,8 +12,14 @@ STATUS_TO_ERROR_CODE: dict[int, str] = {
     403: "FORBIDDEN",
     404: "NOT_FOUND",
     408: "REQUEST_TIMEOUT",
+    409: "CONFLICT",
     422: "VALIDATION_ERROR",
+    429: "TOO_MANY_REQUESTS",
+    # Without these, an upstream failure inherited the 500 fallback and every
+    # provider outage reached the user as "Internal server error".
+    502: "UPSTREAM_ERROR",
     503: "SERVICE_UNAVAILABLE",
+    504: "REQUEST_TIMEOUT",
     500: "INTERNAL_ERROR",
 }
 
@@ -71,6 +77,66 @@ ERROR_MESSAGES: dict[str, dict[str, str]] = {
         "uk": "Сервіс тимчасово недоступний.",
         "ru": "Сервис временно недоступен.",
         "de": "Der Dienst ist vorübergehend nicht verfügbar.",
+    },
+    "CONFLICT": {
+        "en": "That conflicts with the current state.",
+        "uk": "Це суперечить поточному стану.",
+        "ru": "Это конфликтует с текущим состоянием.",
+        "de": "Das steht im Konflikt mit dem aktuellen Stand.",
+    },
+    "TOO_MANY_REQUESTS": {
+        "en": "Too many requests. Please try again a bit later.",
+        "uk": "Забагато запитів. Спробуйте трохи пізніше.",
+        "ru": "Слишком много запросов. Попробуйте чуть позже.",
+        "de": (
+            "Zu viele Anfragen. "
+            "Bitte versuchen Sie es etwas später erneut."
+        ),
+    },
+    "UPSTREAM_ERROR": {
+        "en": "An external service failed to respond. Please try again.",
+        "uk": "Зовнішній сервіс не відповів. Спробуйте ще раз.",
+        "ru": "Внешний сервис не ответил. Попробуйте ещё раз.",
+        "de": (
+            "Ein externer Dienst hat nicht geantwortet. "
+            "Bitte erneut versuchen."
+        ),
+    },
+    "BILLING_PROVIDER_ERROR": {
+        "en": (
+            "The payment provider could not be reached. "
+            "Please try again in a minute."
+        ),
+        "uk": (
+            "Не вдалося звʼязатися з платіжним провайдером. "
+            "Спробуйте за хвилину."
+        ),
+        "ru": (
+            "Не удалось связаться с платёжным провайдером. "
+            "Попробуйте через минуту."
+        ),
+        "de": (
+            "Der Zahlungsanbieter war nicht erreichbar. "
+            "Bitte in einer Minute erneut versuchen."
+        ),
+    },
+    "BILLING_ACCOUNT_UNLINKED": {
+        "en": (
+            "We could not open your billing account. Please contact "
+            "support and we will sort out your subscription."
+        ),
+        "uk": (
+            "Не вдалося відкрити ваш платіжний акаунт. Напишіть "
+            "у підтримку — ми розберемося з підпискою."
+        ),
+        "ru": (
+            "Не удалось открыть ваш платёжный аккаунт. Напишите "
+            "в поддержку — мы разберёмся с подпиской."
+        ),
+        "de": (
+            "Ihr Zahlungskonto konnte nicht geöffnet werden. "
+            "Bitte kontaktieren Sie den Support."
+        ),
     },
     "VALIDATION_ERROR": {
         "en": "Validation error.",

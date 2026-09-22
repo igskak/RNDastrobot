@@ -14,6 +14,7 @@ from urllib.parse import urlencode
 from uuid import UUID
 
 from fastapi import HTTPException, status
+from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -217,6 +218,23 @@ def get_active_subscription(db: Session, astrologer_id) -> Optional[BillingSubsc
     return None
 
 
+def _customer_row(db: Session, *, provider: str, astrologer_id) -> Optional[BillingCustomer]:
+    return (
+        db.query(BillingCustomer)
+        .filter(
+            BillingCustomer.provider == provider,
+            BillingCustomer.astrologer_id == astrologer_id,
+        )
+        .order_by(BillingCustomer.updated_at.desc().nullslast(), BillingCustomer.created_at.desc().nullslast())
+        .first()
+    )
+
+
+def _stored_customer_id(db: Session, *, provider: str, astrologer: Astrologer) -> Optional[str]:
+    row = _customer_row(db, provider=provider, astrologer_id=astrologer.id)
+    return str(row.provider_customer_id) if row and row.provider_customer_id else None
+
+
 def get_effective_plan_code(db: Session, astrologer: Astrologer) -> str:
     active_subscription = get_active_subscription(db, astrologer.id)
     if active_subscription and active_subscription.plan_code in PAID_PLAN_CODES:
@@ -282,8 +300,93 @@ def get_price_id(db: Session, *, provider: str, plan_code: str, interval: str) -
     )
 
 
+class BillingProviderError(Exception):
+    """A billing provider API call failed.
+
+    Carries the provider's own machine-readable error code so callers can
+    branch on it (e.g. a stale customer id) instead of matching on free text.
+    The raw provider body stays here for the log and never reaches the client:
+    it contains account ids and dashboard links.
+    """
+
+    def __init__(
+        self,
+        provider: str,
+        *,
+        status_code: Optional[int] = None,
+        code: Optional[str] = None,
+        param: Optional[str] = None,
+        message: Optional[str] = None,
+        raw: Optional[str] = None,
+    ) -> None:
+        super().__init__(message or code or "billing provider error")
+        self.provider = provider
+        self.status_code = status_code
+        self.code = code
+        self.param = param
+        self.message = message
+        self.raw = raw
+
+
+def _parse_provider_error(provider: str, status_code: Optional[int], body: str) -> BillingProviderError:
+    """Pull code/param/message out of a provider error body, best effort."""
+    code = param = message = None
+    try:
+        parsed = json.loads(body or "{}")
+    except ValueError:
+        parsed = {}
+    error_obj = parsed.get("error") if isinstance(parsed, dict) else None
+    if isinstance(error_obj, dict):
+        code = error_obj.get("code") or error_obj.get("type")
+        param = error_obj.get("param")
+        message = error_obj.get("message") or error_obj.get("detail")
+    elif isinstance(parsed, dict):
+        code = parsed.get("code") or parsed.get("type")
+        message = parsed.get("message") or parsed.get("detail")
+    return BillingProviderError(
+        provider,
+        status_code=status_code,
+        code=str(code) if code else None,
+        param=str(param) if param else None,
+        message=str(message) if message else None,
+        raw=body,
+    )
+
+
+def provider_http_error(exc: BillingProviderError) -> HTTPException:
+    """Turn a provider failure into a localized 502 for the client.
+
+    The client gets a localized message plus the provider's error code for
+    support; the provider's own prose (which names customer ids, the Stripe
+    account and a dashboard log URL) is logged, not echoed.
+    """
+    logger.error(
+        "Billing provider call failed: provider={} status={} code={} body={}",
+        exc.provider,
+        exc.status_code,
+        exc.code,
+        exc.raw or exc.message,
+    )
+    return HTTPException(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        detail={
+            "error_code": "BILLING_PROVIDER_ERROR",
+            "detail": {"provider": exc.provider, "code": exc.code},
+        },
+    )
+
+
 class BillingProvider:
     provider = BILLING_PROVIDER_PADDLE
+
+    def should_ignore_event(self, payload: Dict[str, Any]) -> Optional[str]:
+        """Reason to drop a verified webhook without touching billing state.
+
+        Signature verification only proves the event came from the provider —
+        not that it belongs to this environment. Returns a short reason string
+        when the event must be ignored, or None to process it.
+        """
+        return None
 
     def create_checkout(self, db: Session, *, astrologer: Astrologer, plan_code: str, interval: str, coupon_code: Optional[str]) -> BillingCheckout:
         raise NotImplementedError
@@ -327,10 +430,13 @@ class PaddleBillingProvider(BillingProvider):
             with urlrequest.urlopen(req, timeout=20) as response:
                 return json.loads(response.read().decode("utf-8") or "{}")
         except urlerror.HTTPError as exc:
-            message = exc.read().decode("utf-8", errors="replace")
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Paddle API error: {message}") from exc
+            raise _parse_provider_error(
+                self.provider, exc.code, exc.read().decode("utf-8", errors="replace")
+            ) from exc
         except urlerror.URLError as exc:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Paddle API unavailable: {exc.reason}") from exc
+            raise BillingProviderError(self.provider, message=str(exc.reason)) from exc
+        except Exception as exc:  # timeouts, TLS, malformed JSON — never a bare 500
+            raise BillingProviderError(self.provider, message=str(exc)) from exc
 
     def create_checkout(self, db: Session, *, astrologer: Astrologer, plan_code: str, interval: str, coupon_code: Optional[str]) -> BillingCheckout:
         price_id = get_price_id(db, provider=self.provider, plan_code=plan_code, interval=interval)
@@ -347,7 +453,10 @@ class PaddleBillingProvider(BillingProvider):
             payload["discount_id"] = coupon_code.strip()
             payload["custom_data"]["coupon_code"] = coupon_code.strip()
 
-        response = self._api_request("POST", "/transactions", payload)
+        try:
+            response = self._api_request("POST", "/transactions", payload)
+        except BillingProviderError as exc:
+            raise provider_http_error(exc) from exc
         data = response.get("data") or response
         checkout_url = (
             _nested(data, "checkout", "url")
@@ -355,7 +464,10 @@ class PaddleBillingProvider(BillingProvider):
             or data.get("url")
         )
         if not checkout_url:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Paddle did not return a checkout URL.")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail={"error_code": "BILLING_PROVIDER_ERROR", "detail": {"provider": self.provider, "code": "no_checkout_url"}},
+            )
         return BillingCheckout(checkout_url=str(checkout_url), provider=self.provider)
 
     def create_customer_portal(self, db: Session, *, astrologer: Astrologer) -> BillingPortal:
@@ -366,16 +478,39 @@ class PaddleBillingProvider(BillingProvider):
             .first()
         )
         if not subscription:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No billing subscription found.")
-        response = self._api_request(
-            "POST",
-            "/customer-portal-sessions",
-            {"subscription_ids": [subscription.provider_subscription_id]},
-        )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error_code": "BILLING_ACCOUNT_UNLINKED"},
+            )
+        customer_id = _stored_customer_id(db, provider=self.provider, astrologer=astrologer)
+        if not customer_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error_code": "BILLING_ACCOUNT_UNLINKED"},
+            )
+        # Paddle Billing exposes portal sessions under the customer, not at the
+        # API root; passing subscription_ids adds the per-subscription deep links.
+        try:
+            response = self._api_request(
+                "POST",
+                f"/customers/{customer_id}/portal-sessions",
+                {"subscription_ids": [subscription.provider_subscription_id]},
+            )
+        except BillingProviderError as exc:
+            raise provider_http_error(exc) from exc
         data = response.get("data") or response
-        portal_url = data.get("url") or _nested(data, "urls", "general") or _nested(data, "customer_portal", "url")
+        subscription_links = _nested(data, "urls", "subscriptions") or []
+        first_link = subscription_links[0] if isinstance(subscription_links, list) and subscription_links else {}
+        portal_url = (
+            _nested(data, "urls", "general", "overview")
+            or (first_link.get("cancel_subscription") if isinstance(first_link, dict) else None)
+            or data.get("url")
+        )
         if not portal_url:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Paddle did not return a portal URL.")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail={"error_code": "BILLING_PROVIDER_ERROR", "detail": {"provider": self.provider, "code": "no_portal_url"}},
+            )
         return BillingPortal(portal_url=str(portal_url), provider=self.provider)
 
     def verify_webhook(self, raw_body: bytes, headers: Dict[str, str]) -> Dict[str, Any]:
@@ -495,10 +630,13 @@ class StripeBillingProvider(BillingProvider):
             with urlrequest.urlopen(req, timeout=20) as response:
                 return json.loads(response.read().decode("utf-8") or "{}")
         except urlerror.HTTPError as exc:
-            message = exc.read().decode("utf-8", errors="replace")
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Stripe API error: {message}") from exc
+            raise _parse_provider_error(
+                self.provider, exc.code, exc.read().decode("utf-8", errors="replace")
+            ) from exc
         except urlerror.URLError as exc:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Stripe API unavailable: {exc.reason}") from exc
+            raise BillingProviderError(self.provider, message=str(exc.reason)) from exc
+        except Exception as exc:  # timeouts, TLS, malformed JSON — never a bare 500
+            raise BillingProviderError(self.provider, message=str(exc)) from exc
 
     def _resolve_promotion_code_id(self, code: str) -> Optional[str]:
         """Resolve a customer-facing promotion code (e.g. ``FREEBETA``) to its
@@ -548,7 +686,10 @@ class StripeBillingProvider(BillingProvider):
         # page instead (discounts and allow_promotion_codes are mutually
         # exclusive in Checkout).
         if coupon_code:
-            promotion_code_id = self._resolve_promotion_code_id(coupon_code.strip())
+            try:
+                promotion_code_id = self._resolve_promotion_code_id(coupon_code.strip())
+            except BillingProviderError as exc:
+                raise provider_http_error(exc) from exc
             if not promotion_code_id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -558,35 +699,144 @@ class StripeBillingProvider(BillingProvider):
         else:
             payload["allow_promotion_codes"] = True
 
-        response = self._api_request("POST", "/v1/checkout/sessions", payload)
+        try:
+            response = self._api_request("POST", "/v1/checkout/sessions", payload)
+        except BillingProviderError as exc:
+            raise provider_http_error(exc) from exc
         checkout_url = response.get("url")
         if not checkout_url:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Stripe did not return a checkout URL.")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail={"error_code": "BILLING_PROVIDER_ERROR", "detail": {"provider": self.provider, "code": "no_checkout_url"}},
+            )
         return BillingCheckout(checkout_url=str(checkout_url), provider=self.provider)
 
-    def create_customer_portal(self, db: Session, *, astrologer: Astrologer) -> BillingPortal:
-        # NOTE: under Managed Payments, end-customer subscription management also
-        # lives on the Link site (link.com). The Stripe Billing portal is offered
-        # here as the in-app option; confirm it is enabled for the account.
-        customer = (
-            db.query(BillingCustomer)
-            .filter(
-                BillingCustomer.provider == self.provider,
-                BillingCustomer.astrologer_id == astrologer.id,
-            )
-            .order_by(BillingCustomer.updated_at.desc().nullslast(), BillingCustomer.created_at.desc().nullslast())
-            .first()
-        )
-        if not customer or not customer.provider_customer_id:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No billing customer found.")
-        payload: Dict[str, Any] = {"customer": customer.provider_customer_id}
+    def _key_livemode(self) -> Optional[bool]:
+        """True for a live key, False for a test key, None when undetectable."""
+        key = self.api_key
+        if key.startswith(("sk_live_", "rk_live_")):
+            return True
+        if key.startswith(("sk_test_", "rk_test_")):
+            return False
+        return None
+
+    def should_ignore_event(self, payload: Dict[str, Any]) -> Optional[str]:
+        """Drop events from the other Stripe mode.
+
+        A test-mode webhook that reaches the live deployment is signed with the
+        same endpoint secret, so verification passes and the event used to be
+        written as a real subscription. The resulting rows point at test-mode
+        customer ids that the live key cannot read, which breaks the billing
+        portal for that account. Refuse the event instead of storing it.
+        """
+        key_livemode = self._key_livemode()
+        event_livemode = payload.get("livemode")
+        if key_livemode is None or not isinstance(event_livemode, bool):
+            return None
+        if event_livemode != key_livemode:
+            return "livemode_mismatch"
+        return None
+
+    @staticmethod
+    def _is_unknown_customer(exc: BillingProviderError) -> bool:
+        return exc.code == "resource_missing" and (exc.param or "customer") == "customer"
+
+    def _lookup_customer_id_by_email(self, astrologer: Astrologer) -> Optional[str]:
+        """Find this astrologer's customer in the mode the current key talks to.
+
+        Used to recover when the stored id belongs to a customer the key cannot
+        see. An email match alone is not enough to be sure, so a customer whose
+        metadata names this astrologer wins; otherwise only an unambiguous
+        single match is accepted.
+        """
+        email = str(getattr(astrologer, "email", "") or "").strip()
+        if not email:
+            return None
+        query = urlencode({"email": email, "limit": 10})
+        response = self._api_request("GET", f"/v1/customers?{query}")
+        items = [item for item in (response.get("data") or []) if isinstance(item, dict)]
+        for item in items:
+            metadata = item.get("metadata") or {}
+            if str(metadata.get("astrologer_id") or "") == str(astrologer.id):
+                return str(item.get("id") or "") or None
+        if len(items) == 1:
+            return str(items[0].get("id") or "") or None
+        return None
+
+    def _open_portal(self, customer_id: str) -> BillingPortal:
+        payload: Dict[str, Any] = {"customer": customer_id}
         if self.base_url:
             payload["return_url"] = f"{self.base_url}/pricing.html"
         response = self._api_request("POST", "/v1/billing_portal/sessions", payload)
         portal_url = response.get("url")
         if not portal_url:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Stripe did not return a portal URL.")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail={"error_code": "BILLING_PROVIDER_ERROR", "detail": {"provider": self.provider, "code": "no_portal_url"}},
+            )
         return BillingPortal(portal_url=str(portal_url), provider=self.provider)
+
+    def create_customer_portal(self, db: Session, *, astrologer: Astrologer) -> BillingPortal:
+        # NOTE: under Managed Payments, end-customer subscription management also
+        # lives on the Link site (link.com). The Stripe Billing portal is offered
+        # here as the in-app option; confirm it is enabled for the account.
+        customer = _customer_row(db, provider=self.provider, astrologer_id=astrologer.id)
+        stored_customer_id = str(customer.provider_customer_id) if customer and customer.provider_customer_id else None
+
+        if stored_customer_id:
+            try:
+                return self._open_portal(stored_customer_id)
+            except BillingProviderError as exc:
+                # Anything other than "this customer does not exist for my key"
+                # is a genuine provider failure — do not paper over it.
+                if not self._is_unknown_customer(exc):
+                    raise provider_http_error(exc) from exc
+                logger.warning(
+                    "Stored Stripe customer {} is unknown to the current key; re-resolving by email",
+                    stored_customer_id,
+                )
+
+        try:
+            resolved_customer_id = self._lookup_customer_id_by_email(astrologer)
+        except BillingProviderError as exc:
+            raise provider_http_error(exc) from exc
+
+        if not resolved_customer_id:
+            # Either the account never checked out against this key's mode, or
+            # its rows came from the other mode. Either way the portal cannot be
+            # opened and the user needs a person, not a retry.
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={"error_code": "BILLING_ACCOUNT_UNLINKED"},
+            )
+
+        # Caching the repaired id is an optimisation, not a precondition: the
+        # (provider, provider_customer_id) unique index can already hold this id
+        # on another row, and that must not cost the user their portal.
+        try:
+            if customer:
+                customer.provider_customer_id = resolved_customer_id
+                customer.email = getattr(astrologer, "email", None) or customer.email
+            else:
+                customer = BillingCustomer(
+                    astrologer_id=astrologer.id,
+                    provider=self.provider,
+                    provider_customer_id=resolved_customer_id,
+                    email=getattr(astrologer, "email", None),
+                )
+                db.add(customer)
+            db.flush()
+        except IntegrityError:
+            db.rollback()
+            logger.warning(
+                "Could not cache re-resolved Stripe customer {}; opening the portal anyway",
+                resolved_customer_id,
+            )
+
+        try:
+            return self._open_portal(resolved_customer_id)
+        except BillingProviderError as exc:
+            raise provider_http_error(exc) from exc
 
     def verify_webhook(self, raw_body: bytes, headers: Dict[str, str]) -> Dict[str, Any]:
         if not self.webhook_secret:

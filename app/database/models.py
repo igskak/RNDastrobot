@@ -396,7 +396,7 @@ class BillingCustomer(Base):
     astrologer = relationship("Astrologer", back_populates="billing_customers")
 
     __table_args__ = (
-        CheckConstraint("provider IN ('paddle')", name='chk_billing_customers_provider'),
+        CheckConstraint("provider IN ('paddle', 'stripe')", name='chk_billing_customers_provider'),
         Index('idx_billing_customers_astrologer', 'astrologer_id'),
         Index('uq_billing_customers_provider_customer', 'provider', 'provider_customer_id', unique=True),
     )
@@ -427,7 +427,7 @@ class BillingSubscription(Base):
     billing_customer = relationship("BillingCustomer")
 
     __table_args__ = (
-        CheckConstraint("provider IN ('paddle')", name='chk_billing_subscriptions_provider'),
+        CheckConstraint("provider IN ('paddle', 'stripe')", name='chk_billing_subscriptions_provider'),
         CheckConstraint("plan_code IN ('standard', 'pro')", name='chk_billing_subscriptions_plan_code'),
         Index('idx_billing_subscriptions_astrologer', 'astrologer_id'),
         Index('idx_billing_subscriptions_status', 'status'),
@@ -450,7 +450,7 @@ class BillingEvent(Base):
     processed_at = Column(DateTime)
 
     __table_args__ = (
-        CheckConstraint("provider IN ('paddle')", name='chk_billing_events_provider'),
+        CheckConstraint("provider IN ('paddle', 'stripe')", name='chk_billing_events_provider'),
         Index('idx_billing_events_provider_type', 'provider', 'event_type'),
         Index('uq_billing_events_provider_event', 'provider', 'provider_event_id', unique=True),
     )
@@ -470,7 +470,7 @@ class BillingPriceMap(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
-        CheckConstraint("provider IN ('paddle')", name='chk_billing_price_map_provider'),
+        CheckConstraint("provider IN ('paddle', 'stripe')", name='chk_billing_price_map_provider'),
         CheckConstraint("plan_code IN ('standard', 'pro')", name='chk_billing_price_map_plan_code'),
         CheckConstraint("interval IN ('monthly', 'yearly')", name='chk_billing_price_map_interval'),
         Index('idx_billing_price_map_lookup', 'provider', 'plan_code', 'interval', 'is_active'),
