@@ -29,6 +29,8 @@ PUBLIC_PATHS = [
     "/terms.html",
     "/astrology-practice-management",
     "/astrology-practice-management.html",
+    "/record-astrology-consultations",
+    "/record-astrology-consultations.html",
     "/astrologer-workspace",
     "/astrologer-workspace.html",
     "/cloud-astrology-software",
@@ -129,6 +131,27 @@ def test_indexnow_key_file_serves_only_the_configured_key(client, monkeypatch):
 
     # A guessed filename must not confirm that any key exists.
     assert client.get("/indexnow-deadbeef.txt").status_code == 404
+
+
+@pytest.mark.parametrize("path", PUBLIC_PATHS)
+def test_structured_data_parses(client, path):
+    """A JSON-LD block with a stray comma is skipped in silence by search engines.
+
+    The audit script counts the blocks on a page but cannot tell a valid one from a
+    broken one, so a typo in a hand-written FAQPage would ship looking healthy.
+    """
+    import json
+    import re
+
+    blocks = re.findall(
+        r'<script type="application/ld\+json">(.*?)</script>',
+        client.get(path).text,
+        re.S,
+    )
+
+    for block in blocks:
+        payload = json.loads(block)  # raises on malformed markup
+        assert payload.get("@type"), f"{path}: JSON-LD block without an @type"
 
 
 def test_assets_are_not_given_a_robots_header(client):

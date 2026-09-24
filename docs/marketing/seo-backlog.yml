@@ -24,7 +24,10 @@ meta:
 
 items:
   - id: record-astrology-consultations
-    status: todo
+    status: shipped
+    # No PR number: GitHub Actions is not permitted to open pull requests here, so the
+    # evidence lives in issue #7 and the branch is waiting for a human to open the PR.
+    pr: "issue #7, branch seo-agent/record-astrology-consultations"
     type: category-landing
     slug: /record-astrology-consultations
     target_queries:
