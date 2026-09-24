@@ -9,6 +9,7 @@
         ['i18nPlaceholder', 'placeholder'],
         ['i18nTitle', 'title'],
         ['i18nAriaLabel', 'aria-label'],
+        ['i18nAlt', 'alt'],
         ['i18nValue', 'value'],
         ['i18nDataLabel', 'data-label'],
     ];
@@ -70,7 +71,7 @@
         applyDocumentTitle(documentRef);
 
         documentRef
-            .querySelectorAll('[data-i18n], [data-i18n-html], [data-i18n-placeholder], [data-i18n-title], [data-i18n-aria-label], [data-i18n-value], [data-i18n-data-label]')
+            .querySelectorAll('[data-i18n], [data-i18n-html], [data-i18n-placeholder], [data-i18n-title], [data-i18n-aria-label], [data-i18n-alt], [data-i18n-value], [data-i18n-data-label]')
             .forEach((element) => applyI18nToElement(element));
     }
 

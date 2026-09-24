@@ -2598,6 +2598,11 @@
         "title": "Videogespräche mit Aufnahme und Transkription.",
         "text": "Führen Sie die Beratung direkt in Steliara. Das Gespräch wird aufgezeichnet und transkribiert, eine kurze Zusammenfassung im Profil gespeichert. Vor dem nächsten Termin müssen Sie nichts aus dem Gedächtnis rekonstruieren."
       },
+      "shots": {
+        "workspace": "Der Arbeitsbildschirm von Steliara: Geburtshoroskop mit Transiten und den Planetenpositionen auf beiden Seiten des Rads",
+        "assistant": "Der Chat beantwortet, wann Transit-Pluto exakt auf dem Radix-Mond steht, mit dem Datum jedes Durchgangs und jeder Station",
+        "profile": "Ein Personenprofil: Horoskop, Ihre Notizen, Kontaktdaten und eine verknüpfte Person für die Synastrie"
+      },
       "foundation": {
         "kicker": "Die Grundlage",
         "title": "Präzision, auf die Sie sich verlassen können.",

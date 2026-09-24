@@ -145,3 +145,16 @@ test('English sources keep their bare canonical URLs', () => {
     const document = documentOf(fs.readFileSync(path.join(frontendRoot, 'index.html'), 'utf8'));
     assert.equal(document.querySelector('link[rel="canonical"]')?.getAttribute('href'), `${ORIGIN}/`);
 });
+
+test('screenshot alt text is translated with the page', () => {
+    const catalog = (locale) => JSON.parse(fs.readFileSync(path.join(frontendRoot, 'locales', `${locale}.json`), 'utf8'));
+    for (const locale of LOCALES) {
+        const doc = documentOf(readGenerated(locale, 'index.html'));
+        const shots = [...doc.querySelectorAll('img[data-i18n-alt]')];
+        assert.ok(shots.length >= 3, `${locale}/index.html lost its screenshots`);
+        for (const img of shots) {
+            const key = img.getAttribute('data-i18n-alt').split('.').pop();
+            assert.equal(img.getAttribute('alt'), catalog(locale).page.index.shots[key], `${locale} alt for ${key}`);
+        }
+    }
+});

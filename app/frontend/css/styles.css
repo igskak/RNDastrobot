@@ -2080,6 +2080,50 @@ input[type="number"] {
     color: var(--text-muted);
 }
 
+/* Real product screenshots. Built from docs/marketing/product-hunt/screens by
+   docs/marketing/product-hunt/gallery-src/build.py (JPEG, 1x and 2x). */
+.landing-shot {
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 12px;
+    background: var(--bg-secondary, #fff);
+    box-shadow: 0 1px 2px rgba(30, 58, 95, 0.05), 0 24px 60px -28px rgba(30, 58, 95, 0.35);
+}
+
+.landing-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Text beside a screenshot. The reverse variant only moves the picture left;
+   the text stays first in reading order. */
+.landing-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    align-items: center;
+    column-gap: clamp(32px, 5vw, 64px);
+}
+
+.landing-split-reverse {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
+
+.landing-split-reverse .landing-shot {
+    order: -1;
+}
+
+@media (max-width: 980px) {
+    .landing-split-reverse,
+    .landing-split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .landing-split-reverse .landing-shot {
+        order: 0;
+    }
+}
+
 .landing-card,
 .landing-quote {
     padding: 20px;

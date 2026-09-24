@@ -2603,6 +2603,11 @@
         "title": "Video calls with recording and transcription.",
         "text": "Hold the consultation inside Steliara. The conversation is recorded and transcribed, and a short summary is saved to the person’s profile. Nothing has to be reconstructed from memory before the next session."
       },
+      "shots": {
+        "workspace": "Steliara's working screen: a natal chart with transits and the planet positions on either side of the wheel",
+        "assistant": "The chat answering when transiting Pluto is exactly conjunct the natal Moon, with the date of each pass and station",
+        "profile": "A person's profile: their chart, your notes, contact details and a linked partner for synastry"
+      },
       "foundation": {
         "kicker": "What it is built on",
         "title": "Precision you can rely on.",
