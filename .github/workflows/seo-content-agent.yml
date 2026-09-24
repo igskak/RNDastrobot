@@ -10,8 +10,9 @@ name: SEO content agent
 # The agent's actual instructions live in docs/marketing/seo-agent-brief.md so they can
 # be edited and reviewed without touching CI.
 #
-# Requires the ANTHROPIC_API_KEY repository secret. Without it the job exits cleanly
-# with a note rather than failing every Monday.
+# Requires CLAUDE_CODE_OAUTH_TOKEN (a Claude subscription token from `claude setup-token`)
+# or ANTHROPIC_API_KEY. Without either the job exits cleanly with a note rather than
+# failing every Monday.
 
 on:
   schedule:
@@ -42,14 +43,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Two ways to pay for the agent: a Claude subscription token (CLAUDE_CODE_OAUTH_TOKEN,
+      # from `claude setup-token`) or an API key (ANTHROPIC_API_KEY). The subscription token
+      # wins when both exist, and only the winner is handed to the action below. That is
+      # deliberate: the org-level API key that broke the 2026-09-21 run is still in the
+      # secrets, and passing both would leave the choice to the action.
+      #
+      # Decided here, in shell, because GitHub does not allow secrets in `if:` conditions;
+      # later steps branch on the `credential` output instead.
       - name: Check the agent is configured
         id: config
+        env:
+          OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
-            echo "ANTHROPIC_API_KEY is not set — add it in Settings > Secrets > Actions."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
+          if [ -n "$OAUTH_TOKEN" ]; then
+            echo "Using the Claude subscription token."
+            echo "credential=oauth" >> "$GITHUB_OUTPUT"
             echo "ready=true" >> "$GITHUB_OUTPUT"
+          elif [ -n "$API_KEY" ]; then
+            echo "Using the Anthropic API key."
+            echo "credential=apikey" >> "$GITHUB_OUTPUT"
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Neither CLAUDE_CODE_OAUTH_TOKEN nor ANTHROPIC_API_KEY is set — add one in Settings > Secrets > Actions."
+            echo "credential=none" >> "$GITHUB_OUTPUT"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Is there anything queued?
@@ -106,8 +125,11 @@ jobs:
       # Prints status, error type and message only. The key never appears (GitHub masks
       # it regardless), and Anthropic error messages carry no secrets, which matters
       # because this repository is public and so are its Actions logs.
+      #
+      # API-key path only. A subscription token is issued for Claude Code, so it is used
+      # only through the official action below, never replayed in a hand-written request.
       - name: Check the API key can actually reach the model
-        if: steps.queue.outputs.queued == 'true'
+        if: steps.queue.outputs.queued == 'true' && steps.config.outputs.credential == 'apikey'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           AGENT_MODEL: claude-opus-5
@@ -146,7 +168,8 @@ jobs:
         if: steps.queue.outputs.queued == 'true'
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ steps.config.outputs.credential == 'oauth' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+          anthropic_api_key: ${{ steps.config.outputs.credential == 'apikey' && secrets.ANTHROPIC_API_KEY || '' }}
           github_token: ${{ github.token }}
           # Pinned so the model is a decision in this file rather than whatever the action
           # defaults to that week. The failed run picked `claude-opus-5[1m]` on its own.
@@ -179,7 +202,7 @@ jobs:
         if: steps.config.outputs.ready != 'true' || steps.queue.outputs.queued == 'false'
         run: |
           if [ "${{ steps.config.outputs.ready }}" != "true" ]; then
-            echo "::notice::SEO content agent is idle: ANTHROPIC_API_KEY is not configured."
+            echo "::notice::SEO content agent is idle: neither CLAUDE_CODE_OAUTH_TOKEN nor ANTHROPIC_API_KEY is configured."
           else
             echo "::notice::SEO content agent is idle: every backlog item is shipped or dropped."
           fi
