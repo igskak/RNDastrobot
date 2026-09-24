@@ -173,3 +173,10 @@ def test_output_formatting_matches_what_the_chat_renders():
     """The chat renders a small markdown subset; anything else shows up raw."""
     assert "**bold** for a" in P
     assert "No # headings, no" in P and "markdown tables" in P
+
+
+def test_window_rule_no_longer_demands_auto_expansion_in_every_answer():
+    """The tool rules told the model to always report auto-expansion, which beat
+    the OUTPUT rule and put "Auto-expanded: no." at the end of every reply."""
+    assert "whether the search auto-expanded" not in P
+    assert "Mention that the search window grew only when" in P

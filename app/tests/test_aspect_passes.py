@@ -201,3 +201,40 @@ def test_planet_longitude_fast_path_does_not_calculate_all_planets(monkeypatch):
 
     actual = eng._get_transit_body_longitude(swe.julday(2026, 6, 11, 0.0), 'Uranus')
     assert abs(actual - expected) < 1e-8
+
+
+def test_closest_approach_of_a_perfecting_contact_is_its_best_exact_pass():
+    """The grid minimum used to be reported ("2 Aug 2027 23:59:59, orb 0.0047")
+    next to the real exact pass at 04:48 the next morning."""
+    eng = _engine()
+    jd_R, lon_R, jd_D, lon_D = _find_retro_arc()
+    natal = (lon_R + lon_D) / 2.0
+
+    contact = eng._scan_aspect_contacts(
+        transit_body='Uranus', natal_longitude=natal,
+        exact_angle=0.0, max_orb=5.0,
+        jd_start=jd_R - 260, jd_end=jd_D + 260, step_jd=1.0,
+    )[0]
+
+    best = min(contact['passes'], key=lambda p: p['orb'])
+    assert contact['min_orb_jd'] == best['jd']
+    assert contact['min_orb'] == best['orb']
+
+
+def test_closest_approach_without_perfection_lands_on_the_station_even_on_a_coarse_grid():
+    eng = _engine()
+    jd_R, lon_R, _, _ = _find_retro_arc()
+    station_jd = eng._bisect_speed_zero(jd_R - 2, jd_R + 2, 'Uranus')
+    station_lon, _ = _uranus(station_jd)
+    natal = station_lon + 0.5  # never reached: the station is the closest point
+
+    contacts = eng._scan_aspect_contacts(
+        transit_body='Uranus', natal_longitude=natal,
+        exact_angle=0.0, max_orb=5.0,
+        jd_start=jd_R - 160, jd_end=jd_R + 60, step_jd=5.0,
+    )
+
+    contact = min(contacts, key=lambda c: c['min_orb'])
+    assert not contact['passes']
+    assert abs(contact['min_orb'] - 0.5) < 1e-4
+    assert abs(contact['min_orb_jd'] - station_jd) < 0.5  # within half a day of the station, not the 5-day grid

@@ -1240,6 +1240,46 @@ class TransitService:
                 jd_b = jd_m
         return 0.5 * (jd_a + jd_b)
 
+    def _refine_closest_approach(
+        self, contact: Dict, transit_body: str, natal_longitude: float,
+        exact_angle: float, step_jd: float,
+    ) -> None:
+        """Replace the sampled minimum with the real one.
+
+        The scan only sees the grid, so its minimum carried a grid timestamp
+        (e.g. "2 Aug 2027 23:59:59, orb 0.0047" next to an exact pass at 04:48
+        the next morning). A contact that perfects is closest at its best exact
+        pass; one that never perfects has a smooth minimum near a station, found
+        by golden-section search on the deviation between the neighbouring samples.
+        """
+        passes = contact.get('passes') or []
+        if passes:
+            best = min(passes, key=lambda item: item['orb'])
+            contact['min_orb'], contact['min_orb_jd'] = best['orb'], best['jd']
+            return
+        lo = max(contact['jd_enter'], contact['min_orb_jd'] - step_jd)
+        hi = min(contact.get('jd_leave', contact['min_orb_jd'] + step_jd), contact['min_orb_jd'] + step_jd)
+        ratio = (5 ** 0.5 - 1) / 2
+
+        def dev(jd: float) -> float:
+            return self._aspect_deviation_at_jd(jd, transit_body, natal_longitude, exact_angle)
+
+        a, b = hi - ratio * (hi - lo), lo + ratio * (hi - lo)
+        f_a, f_b = dev(a), dev(b)
+        for _ in range(40):
+            if f_a < f_b:
+                hi, b, f_b = b, a, f_a
+                a = hi - ratio * (hi - lo)
+                f_a = dev(a)
+            else:
+                lo, a, f_a = a, b, f_b
+                b = lo + ratio * (hi - lo)
+                f_b = dev(b)
+        jd_min = 0.5 * (lo + hi)
+        f_min = dev(jd_min)
+        if f_min < contact['min_orb']:
+            contact['min_orb'], contact['min_orb_jd'] = f_min, jd_min
+
     def _scan_aspect_contacts(
         self, transit_body: str, natal_longitude: float, exact_angle: float,
         max_orb: float, jd_start: float, jd_end: float, step_jd: float,
@@ -1331,6 +1371,7 @@ class TransitService:
                 cur['jd_leave'] = self._bisect_orb_boundary(
                     prev_jd, jd, transit_body, natal_longitude, exact_angle, max_orb)
                 cur['leave_complete'] = True
+                self._refine_closest_approach(cur, transit_body, natal_longitude, exact_angle, step_jd)
                 contacts.append(cur)
                 cur = None
 
@@ -1342,6 +1383,7 @@ class TransitService:
         if cur is not None:
             cur['jd_leave'] = jd_end
             cur['leave_complete'] = False
+            self._refine_closest_approach(cur, transit_body, natal_longitude, exact_angle, step_jd)
             contacts.append(cur)
 
         return contacts

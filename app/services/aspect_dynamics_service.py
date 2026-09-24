@@ -1246,11 +1246,22 @@ class AspectDynamicsService:
                 }
                 for s in stations
             ],
-            "closest_approach": {
-                "orb": round(float(contact["min_orb"]), 4),
-                "date": self._jd_to_iso(contact["min_orb_jd"], timezone),
-            },
+            "closest_approach": self._closest_approach(contact, passes, timezone),
         }
+
+    def _closest_approach(self, contact: Dict, passes: List[Dict], timezone: str) -> Dict:
+        """A contact that perfects is closest at its best exact pass.
+
+        The sampled minimum carries a grid timestamp, which read as a fake
+        precise moment next to the real passes (see transit_service
+        _refine_closest_approach for the same fix on the assistant's path).
+        """
+        if passes:
+            best = min(passes, key=lambda p: float(p.get("orb") or 0.0))
+            orb, jd = float(best.get("orb") or 0.0), best["jd"]
+        else:
+            orb, jd = float(contact["min_orb"]), contact["min_orb_jd"]
+        return {"orb": round(orb, 4), "date": self._jd_to_iso(jd, timezone)}
 
     @staticmethod
     def _dedupe_jd_items(

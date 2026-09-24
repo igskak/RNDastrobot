@@ -5,6 +5,7 @@ No real OpenAI call: a scripted fake client drives the loop. Verifies tool
 dispatch, that the active chart's user_id is injected server-side (never a
 model argument), and that the tool schema exposes deterministic enums.
 """
+import json
 from types import SimpleNamespace
 from datetime import date
 from uuid import uuid4
@@ -652,3 +653,44 @@ def test_synastry_partner_source_reports_missing_context():
 
     assert out["status"] == "error"
     assert out["error"] == "synastry_partner_missing:active_synastry"
+
+
+def test_model_reads_tool_instants_at_minute_precision_while_results_keep_full_values(monkeypatch):
+    """Replies pasted "11:29:44-08:00" straight from the tool payload."""
+    service = AstroAssistantService(
+        db_session=None, default_timezone="America/Los_Angeles",
+        default_anchor_date=date(2026, 9, 24),
+    )
+    raw_contact = {
+        "enter": "2026-01-04T14:05:09-08:00",
+        "passes": [{"date": "2027-08-03T04:48:52-07:00", "motion": "retrograde", "orb": 0.0047}],
+        "closest_approach": {"date": "2027-08-03T04:48:52-07:00", "orb": 0.0047},
+    }
+
+    class _Transits:
+        def find_aspect_passes(self, **kwargs):
+            return {"status": "ok", "exact_angle": 0.0, "speed": 0.0123456,
+                    "requested_window": {"start": "2021-09-24", "end": "2031-09-24"},
+                    "contacts": [raw_contact]}
+
+    service._transit_service = _Transits()
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "find_aspect_passes",
+            '{"transit_body":"Pluto","natal_body":"Moon","aspect_type":"Conjunction"}')]),
+        _msg(content="Three exact passes."),
+    ]
+    client = _FakeClient(scripted)
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: client)
+
+    result = service.chat(uuid4(), [{"role": "user", "content": "pluto conj moon?"}])
+
+    tool_msg = next(m for m in client.chat.completions.calls[1]["messages"] if m.get("role") == "tool")
+    seen = json.loads(tool_msg["content"])["contacts"][0]
+    assert seen["enter"] == "2026-01-04 14:05"
+    assert seen["passes"][0] == {"date": "2027-08-03 04:48", "motion": "retrograde", "orb": 0.0}
+    assert json.loads(tool_msg["content"])["requested_window"]["start"] == "2021-09-24"  # dates untouched
+    assert json.loads(tool_msg["content"])["speed"] == 0.0123456  # only orbs are rounded
+    # Citations, tables and exports read tool_results: full precision stays there.
+    assert result["tool_results"][0]["result"]["contacts"][0] == raw_contact

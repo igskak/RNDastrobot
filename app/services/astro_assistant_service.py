@@ -235,6 +235,34 @@ def _build_survey_event(
     }
 
 
+# "2027-02-17T11:29:44-08:00" -> date "2027-02-17", minutes "11:29". Tools stamp
+# local chart time with seconds and a UTC offset; the model copied both verbatim.
+_ISO_INSTANT_RE = re.compile(
+    r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?$")
+_ORB_DISPLAY_DECIMALS = 2
+
+
+def _model_view(value, key: str = ""):
+    """What the model reads of a tool result: the same data at reading precision.
+
+    Instants become "YYYY-MM-DD HH:MM" in the chart's local time (already the
+    tools' zone) and orbs are rounded to two decimals, so the numbers the model
+    copies are the ones an astrologer reads. Only the model's copy changes:
+    tool_results — the source for citations, tables, charts and exports — keep
+    the full-precision values.
+    """
+    if isinstance(value, dict):
+        return {k: _model_view(v, k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_model_view(item, key) for item in value]
+    if isinstance(value, str):
+        match = _ISO_INSTANT_RE.match(value)
+        return f"{match.group(1)} {match.group(2)}" if match else value
+    if isinstance(value, float) and "orb" in key.lower():
+        return round(value, _ORB_DISPLAY_DECIMALS)
+    return value
+
+
 def _monthly_summary(events: List[Dict]) -> List[Dict]:
     """Exact passes per calendar month.
 
@@ -750,7 +778,9 @@ deterministically when it saves the note.
 
 Rules:
 - The active chart is fixed by the system; do not ask which chart or pass any id.
-- Always state the time window the result covers, and whether the search auto-expanded.
+- Name the period the result covers in a short phrase ("past and next 5 years", \
+"2021–2031"). Mention that the search window grew only when that changed what the \
+astrologer asked for.
 - For multi-step work ("по очереди", "исполняй", "следующий шаг", "продолжай план"), \
 use the conversation history and current workspace to continue the next unresolved \
 calculation. Do not ask which chart to use when active_chart or synastry_partner can be \
@@ -2067,7 +2097,7 @@ class AstroAssistantService:
                 convo.append({
                     "role": "tool",
                     "tool_call_id": tc.id,
-                    "content": json.dumps(result, ensure_ascii=False),
+                    "content": json.dumps(_model_view(result), ensure_ascii=False),
                 })
 
         # Iteration cap hit — ask the model for a final answer with no more tools.
