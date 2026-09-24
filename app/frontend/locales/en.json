@@ -3190,7 +3190,7 @@
         "description": "Steliara Terms of Service, Privacy Policy, and Refund & Cancellation Policy."
       },
       "title": "Terms & Policies",
-      "updated": "Last updated: 19 June 2026",
+      "updated": "Last updated: 25 September 2026",
       "back": "← Back to Steliara",
       "nav": {
         "pricing": "Pricing"
@@ -3222,7 +3222,7 @@
         "s2": "<h3>2. How we use data</h3><ul><li>To provide, maintain, and improve the Service.</li><li>To process subscriptions and prevent fraud (via Stripe).</li><li>To communicate with you about your account, security, and service updates.</li><li>To comply with legal obligations.</li></ul>",
         "s3": "<h3>3. Legal bases (GDPR)</h3><p>We process personal data under one or more of: performance of a contract (providing the Service), legitimate interests (securing and improving the Service), legal obligation (tax and accounting), and consent (where required, e.g. optional communications).</p>",
         "s4": "<h3>4. Sharing &amp; sub-processors</h3><p><strong>Stripe</strong> (and <strong>Link, a Stripe company</strong>) acts as our merchant of record and as an independent controller of payment and transaction data, under Stripe's own <a href=\"https://stripe.com/privacy\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>. We also share data with service providers who process data on our behalf under appropriate agreements, including <strong>PostHog</strong> (product analytics, hosted in the EU), our hosting and database providers, and email delivery providers. We do not sell your personal data.</p>",
-        "s5": "<h3>5. Data retention</h3><p>We keep account and content data for as long as your account is active. After account closure we delete or anonymize data within a reasonable period, except where retention is required for legal, tax, or security purposes.</p>",
+        "s5": "<h3>5. Data retention</h3><p>We keep account and content data for as long as your account is active. After account closure we delete or anonymize data within a reasonable period, except where retention is required for legal, tax, or security purposes.</p><p>Consultation audio recordings are kept for six months from the day they are made and then deleted automatically. Transcripts and summaries created from them stay with the profile until you delete them or close your account.</p>",
         "s6": "<h3>6. International transfers</h3><p>Data may be processed in countries outside your own. Where this happens, we rely on appropriate safeguards such as Standard Contractual Clauses.</p>",
         "s7": "<h3>7. Your rights</h3><p>Subject to applicable law, you may request access, correction, deletion, restriction, or portability of your personal data, and you may object to certain processing. To exercise these rights, contact us using the details in the <a href=\"#contact\">Contact</a> section. You also have the right to lodge a complaint with your local data protection authority.</p>",
         "s8": "<h3>8. Security</h3><p>We use industry-standard measures including encryption in transit, hashed passwords, and access controls. No method of transmission or storage is fully secure, but we work to protect your data.</p>",
@@ -3281,7 +3281,7 @@
       },
       "consent": {
         "title": "Record this session?",
-        "body": "Only audio will be recorded. The recording will be stored securely in the profile and automatically transcribed. Both sides must agree before recording begins.",
+        "body": "Only audio will be recorded. The recording will be stored securely in the profile and automatically transcribed. Both sides must agree before recording begins. The audio is kept for six months, then deleted automatically; the transcript stays in the profile.",
         "waitNote": "Waiting for the other person to confirm consent…",
         "cancel": "Cancel",
         "agree": "I agree — request consent"
@@ -3349,7 +3349,7 @@
       },
       "consent": {
         "title": "Recording consent",
-        "body": "The astrologer would like to record this session. <strong>Only audio will be recorded — no video.</strong> The recording will be used to prepare a summary for your records.",
+        "body": "The astrologer would like to record this session. <strong>Only audio will be recorded — no video.</strong> The recording will be used to prepare a summary for your records. The audio is kept for six months and then deleted automatically.",
         "decline": "Decline",
         "accept": "I agree"
       },

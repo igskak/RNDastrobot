@@ -37,6 +37,7 @@ from app.api.routes import auth, natal, transits, solar, progressions, direction
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 from app.services.processing_pipeline import recover_stuck_sessions
+from app.services.recording_retention_service import start_recording_retention_worker
 from app.auth.site_mode import is_solo_request
 from app.i18n.locale import DEFAULT_LOCALE, SUPPORTED_LOCALES, normalize_locale
 
@@ -44,6 +45,7 @@ from app.i18n.locale import DEFAULT_LOCALE, SUPPORTED_LOCALES, normalize_locale
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     recover_stuck_sessions()   # re-queue any sessions stuck mid-processing
+    start_recording_retention_worker()   # delete consultation audio after 180 days
     yield
 
 # Путь к frontend
@@ -523,10 +525,13 @@ Ephemeris using an orb table tuned with a practising astrologer.
 ## What makes it different
 
 Most astrology tools are either chart calculators or client lists. Steliara also
-runs the consultation as a video call inside the app, records it, transcribes it,
-and writes a short summary onto the profile of the person you read for. That
-removes the common arrangement of chart software plus a separate video app plus a
-separate transcription service.
+runs the consultation as a video call inside the app, records the audio (never the
+video), transcribes it, and writes a short summary onto the profile of the person you
+read for. That removes the common arrangement of chart software plus a separate video
+app plus a separate transcription service.
+
+Recording needs both sides' consent. The audio is kept for six months and then deleted
+automatically; the transcript and summary stay on the profile.
 
 ## Who it is for
 

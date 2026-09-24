@@ -3185,7 +3185,7 @@
         "description": "Nutzungsbedingungen, Datenschutzerklärung sowie Erstattungs- und Kündigungsrichtlinie von Steliara."
       },
       "title": "Nutzungsbedingungen und Richtlinien",
-      "updated": "Zuletzt aktualisiert: 19. Juni 2026",
+      "updated": "Zuletzt aktualisiert: 25. September 2026",
       "back": "← Zurück zu Steliara",
       "nav": {
         "pricing": "Preise"
@@ -3217,7 +3217,7 @@
         "s2": "<h3>2. Wie wir Daten verwenden</h3><ul><li>Um den Dienst bereitzustellen, zu warten und zu verbessern.</li><li>Um Abonnements abzuwickeln und Betrug zu verhindern (über Stripe).</li><li>Um Sie über Ihr Konto, Sicherheitsfragen und Neuerungen des Dienstes zu informieren.</li><li>Um gesetzliche Pflichten zu erfüllen.</li></ul>",
         "s3": "<h3>3. Rechtsgrundlagen (DSGVO)</h3><p>Wir verarbeiten personenbezogene Daten auf einer oder mehreren der folgenden Grundlagen: Vertragserfüllung (Bereitstellung des Dienstes), berechtigte Interessen (Sicherung und Verbesserung des Dienstes), rechtliche Verpflichtungen (Steuern und Buchhaltung) sowie Einwilligung, soweit erforderlich, etwa für optionale Mitteilungen.</p>",
         "s4": "<h3>4. Weitergabe und Unterauftragsverarbeiter</h3><p><strong>Stripe</strong> und <strong>Link, ein Unternehmen von Stripe</strong>, handeln als unser Merchant of Record und als eigenständige Verantwortliche für Zahlungs- und Transaktionsdaten nach der <a href=\"https://stripe.com/privacy\" target=\"_blank\" rel=\"noopener\">Datenschutzerklärung von Stripe</a>. Wir geben Daten außerdem an Dienstleister weiter, die sie auf Grundlage geeigneter Vereinbarungen in unserem Auftrag verarbeiten. Dazu gehören <strong>PostHog</strong> (Produktanalyse, in der EU gehostet), unsere Hosting- und Datenbankanbieter sowie Anbieter für den E-Mail-Versand. Wir verkaufen Ihre personenbezogenen Daten nicht.</p>",
-        "s5": "<h3>5. Speicherdauer</h3><p>Wir speichern Konto- und Inhaltsdaten, solange Ihr Konto aktiv ist. Nach der Schließung des Kontos löschen oder anonymisieren wir die Daten innerhalb eines angemessenen Zeitraums, sofern sie nicht aus rechtlichen, steuerlichen oder Sicherheitsgründen aufbewahrt werden müssen.</p>",
+        "s5": "<h3>5. Speicherdauer</h3><p>Wir speichern Konto- und Inhaltsdaten, solange Ihr Konto aktiv ist. Nach der Schließung des Kontos löschen oder anonymisieren wir die Daten innerhalb eines angemessenen Zeitraums, sofern sie nicht aus rechtlichen, steuerlichen oder Sicherheitsgründen aufbewahrt werden müssen.</p><p>Tonaufnahmen von Beratungen werden sechs Monate ab dem Tag der Aufnahme gespeichert und danach automatisch gelöscht. Daraus erstellte Transkripte und Zusammenfassungen bleiben im Profil, bis Sie sie löschen oder Ihr Konto schließen.</p>",
         "s6": "<h3>6. Internationale Datenübermittlungen</h3><p>Daten können in anderen Ländern als Ihrem eigenen verarbeitet werden. In diesem Fall stützen wir uns auf geeignete Schutzmaßnahmen, etwa Standardvertragsklauseln.</p>",
         "s7": "<h3>7. Ihre Rechte</h3><p>Nach Maßgabe des geltenden Rechts können Sie Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung oder Übertragbarkeit Ihrer personenbezogenen Daten verlangen und bestimmten Verarbeitungen widersprechen. Nutzen Sie dafür die Angaben im Abschnitt <a href=\"#contact\">Kontakt</a>. Sie haben außerdem das Recht, sich bei Ihrer örtlichen Datenschutzaufsichtsbehörde zu beschweren.</p>",
         "s8": "<h3>8. Sicherheit</h3><p>Wir verwenden branchenübliche Schutzmaßnahmen, darunter Verschlüsselung bei der Übertragung, gehashte Passwörter und Zugriffskontrollen. Keine Übertragungs- oder Speichermethode ist vollständig sicher. Wir arbeiten jedoch daran, Ihre Daten zu schützen.</p>",
@@ -3276,7 +3276,7 @@
       },
       "consent": {
         "title": "Dieses Gespräch aufzeichnen?",
-        "body": "Es wird nur der Ton aufgenommen. Die Aufnahme wird sicher im Profil gespeichert und automatisch transkribiert. Bevor sie beginnt, müssen beide Personen zustimmen.",
+        "body": "Es wird nur der Ton aufgenommen. Die Aufnahme wird sicher im Profil gespeichert und automatisch transkribiert. Bevor sie beginnt, müssen beide Personen zustimmen. Der Ton wird sechs Monate gespeichert und danach automatisch gelöscht; das Transkript bleibt im Profil.",
         "waitNote": "Wir warten auf die Zustimmung der anderen Person …",
         "cancel": "Abbrechen",
         "agree": "Zustimmen und andere Person fragen"
@@ -3344,7 +3344,7 @@
       },
       "consent": {
         "title": "Zustimmung zur Aufnahme",
-        "body": "Ihre Astrologin oder Ihr Astrologe möchte dieses Gespräch aufzeichnen. <strong>Aufgenommen wird nur der Ton, kein Video.</strong> Aus der Aufnahme wird eine Zusammenfassung für Sie erstellt.",
+        "body": "Ihre Astrologin oder Ihr Astrologe möchte dieses Gespräch aufzeichnen. <strong>Aufgenommen wird nur der Ton, kein Video.</strong> Aus der Aufnahme wird eine Zusammenfassung für Sie erstellt. Der Ton wird sechs Monate gespeichert und danach automatisch gelöscht.",
         "decline": "Ablehnen",
         "accept": "Ich stimme zu"
       },
