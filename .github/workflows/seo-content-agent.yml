@@ -103,18 +103,7 @@ jobs:
 
       - name: Start the app so the agent can audit its own page
         if: steps.queue.outputs.queued == 'true'
-        env:
-          DATABASE_URL: sqlite+pysqlite:///./_seo_agent.db
-          FRONTEND_BASE_URL: http://127.0.0.1:8099
-        run: |
-          nohup python -m uvicorn app.api.main:app --host 127.0.0.1 --port 8099 \
-            --log-level warning > /tmp/seo-agent-api.log 2>&1 &
-          for _ in $(seq 1 40); do
-            sleep 1
-            curl -sf -o /dev/null http://127.0.0.1:8099/robots.txt && break
-          done
-          curl -sf -o /dev/null http://127.0.0.1:8099/robots.txt \
-            || { echo "app did not come up"; cat /tmp/seo-agent-api.log; exit 1; }
+        run: bash app/scripts/seo_agent_app.sh
 
       # The first scheduled run (2026-09-21) died in 460 ms: one turn, $0, no model usage,
       # and nothing in the log but `is_error: true`. The action swallows the API's actual
@@ -164,9 +153,22 @@ jobs:
           echo "::error title=SEO agent cannot reach the model::$TYPE — $HINT"
           exit 1
 
+      # In automation mode the action allows file reads and edits and nothing that runs a
+      # command. The 2026-09-24 run proved what that means: 62 turns, $4.59, 18 permission
+      # denials, `is_error: false` — and no branch, no PR, nothing left behind, because
+      # every gate, every git command and `gh pr create` was refused.
+      #
+      # The list below is exactly what docs/marketing/seo-agent-brief.md asks for and no
+      # more: no curl, no generic `python`/`node`, no `env`. It is not a sandbox — an agent
+      # that can write files and run a repo script can run anything it writes — and it is
+      # not meant to be one. The boundary that matters is the PR: nothing reaches main
+      # without a human merge. The narrow list is about the agent reading competitor pages
+      # (untrusted content) with as little reach as the job allows.
       - name: Build the next page
         if: steps.queue.outputs.queued == 'true'
         uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
         with:
           claude_code_oauth_token: ${{ steps.config.outputs.credential == 'oauth' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
           anthropic_api_key: ${{ steps.config.outputs.credential == 'apikey' && secrets.ANTHROPIC_API_KEY || '' }}
@@ -176,6 +178,7 @@ jobs:
           claude_args: |
             --model claude-opus-5
             --max-turns 120
+            --allowedTools "Read,Glob,Grep,Edit,Write,WebSearch,WebFetch,Bash(git *),Bash(gh pr create *),Bash(gh pr view *),Bash(gh label create *),Bash(gh issue create *),Bash(npm --prefix app run *),Bash(node app/scripts/*),Bash(python -m pytest *),Bash(python app/scripts/seo_audit.py *),Bash(bash app/scripts/seo_agent_app.sh)"
           prompt: |
             Read docs/marketing/seo-agent-brief.md and follow it exactly. It is your
             complete operating brief: which item to take, what "finished" means, which
@@ -188,15 +191,45 @@ jobs:
             because canonicals are baked in with the production origin.
 
             Restart the app after changing app/api/main.py, or the audit will check the
-            old routes:
-              pkill -f "uvicorn app.api.main" || true
-              DATABASE_URL=sqlite+pysqlite:///./_seo_agent.db \
-              FRONTEND_BASE_URL=http://127.0.0.1:8099 \
-              nohup python -m uvicorn app.api.main:app --host 127.0.0.1 --port 8099 \
-                --log-level warning > /tmp/seo-agent-api.log 2>&1 &
+            old routes. Use exactly this command, which is the one you are permitted to
+            run for it:
+              bash app/scripts/seo_agent_app.sh
+
+            Your shell access is limited to the commands the brief needs (git, the gates,
+            gh pr/label/issue). If something you need is refused, do not look for a way
+            around it: say in the PR or issue what was refused and why you needed it.
 
             Open the pull request against main with the label seo-agent. Do not merge it
             and do not push to main.
+
+            If `gh pr create` is refused by GitHub (for example "GitHub Actions is not
+            permitted to create or approve pull requests"), the work must not be lost:
+            push the branch anyway, then open an issue titled "seo-agent: <item id> ready
+            on branch <branch>" containing everything the PR description would have.
+
+      # The action prints only a count of refused tool calls. The names and commands are in
+      # its execution log, which is not uploaded — this repository is public and the full
+      # transcript can contain anything the agent read. This pulls out just the refusals,
+      # truncated, so the next quiet no-op says exactly which rule was missing.
+      - name: Report what the agent was not allowed to do
+        if: always() && steps.queue.outputs.queued == 'true'
+        run: |
+          OUT="$RUNNER_TEMP/claude-execution-output.json"
+          if [ ! -s "$OUT" ]; then
+            echo "No execution output to inspect."
+            exit 0
+          fi
+          DENIED=$(jq -r '
+            [.. | objects | select(.type? == "result")] | last | (.permission_denials // [])[]
+            | "\(.tool_name)\t\((.tool_input.command // .tool_input.url // .tool_input.file_path // "") | tostring | .[0:160])"
+          ' "$OUT" 2>/dev/null || true)
+          if [ -z "$DENIED" ]; then
+            echo "The agent was not refused anything."
+          else
+            echo "Refused tool calls:"
+            printf '%s\n' "$DENIED" | sed 's/^/  /'
+            echo "::warning title=SEO agent was refused $(printf '%s\n' "$DENIED" | wc -l | tr -d ' ') tool call(s)::See the step log for which. Add a narrow rule to --allowedTools if the brief genuinely needs it."
+          fi
 
       - name: Say nothing happened, and why
         if: steps.config.outputs.ready != 'true' || steps.queue.outputs.queued == 'false'
