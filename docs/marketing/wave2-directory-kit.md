@@ -49,8 +49,14 @@ Copy from this file rather than retyping, or the drift is guaranteed.
   > Ephemeris with a professional orb setup. A built-in assistant finds facts in the chart
   > for you, such as aspects, exact date windows, and placements, while you stay the
   > interpreter. Runs on Mac, Windows, and any browser. Free 14-day trial, no card.
-- **Pricing (verified against the live page 2026-09-18):** Practitioner $24/month,
-  Studio $39/month, both billed monthly, 14-day free trial, no card.
+- **Pricing (verified against the live page 2026-09-24):** Practitioner $24/month,
+  Studio $39/month, both billed monthly, 14-day free trial, no card. **Consultation
+  recording, transcripts and summaries are on Studio only.** Wherever a listing shows a
+  price next to the recording story, say which plan it is on; a reader who pays $24
+  expecting recording is exactly the complaint a launch-day commenter posts.
+- **Recording is audio only, with both sides' consent.** The call itself is video; the
+  recording is not. Write "records the consultation" or "records the audio", never
+  "records the video". (Source: the in-call consent notice in `locales/en.json`.)
 - **Maker note (Product Hunt / Indie Hackers):** Solo-built, working closely with
   practicing astrologers. Happy to answer anything in the comments.
 
