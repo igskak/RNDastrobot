@@ -87,22 +87,19 @@ Crunchbase only keeps tech-ecosystem profiles and removes thin ones, so fill the
 description, categories, founded year, website and logo in the first pass rather than
 saving a stub.
 
-### 3. Product Hunt
+### 3. Product Hunt — launch planned for Saturday 2026-10-10
 
-Two distinct things, and the order matters. **Claim the product page now** — that is the
-entity record and it is not the launch. **Schedule the actual launch separately**, once
-there are a few founding members and two or three testimonials; a launch without momentum
-spends a one-time card for nothing.
+Owned by [`product-hunt/launch-kit.md`](product-hunt/launch-kit.md), which supersedes what
+this section used to say (claim the page now, launch later once testimonials exist). The
+launch is framed the same way as this whole file: an entity and citation play to separate
+"Steliara" from STELARA, not an acquisition channel. Taglines, gallery, first comment and
+the pre-launch blocker list live there; do not maintain a second copy here.
 
-- Tagline: `The workspace for practicing astrologers`
-- Description: Everything about every person you read for in one place: charts, notes,
-  and the consultations themselves, recorded, transcribed, and summarized. Works on Mac,
-  Windows, any browser. The assistant finds facts in the chart; you stay the interpreter.
-- First maker comment: "Hi PH 👋 I built Steliara because practicing astrologers juggle a
-  chart tool, a video call, and scattered notes, and the substance of each consultation
-  vanishes when the call ends. Steliara keeps it all together and records and summarizes
-  the session. The AI never reads the chart for you, it just finds the facts faster. Free
-  14-day trial, would love your honest feedback."
+What matters from this file's point of view is **order**. Get LinkedIn, Crunchbase and the
+G2/Capterra profiles live *before* 10 October, with the identical name, URL and one-liner
+from the assets above. Launch day is when the most new sources will mention Steliara at
+once; if the entity is already corroborated elsewhere, those mentions reinforce one thing
+instead of introducing a new one.
 
 ### 4. G2 and Capterra — vendor profile now, reviews later
 
@@ -156,7 +153,7 @@ assistant, and skip rather than let a directory reframe it.
 | --- | --- | --- | --- | --- |
 | LinkedIn Page | | | | needs ihor@steliara.com first |
 | Crunchbase | | | | search for duplicates first |
-| Product Hunt (page claim) | | | | not the launch |
+| Product Hunt | | | | launch 2026-10-10, see product-hunt/launch-kit.md |
 | G2 vendor profile | | | | |
 | Capterra vendor profile | | | | |
 | AlternativeTo | | | | 4 competitor pages |
@@ -164,7 +161,6 @@ assistant, and skip rather than let a directory reframe it.
 | BetaList | | | | |
 | Indie Hackers | | | | |
 | Startup dirs (batch) | | | | |
-| Product Hunt launch | | | | after testimonials |
 
 ---
 
