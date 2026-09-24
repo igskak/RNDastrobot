@@ -126,12 +126,17 @@ jobs:
           TYPE=$(jq -r '.error.type // "unknown"' "$RESPONSE" 2>/dev/null || echo unknown)
           MESSAGE=$(jq -r '.error.message // "no message"' "$RESPONSE" 2>/dev/null || echo "unparseable response")
           case "$TYPE" in
+            invalid_request_error)
+              case "$MESSAGE" in
+                *workspace*) HINT="The key was created at organisation level, not inside a workspace. console.anthropic.com > Workspaces > pick one > API keys > create a key there, then replace the ANTHROPIC_API_KEY repository secret." ;;
+                *)           HINT="$MESSAGE" ;;
+              esac ;;
             billing_error)        HINT="No usable credit on the Anthropic account. console.anthropic.com > Settings > Billing: add credit, or check the key's workspace has a spend limit above zero." ;;
             authentication_error) HINT="The key itself is rejected. It may have been revoked or pasted with a stray character. Create a new one and replace the ANTHROPIC_API_KEY repository secret." ;;
             permission_error)     HINT="The key is valid but not allowed to use this model or workspace. Check the key's workspace permissions in the console." ;;
             not_found_error)      HINT="$AGENT_MODEL is not available to this organization. Pin a model the account can use." ;;
             rate_limit_error|overloaded_error|api_error) HINT="Transient on Anthropic's side. Re-run the workflow later; nothing to fix." ;;
-            *)                    HINT="See the message above." ;;
+            *)                    HINT="$MESSAGE" ;;
           esac
           echo "HTTP $CODE — $TYPE: $MESSAGE"
           echo "::error title=SEO agent cannot reach the model::$TYPE — $HINT"
