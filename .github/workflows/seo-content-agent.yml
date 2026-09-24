@@ -97,13 +97,56 @@ jobs:
           curl -sf -o /dev/null http://127.0.0.1:8099/robots.txt \
             || { echo "app did not come up"; cat /tmp/seo-agent-api.log; exit 1; }
 
+      # The first scheduled run (2026-09-21) died in 460 ms: one turn, $0, no model usage,
+      # and nothing in the log but `is_error: true`. The action swallows the API's actual
+      # error, so a key with no credit and a key that is simply wrong look identical from
+      # here. One tiny request first, reported by type, turns that into a sentence someone
+      # can act on — and costs a fraction of a cent.
+      #
+      # Prints status, error type and message only. The key never appears (GitHub masks
+      # it regardless), and Anthropic error messages carry no secrets, which matters
+      # because this repository is public and so are its Actions logs.
+      - name: Check the API key can actually reach the model
+        if: steps.queue.outputs.queued == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AGENT_MODEL: claude-opus-5
+        run: |
+          RESPONSE="$(mktemp)"
+          CODE=$(curl -sS -m 60 -o "$RESPONSE" -w "%{http_code}" https://api.anthropic.com/v1/messages \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d "{\"model\":\"$AGENT_MODEL\",\"max_tokens\":32,\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}")
+          if [ "$CODE" = "200" ]; then
+            echo "API reachable: $AGENT_MODEL answered (HTTP 200)."
+            exit 0
+          fi
+
+          TYPE=$(jq -r '.error.type // "unknown"' "$RESPONSE" 2>/dev/null || echo unknown)
+          MESSAGE=$(jq -r '.error.message // "no message"' "$RESPONSE" 2>/dev/null || echo "unparseable response")
+          case "$TYPE" in
+            billing_error)        HINT="No usable credit on the Anthropic account. console.anthropic.com > Settings > Billing: add credit, or check the key's workspace has a spend limit above zero." ;;
+            authentication_error) HINT="The key itself is rejected. It may have been revoked or pasted with a stray character. Create a new one and replace the ANTHROPIC_API_KEY repository secret." ;;
+            permission_error)     HINT="The key is valid but not allowed to use this model or workspace. Check the key's workspace permissions in the console." ;;
+            not_found_error)      HINT="$AGENT_MODEL is not available to this organization. Pin a model the account can use." ;;
+            rate_limit_error|overloaded_error|api_error) HINT="Transient on Anthropic's side. Re-run the workflow later; nothing to fix." ;;
+            *)                    HINT="See the message above." ;;
+          esac
+          echo "HTTP $CODE — $TYPE: $MESSAGE"
+          echo "::error title=SEO agent cannot reach the model::$TYPE — $HINT"
+          exit 1
+
       - name: Build the next page
         if: steps.queue.outputs.queued == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ github.token }}
+          # Pinned so the model is a decision in this file rather than whatever the action
+          # defaults to that week. The failed run picked `claude-opus-5[1m]` on its own.
           claude_args: |
+            --model claude-opus-5
             --max-turns 120
           prompt: |
             Read docs/marketing/seo-agent-brief.md and follow it exactly. It is your
