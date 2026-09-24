@@ -7,13 +7,19 @@ Needs Google Chrome (headless) and network access for Google Fonts.
 Raw screens live in ../screens/ (2880x1800, captured at 2x from a 1440x900 viewport).
 Outputs go to ../gallery/ at 2x of Product Hunt's 1270x760 (2540x1520), plus
 thumbnail-240.png and og-1200x630.png.
+
+The same mark and OG image are the site's brand assets: they are also written to
+app/frontend/assets/brand/ (favicon.ico, icon PNGs, apple-touch-icon, og-image).
+Downscaling uses macOS `sips`.
 """
 import pathlib
+import struct
 import subprocess
 
 HERE = pathlib.Path(__file__).resolve().parent
 SCREENS = HERE.parent / "screens"
 OUT = HERE.parent / "gallery"
+BRAND = HERE.parents[3] / "app" / "frontend" / "assets" / "brand"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 FONTS = (
@@ -103,13 +109,16 @@ h1{{font-size:50px;line-height:1.02;margin-top:12px}}
 </body></html>"""
 
 
-def thumb_html():
+def thumb_html(star=True):
+    # Tiny favicons drop the star and enlarge the S so it survives 16px.
+    size = 168 if star else 212
+    star_el = '<div class="star">&#10022;</div>' if star else ''
     return f"""<!doctype html><html><head><meta charset="utf-8">{FONTS}<style>
 *{{margin:0;padding:0}}html,body{{width:240px;height:240px;overflow:hidden;background:#1E3A5F}}
 body{{position:relative;display:grid;place-items:center;background:radial-gradient(160px 160px at 70% 20%,rgba(184,147,90,.35),transparent 70%),#1E3A5F}}
-.m{{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:168px;line-height:1;color:#E9D6B0;transform:translateY(-8px)}}
+.m{{font-family:'Cormorant Garamond',serif;font-weight:{500 if star else 600};font-size:{size}px;line-height:1;color:#E9D6B0;transform:translateY(-{8 if star else 12}px)}}
 .star{{position:absolute;top:30px;right:40px;font-size:34px;line-height:1;color:#D9B97F;font-family:'DM Sans',sans-serif}}
-</style></head><body><div class="m">S</div><div class="star">&#10022;</div></body></html>"""
+</style></head><body><div class="m">S</div>{star_el}</body></html>"""
 
 
 def og_html():
@@ -127,16 +136,53 @@ h1{{font-size:54px;line-height:1.02}}
 </body></html>"""
 
 
-def render(html, name, w, h, scale):
+def render(html, name, w, h, scale, out_dir=OUT):
     src = HERE / f"_{name}.html"
     src.write_text(html, encoding="utf-8")
     subprocess.run(
         [CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--allow-file-access-from-files",
          f"--force-device-scale-factor={scale}", f"--window-size={w},{h}",
-         "--virtual-time-budget=6000", f"--screenshot={OUT / (name + '.png')}", src.as_uri()],
+         "--virtual-time-budget=6000", f"--screenshot={out_dir / (name + '.png')}", src.as_uri()],
         check=True, capture_output=True,
     )
     src.unlink()
+
+
+def downscale(src, dst, size):
+    subprocess.run(["sips", "-z", str(size), str(size), str(src), "--out", str(dst)], check=True, capture_output=True)
+
+
+def write_ico(dst, pngs):
+    """An ICO whose entries are PNGs (supported by every current browser)."""
+    blobs = [(size, path.read_bytes()) for size, path in pngs]
+    header = struct.pack("<HHH", 0, 1, len(blobs))
+    offset = 6 + 16 * len(blobs)
+    entries, data = b"", b""
+    for size, blob in blobs:
+        entries += struct.pack("<BBBBHHII", size % 256, size % 256, 0, 0, 1, 32, len(blob), offset)
+        offset += len(blob)
+        data += blob
+    dst.write_bytes(header + entries + data)
+
+
+def build_brand():
+    BRAND.mkdir(parents=True, exist_ok=True)
+    tmp = HERE / "_brand"
+    tmp.mkdir(exist_ok=True)
+    render(thumb_html(star=True), "mark", 240, 240, 512 / 240, tmp)
+    render(thumb_html(star=False), "mark-small", 240, 240, 512 / 240, tmp)
+    downscale(tmp / "mark.png", BRAND / "icon-512.png", 512)
+    downscale(tmp / "mark.png", BRAND / "icon-192.png", 192)
+    downscale(tmp / "mark.png", BRAND / "apple-touch-icon.png", 180)
+    small = []
+    for size in (16, 32, 48):
+        downscale(tmp / "mark-small.png", tmp / f"ico-{size}.png", size)
+        small.append((size, tmp / f"ico-{size}.png"))
+    write_ico(BRAND / "favicon.ico", small)
+    (BRAND / "og-image.png").write_bytes((OUT / "og-1200x630.png").read_bytes())
+    for f in tmp.iterdir():
+        f.unlink()
+    tmp.rmdir()
 
 
 def main():
@@ -147,6 +193,8 @@ def main():
     render(thumb_html(), "thumbnail-240", 240, 240, 1)
     render(og_html(), "og-1200x630", 1200, 630, 1)
     print("rendered thumbnail + og")
+    build_brand()
+    print("wrote", BRAND)
 
 
 if __name__ == "__main__":

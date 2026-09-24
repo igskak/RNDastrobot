@@ -412,6 +412,15 @@ _CRAWLER_DISALLOW = (
 )
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon_ico():
+    """Browsers and crawlers ask for /favicon.ico at the root whatever the page links."""
+    path = os.path.join(FRONTEND_PATH, "assets", "brand", "favicon.ico")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="image/x-icon", headers={"Cache-Control": "public, max-age=604800"})
+    raise HTTPException(status_code=404, detail="Not found")
+
+
 @app.get("/robots.txt")
 async def robots_txt():
     """Crawler directives. Allow public pages, keep app internals out, point to sitemap."""
@@ -599,7 +608,7 @@ applied at checkout.
 ## Practitioner
 - Price: $24/month billed monthly | $20/month billed annually
 - Includes: natal and transit charts (Swiss Ephemeris), unlimited profiles for the
-  people you read for, notes and recordings, forecast timeline and tables,
+  people you read for, notes, forecast timeline and tables,
   multiple house systems, email support
 
 ## Studio

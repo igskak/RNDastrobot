@@ -137,3 +137,23 @@ def test_assets_are_not_given_a_robots_header(client):
 
     assert response.status_code == 200
     assert "x-robots-tag" not in response.headers
+
+
+def test_favicon_is_served_at_the_root(client):
+    """/favicon.ico returned a JSON 404 on prod, so every tab and search result
+    showed a blank icon."""
+    response = client.get("/favicon.ico")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/x-icon"
+    assert response.content[:4] == b"\x00\x00\x01\x00"
+
+
+@pytest.mark.parametrize("path", ["/", "/pricing.html", "/cloud-astrology-software", "/de/"])
+def test_shared_links_get_a_preview_image(client, path):
+    """Pages declared a large Twitter card with no image behind it."""
+    html = client.get(path).text
+
+    assert 'property="og:image" content="https://www.steliara.com/assets/brand/og-image.png"' in html
+    assert 'name="twitter:image"' in html
+    assert client.get("/assets/brand/og-image.png").status_code == 200

@@ -6,6 +6,8 @@
  * the server injects user_id into tool calls, so the model never controls it.
  */
 
+import './chat-markdown.js';
+
 const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:8000/api/v1'
     : '/api/v1';
@@ -364,7 +366,14 @@ class ChatWidget {
         messageDiv.className = `chat-message ${role}`;
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.textContent = content;
+        // Assistant replies carry a small markdown subset; ChatMarkdown builds
+        // DOM nodes with textContent, so this stays an innerHTML-free path.
+        if (role === 'assistant' && window.ChatMarkdown) {
+            contentDiv.classList.add('is-markdown');
+            window.ChatMarkdown.render(contentDiv, content);
+        } else {
+            contentDiv.textContent = content;
+        }
         messageDiv.appendChild(contentDiv);
         this.messages.appendChild(messageDiv);
         this.messages.scrollTop = this.messages.scrollHeight;
@@ -1289,7 +1298,7 @@ class ChatWidget {
                 this.decorateAssistantTurn(assistantEl, data);
                 this.history.push({ role: 'assistant', content: reply });
                 if (compactFeedback) {
-                    this.setVoiceMiniStatus(reply, { timeoutMs: 10000 });
+                    this.setVoiceMiniStatus(window.ChatMarkdown?.toPlainText(reply) ?? reply, { timeoutMs: 10000 });
                 }
                 document.dispatchEvent(new CustomEvent('steliara:onboarding-assistant-answer'));
             }

@@ -1,5 +1,5 @@
 import os
-from datetime import date, time
+from datetime import date, datetime, time
 from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
@@ -194,6 +194,46 @@ def test_person_profile_aggregates_all_owned_charts_and_history():
     assert payload["consultations"][0]["person_id"] == str(person_id)
     assert payload["consultations"][0]["chart_id"] == str(older_chart_id)
     assert "user" not in payload
+
+
+def test_last_session_is_the_latest_completed_one_not_a_planned_meeting():
+    """A planned meeting next week sorts first by scheduled_at and was shown as
+    the "last session"; cancelled ones must not count either."""
+    owner_id = _create_astrologer()
+    person_id = _create_person(owner_id)
+    chart_id = _create_chart(owner_id, person_id)
+
+    db = TestingSessionLocal()
+    try:
+        for kind, status, when in (
+            ("natal", "completed", datetime(2026, 2, 11, 17, 0)),
+            ("solar_return", "completed", datetime(2026, 8, 19, 16, 0)),
+            ("transit", "cancelled", datetime(2026, 9, 1, 16, 0)),
+            ("transit", "planned", datetime(2026, 10, 1, 16, 0)),
+        ):
+            db.add(Consultation(
+                astrologer_id=owner_id, person_id=person_id, chart_id=chart_id, user_id=chart_id,
+                consultation_type=kind, status=status, scheduled_at=when,
+            ))
+        db.commit()
+    finally:
+        db.close()
+
+    app.dependency_overrides[require_auth] = lambda: _auth_override(owner_id)
+    with TestClient(app) as client:
+        stats = client.get(f"/api/v1/persons/{person_id}/profile").json()["stats"]
+
+    assert stats["last_consultation_at"].startswith("2026-08-19T16:00")
+    assert stats["last_consultation_type"] == "solar_return"
+    assert stats["planned_count"] == 1
+
+    # The chart list reports the same "last session" as the profile.
+    with TestClient(app) as client:
+        rows = client.get("/api/v1/users").json()
+    row = next(item for item in rows if item["user_id"] == str(chart_id))
+    assert row["last_consultation_at"].startswith("2026-08-19T16:00")
+    assert row["last_consultation_type"] == "solar_return"
+    assert row["upcoming_count"] == 1
 
 
 def test_primary_chart_must_be_owned_by_person_and_reselects_after_unlink():

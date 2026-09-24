@@ -109,7 +109,9 @@ jobs:
             app/tests/test_localized_pages_build.test.cjs \
             app/tests/test_frontend_api_client.test.cjs \
             app/tests/test_frontend_timezones.test.cjs \
-            app/tests/test_forecast_timeline_utils.test.cjs
+            app/tests/test_forecast_timeline_utils.test.cjs \
+            app/tests/test_chat_markdown.test.cjs \
+            app/tests/test_client_profile_dates.test.cjs
 
       # Forecast workspace tests are self-running scripts (process.exit on failure),
       # not `node --test` suites — invoke each directly so a red assertion fails CI.

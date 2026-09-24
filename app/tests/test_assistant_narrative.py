@@ -159,3 +159,17 @@ def test_provenance_offers_a_short_version_for_display():
     settings = build_methodology_provenance(_StubRuntime(), "u")["resolved_settings"]
     assert settings["methodology_version"] == "2b7193bcf64e"
     assert len(settings["methodology_version"]) == 12
+
+
+def test_output_asks_for_human_dates_not_tool_timestamps():
+    """Replies pasted tool timestamps verbatim ("2025-05-03 23:59:59-07:00") and
+    narrated the search window, which buried the three exact dates asked for."""
+    assert '"17 Feb 2027"' in P
+    assert "no UTC" in P and "offsets such as -07:00" in P
+    assert "Do not narrate search mechanics" in P
+
+
+def test_output_formatting_matches_what_the_chat_renders():
+    """The chat renders a small markdown subset; anything else shows up raw."""
+    assert "**bold** for a" in P
+    assert "No # headings, no" in P and "markdown tables" in P

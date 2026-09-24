@@ -109,9 +109,19 @@ function formatDate(isoDate) {
     return `${parts[2]}.${parts[1]}.${parts[0]}`;
 }
 
+// Naive backend timestamps (created_at) are UTC; aware ones (scheduled_at)
+// already end in Z or an offset such as +00:00, and appending another Z to
+// those made the date unparseable.
+const HAS_ZONE_SUFFIX = /(?:Z|[+-]\d{2}:?\d{2}(?::\d{2})?)$/i;
+
+function parseBackendInstant(isoStr) {
+    const value = isoStr.includes('T') && !HAS_ZONE_SUFFIX.test(isoStr) ? `${isoStr}Z` : isoStr;
+    return window.Timezones?.parseInstant ? window.Timezones.parseInstant(value) : new Date(value);
+}
+
 function formatDateTime(isoStr) {
     if (!isoStr) return '';
-    const dt = new Date(isoStr + (isoStr.includes('T') && !isoStr.endsWith('Z') ? 'Z' : ''));
+    const dt = parseBackendInstant(isoStr);
     if (Number.isNaN(dt.getTime())) return isoStr;
     if (window.LocaleFormatters?.formatDateTime) {
         return window.LocaleFormatters.formatDateTime(dt);
@@ -1095,7 +1105,7 @@ function renderRecordings(sessions) {
 
     refs.recordingsList.innerHTML = sessions.map((cs) => {
         const dateStr = cs.started_at
-            ? formatDateTime(`${cs.started_at}Z`)
+            ? formatDateTime(cs.started_at)
             : (cs.created_at ? formatDate(`${cs.created_at}Z`) : '—');
         const dur = cs.duration_seconds ? formatDuration(cs.duration_seconds) : '';
         const isExpandable = csIsExpandable(cs.call_status);

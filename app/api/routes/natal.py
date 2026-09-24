@@ -408,7 +408,10 @@ def list_users(
             db.query(
                 Consultation.user_id,
                 sa_func.count(Consultation.id).label("consultation_count"),
-                sa_func.max(Consultation.scheduled_at).label("last_consultation_at"),
+                # Only sessions that took place; a planned one is upcoming, not "last".
+                sa_func.max(
+                    case((Consultation.status == 'completed', Consultation.scheduled_at), else_=None)
+                ).label("last_consultation_at"),
                 sa_func.sum(
                     case((and_(Consultation.is_paid == False, Consultation.status == 'completed'), 1), else_=0)  # noqa: E712
                 ).label("unpaid_count"),
@@ -431,7 +434,10 @@ def list_users(
                     order_by=Consultation.scheduled_at.desc().nullslast(),
                 ).label("row_num"),
             )
-            .filter(Consultation.astrologer_id == auth.astrologer.id)
+            .filter(
+                Consultation.astrologer_id == auth.astrologer.id,
+                Consultation.status == 'completed',
+            )
             .subquery()
         )
 

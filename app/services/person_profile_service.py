@@ -265,7 +265,12 @@ def build_person_profile(
 
     total = len(consultations) if meeting_stats_enabled else 0
     paid = sum(1 for item in consultations if item.is_paid) if meeting_stats_enabled else 0
-    last_consultation = consultations[0] if consultations and meeting_stats_enabled else None
+    # "Last session" means one that took place: a planned meeting next week
+    # (the newest row by scheduled_at) is not the last session.
+    last_consultation = next(
+        (item for item in consultations if item.status == "completed" and item.scheduled_at),
+        None,
+    ) if meeting_stats_enabled else None
     aggregated_key_points: list[str] = []
     for call in calls:
         if call.call_status != "completed" or not call.key_points:
