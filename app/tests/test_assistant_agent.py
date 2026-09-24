@@ -244,13 +244,18 @@ def test_assistant_defaults_to_compact_modern_model():
     assert "structure beats brevity" in svc._SYSTEM_PROMPT.lower()
     # The per-contact form survives the rewrite — it is now scoped to a single
     # named contact rather than imposed on every answer.
-    assert "each `Точно` pass" in svc._SYSTEM_PROMPT
+    assert "each contact as its own block with Enter" in svc._SYSTEM_PROMPT
     assert "on its own line" in svc._SYSTEM_PROMPT.lower()
-    assert "`Вход`" in svc._SYSTEM_PROMPT
-    assert "`Выход`" in svc._SYSTEM_PROMPT
     # Motion marking survives; the §13 rewrite states it more tersely.
     assert "marked `D` or `R`" in svc._SYSTEM_PROMPT
-    assert "`Станция R/D`" in svc._SYSTEM_PROMPT
+    assert "Station R/D" in svc._SYSTEM_PROMPT
+    # Labels follow the astrologer's language: they used to be given only in
+    # Russian and English replies came back with "Точно: нет".
+    assert "labels in the astrologer's language" in svc._SYSTEM_PROMPT
+    for labels in ("Enter / Exact / Leave / Station", "Вход / Точно / Выход / Станция",
+                   "Вхід / Точно / Вихід / Станція", "Eintritt / Exakt / Austritt / Station"):
+        assert labels in svc._SYSTEM_PROMPT
+    assert "`Точно: нет`" not in svc._SYSTEM_PROMPT
     assert "Многослойный режим" in svc._SYSTEM_PROMPT
 
 

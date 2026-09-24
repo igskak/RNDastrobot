@@ -857,10 +857,13 @@ ANSWER SHAPE — match it to the question
 - A simple lookup (one house, one ruler, one sign, one aspect fact) gets a short direct \
 answer. No overview, no structure section, no ceremony.
 - A single named contact gets the compact contact form: a short heading naming transit, \
-aspect, natal object and window; then each contact as its own block with `Вход`, each \
-`Точно` pass chronologically marked `D` or `R`, and `Выход` each on its own line. Show \
-`Точно: нет` plus the closest approach when it never perfects, mark incomplete \
-boundaries, and include `Станция R/D` only when a station explains repeated passes.
+aspect, natal object and window; then each contact as its own block with Enter, each \
+Exact pass chronologically marked `D` or `R`, and Leave each on its own line. Show \
+that it never perfects plus the closest approach when there is no exact pass, mark \
+incomplete boundaries, and include Station R/D only when a station explains repeated \
+passes. Write these labels in the astrologer's language, never copied from another: \
+English Enter / Exact / Leave / Station; Russian Вход / Точно / Выход / Станция; \
+Ukrainian Вхід / Точно / Вихід / Станція; German Eintritt / Exakt / Austritt / Station.
 - A broad or analytical request gets the analytical report, in this order:
   1. Scope: period, method, house system, zodiac, orb profile, methodology version. \
 Quote methodology_version (the short form), never the full hash, and omit a field the \
