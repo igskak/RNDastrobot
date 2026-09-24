@@ -1,0 +1,63 @@
+{
+ "account": "dev test account (see private notes)",
+ "created": "2026-09-24",
+ "persons": {
+  "Maya Lindqvist": [
+   "73bf4358-e3ac-4b8d-8c0e-bb750318e830",
+   "efd89026-3251-458a-8d4a-60c978ed6729"
+  ],
+  "Daniel Okafor": [
+   "3cbcc825-8911-46ef-b1f9-f8ced09687e0",
+   "927909bf-9dc1-4268-8695-76c2e2126f7c"
+  ],
+  "Clara Moreau": [
+   "ec5c2241-d0a6-4ecb-b594-4104f75fc2cc",
+   "cd162acc-f66e-49e1-814f-32b679cce424"
+  ],
+  "Sofia Reyes": [
+   "c9ee8557-f0fb-4ee0-8898-abfe8f37ea20",
+   "182204ee-b33a-4d70-87d5-4377168e02a2"
+  ],
+  "James Whitaker": [
+   "3f0d88a7-1448-44e4-87ca-840a18e07fb4",
+   "c54a208a-c130-4134-8494-060b6408edb8"
+  ],
+  "Hana Sato": [
+   "0b409f63-90a5-4be8-aaf2-f05a33be299e",
+   "50451634-a1cb-4842-a492-e60e17585470"
+  ],
+  "Leila Haddad": [
+   "ad64a552-814b-4721-a527-44d4d57734b9",
+   "121ebdf9-8b05-43ed-a28a-52641a8030c9"
+  ],
+  "Oliver Brandt": [
+   "e7b014a1-34eb-4099-a3c9-19c5c5a21524",
+   "d59b8489-7ad2-4eab-989a-0c95faa4c370"
+  ],
+  "Amara Nwosu": [
+   "b33babf8-728d-4227-bd84-11c5c77a7af0",
+   "9a2ea7d2-8589-4b82-8668-1bc2ae60d48b"
+  ],
+  "Ethan Cole": [
+   "9f3391ea-4fe2-4c1e-94b9-33186f83d3fb",
+   "0778341c-32b7-423d-8d3e-7116ee5406bb"
+  ],
+  "Tom Berg": [
+   "d5d8d457-5fd3-4944-b429-cb09b350237e",
+   "8f99729f-8db6-4314-94b4-2e1954af5f73"
+  ]
+ },
+ "maya_memory": [
+  "c2921b4f-b765-44b9-8f6c-fc8372458788",
+  "3704e4bb-d958-40f4-8710-e03dd1b9bf9c",
+  "c2eb7994-4313-4e22-a9dd-180b890d0998",
+  "a91bde11-6fda-425b-b3e0-361fca40ae06",
+  "eb0dad2f-8039-4d82-9a77-4df18dddf2cf"
+ ],
+ "maya_consultations": [
+  "aafa57ce-c2a1-4438-be7a-166f4d05e4ee",
+  "a473b3d5-cfa6-473f-bf75-a5db959fba04",
+  "a1975073-3a3e-4181-83c6-ed82eb238de8",
+  "fd5fd676-5f03-4565-ac54-73a14e5c2eb6"
+ ]
+}
