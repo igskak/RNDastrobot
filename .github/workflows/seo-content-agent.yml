@@ -40,8 +40,14 @@ jobs:
     timeout-minutes: 45
 
     steps:
+      # Full history, not the default single commit. With depth 1 the branch has no parents
+      # inside the runner, and the 2026-09-24 agent concluded — reasonably, from what it
+      # could see — that this branch shared no history with main and would read as 1,500
+      # added files. It was 3 files. An agent reasoning about branches needs the branches.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # Two ways to pay for the agent: a Claude subscription token (CLAUDE_CODE_OAUTH_TOKEN,
       # from `claude setup-token`) or an API key (ANTHROPIC_API_KEY). The subscription token
@@ -178,7 +184,7 @@ jobs:
           claude_args: |
             --model claude-opus-5
             --max-turns 120
-            --allowedTools "Read,Glob,Grep,Edit,Write,WebSearch,WebFetch,Bash(git *),Bash(gh pr create *),Bash(gh pr view *),Bash(gh label create *),Bash(gh issue create *),Bash(npm --prefix app run *),Bash(node app/scripts/*),Bash(python -m pytest *),Bash(python app/scripts/seo_audit.py *),Bash(bash app/scripts/seo_agent_app.sh)"
+            --allowedTools "Read,Glob,Grep,Edit,Write,WebSearch,WebFetch,Bash(git *),Bash(gh pr create *),Bash(gh pr view *),Bash(gh pr list *),Bash(gh label create *),Bash(gh issue create *),Bash(npm --prefix app run *),Bash(node app/scripts/*),Bash(python -m pytest *),Bash(python app/scripts/seo_audit.py *),Bash(bash app/scripts/seo_agent_app.sh)"
           prompt: |
             Read docs/marketing/seo-agent-brief.md and follow it exactly. It is your
             complete operating brief: which item to take, what "finished" means, which
