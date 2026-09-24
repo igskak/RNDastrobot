@@ -183,14 +183,6 @@ async def isolate_solo_marketing_routes(request: Request, call_next):
     return await call_next(request)
 
 
-def _is_localized_document_path(path: str) -> bool:
-    """True for /de, /de/ and /de/<page>.html — the prerendered documents."""
-    segments = [segment for segment in path.split("/") if segment]
-    if not segments or segments[0] not in PREFIXED_LOCALES:
-        return False
-    return len(segments) == 1 or (len(segments) == 2 and segments[1].endswith(".html"))
-
-
 @app.middleware("http")
 async def redirect_legacy_locale_query(request: Request, call_next):
     """Send /pricing.html?lang=de to /de/pricing.html.
@@ -237,49 +229,26 @@ async def noindex_app_documents(request: Request, call_next):
     return response
 
 
+_STATIC_PREFIXES = ("/css/", "/js/", "/bundles/", "/locales/", "/assets/", "/fonts/")
+
+
 @app.middleware("http")
 async def static_cache_headers(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
-    frontend_document_paths = {
-        "/",
-        "/new",
-        "/login",
-        "/login.html",
-        "/index.html",
-        "/account-settings",
-        "/account-settings.html",
-        "/natal-full.html",
-        "/forecast-tables",
-        "/forecast-tables.html",
-        "/forecast-timeline",
-        "/forecast-timeline.html",
-        "/calendar",
-        "/calendar.html",
-        "/consultation-call.html",
-        "/consultation-join.html",
-        "/pricing.html",
-        "/terms.html",
-        "/cloud-astrology-software",
-        "/cloud-astrology-software.html",
-        "/astrologer-workspace",
-        "/astrologer-workspace.html",
-        "/astrology-practice-management",
-        "/astrology-practice-management.html",
-    }
 
-    if (
-        path in frontend_document_paths
-        or path.startswith(("/client/", "/consultation/"))
-        or _is_localized_document_path(path)
-    ):
-        # HTML documents should always revalidate so deploys pick up the latest
-        # versioned asset markers immediately after rollout.
+    # Every HTML document must be refetched so a deploy reaches people at once: the
+    # page names the versioned bundles, and a stale page keeps loading the old ones.
+    # Decided by content type rather than a list of paths — the list missed
+    # /forecast-new.html, and browsers then cached the workspace heuristically for
+    # hours after each release. A route that sets its own Cache-Control keeps it.
+    is_document = response.headers.get("content-type", "").startswith("text/html")
+    if is_document and not path.startswith(_STATIC_PREFIXES) and "cache-control" not in response.headers:
         response.headers["Cache-Control"] = "no-store, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
 
-    if path.startswith(("/css/", "/js/", "/bundles/", "/locales/", "/assets/", "/fonts/")):
+    if path.startswith(_STATIC_PREFIXES):
         if os.getenv("APP_ENV", "development").lower() == "production":
             response.headers.setdefault("Cache-Control", "public, max-age=31536000, immutable")
         else:
