@@ -2426,20 +2426,6 @@
           "email": "maya@example.com",
           "messenger": "Bevorzugt Sprachnachrichten"
         },
-        "timeline": {
-          "itemOne": {
-            "label": "Okt. 2025 – Mai 2026",
-            "value": "Transit-Uranus zur Radix-Venus"
-          },
-          "itemTwo": {
-            "label": "Aktueller Schwerpunkt",
-            "value": "Solar und monatliche Auslösungen"
-          },
-          "itemThree": {
-            "label": "Für die Beratung gespeichert",
-            "value": "Wichtige Termine bleiben mit dem Profil verknüpft."
-          }
-        },
         "chat": {
           "query": "Zeigen Sie Uranus-Venus-Konjunktionen für die vergangenen und die kommenden fünf Jahre.",
           "meta": "Antwort anhand der Horoskopdaten",

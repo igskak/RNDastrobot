@@ -2431,20 +2431,6 @@
           "email": "maya@example.com",
           "messenger": "Prefers voice notes"
         },
-        "timeline": {
-          "itemOne": {
-            "label": "Oct 2025 - May 2026",
-            "value": "Transit Uranus to natal Venus"
-          },
-          "itemTwo": {
-            "label": "Current focus",
-            "value": "Solar return and monthly triggers"
-          },
-          "itemThree": {
-            "label": "Saved for session",
-            "value": "Key dates stay attached to the profile"
-          }
-        },
         "chat": {
           "query": "Show Uranus-Venus conjunctions for the past and next 5 years.",
           "meta": "Answer from chart data",

@@ -31,12 +31,12 @@
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","url":"https://www.steliara.com/","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","offers":{"@type":"Offer","price":"24","priceCurrency":"USD"},"description":"Charts, the people you read for, and your recorded consultations in one place. Steliara is a browser workspace for practicing astrologers. Free 14-day trial.","inLanguage":"en"}
     </script>
-    <link rel="stylesheet" href="/bundles/index.bundle.css?v=ae23f8f30590">
-    <link rel="stylesheet" href="/css/locale-switcher.css?v=ae23f8f30590">
+    <link rel="stylesheet" href="/bundles/index.bundle.css?v=d33c84631e3a">
+    <link rel="stylesheet" href="/css/locale-switcher.css?v=d33c84631e3a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'ae23f8f30590';</script>
+    <script>window.__APP_BUILD_ID__ = 'd33c84631e3a';</script>
 
     <meta property="og:locale" content="en_US">
 </head>
@@ -149,16 +149,40 @@
                                 </div>
                             </section>
                             <section id="previewPaneForecast" class="landing-preview-pane" role="tabpanel" aria-labelledby="previewTabForecast" data-preview-pane="forecast" hidden="">
-                                <div class="landing-preview-wheel" aria-hidden="true">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
-                                <div class="landing-timeline-preview">
-                                    <div><span data-i18n="page.index.preview.timeline.itemOne.label">Oct 2025 - May 2026</span><strong data-i18n="page.index.preview.timeline.itemOne.value">Transit Uranus to natal Venus</strong></div>
-                                    <div><span data-i18n="page.index.preview.timeline.itemTwo.label">Current focus</span><strong data-i18n="page.index.preview.timeline.itemTwo.value">Solar return and monthly triggers</strong></div>
-                                    <div><span data-i18n="page.index.preview.timeline.itemThree.label">Saved for session</span><strong data-i18n="page.index.preview.timeline.itemThree.value">Key dates stay attached to the profile</strong></div>
+                                <div class="landing-mini-app is-periods">
+                                    <div class="landing-mini-toolbar">
+                                        <div class="landing-mini-id">
+                                            <strong class="landing-mini-name" data-i18n="page.index.preview.profile.name">Maya Lindqvist</strong>
+                                            <span class="landing-mini-meta"><span data-i18n="common.method.transit">Transits</span> · 10.2026 – 09.2027</span>
+                                        </div>
+                                        <div class="landing-mini-seg" aria-hidden="true">
+                                            <span data-i18n="page.forecast.presets.sixMonths">6 months</span>
+                                            <span class="is-active" data-i18n="page.forecast.presets.oneYear">1 year</span>
+                                        </div>
+                                    </div>
+                                    <div class="landing-mini-card landing-mini-timeline" aria-hidden="true">
+                                        <div class="landing-mini-axis"><span style="--at:0%">10.2026</span><span style="--at:25.3%">01.2027</span><span style="--at:50%">04.2027</span><span style="--at:75%">07.2027</span></div>
+                                        <ul class="landing-mini-rows">
+                                            <li class="is-conj"><span class="landing-mini-glyphs">♇ ☌ ☽</span><span class="landing-mini-track"><i style="--from:0%;--to:100%"></i><b style="--at:38.2%"></b><b style="--at:84.1%"></b></span></li>
+                                            <li class="is-square"><span class="landing-mini-glyphs">♆ □ ♄</span><span class="landing-mini-track"><i style="--from:0%;--to:39.3%"></i><b style="--at:10.4%"></b></span></li>
+                                            <li class="is-trine"><span class="landing-mini-glyphs">♅ △ ☽</span><span class="landing-mini-track"><i style="--from:0%;--to:20.9%"></i><i style="--from:50%;--to:81.3%"></i><b style="--at:65.7%"></b></span></li>
+                                            <li class="is-square"><span class="landing-mini-glyphs">♄ □ ♂</span><span class="landing-mini-track"><i style="--from:41.8%;--to:46.4%"></i><b style="--at:44.2%"></b></span></li>
+                                            <li class="is-opp"><span class="landing-mini-glyphs">♃ ☍ ☿</span><span class="landing-mini-track"><i style="--from:15.9%;--to:23.6%"></i><i style="--from:77.2%;--to:79.9%"></i><b style="--at:19.8%"></b><b style="--at:78.6%"></b></span></li>
+                                            <li class="is-sextile"><span class="landing-mini-glyphs">♆ ⚹ ☽</span><span class="landing-mini-track"><i style="--from:38.5%;--to:100%"></i><b style="--at:61.8%"></b></span></li>
+                                            <li class="is-square"><span class="landing-mini-glyphs">⚷ □ ☽</span><span class="landing-mini-track"><i style="--from:67%;--to:100%"></i><b style="--at:85.2%"></b></span></li>
+                                        </ul>
+                                        <div class="landing-mini-legend">
+                                            <span class="is-conj">☌ <span data-i18n="astro.aspect.Conjunction">Conjunction</span></span>
+                                            <span class="is-trine">△ <span data-i18n="astro.aspect.Trine">Trine</span></span>
+                                            <span class="is-sextile">⚹ <span data-i18n="astro.aspect.Sextile">Sextile</span></span>
+                                            <span class="is-square">□ <span data-i18n="astro.aspect.Square">Square</span></span>
+                                            <span class="is-opp">☍ <span data-i18n="astro.aspect.Opposition">Opposition</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="landing-mini-card landing-mini-detail">
+                                        <p class="landing-mini-label"><span class="landing-mini-glyphs">♇ ☌ ☽</span> <span data-i18n="astro.planet.Pluto">Pluto</span> · <span data-i18n="astro.aspect.Conjunction">Conjunction</span> · <span data-i18n="astro.planet.Moon">Moon</span></p>
+                                        <div class="landing-mini-exacts"><span data-i18n="page.forecast.timeline.tooltip.exact">Exact</span><time>17.02.2027 D</time><time>03.08.2027 R</time><time>27.12.2027 D</time></div>
+                                    </div>
                                 </div>
                             </section>
                             <section id="previewPaneChat" class="landing-preview-pane" role="tabpanel" aria-labelledby="previewTabChat" data-preview-pane="chat" hidden="">
@@ -336,8 +360,8 @@
         </footer>
     </div>
 
-    <script type="module" src="/js/bundles/index.bundle.js?v=ae23f8f30590"></script>
+    <script type="module" src="/js/bundles/index.bundle.js?v=d33c84631e3a"></script>
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=ae23f8f30590"></script>
-    <script src="/js/locale-switcher.js?v=ae23f8f30590"></script>
+    <script src="/js/analytics.js?v=d33c84631e3a"></script>
+    <script src="/js/locale-switcher.js?v=d33c84631e3a"></script>
 </body></html>

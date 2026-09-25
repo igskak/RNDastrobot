@@ -1706,14 +1706,24 @@ input[type="number"] {
 
 .landing-preview-pane {
     display: grid;
-    align-content: start;
+    align-content: stretch;
     gap: 14px;
     min-width: 0;
     animation: preview-pane-in 0.34s var(--motion-soft) both;
 }
 
+/* Every pane shares one grid cell, so the card keeps the height of the tallest
+   pane and does not jump when the tabs switch. Hidden panes stay out of view and
+   out of the accessibility tree. */
+.landing-preview-pane {
+    grid-area: 1 / 1;
+}
+
 .landing-preview-pane[hidden] {
-    display: none;
+    display: grid;
+    visibility: hidden;
+    pointer-events: none;
+    animation: none;
 }
 
 @keyframes preview-pane-in {
@@ -1946,6 +1956,182 @@ input[type="number"] {
     color: var(--text-muted);
 }
 
+/* "Periods": the real year of transits for the demo chart, drawn like the app's
+   timeline. Colours are the app's default aspect palette. */
+.landing-mini-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.landing-mini-toolbar .landing-mini-meta {
+    white-space: normal;
+}
+
+.landing-mini-seg {
+    display: flex;
+    flex: none;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 8px;
+    background: var(--bg-tertiary, #f0ede4);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.landing-mini-seg span {
+    padding: 3px 8px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.landing-mini-seg .is-active {
+    background: #fff;
+    color: var(--accent);
+    box-shadow: 0 1px 3px rgba(26, 22, 20, 0.08);
+}
+
+/* The timeline takes whatever height the tallest pane leaves, rows spread evenly. */
+.landing-mini-app.is-periods {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.landing-mini-timeline {
+    --glyph-col: 56px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 6px;
+}
+
+.landing-mini-axis {
+    position: relative;
+    height: 14px;
+    margin-left: var(--glyph-col);
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.landing-mini-axis span {
+    position: absolute;
+    left: var(--at);
+    padding-left: 3px;
+    border-left: 1px solid rgba(30, 58, 95, 0.18);
+    line-height: 14px;
+}
+
+.landing-mini-rows {
+    display: grid;
+    align-content: space-evenly;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.landing-mini-rows li {
+    display: grid;
+    grid-template-columns: var(--glyph-col) minmax(0, 1fr);
+    align-items: center;
+}
+
+.landing-mini-glyphs {
+    color: var(--text-primary);
+    font-family: var(--font-symbol);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.landing-mini-track {
+    position: relative;
+    height: 12px;
+    border-radius: 6px;
+    background: rgba(30, 58, 95, 0.04);
+}
+
+.landing-mini-track i {
+    position: absolute;
+    top: 3px;
+    left: var(--from);
+    width: max(calc(var(--to) - var(--from)), 6px);
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, transparent, var(--aspect) 30%, var(--aspect) 70%, transparent);
+    opacity: 0.55;
+}
+
+.landing-mini-track b {
+    position: absolute;
+    top: 1px;
+    left: var(--at);
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--aspect);
+    box-shadow: 0 0 0 1px rgba(26, 22, 20, 0.08);
+}
+
+.landing-mini-rows .is-conj,
+.landing-mini-legend .is-conj { --aspect: #f59e0b; }
+.landing-mini-rows .is-trine,
+.landing-mini-legend .is-trine { --aspect: #3b82f6; }
+.landing-mini-rows .is-sextile,
+.landing-mini-legend .is-sextile { --aspect: #22c55e; }
+.landing-mini-rows .is-square,
+.landing-mini-legend .is-square,
+.landing-mini-rows .is-opp,
+.landing-mini-legend .is-opp { --aspect: #ef4444; }
+
+.landing-mini-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(30, 58, 95, 0.07);
+    color: var(--text-muted);
+    font-size: 10.5px;
+}
+
+.landing-mini-legend > span {
+    color: var(--aspect);
+    font-family: var(--font-symbol);
+}
+
+.landing-mini-legend > span span {
+    color: var(--text-muted);
+    font-family: var(--font-ui);
+}
+
+.landing-mini-detail .landing-mini-glyphs {
+    margin-right: 4px;
+}
+
+.landing-mini-exacts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.landing-mini-exacts time {
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: rgba(245, 158, 11, 0.14);
+    color: #92400e;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
 /* On a phone the hero card must stay short: keep the person, the counts and two
    notes; the side cards return from tablet width up. */
 @media (max-width: 560px) {
@@ -1960,7 +2146,6 @@ input[type="number"] {
 
 }
 
-.landing-timeline-preview span,
 .landing-chat-bubble span {
     display: block;
     color: var(--text-muted);
@@ -1970,54 +2155,6 @@ input[type="number"] {
     line-height: 1.3;
     text-transform: uppercase;
 }
-
-.landing-preview-wheel {
-    position: relative;
-    width: min(276px, 66vw);
-    aspect-ratio: 1;
-    margin: 6px auto 2px;
-    border: 1px solid rgba(30, 58, 95, 0.18);
-    border-radius: 50%;
-    background:
-        repeating-conic-gradient(from -8deg, rgba(30, 58, 95, 0.12) 0deg 1deg, transparent 1deg 30deg),
-        conic-gradient(from 22deg, rgba(184, 147, 90, 0.18), transparent 18%, rgba(47, 93, 91, 0.13), transparent 44%, rgba(30, 58, 95, 0.12), transparent 72%, rgba(184, 147, 90, 0.18)),
-        radial-gradient(circle, transparent 0 31%, rgba(184, 147, 90, 0.18) 31.5% 32.5%, transparent 33% 52%, rgba(30, 58, 95, 0.14) 52.5% 53.5%, transparent 54%);
-    animation: landing-wheel-drift 34s linear infinite;
-}
-
-@keyframes landing-wheel-drift {
-    to { transform: rotate(360deg); }
-}
-
-.landing-preview-wheel::before,
-.landing-preview-wheel::after,
-.landing-preview-wheel span {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-}
-
-.landing-preview-wheel::before {
-    inset: 16%;
-    border: 1px dashed rgba(184, 147, 90, 0.42);
-}
-
-.landing-preview-wheel::after {
-    inset: 47%;
-    background: var(--accent);
-}
-
-.landing-preview-wheel span {
-    width: 10px;
-    height: 10px;
-    background: var(--gold);
-    box-shadow: 0 0 0 5px rgba(184, 147, 90, 0.12);
-}
-
-.landing-preview-wheel span:nth-child(1) { top: 10%; left: 48%; }
-.landing-preview-wheel span:nth-child(2) { right: 16%; top: 32%; }
-.landing-preview-wheel span:nth-child(3) { left: 24%; bottom: 18%; }
-.landing-preview-wheel span:nth-child(4) { right: 28%; bottom: 13%; background: #2F5D5B; }
 
 .landing-preview-grid {
     margin-top: 14px;
@@ -2034,41 +2171,6 @@ input[type="number"] {
     margin-top: 6px;
     color: var(--text-primary);
     font-size: 16px;
-}
-
-.landing-timeline-preview {
-    display: grid;
-    gap: 1px;
-    overflow: hidden;
-    border: 1px solid rgba(30, 58, 95, 0.09);
-    border-radius: 14px;
-    background: rgba(30, 58, 95, 0.08);
-}
-
-.landing-timeline-preview div {
-    position: relative;
-    display: grid;
-    gap: 5px;
-    padding: 13px 14px 13px 34px;
-    background: rgba(255, 255, 255, 0.86);
-}
-
-.landing-timeline-preview div::before {
-    content: "";
-    position: absolute;
-    left: 14px;
-    top: 18px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--gold);
-    box-shadow: 0 0 0 4px rgba(184, 147, 90, 0.13);
-}
-
-.landing-timeline-preview strong {
-    color: var(--text-primary);
-    font-size: 14px;
-    line-height: 1.35;
 }
 
 .landing-chat-preview {
@@ -4865,11 +4967,6 @@ input[type="number"] {
 
     .landing-preview-stage {
         min-height: auto;
-    }
-
-    .landing-preview-wheel {
-        width: min(250px, 76vw);
-        margin: 20px auto;
     }
 
     .landing-card-grid-3,
