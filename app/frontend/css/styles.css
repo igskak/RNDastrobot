@@ -1665,7 +1665,7 @@ input[type="number"] {
 
 .landing-preview-tabs {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 4px;
     margin-top: 16px;
     padding: 4px;
@@ -1955,6 +1955,108 @@ input[type="number"] {
 .landing-mini-row > span:not(.landing-mini-chip) {
     color: var(--text-muted);
 }
+
+/* "Chart": the bi-wheel, natal inside and transits outside, drawn by
+   docs/marketing/product-hunt/gallery-src/hero_wheel.py from the ephemeris. */
+.landing-mini-app.is-wheel {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.landing-mini-layer {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px 3px 10px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.landing-mini-layer b {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.landing-mini-wheel-wrap {
+    display: grid;
+    place-items: center;
+    min-height: 0;
+}
+
+.landing-mini-wheel {
+    display: block;
+    width: 100%;
+    max-width: 330px;
+    height: auto;
+}
+
+.landing-mini-wheel text {
+    font-family: var(--font-symbol);
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+.landing-mini-wheel .is-house,
+.landing-mini-wheel .is-angle,
+.landing-mini-wheel .is-retro {
+    font-family: var(--font-ui);
+    fill: #9ca3af;
+}
+
+.landing-mini-wheel .is-house {
+    font-size: 6.5px;
+}
+
+.landing-mini-wheel .is-angle {
+    fill: #1f2937;
+    font-size: 6.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.landing-mini-wheel .is-retro {
+    fill: #ef4444;
+    font-size: 5.5px;
+    font-weight: 600;
+}
+
+.landing-mini-aspects {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.landing-mini-aspects li {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-top: 2px solid var(--aspect);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.landing-mini-aspects .is-conj { --aspect: #f59e0b; }
+.landing-mini-aspects .is-trine { --aspect: #3b82f6; }
+.landing-mini-aspects .is-sextile { --aspect: #22c55e; }
+.landing-mini-aspects .is-square,
+.landing-mini-aspects .is-opp { --aspect: #ef4444; }
 
 /* "Periods": the real year of transits for the demo chart, drawn like the app's
    timeline. Colours are the app's default aspect palette. */
@@ -2260,7 +2362,8 @@ input[type="number"] {
     }
 
     .landing-mini-side,
-    .landing-mini-notes li:nth-child(n + 3) {
+    .landing-mini-notes li:nth-child(n + 3),
+    .landing-mini-app.is-wheel .landing-mini-meta {
         display: none;
     }
 

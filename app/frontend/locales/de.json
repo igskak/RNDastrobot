@@ -2411,9 +2411,13 @@
         "title": "Klientenprofil",
         "status": "Alles Wichtige griffbereit",
         "modes": {
+          "chart": "Horoskop",
           "profile": "Profil",
           "forecast": "Zeiträume",
           "chat": "Chat"
+        },
+        "wheel": {
+          "alt": "Biwheel für Maya Lindqvist: innen das Geburtshoroskop, außen die Transite vom 17.02.2027, Pluto exakt auf ihrem Radix-Mond"
         },
         "profile": {
           "name": "Maya Lindqvist",

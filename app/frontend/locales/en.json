@@ -2416,9 +2416,13 @@
         "title": "Practice profile",
         "status": "Context nearby",
         "modes": {
+          "chart": "Chart",
           "profile": "Profile",
           "forecast": "Periods",
           "chat": "Chat"
+        },
+        "wheel": {
+          "alt": "Bi-wheel for Maya Lindqvist: natal chart inside, transits of 17.02.2027 outside, Pluto exactly on her natal Moon"
         },
         "profile": {
           "name": "Maya Lindqvist",
