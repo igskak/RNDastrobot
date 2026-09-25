@@ -2464,7 +2464,7 @@
           },
           "three": {
             "q": "How does the chat work?",
-            "a": "Ask a question from chart or forecast data. For example, ask for transit Uranus conjunctions to natal Venus for the past and next 5 years and get the periods without manual searching."
+            "a": "Ask a question from chart or forecast data. For example, ask when transiting Pluto is exactly conjunct the natal Moon over the past and next 5 years, and get every exact date without searching by hand."
           },
           "four": {
             "q": "Will it interpret the chart for me?",
@@ -2576,7 +2576,7 @@
       "assistant": {
         "kicker": "Chat over chart data",
         "title": "Ask, and get an answer from the chart.",
-        "text": "The chat works from the real calculations. Ask about transiting Uranus conjunct natal Venus over the past and next five years and you get exact periods. Or ask it to show something on screen, and it will.",
+        "text": "The chat works from the real calculations. Ask when transiting Pluto is exactly conjunct the natal Moon over the past and next five years, and you get every exact pass with its date. Or ask it to show something on screen, and it will.",
         "note": "The chat finds the data. The interpretation stays yours."
       },
       "people": {

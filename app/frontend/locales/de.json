@@ -2459,7 +2459,7 @@
           },
           "three": {
             "q": "Wie funktioniert der Chat?",
-            "a": "Stellen Sie eine Frage zu Horoskop- oder Prognosedaten. Lassen Sie sich zum Beispiel Konjunktionen von Transit-Uranus zur Radix-Venus für die vergangenen und kommenden fünf Jahre zeigen. Sie erhalten die Zeiträume, ohne selbst danach suchen zu müssen."
+            "a": "Stellen Sie eine Frage zu Horoskop- oder Prognosedaten. Fragen Sie zum Beispiel, wann Transit-Pluto in den vergangenen und kommenden fünf Jahren exakt auf dem Radix-Mond steht. Sie erhalten jedes exakte Datum, ohne selbst danach suchen zu müssen."
           },
           "four": {
             "q": "Übernimmt Steliara die Deutung für mich?",
@@ -2571,7 +2571,7 @@
       "assistant": {
         "kicker": "Fragen zu Horoskopdaten",
         "title": "Ihre Frage. Eine Antwort aus dem Horoskop.",
-        "text": "Der Chat arbeitet mit den tatsächlichen Berechnungen. Fragen Sie nach Konjunktionen von Transit-Uranus zur Radix-Venus in den vergangenen und kommenden fünf Jahren – Sie erhalten die exakten Zeiträume. Oder lassen Sie sich etwas direkt auf dem Bildschirm anzeigen.",
+        "text": "Der Chat arbeitet mit den tatsächlichen Berechnungen. Fragen Sie, wann Transit-Pluto in den vergangenen und kommenden fünf Jahren exakt auf dem Radix-Mond steht – Sie erhalten jeden exakten Durchgang mit Datum. Oder lassen Sie sich etwas direkt auf dem Bildschirm anzeigen.",
         "note": "Der Chat findet die Daten. Die Deutung bleibt bei Ihnen."
       },
       "people": {
