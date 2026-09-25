@@ -2432,10 +2432,10 @@
           "messenger": "Prefers voice notes"
         },
         "chat": {
-          "query": "Show Uranus-Venus conjunctions for the past and next 5 years.",
+          "query": "When is transiting Pluto exactly conjunct natal Moon? Past and next 5 years",
           "meta": "Answer from chart data",
-          "answerTitle": "Three exact windows found",
-          "answer": "The assistant returns dates, context, and the chart links you need before the session."
+          "answerTitle": "Pluto conjunct natal Moon, past and next 5 years",
+          "noExact": "2025 and 2029: in orb, never exact (closest 2.02° and 2.21°)"
         },
         "metricOne": {
           "label": "Profile",

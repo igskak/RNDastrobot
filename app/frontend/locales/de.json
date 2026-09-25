@@ -2427,10 +2427,10 @@
           "messenger": "Bevorzugt Sprachnachrichten"
         },
         "chat": {
-          "query": "Zeigen Sie Uranus-Venus-Konjunktionen für die vergangenen und die kommenden fünf Jahre.",
+          "query": "Wann steht Transit-Pluto exakt auf dem Radix-Mond? Letzte und nächste 5 Jahre",
           "meta": "Antwort anhand der Horoskopdaten",
-          "answerTitle": "Drei Zeitfenster mit exakten Kontakten gefunden",
-          "answer": "Der Assistent liefert Termine, Zusammenhänge und Links zu den Horoskopen, die Sie für die Beratung brauchen."
+          "answerTitle": "Pluto Konjunktion Radix-Mond, letzte und nächste 5 Jahre",
+          "noExact": "2025 und 2029: im Orbis, aber nie exakt (am nächsten 2,02° und 2,21°)"
         },
         "metricOne": {
           "label": "Profil",
