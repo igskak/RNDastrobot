@@ -173,6 +173,8 @@ async def isolate_solo_marketing_routes(request: Request, call_next):
         "/astrologer-workspace.html",
         "/astrology-practice-management",
         "/astrology-practice-management.html",
+        "/record-astrology-consultations",
+        "/record-astrology-consultations.html",
     }
     # A prefixed URL is the same page in another language, so it needs the same fence.
     commercial_paths |= {
@@ -412,6 +414,7 @@ async def robots_txt():
 _SITEMAP_PAGES = (
     ("/", "1.0"),
     ("/astrology-practice-management", "0.9"),
+    ("/record-astrology-consultations", "0.9"),
     ("/astrologer-workspace", "0.9"),
     ("/cloud-astrology-software", "0.9"),
     ("/pricing.html", "0.8"),
@@ -420,7 +423,7 @@ _SITEMAP_PAGES = (
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-09-17"
+_SITEMAP_LASTMOD = "2026-09-24"
 
 
 def _indexable_document_paths() -> frozenset:
@@ -544,6 +547,7 @@ chart, and not a consumer horoscope product.
 
 - Home: {base}/
 - Astrology practice management: {base}/astrology-practice-management
+- Recording and transcribing consultations: {base}/record-astrology-consultations
 - Workspace with recorded, transcribed sessions: {base}/astrologer-workspace
 - Cloud astrology software (Mac and Windows): {base}/cloud-astrology-software
 - Pricing: {base}/pricing.html
@@ -861,6 +865,18 @@ async def conquest_workspace_page():
 async def conquest_practice_page():
     """SEO category landing: astrology practice management software."""
     return _serve_frontend_page("astrology-practice-management.html")
+
+
+@app.get("/record-astrology-consultations")
+@app.get("/record-astrology-consultations.html")
+async def conquest_recording_page():
+    """SEO category landing: recording, transcribing and summarizing consultations.
+
+    The differentiator had no page of its own: /astrologer-workspace buries it under
+    "More than charts and a client list", and on 2026-09-17 a competitor held both top
+    slots on Bing for "astrology software that records client sessions".
+    """
+    return _serve_frontend_page("record-astrology-consultations.html")
 
 
 @app.get("/health")

@@ -6,6 +6,14 @@ Google's own `site:` operator was unavailable (Google served a bot check and Sta
 proof-of-work challenge; neither was bypassed), so Google-side index counts are inferred
 from GA4 rather than observed directly — see "What we still cannot see".
 
+> **Update 2026-09-18 — one conclusion below is wrong.** Search Console is now connected
+> and the first pull, for the 28 days to 09-14 (entirely before these fixes), reports
+> **105 impressions, 2 clicks, average position 19.1**, up from 32 impressions and
+> position 25.6 in the prior 28 days. Google *is* showing the site. So this is a page-two
+> ranking problem, not an indexing one, and the "effectively no" in the table below reads
+> as "no clicks" rather than "not shown". GA4 only ever sees clicks, which is why the
+> original inference went wrong. Everything else here stands.
+
 ---
 
 ## 1. The short version
@@ -193,8 +201,11 @@ works through. See [`seo-automation-pipeline.md`](seo-automation-pipeline.md).
    until `INDEXNOW_KEY` is set on both the Render service and repo secrets.
 9. **Bing Webmaster Tools** — not verified. Free, and Bing is where we already rank.
 10. **Brand-entity work** for the `stelara` collision: Crunchbase, LinkedIn company page,
-    Product Hunt, G2/Capterra listings, Wikidata. These teach engines that "steliara" is a
-    distinct entity rather than a typo.
+    Product Hunt, G2/Capterra listings. These teach engines that "steliara" is a distinct
+    entity rather than a typo. Worked steps in
+    [`wave2-directory-kit.md`](wave2-directory-kit.md). Not Wikidata: its notability policy
+    needs a Wikipedia sitelink or serious published references, and an item without either
+    gets deleted.
 11. **Directory submissions** — `docs/marketing/wave2-directory-kit.md` exists, execution
     does not.
 
@@ -205,10 +216,10 @@ works through. See [`seo-automation-pipeline.md`](seo-automation-pipeline.md).
 Honest list of gaps in this audit, because acting on them requires access this session
 does not have:
 
-- **Google Search Console data.** The property is verified but there is no API connector
-  here. Impressions, average position, actual index coverage and crawl errors are all
-  invisible. This is the single most valuable missing input, and it is the first thing the
-  automated pipeline needs.
+- ~~**Google Search Console data.**~~ Connected 2026-09-18 via a service account;
+  `app/scripts/gsc_report.py` pulls it into the daily monitor and the history lands on the
+  `seo-metrics` branch. It immediately corrected the headline conclusion — see the update
+  at the top.
 - **Google index count.** `site:` was blocked by a bot check. Bing's index is observable;
   Google's is not.
 - **Backlink profile.** No Ahrefs/Semrush API in this session. Assume near-zero: the

@@ -56,6 +56,10 @@ python app/scripts/seo_audit.py --base http://127.0.0.1:8099 --canonical-base ht
 The last one needs the app running locally; the workflow starts it. It is the check that
 matters most: it will catch a page that renders blank, has no H1, or lost its canonical.
 
+After changing `app/api/main.py`, restart the app with `bash app/scripts/seo_agent_app.sh`
+before re-running the audit. That exact command is the one your permissions allow; an
+inline `VAR=... nohup python -m uvicorn ... &` will be refused.
+
 ## Writing rules
 
 These are not style preferences. Breaking them produces a page that is worse than no page.
