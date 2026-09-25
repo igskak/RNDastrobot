@@ -2419,17 +2419,17 @@
           "forecast": "Periods",
           "chat": "Chat"
         },
-        "insightTitle": "Remember what matters",
-        "insight": "Before a meeting, you can see the chart, recordings, notes, and important points without rebuilding the history from memory.",
-        "context": {
-          "personLabel": "Person",
-          "personValue": "Natal profile",
-          "notesLabel": "Notes",
-          "notesValue": "12 saved points",
-          "recordingsLabel": "Calls",
-          "recordingsValue": "2 recordings",
-          "chartsLabel": "Charts",
-          "chartsValue": "Natal + forecast"
+        "profile": {
+          "name": "Maya Lindqvist",
+          "place": "Portland, Oregon, USA",
+          "tag": "Monthly",
+          "note1": "Pluto is crossing her natal Moon through 2027. Keep Saturn square Mars in view for the freelance timing.",
+          "note2": "Thinking about leaving the design studio to go freelance. Wants to know when, not whether.",
+          "note3": "Send the solar return notes before her birthday in March.",
+          "partnerName": "Tom Berg",
+          "partnerLabel": "Partner",
+          "email": "maya@example.com",
+          "messenger": "Prefers voice notes"
         },
         "timeline": {
           "itemOne": {

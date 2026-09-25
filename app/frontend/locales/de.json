@@ -2414,17 +2414,17 @@
           "forecast": "Zeiträume",
           "chat": "Chat"
         },
-        "insightTitle": "Das Wesentliche im Blick behalten",
-        "insight": "Vor dem Gespräch sehen Sie Horoskop, Aufnahmen, Notizen und wichtige Punkte. So müssen Sie sich die Vorgeschichte nicht erst wieder in Erinnerung rufen.",
-        "context": {
-          "personLabel": "Person",
-          "personValue": "Radixprofil",
-          "notesLabel": "Notizen",
-          "notesValue": "12 gespeicherte Punkte",
-          "recordingsLabel": "Gespräche",
-          "recordingsValue": "2 Aufnahmen",
-          "chartsLabel": "Horoskope",
-          "chartsValue": "Radix + Prognose"
+        "profile": {
+          "name": "Maya Lindqvist",
+          "place": "Portland, Oregon, USA",
+          "tag": "Monatlich",
+          "note1": "Pluto läuft bis 2027 über ihren Radix-Mond. Für den Zeitpunkt der Selbstständigkeit das Saturn-Quadrat zum Mars im Blick behalten.",
+          "note2": "Überlegt, das Designstudio zu verlassen und sich selbstständig zu machen. Will wissen, wann – nicht, ob.",
+          "note3": "Die Notizen zum Solar vor ihrem Geburtstag im März schicken.",
+          "partnerName": "Tom Berg",
+          "partnerLabel": "Partner",
+          "email": "maya@example.com",
+          "messenger": "Bevorzugt Sprachnachrichten"
         },
         "timeline": {
           "itemOne": {

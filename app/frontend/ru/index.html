@@ -31,12 +31,12 @@
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","url":"https://www.steliara.com/ru/","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","offers":{"@type":"Offer","price":"24","priceCurrency":"USD"},"description":"Карты, люди, с которыми вы работаете, и записи консультаций — в одном месте. Steliara — рабочее пространство астролога в браузере. 14 дней бесплатно.","inLanguage":"ru"}
     </script>
-    <link rel="stylesheet" href="/bundles/index.bundle.css?v=21eb92fb8012">
-    <link rel="stylesheet" href="/css/locale-switcher.css?v=21eb92fb8012">
+    <link rel="stylesheet" href="/bundles/index.bundle.css?v=ae23f8f30590">
+    <link rel="stylesheet" href="/css/locale-switcher.css?v=ae23f8f30590">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '21eb92fb8012';</script>
+    <script>window.__APP_BUILD_ID__ = 'ae23f8f30590';</script>
 
     <meta property="og:locale" content="ru_RU">
 </head>
@@ -104,30 +104,48 @@
                         </div>
                         <div class="landing-preview-stage" data-preview-stage="">
                             <section id="previewPaneProfile" class="landing-preview-pane is-active" role="tabpanel" aria-labelledby="previewTabProfile" data-preview-pane="profile">
-                                <div class="landing-product-frame">
-                                    <div class="landing-product-sidebar" aria-hidden="true">
-                                        <span></span>
-                                        <span></span>
-                                        <span></span>
+                                <div class="landing-mini-app">
+                                    <div class="landing-mini-head">
+                                        <span class="landing-mini-avatar" aria-hidden="true">ML</span>
+                                        <div class="landing-mini-id">
+                                            <strong class="landing-mini-name" data-i18n="page.index.preview.profile.name">Майя Линдквист</strong>
+                                            <span class="landing-mini-meta">14.03.1988 · 06:42 · <span data-i18n="page.index.preview.profile.place">Портленд, Орегон, США</span></span>
+                                        </div>
+                                        <span class="landing-mini-chip" data-i18n="page.index.preview.profile.tag">Ежемесячно</span>
                                     </div>
-                                    <div class="landing-product-main">
-                                        <div class="landing-product-person">
-                                            <div class="landing-product-avatar" aria-hidden="true"></div>
-                                            <div>
-                                                <span data-i18n="page.index.preview.context.personLabel">Человек</span>
-                                                <strong data-i18n="page.index.preview.context.personValue">Натальный профиль</strong>
+                                    <dl class="landing-mini-stats">
+                                        <div><dd>4</dd><dt data-i18n="page.clientProfile.stats.totalSessions">Всего сессий</dt></div>
+                                        <div><dd>3</dd><dt data-i18n="page.clientProfile.stats.completed">Завершено</dt></div>
+                                        <div><dd>1</dd><dt data-i18n="page.clientProfile.stats.planned">Запланировано</dt></div>
+                                        <div class="is-wide"><dd>19.08.2026 (<span data-i18n="page.clientProfile.savedCharts.types.solar_return">Соляр</span>)</dd><dt data-i18n="page.clientProfile.stats.lastSession">Последняя сессия</dt></div>
+                                    </dl>
+                                    <div class="landing-mini-cols">
+                                        <div class="landing-mini-card">
+                                            <p class="landing-mini-label" data-i18n="page.clientProfile.sections.notes">Заметки</p>
+                                            <ul class="landing-mini-notes">
+                                                <li><time>12.09.2026</time><span data-i18n="page.index.preview.profile.note1">Плутон проходит по её натальной Луне до конца 2027 года. Для перехода на фриланс держать в поле зрения квадрат Сатурна к Марсу.</span></li>
+                                                <li><time>19.08.2026</time><span data-i18n="page.index.preview.profile.note2">Думает уйти из дизайн-студии на фриланс. Хочет понять, когда, а не стоит ли.</span></li>
+                                                <li><time>06.05.2026</time><span data-i18n="page.index.preview.profile.note3">Отправить заметки по соляру до её дня рождения в марте.</span></li>
+                                            </ul>
+                                        </div>
+                                        <div class="landing-mini-side">
+                                            <div class="landing-mini-card">
+                                                <p class="landing-mini-label" data-i18n="page.clientProfile.sections.contact">Контакты</p>
+                                                <dl class="landing-mini-fields">
+                                                    <div><dt data-i18n="page.clients.crm.email">Эл. почта</dt><dd data-i18n="page.index.preview.profile.email">maya@example.com</dd></div>
+                                                    <div><dt data-i18n="page.clients.crm.messenger">Мессенджер</dt><dd data-i18n="page.index.preview.profile.messenger">Предпочитает голосовые</dd></div>
+                                                </dl>
+                                            </div>
+                                            <div class="landing-mini-card">
+                                                <p class="landing-mini-label" data-i18n="page.clientProfile.linkedCharts.title">Карты профиля</p>
+                                                <div class="landing-mini-row is-primary"><strong data-i18n="page.index.preview.profile.name">Майя Линдквист</strong><span>14.03.1988</span></div>
+                                            </div>
+                                            <div class="landing-mini-card">
+                                                <p class="landing-mini-label" data-i18n="page.clientProfile.sections.relatedPeople">Карты синастрий</p>
+                                                <div class="landing-mini-row"><strong data-i18n="page.index.preview.profile.partnerName">Том Берг</strong><span class="landing-mini-chip is-small" data-i18n="page.index.preview.profile.partnerLabel">Партнёр</span></div>
                                             </div>
                                         </div>
-                                        <div class="landing-product-context">
-                                            <div><span data-i18n="page.index.preview.context.notesLabel">Заметки</span><strong data-i18n="page.index.preview.context.notesValue">12 важных пунктов</strong></div>
-                                            <div><span data-i18n="page.index.preview.context.recordingsLabel">Встречи</span><strong data-i18n="page.index.preview.context.recordingsValue">2 записи</strong></div>
-                                            <div><span data-i18n="page.index.preview.context.chartsLabel">Карты</span><strong data-i18n="page.index.preview.context.chartsValue">Натал + прогноз</strong></div>
-                                        </div>
                                     </div>
-                                </div>
-                                <div class="landing-preview-note">
-                                    <strong data-i18n="page.index.preview.insightTitle">Быстро вспомнить главное</strong>
-                                    <p data-i18n="page.index.preview.insight">Перед встречей видно карту, записи разговоров, заметки и важные акценты. Не нужно заново собирать историю общения, даже если прошло много времени.</p>
                                 </div>
                             </section>
                             <section id="previewPaneForecast" class="landing-preview-pane" role="tabpanel" aria-labelledby="previewTabForecast" data-preview-pane="forecast" hidden="">
@@ -318,8 +336,8 @@
         </footer>
     </div>
 
-    <script type="module" src="/js/bundles/index.bundle.js?v=21eb92fb8012"></script>
+    <script type="module" src="/js/bundles/index.bundle.js?v=ae23f8f30590"></script>
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=21eb92fb8012"></script>
-    <script src="/js/locale-switcher.js?v=21eb92fb8012"></script>
+    <script src="/js/analytics.js?v=ae23f8f30590"></script>
+    <script src="/js/locale-switcher.js?v=ae23f8f30590"></script>
 </body></html>
