@@ -31,6 +31,13 @@ from app.services.storage_service import storage_service
 
 RECORDING_RETENTION_DAYS = 180
 
+# The rule covers recordings made from the day it was published, not the ones before it.
+# Every recording that existed on 2026-09-26 was an internal test call, and the owner
+# asked to keep them for now rather than have the first pass sweep them on 1 October.
+# Recordings from this date onward expire normally. To bring the older ones under the
+# rule later, move this date back; to delete them sooner, do it deliberately, by hand.
+RETENTION_APPLIES_FROM = datetime(2026, 9, 26)
+
 # Small enough that one batch never holds row locks for long, large enough that a backlog
 # clears in a few passes.
 _BATCH_SIZE = 100
@@ -54,7 +61,8 @@ def purge_expired_recordings(db: Session, now: Optional[datetime] = None, storag
 
     The age of a recording is taken from when recording started, falling back to when
     the call ended and then to when the session was created, for rows made before
-    `recording_started_at` was reliably set.
+    `recording_started_at` was reliably set. Recordings made before
+    RETENTION_APPLIES_FROM are never touched.
 
     The database is only told the audio is gone once storage has actually removed it. A
     failed delete leaves the row untouched, so the next pass retries it instead of the
@@ -72,7 +80,9 @@ def purge_expired_recordings(db: Session, now: Optional[datetime] = None, storag
     failed_ids = set()
     while True:
         query = db.query(CallSession).filter(
-            CallSession.audio_storage_path.isnot(None), recorded_at < cutoff,
+            CallSession.audio_storage_path.isnot(None),
+            recorded_at >= RETENTION_APPLIES_FROM,
+            recorded_at < cutoff,
         )
         if failed_ids:
             query = query.filter(CallSession.id.notin_(failed_ids))

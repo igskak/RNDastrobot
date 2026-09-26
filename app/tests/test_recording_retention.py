@@ -19,7 +19,9 @@ from app.tests.api_test_db import create_sqlite_test_session_factory, reset_sqli
 
 engine, SessionFactory = create_sqlite_test_session_factory("./_recording_retention_test.sqlite3")
 
-NOW = datetime(2026, 9, 25, 12, 0, 0)
+# Far enough past RETENTION_APPLIES_FROM (2026-09-26) that "older than six months" lands
+# inside the window the rule covers: 180-248 days before NOW is after the start date.
+NOW = datetime(2027, 6, 1, 12, 0, 0)
 
 
 class FakeStorage:
@@ -46,13 +48,16 @@ def db():
         session.close()
 
 
-def _call(db, *, recorded_days_ago=None, ended_days_ago=None, created_days_ago=0, audio="audio/x.ogg"):
+def _call(db, *, recorded_days_ago=None, ended_days_ago=None, created_days_ago=0, audio="audio/x.ogg",
+          recorded_at=None):
+    if recorded_at is None and recorded_days_ago is not None:
+        recorded_at = NOW - timedelta(days=recorded_days_ago)
     cs = CallSession(
         astrologer_id=uuid4(),
         livekit_room_name=f"room-{uuid4()}",
         call_status="completed",
         audio_storage_path=audio,
-        recording_started_at=NOW - timedelta(days=recorded_days_ago) if recorded_days_ago is not None else None,
+        recording_started_at=recorded_at,
         ended_at=NOW - timedelta(days=ended_days_ago) if ended_days_ago is not None else None,
         created_at=NOW - timedelta(days=created_days_ago),
         transcript_text="What we talked about.",
@@ -72,6 +77,33 @@ def _reload(db, call_id):
 def test_the_period_is_six_months():
     assert retention.RECORDING_RETENTION_DAYS == 180
     assert retention.retention_cutoff(NOW) == NOW - timedelta(days=180)
+
+
+def test_the_rule_starts_on_the_day_it_was_published():
+    assert retention.RETENTION_APPLIES_FROM == datetime(2026, 9, 26)
+
+
+def test_recordings_made_before_the_rule_are_never_deleted(db):
+    """Every recording that existed on 2026-09-26 was a test call the owner asked to keep.
+
+    The oldest one in production is from 2026-04-04. Without the start date it would
+    have been swept on 2026-10-01.
+    """
+    before_rule = _call(db, recorded_at=datetime(2026, 4, 4, 10, 37), audio="audio/test-call-april.ogg")
+    day_before = _call(db, recorded_at=datetime(2026, 9, 25, 23, 0), audio="audio/test-call-sept-25.ogg")
+    storage = FakeStorage()
+
+    assert retention.purge_expired_recordings(db, now=NOW, storage=storage) == 0
+    assert storage.deleted == []
+    assert _reload(db, before_rule).audio_storage_path == "audio/test-call-april.ogg"
+    assert _reload(db, day_before).audio_storage_path == "audio/test-call-sept-25.ogg"
+
+
+def test_a_recording_from_the_first_day_of_the_rule_does_expire(db):
+    first_day = _call(db, recorded_at=datetime(2026, 9, 26, 9, 0), audio="audio/first-real.ogg")
+
+    assert retention.purge_expired_recordings(db, now=NOW, storage=FakeStorage()) == 1
+    assert _reload(db, first_day).audio_storage_path is None
 
 
 def test_audio_past_six_months_is_deleted_and_the_rest_of_the_session_is_kept(db):
@@ -105,7 +137,7 @@ def test_audio_inside_six_months_is_left_alone(db):
 def test_age_falls_back_to_call_end_then_to_creation(db):
     """Older rows can lack recording_started_at; they must still expire, not live forever."""
     by_end = _call(db, ended_days_ago=200, created_days_ago=10, audio="audio/by-end.ogg")
-    by_created = _call(db, created_days_ago=365, audio="audio/by-created.ogg")
+    by_created = _call(db, created_days_ago=220, audio="audio/by-created.ogg")
     storage = FakeStorage()
 
     assert retention.purge_expired_recordings(db, now=NOW, storage=storage) == 2
