@@ -3224,12 +3224,18 @@
     }
 
     function resetPrognosticDateTime() {
-        setSelectedDateTime(getLocalNowIso(state.timezone));
+        // Момент синастрии — рождение партнёра: «сейчас» к нему неприменимо.
+        if (isSynastryMomentActive()) return;
+        // Как и степпер, пишем момент в конфиг выбранного слоя: fetchLayer берёт дату
+        // оттуда, и одна правка state.selectedDateTime оставляла планеты на старой дате.
+        applyDisplayedMomentDateTime(getLocalNowIso(state.timezone));
         state.lastStepperAction = null;
         syncControlsFromState();
-        schedulePersist();
+        updatePrognosticTimeMeta();
+        renderNowBlocks();
         setLightweightLoading(true);
-        void loadActiveLayers({ lightweight: true });
+        schedulePersist();
+        void loadDisplayedMomentLayers({ lightweight: true, selectedOnly: true });
     }
 
     function toggleNatalMomentEditor() {
