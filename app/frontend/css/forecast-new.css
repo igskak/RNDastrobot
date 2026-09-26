@@ -580,6 +580,17 @@
     outline: none;
 }
 
+.forecast-new-stepper-action:disabled,
+.forecast-new-stepper-action:disabled:hover {
+    border-color: rgba(30, 58, 95, 0.14);
+    background: rgba(255, 255, 255, 0.82);
+    color: rgba(30, 58, 95, 0.78);
+    box-shadow: none;
+    transform: none;
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
 .forecast-new-time-stepper-actions {
     display: inline-flex;
     flex: 0 0 auto;

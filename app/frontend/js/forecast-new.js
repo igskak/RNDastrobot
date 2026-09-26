@@ -3053,9 +3053,12 @@
         }
         if (!refs.forecastNewTimeStepper?.querySelector('[data-time-step-key]')) {
             renderTimeStepper();
-            return;
+        } else {
+            updateTimeStepperValues(refs.forecastNewTimeStepper, getDisplayedMomentDateTime());
         }
-        updateTimeStepperValues(refs.forecastNewTimeStepper, getDisplayedMomentDateTime());
+        // В синастрии степпер показывает рождение партнёра — «сейчас» к нему неприменимо.
+        const resetButton = refs.forecastNewTimeStepper?.querySelector('[data-reset-moment="prognostic"]');
+        if (resetButton) resetButton.disabled = isSynastryMomentActive();
     }
 
     function renderTimeStepperLoading() {
