@@ -960,6 +960,11 @@
     display: block;
     max-width: 100%;
     flex: 0 0 auto;
+    /* В одну строку: перенос («Keine Ebene / ausgewählt») растил шапку, и карточка
+       момента (position: absolute) наезжала на её подзаголовок. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .forecast-new-moment-toggle-meta {
@@ -2353,12 +2358,6 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     margin-top: 6px;
 }
 
-.forecast-new-native-datetime input {
-    min-width: 0;
-    padding: 6px 8px;
-    font-size: 11px;
-}
-
 .forecast-new-location-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2366,10 +2365,21 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     margin-top: 6px;
 }
 
-.forecast-new-location-grid input {
+/* Одна высота для всех полей карточки момента. Селект часового пояса тоже сюда:
+   иначе он остаётся на глобальных 14px / 11px 14px и выходит вдвое выше соседей. */
+.forecast-new-native-datetime input,
+.forecast-new-location-grid input,
+.forecast-new-location-grid select {
     min-width: 0;
-    padding: 6px 8px;
+    height: 30px;
+    padding: 0 6px;
     font-size: 11px;
+}
+
+/* Иконка календаря съедала место: в узкой колонке дата обрезалась («09.08.202»). */
+.forecast-new-native-datetime input::-webkit-calendar-picker-indicator {
+    margin-inline-start: 2px;
+    padding: 0;
 }
 
 /* Layers + add-layer sit at the far right, packed against the action buttons.
