@@ -164,6 +164,9 @@ def _serialize_call(call: CallSession) -> Dict[str, Any]:
         "ended_at": call.ended_at.isoformat() if call.ended_at else None,
         "duration_seconds": call.duration_seconds,
         "has_recording": bool(call.audio_storage_path),
+        # Set once the retention job has deleted the audio (180 days); lets the
+        # profile say "audio expired" rather than implying there never was any.
+        "audio_deleted_at": call.audio_deleted_at.isoformat() if call.audio_deleted_at else None,
         "has_transcript": bool(call.transcript_text),
         "has_summary": bool(call.summary_text or call.summary_json),
         "summary_text": call.summary_text,

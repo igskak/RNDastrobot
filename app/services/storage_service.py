@@ -55,14 +55,20 @@ class StorageService:
             )
         return url
 
-    def delete_file(self, storage_path: str) -> None:
-        """Delete a recording file from storage."""
+    def delete_file(self, storage_path: str) -> bool:
+        """Delete a recording file from storage. Returns False when the delete failed.
+
+        A path that no longer exists counts as deleted: Supabase answers an empty list
+        rather than an error, and there is nothing left to keep.
+        """
         try:
             client = self._get_client()
             client.storage.from_(self._bucket).remove([storage_path])
             logger.info(f"Deleted storage file: {storage_path}")
+            return True
         except Exception as e:
             logger.warning(f"Could not delete storage file {storage_path} ({self._describe_target()}): {e}")
+            return False
 
     def is_configured(self) -> bool:
         return bool(self._supabase_url and self._supabase_service_key)

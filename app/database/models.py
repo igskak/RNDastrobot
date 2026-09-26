@@ -1497,9 +1497,12 @@ class CallSession(Base):
     client_join_token_hash = Column(String(128), unique=True)
     client_join_token_expires_at = Column(DateTime)
 
-    # Audio recording (stored in Supabase Storage)
+    # Audio recording (stored in Supabase Storage). Deleted 180 days after recording by
+    # recording_retention_service; audio_storage_path is then NULL and audio_deleted_at
+    # says when. Transcript and summaries below are kept.
     audio_storage_path = Column(Text)
     audio_duration_seconds = Column(Integer)
+    audio_deleted_at = Column(DateTime)
 
     # Transcription (AssemblyAI)
     assemblyai_transcript_id = Column(String(255))
