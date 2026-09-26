@@ -1665,7 +1665,7 @@ input[type="number"] {
 
 .landing-preview-tabs {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 4px;
     margin-top: 16px;
     padding: 4px;
@@ -1706,14 +1706,24 @@ input[type="number"] {
 
 .landing-preview-pane {
     display: grid;
-    align-content: start;
+    align-content: stretch;
     gap: 14px;
     min-width: 0;
     animation: preview-pane-in 0.34s var(--motion-soft) both;
 }
 
+/* Every pane shares one grid cell, so the card keeps the height of the tallest
+   pane and does not jump when the tabs switch. Hidden panes stay out of view and
+   out of the accessibility tree. */
+.landing-preview-pane {
+    grid-area: 1 / 1;
+}
+
 .landing-preview-pane[hidden] {
-    display: none;
+    display: grid;
+    visibility: hidden;
+    pointer-events: none;
+    animation: none;
 }
 
 @keyframes preview-pane-in {
@@ -1728,170 +1738,635 @@ input[type="number"] {
     }
 }
 
-.landing-product-frame {
+/* Hero preview panes: small, faithful redraws of real app screens (the profile
+   page for "Profile"). Drawn rather than screenshotted so they stay sharp at
+   this size and translate with the page. */
+.landing-mini-app {
     display: grid;
-    grid-template-columns: 54px minmax(0, 1fr);
-    min-height: 230px;
-    overflow: hidden;
+    gap: 12px;
+    padding: 14px;
     border: 1px solid rgba(30, 58, 95, 0.1);
     border-radius: 14px;
+    background: var(--bg-primary, #f9f7f2);
+}
+
+.landing-mini-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 10px;
     background: #fff;
 }
 
-.landing-product-sidebar {
+.landing-mini-avatar {
     display: grid;
-    align-content: start;
-    gap: 10px;
-    padding: 14px 12px;
-    background: var(--accent);
-}
-
-.landing-product-sidebar span {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.14);
-}
-
-.landing-product-sidebar span:first-child {
-    background: rgba(255, 255, 255, 0.92);
-}
-
-.landing-product-main {
-    display: grid;
-    gap: 14px;
-    align-content: start;
-    padding: 16px;
-}
-
-.landing-product-person {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid rgba(30, 58, 95, 0.08);
-}
-
-.landing-product-avatar {
-    width: 46px;
-    height: 46px;
+    place-items: center;
+    flex: none;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    background:
-        linear-gradient(135deg, rgba(30, 58, 95, 0.92), rgba(47, 93, 91, 0.82)),
-        var(--accent);
-    box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.22);
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 14px;
+    letter-spacing: 0.04em;
 }
 
-.landing-product-person span,
-.landing-product-context span,
-.landing-timeline-preview span,
-.landing-chat-bubble span {
-    display: block;
+.landing-mini-id {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.landing-mini-name {
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+.landing-mini-meta {
+    overflow: hidden;
     color: var(--text-muted);
     font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    line-height: 1.3;
-    text-transform: uppercase;
-}
-
-.landing-product-person strong {
-    display: block;
-    margin-top: 3px;
-    color: var(--text-primary);
-    font-size: 18px;
-    line-height: 1.16;
-}
-
-.landing-product-context {
-    display: grid;
-    gap: 10px;
-}
-
-.landing-product-context div {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 12px;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(30, 58, 95, 0.07);
-}
-
-.landing-product-context div:last-child {
-    border-bottom: 0;
-}
-
-.landing-product-context strong {
-    color: var(--text-primary);
-    font-size: 13px;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.landing-preview-wheel {
-    position: relative;
-    width: min(276px, 66vw);
-    aspect-ratio: 1;
-    margin: 6px auto 2px;
-    border: 1px solid rgba(30, 58, 95, 0.18);
-    border-radius: 50%;
-    background:
-        repeating-conic-gradient(from -8deg, rgba(30, 58, 95, 0.12) 0deg 1deg, transparent 1deg 30deg),
-        conic-gradient(from 22deg, rgba(184, 147, 90, 0.18), transparent 18%, rgba(47, 93, 91, 0.13), transparent 44%, rgba(30, 58, 95, 0.12), transparent 72%, rgba(184, 147, 90, 0.18)),
-        radial-gradient(circle, transparent 0 31%, rgba(184, 147, 90, 0.18) 31.5% 32.5%, transparent 33% 52%, rgba(30, 58, 95, 0.14) 52.5% 53.5%, transparent 54%);
-    animation: landing-wheel-drift 34s linear infinite;
+.landing-mini-chip {
+    flex: none;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--accent-light, #ebf0f7);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
 }
 
-@keyframes landing-wheel-drift {
-    to { transform: rotate(360deg); }
+.landing-mini-chip.is-small {
+    padding: 2px 7px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
-.landing-preview-wheel::before,
-.landing-preview-wheel::after,
-.landing-preview-wheel span {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
+.landing-mini-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 0;
+    padding: 0 2px;
 }
 
-.landing-preview-wheel::before {
-    inset: 16%;
-    border: 1px dashed rgba(184, 147, 90, 0.42);
+.landing-mini-stats div {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    min-width: 0;
 }
 
-.landing-preview-wheel::after {
-    inset: 47%;
+.landing-mini-stats dd {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.landing-mini-stats dt {
+    color: var(--text-muted);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* Like the real profile: the last session sits on its own line under the counts. */
+.landing-mini-stats .is-wide {
+    flex-basis: 100%;
+}
+
+.landing-mini-fields {
+    display: grid;
+    gap: 5px;
+    margin: 0;
+    font-size: 11.5px;
+}
+
+.landing-mini-fields div {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+}
+
+.landing-mini-fields dt {
+    color: var(--text-muted);
+    font-size: 10.5px;
+}
+
+.landing-mini-fields dd {
+    margin: 0;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+}
+
+.landing-mini-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+}
+
+.landing-mini-side {
+    display: grid;
+    gap: 10px;
+}
+
+.landing-mini-card {
+    display: grid;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.landing-mini-label {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.landing-mini-notes {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.landing-mini-notes li {
+    display: grid;
+    gap: 4px;
+    padding: 8px 9px;
+    border: 1px solid rgba(30, 58, 95, 0.07);
+    border-radius: 8px;
+    background: var(--bg-primary, #f9f7f2);
+    color: var(--text-secondary);
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+
+.landing-mini-notes time {
+    justify-self: start;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: var(--accent-light, #ebf0f7);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.landing-mini-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 8px;
+    padding: 7px 9px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 8px;
+    background: var(--bg-primary, #f9f7f2);
+    font-size: 11.5px;
+}
+
+.landing-mini-row.is-primary {
+    border-color: rgba(30, 58, 95, 0.35);
+    background: var(--accent-light, #ebf0f7);
+}
+
+.landing-mini-row strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.landing-mini-row > span:not(.landing-mini-chip) {
+    color: var(--text-muted);
+}
+
+/* "Chart": the bi-wheel, natal inside and transits outside, drawn by
+   docs/marketing/product-hunt/gallery-src/hero_wheel.py from the ephemeris. */
+.landing-mini-app.is-wheel {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.landing-mini-layer {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px 3px 10px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.landing-mini-layer b {
+    padding: 2px 8px;
+    border-radius: 999px;
     background: var(--accent);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-.landing-preview-wheel span {
+.landing-mini-wheel-wrap {
+    display: grid;
+    place-items: center;
+    min-height: 0;
+}
+
+.landing-mini-wheel {
+    display: block;
+    width: 100%;
+    max-width: 330px;
+    height: auto;
+}
+
+.landing-mini-wheel text {
+    font-family: var(--font-symbol);
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+.landing-mini-wheel .is-house,
+.landing-mini-wheel .is-angle,
+.landing-mini-wheel .is-retro {
+    font-family: var(--font-ui);
+    fill: #9ca3af;
+}
+
+.landing-mini-wheel .is-house {
+    font-size: 6.5px;
+}
+
+.landing-mini-wheel .is-angle {
+    fill: #1f2937;
+    font-size: 6.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.landing-mini-wheel .is-retro {
+    fill: #ef4444;
+    font-size: 5.5px;
+    font-weight: 600;
+}
+
+.landing-mini-aspects {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.landing-mini-aspects li {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-top: 2px solid var(--aspect);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.landing-mini-aspects .is-conj { --aspect: #f59e0b; }
+.landing-mini-aspects .is-trine { --aspect: #3b82f6; }
+.landing-mini-aspects .is-sextile { --aspect: #22c55e; }
+.landing-mini-aspects .is-square,
+.landing-mini-aspects .is-opp { --aspect: #ef4444; }
+
+/* "Periods": the real year of transits for the demo chart, drawn like the app's
+   timeline. Colours are the app's default aspect palette. */
+.landing-mini-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.landing-mini-toolbar .landing-mini-meta {
+    white-space: normal;
+}
+
+.landing-mini-seg {
+    display: flex;
+    flex: none;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 8px;
+    background: var(--bg-tertiary, #f0ede4);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.landing-mini-seg span {
+    padding: 3px 8px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.landing-mini-seg .is-active {
+    background: #fff;
+    color: var(--accent);
+    box-shadow: 0 1px 3px rgba(26, 22, 20, 0.08);
+}
+
+/* The timeline takes whatever height the tallest pane leaves, rows spread evenly. */
+.landing-mini-app.is-periods {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.landing-mini-timeline {
+    --glyph-col: 56px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 6px;
+}
+
+.landing-mini-axis {
+    position: relative;
+    height: 14px;
+    margin-left: var(--glyph-col);
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.landing-mini-axis span {
+    position: absolute;
+    left: var(--at);
+    padding-left: 3px;
+    border-left: 1px solid rgba(30, 58, 95, 0.18);
+    line-height: 14px;
+}
+
+.landing-mini-rows {
+    display: grid;
+    align-content: space-evenly;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.landing-mini-rows li {
+    display: grid;
+    grid-template-columns: var(--glyph-col) minmax(0, 1fr);
+    align-items: center;
+}
+
+.landing-mini-glyphs {
+    color: var(--text-primary);
+    font-family: var(--font-symbol);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.landing-mini-track {
+    position: relative;
+    height: 12px;
+    border-radius: 6px;
+    background: rgba(30, 58, 95, 0.04);
+}
+
+.landing-mini-track i {
+    position: absolute;
+    top: 3px;
+    left: var(--from);
+    width: max(calc(var(--to) - var(--from)), 6px);
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, transparent, var(--aspect) 30%, var(--aspect) 70%, transparent);
+    opacity: 0.55;
+}
+
+.landing-mini-track b {
+    position: absolute;
+    top: 1px;
+    left: var(--at);
     width: 10px;
     height: 10px;
-    background: var(--gold);
-    box-shadow: 0 0 0 5px rgba(184, 147, 90, 0.12);
+    margin-left: -5px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--aspect);
+    box-shadow: 0 0 0 1px rgba(26, 22, 20, 0.08);
 }
 
-.landing-preview-wheel span:nth-child(1) { top: 10%; left: 48%; }
-.landing-preview-wheel span:nth-child(2) { right: 16%; top: 32%; }
-.landing-preview-wheel span:nth-child(3) { left: 24%; bottom: 18%; }
-.landing-preview-wheel span:nth-child(4) { right: 28%; bottom: 13%; background: #2F5D5B; }
+.landing-mini-rows .is-conj,
+.landing-mini-legend .is-conj { --aspect: #f59e0b; }
+.landing-mini-rows .is-trine,
+.landing-mini-legend .is-trine { --aspect: #3b82f6; }
+.landing-mini-rows .is-sextile,
+.landing-mini-legend .is-sextile { --aspect: #22c55e; }
+.landing-mini-rows .is-square,
+.landing-mini-legend .is-square,
+.landing-mini-rows .is-opp,
+.landing-mini-legend .is-opp { --aspect: #ef4444; }
 
-.landing-preview-note {
-    padding: 16px;
-    border: 1px solid rgba(184, 147, 90, 0.22);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.76);
+.landing-mini-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(30, 58, 95, 0.07);
+    color: var(--text-muted);
+    font-size: 10.5px;
 }
 
-.landing-preview-note strong {
+.landing-mini-legend > span {
+    color: var(--aspect);
+    font-family: var(--font-symbol);
+}
+
+.landing-mini-legend > span span {
+    color: var(--text-muted);
+    font-family: var(--font-ui);
+}
+
+.landing-mini-detail .landing-mini-glyphs {
+    margin-right: 4px;
+}
+
+.landing-mini-exacts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.landing-mini-exacts time {
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: rgba(245, 158, 11, 0.14);
+    color: #92400e;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+/* "Chat": the assistant panel with the real answer to the Pluto-Moon question. */
+.landing-mini-app.is-chat {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.landing-mini-chat-head {
+    display: grid;
+    gap: 3px;
+    padding: 10px 12px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.landing-mini-chat-title {
     color: var(--text-primary);
-    font-size: 14px;
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.15;
 }
 
-.landing-preview-note p {
-    margin: 6px 0 0;
+.landing-mini-thread {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+}
+
+.landing-mini-bubble {
+    max-width: 92%;
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+
+.landing-mini-bubble.is-user {
+    justify-self: end;
+    border-bottom-right-radius: 3px;
+    background: var(--accent);
+    color: #fff;
+}
+
+.landing-mini-bubble.is-assistant {
+    display: grid;
+    gap: 6px;
+    justify-self: start;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-bottom-left-radius: 3px;
+    background: #fff;
+    color: var(--text-primary);
+}
+
+.landing-mini-bubble ul {
+    display: grid;
+    gap: 3px;
+    margin: 0;
+    padding-left: 16px;
+}
+
+.landing-mini-bubble li::marker {
+    color: var(--text-muted);
+}
+
+.landing-mini-bubble li.is-pass {
+    list-style: none;
+    margin-left: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+.landing-mini-bubble li.is-pass time {
+    padding: 0 5px;
+    border-radius: 4px;
+    background: rgba(245, 158, 11, 0.14);
+    color: #92400e;
+    font-weight: 600;
+}
+
+.landing-mini-bubble .landing-mini-chip {
+    justify-self: start;
+}
+
+.landing-mini-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 12px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text-muted);
+    font-size: 11.5px;
+}
+
+.landing-mini-input > span:first-child {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.landing-mini-mic {
+    flex: none;
     color: var(--text-secondary);
+}
+
+.landing-mini-send {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: var(--accent);
+    color: #fff;
     font-size: 13px;
-    line-height: 1.55;
+}
+
+/* On a phone the hero card must stay short: keep the person, the counts and two
+   notes; the side cards return from tablet width up. */
+@media (max-width: 560px) {
+    .landing-mini-cols {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .landing-mini-side,
+    .landing-mini-notes li:nth-child(n + 3),
+    .landing-mini-app.is-wheel .landing-mini-meta {
+        display: none;
+    }
+
 }
 
 .landing-preview-grid {
@@ -1909,87 +2384,6 @@ input[type="number"] {
     margin-top: 6px;
     color: var(--text-primary);
     font-size: 16px;
-}
-
-.landing-timeline-preview {
-    display: grid;
-    gap: 1px;
-    overflow: hidden;
-    border: 1px solid rgba(30, 58, 95, 0.09);
-    border-radius: 14px;
-    background: rgba(30, 58, 95, 0.08);
-}
-
-.landing-timeline-preview div {
-    position: relative;
-    display: grid;
-    gap: 5px;
-    padding: 13px 14px 13px 34px;
-    background: rgba(255, 255, 255, 0.86);
-}
-
-.landing-timeline-preview div::before {
-    content: "";
-    position: absolute;
-    left: 14px;
-    top: 18px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--gold);
-    box-shadow: 0 0 0 4px rgba(184, 147, 90, 0.13);
-}
-
-.landing-timeline-preview strong {
-    color: var(--text-primary);
-    font-size: 14px;
-    line-height: 1.35;
-}
-
-.landing-chat-preview {
-    display: grid;
-    gap: 12px;
-    min-height: 374px;
-    align-content: center;
-    padding: 16px;
-    border: 1px solid rgba(30, 58, 95, 0.1);
-    border-radius: 14px;
-    background:
-        linear-gradient(180deg, rgba(235, 240, 247, 0.72), rgba(255, 255, 255, 0.84)),
-        #fff;
-}
-
-.landing-chat-bubble {
-    max-width: 86%;
-    padding: 14px 15px;
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-.landing-chat-bubble-user {
-    justify-self: end;
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 10px 22px rgba(30, 58, 95, 0.16);
-}
-
-.landing-chat-bubble-assistant {
-    justify-self: start;
-    border: 1px solid rgba(30, 58, 95, 0.1);
-    background: #fff;
-    color: var(--text-secondary);
-}
-
-.landing-chat-bubble strong {
-    display: block;
-    margin-top: 8px;
-    color: var(--text-primary);
-    font-size: 14px;
-}
-
-.landing-chat-bubble p {
-    margin: 6px 0 0;
 }
 
 .landing-social-proof {
@@ -2078,6 +2472,50 @@ input[type="number"] {
 .landing-section-note {
     font-size: var(--font-size-label);
     color: var(--text-muted);
+}
+
+/* Real product screenshots. Built from docs/marketing/product-hunt/screens by
+   docs/marketing/product-hunt/gallery-src/build.py (JPEG, 1x and 2x). */
+.landing-shot {
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 12px;
+    background: var(--bg-secondary, #fff);
+    box-shadow: 0 1px 2px rgba(30, 58, 95, 0.05), 0 24px 60px -28px rgba(30, 58, 95, 0.35);
+}
+
+.landing-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* Text beside a screenshot. The reverse variant only moves the picture left;
+   the text stays first in reading order. */
+.landing-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    align-items: center;
+    column-gap: clamp(32px, 5vw, 64px);
+}
+
+.landing-split-reverse {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
+
+.landing-split-reverse .landing-shot {
+    order: -1;
+}
+
+@media (max-width: 980px) {
+    .landing-split-reverse,
+    .landing-split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .landing-split-reverse .landing-shot {
+        order: 0;
+    }
 }
 
 .landing-card,
@@ -4698,11 +5136,6 @@ input[type="number"] {
         min-height: auto;
     }
 
-    .landing-preview-wheel {
-        width: min(250px, 76vw);
-        margin: 20px auto;
-    }
-
     .landing-card-grid-3,
     .landing-card-grid-4,
     .landing-workflow {
@@ -4764,37 +5197,6 @@ input[type="number"] {
     .landing-preview-grid {
         display: grid;
         grid-template-columns: 1fr;
-    }
-
-    .landing-product-frame {
-        grid-template-columns: 44px minmax(0, 1fr);
-    }
-
-    .landing-product-sidebar {
-        padding: 12px 8px;
-    }
-
-    .landing-product-sidebar span {
-        width: 28px;
-        height: 28px;
-    }
-
-    .landing-product-context div {
-        grid-template-columns: 1fr;
-        gap: 4px;
-    }
-
-    .landing-product-context strong {
-        white-space: normal;
-    }
-
-    .landing-chat-preview {
-        min-height: 320px;
-        padding: 12px;
-    }
-
-    .landing-chat-bubble {
-        max-width: 100%;
     }
 
     .landing-section h2,

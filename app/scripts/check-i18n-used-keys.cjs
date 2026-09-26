@@ -51,7 +51,7 @@ function walkFrontendSource(frontendDir) {
 function extractI18nKeys(source) {
     const found = new Set();
     const patterns = [
-        /data-i18n(?:-html|-placeholder|-title|-aria-label|-value|-data-label)?="([^"]+)"/g,
+        /data-i18n(?:-html|-placeholder|-title|-aria-label|-alt|-value|-data-label)?="([^"]+)"/g,
         /\bt\(\s*['"]([^'"]+)['"]/g,
         /FrontendI18n\.t\(\s*['"]([^'"]+)['"]/g,
         /this\.t\(\s*['"]([^'"]+)['"]/g,

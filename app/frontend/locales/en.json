@@ -2416,41 +2416,32 @@
         "title": "Practice profile",
         "status": "Context nearby",
         "modes": {
+          "chart": "Chart",
           "profile": "Profile",
           "forecast": "Periods",
           "chat": "Chat"
         },
-        "insightTitle": "Remember what matters",
-        "insight": "Before a meeting, you can see the chart, recordings, notes, and important points without rebuilding the history from memory.",
-        "context": {
-          "personLabel": "Person",
-          "personValue": "Natal profile",
-          "notesLabel": "Notes",
-          "notesValue": "12 saved points",
-          "recordingsLabel": "Calls",
-          "recordingsValue": "2 recordings",
-          "chartsLabel": "Charts",
-          "chartsValue": "Natal + forecast"
+        "wheel": {
+          "alt": "Bi-wheel for Maya Lindqvist: natal chart inside, transits of 17.02.2027 outside, Pluto exactly on her natal Moon"
         },
-        "timeline": {
-          "itemOne": {
-            "label": "Oct 2025 - May 2026",
-            "value": "Transit Uranus to natal Venus"
-          },
-          "itemTwo": {
-            "label": "Current focus",
-            "value": "Solar return and monthly triggers"
-          },
-          "itemThree": {
-            "label": "Saved for session",
-            "value": "Key dates stay attached to the profile"
-          }
+        "profile": {
+          "initials": "ML",
+          "name": "Maya Lindqvist",
+          "place": "Portland, Oregon, USA",
+          "tag": "Monthly",
+          "note1": "Pluto is crossing her natal Moon through 2027. Keep Saturn square Mars in view for the freelance timing.",
+          "note2": "Thinking about leaving the design studio to go freelance. Wants to know when, not whether.",
+          "note3": "Send the solar return notes before her birthday in March.",
+          "partnerName": "Tom Berg",
+          "partnerLabel": "Partner",
+          "email": "maya@example.com",
+          "messenger": "Prefers voice notes"
         },
         "chat": {
-          "query": "Show Uranus-Venus conjunctions for the past and next 5 years.",
+          "query": "When is transiting Pluto exactly conjunct natal Moon? Past and next 5 years",
           "meta": "Answer from chart data",
-          "answerTitle": "Three exact windows found",
-          "answer": "The assistant returns dates, context, and the chart links you need before the session."
+          "answerTitle": "Pluto conjunct natal Moon, past and next 5 years",
+          "noExact": "2025 and 2029: in orb, never exact (closest 2.02° and 2.21°)"
         },
         "metricOne": {
           "label": "Profile",
@@ -2479,7 +2470,7 @@
           },
           "three": {
             "q": "How does the chat work?",
-            "a": "Ask a question from chart or forecast data. For example, ask for transit Uranus conjunctions to natal Venus for the past and next 5 years and get the periods without manual searching."
+            "a": "Ask a question from chart or forecast data. For example, ask when transiting Pluto is exactly conjunct the natal Moon over the past and next 5 years, and get every exact date without searching by hand."
           },
           "four": {
             "q": "Will it interpret the chart for me?",
@@ -2591,7 +2582,7 @@
       "assistant": {
         "kicker": "Chat over chart data",
         "title": "Ask, and get an answer from the chart.",
-        "text": "The chat works from the real calculations. Ask about transiting Uranus conjunct natal Venus over the past and next five years and you get exact periods. Or ask it to show something on screen, and it will.",
+        "text": "The chat works from the real calculations. Ask when transiting Pluto is exactly conjunct the natal Moon over the past and next five years, and you get every exact pass with its date. Or ask it to show something on screen, and it will.",
         "note": "The chat finds the data. The interpretation stays yours."
       },
       "people": {
@@ -2603,6 +2594,11 @@
         "kicker": "Consultations",
         "title": "Video calls with recording and transcription.",
         "text": "Hold the consultation inside Steliara. The conversation is recorded and transcribed, and a short summary is saved to the person’s profile. Nothing has to be reconstructed from memory before the next session."
+      },
+      "shots": {
+        "workspace": "Steliara's working screen: a natal chart with transits and the planet positions on either side of the wheel",
+        "assistant": "The chat answering when transiting Pluto is exactly conjunct the natal Moon, with the date of each pass and station",
+        "profile": "A person's profile: their chart, your notes, contact details and a linked partner for synastry"
       },
       "foundation": {
         "kicker": "What it is built on",

@@ -1627,13 +1627,26 @@
         syncSolarInputs();
     }
 
+    // После удаления слоя normalizeActiveLayers мог переключить выбор на другой слой.
+    // Его момент надо загрузить в редактор (как при клике по вкладке): иначе степпер и
+    // поля даты показывают момент удалённого слоя, а следующий шаг уводит оставшийся
+    // слой на эту чужую дату.
+    function syncEditorAfterLayerRemoval(previousSelectedId) {
+        if (state.selectedRightLayerId !== previousSelectedId) {
+            applyConfigToScratch(selectedLayerInstance());
+        }
+        syncControlsFromState();
+    }
+
     // Снять весь метод (используется чекбоксами слоёв слева) — удаляет все его инстансы.
     async function deactivateMethod(method) {
         if (!LAYER_ORDER.includes(method)) return;
         closeLayerPopover(method);
+        const previousSelectedId = state.selectedRightLayerId;
         instancesOfMethod(method).forEach((l) => { delete state.layers?.[l.id]; });
         state.activeLayers = state.activeLayers.filter((l) => l.method !== method);
         normalizeActiveLayers();
+        syncEditorAfterLayerRemoval(previousSelectedId);
         renderRightLayerTabs();
         scheduleRightPanelRender();
         schedulePersist();
@@ -1647,9 +1660,11 @@
         if (!isMultiInstanceMethod(inst.method) && instancesOfMethod(inst.method).length <= 1) {
             closeLayerPopover(inst.method);
         }
+        const previousSelectedId = state.selectedRightLayerId;
         delete state.layers?.[id];
         state.activeLayers = state.activeLayers.filter((l) => l.id !== id);
         normalizeActiveLayers();
+        syncEditorAfterLayerRemoval(previousSelectedId);
         renderRightLayerTabs();
         scheduleRightPanelRender();
         schedulePersist();
@@ -3038,9 +3053,12 @@
         }
         if (!refs.forecastNewTimeStepper?.querySelector('[data-time-step-key]')) {
             renderTimeStepper();
-            return;
+        } else {
+            updateTimeStepperValues(refs.forecastNewTimeStepper, getDisplayedMomentDateTime());
         }
-        updateTimeStepperValues(refs.forecastNewTimeStepper, getDisplayedMomentDateTime());
+        // В синастрии степпер показывает рождение партнёра — «сейчас» к нему неприменимо.
+        const resetButton = refs.forecastNewTimeStepper?.querySelector('[data-reset-moment="prognostic"]');
+        if (resetButton) resetButton.disabled = isSynastryMomentActive();
     }
 
     function renderTimeStepperLoading() {
@@ -3224,12 +3242,18 @@
     }
 
     function resetPrognosticDateTime() {
-        setSelectedDateTime(getLocalNowIso(state.timezone));
+        // Момент синастрии — рождение партнёра: «сейчас» к нему неприменимо.
+        if (isSynastryMomentActive()) return;
+        // Как и степпер, пишем момент в конфиг выбранного слоя: fetchLayer берёт дату
+        // оттуда, и одна правка state.selectedDateTime оставляла планеты на старой дате.
+        applyDisplayedMomentDateTime(getLocalNowIso(state.timezone));
         state.lastStepperAction = null;
         syncControlsFromState();
-        schedulePersist();
+        updatePrognosticTimeMeta();
+        renderNowBlocks();
         setLightweightLoading(true);
-        void loadActiveLayers({ lightweight: true });
+        schedulePersist();
+        void loadDisplayedMomentLayers({ lightweight: true, selectedOnly: true });
     }
 
     function toggleNatalMomentEditor() {

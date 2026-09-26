@@ -20,6 +20,8 @@ const KNOWN_HARDCODED_STRING_ALLOWLIST = [
 ];
 
 const KNOWN_UNTRANSLATED_VALUE_KEYS = [
+    // Demo data in the landing hero: an address reads the same in every language.
+    'page.index.preview.profile.email',
     'page.accountSettings.creation.timezoneLabelFormatOptions.gmt',
     'page.accountSettings.creation.timezoneLabelFormatOptions.utc',
     'page.chart.balances.quadrant1',

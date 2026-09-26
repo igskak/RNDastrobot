@@ -9,8 +9,11 @@ Outputs go to ../gallery/ at 2x of Product Hunt's 1270x760 (2540x1520), plus
 thumbnail-240.png and og-1200x630.png.
 
 The same mark and OG image are the site's brand assets: they are also written to
-app/frontend/assets/brand/ (favicon.ico, icon PNGs, apple-touch-icon, og-image).
-Downscaling uses macOS `sips`.
+app/frontend/assets/brand/ (favicon.ico, icon PNGs, apple-touch-icon, og-image), and
+the landing-page screenshots to app/frontend/assets/landing/ (JPEG, 1x and 2x).
+`sips` also writes AVIF, but some of its files decode as fully transparent in
+Chromium (seen on the 2x workspace and profile crops), so the landing ships JPEG.
+Cropping, downscaling and encoding use macOS `sips`.
 """
 import pathlib
 import struct
@@ -20,6 +23,16 @@ HERE = pathlib.Path(__file__).resolve().parent
 SCREENS = HERE.parent / "screens"
 OUT = HERE.parent / "gallery"
 BRAND = HERE.parents[3] / "app" / "frontend" / "assets" / "brand"
+LANDING = HERE.parents[3] / "app" / "frontend" / "assets" / "landing"
+
+# Landing screenshots: (name, screen, crop in 2x screen pixels (x, y, w, h), 1x width).
+# The 2x file is twice the 1x width. Keep crops in sync with the <img> width/height
+# attributes in app/frontend/index.html.
+LANDING_SHOTS = [
+    ("workspace", "workspace", (0, 0, 2880, 1800), 1220),
+    ("assistant", "assistant", (1160, 120, 1720, 1680), 720),
+    ("profile", "profile", (270, 0, 2340, 1500), 720),
+]
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 FONTS = (
@@ -165,6 +178,26 @@ def write_ico(dst, pngs):
     dst.write_bytes(header + entries + data)
 
 
+def build_landing():
+    LANDING.mkdir(parents=True, exist_ok=True)
+    tmp = HERE / "_landing"
+    tmp.mkdir(exist_ok=True)
+    for name, screen, (x, y, w, h), width in LANDING_SHOTS:
+        crop = tmp / f"{name}.png"
+        subprocess.run(["sips", "-c", str(h), str(w), "--cropOffset", str(y), str(x),
+                        str(SCREENS / f"{screen}.png"), "--out", str(crop)], check=True, capture_output=True)
+        for scale in (1, 2):
+            px = width * scale
+            sized = tmp / f"{name}-{px}.png"
+            subprocess.run(["sips", "--resampleWidth", str(px), str(crop), "--out", str(sized)],
+                           check=True, capture_output=True)
+            subprocess.run(["sips", "-s", "format", "jpeg", "-s", "formatOptions", "78", str(sized),
+                            "--out", str(LANDING / f"{name}-{px}.jpg")], check=True, capture_output=True)
+    for f in tmp.iterdir():
+        f.unlink()
+    tmp.rmdir()
+
+
 def build_brand():
     BRAND.mkdir(parents=True, exist_ok=True)
     tmp = HERE / "_brand"
@@ -195,6 +228,8 @@ def main():
     print("rendered thumbnail + og")
     build_brand()
     print("wrote", BRAND)
+    build_landing()
+    print("wrote", LANDING)
 
 
 if __name__ == "__main__":

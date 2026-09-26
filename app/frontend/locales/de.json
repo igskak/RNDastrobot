@@ -2411,41 +2411,32 @@
         "title": "Klientenprofil",
         "status": "Alles Wichtige griffbereit",
         "modes": {
+          "chart": "Horoskop",
           "profile": "Profil",
           "forecast": "Zeiträume",
           "chat": "Chat"
         },
-        "insightTitle": "Das Wesentliche im Blick behalten",
-        "insight": "Vor dem Gespräch sehen Sie Horoskop, Aufnahmen, Notizen und wichtige Punkte. So müssen Sie sich die Vorgeschichte nicht erst wieder in Erinnerung rufen.",
-        "context": {
-          "personLabel": "Person",
-          "personValue": "Radixprofil",
-          "notesLabel": "Notizen",
-          "notesValue": "12 gespeicherte Punkte",
-          "recordingsLabel": "Gespräche",
-          "recordingsValue": "2 Aufnahmen",
-          "chartsLabel": "Horoskope",
-          "chartsValue": "Radix + Prognose"
+        "wheel": {
+          "alt": "Biwheel für Maya Lindqvist: innen das Geburtshoroskop, außen die Transite vom 17.02.2027, Pluto exakt auf ihrem Radix-Mond"
         },
-        "timeline": {
-          "itemOne": {
-            "label": "Okt. 2025 – Mai 2026",
-            "value": "Transit-Uranus zur Radix-Venus"
-          },
-          "itemTwo": {
-            "label": "Aktueller Schwerpunkt",
-            "value": "Solar und monatliche Auslösungen"
-          },
-          "itemThree": {
-            "label": "Für die Beratung gespeichert",
-            "value": "Wichtige Termine bleiben mit dem Profil verknüpft."
-          }
+        "profile": {
+          "initials": "ML",
+          "name": "Maya Lindqvist",
+          "place": "Portland, Oregon, USA",
+          "tag": "Monatlich",
+          "note1": "Pluto läuft bis 2027 über ihren Radix-Mond. Für den Zeitpunkt der Selbstständigkeit das Saturn-Quadrat zum Mars im Blick behalten.",
+          "note2": "Überlegt, das Designstudio zu verlassen und sich selbstständig zu machen. Will wissen, wann – nicht, ob.",
+          "note3": "Die Notizen zum Solar vor ihrem Geburtstag im März schicken.",
+          "partnerName": "Tom Berg",
+          "partnerLabel": "Partner",
+          "email": "maya@example.com",
+          "messenger": "Bevorzugt Sprachnachrichten"
         },
         "chat": {
-          "query": "Zeigen Sie Uranus-Venus-Konjunktionen für die vergangenen und die kommenden fünf Jahre.",
+          "query": "Wann steht Transit-Pluto exakt auf dem Radix-Mond? Letzte und nächste 5 Jahre",
           "meta": "Antwort anhand der Horoskopdaten",
-          "answerTitle": "Drei Zeitfenster mit exakten Kontakten gefunden",
-          "answer": "Der Assistent liefert Termine, Zusammenhänge und Links zu den Horoskopen, die Sie für die Beratung brauchen."
+          "answerTitle": "Pluto Konjunktion Radix-Mond, letzte und nächste 5 Jahre",
+          "noExact": "2025 und 2029: im Orbis, aber nie exakt (am nächsten 2,02° und 2,21°)"
         },
         "metricOne": {
           "label": "Profil",
@@ -2474,7 +2465,7 @@
           },
           "three": {
             "q": "Wie funktioniert der Chat?",
-            "a": "Stellen Sie eine Frage zu Horoskop- oder Prognosedaten. Lassen Sie sich zum Beispiel Konjunktionen von Transit-Uranus zur Radix-Venus für die vergangenen und kommenden fünf Jahre zeigen. Sie erhalten die Zeiträume, ohne selbst danach suchen zu müssen."
+            "a": "Stellen Sie eine Frage zu Horoskop- oder Prognosedaten. Fragen Sie zum Beispiel, wann Transit-Pluto in den vergangenen und kommenden fünf Jahren exakt auf dem Radix-Mond steht. Sie erhalten jedes exakte Datum, ohne selbst danach suchen zu müssen."
           },
           "four": {
             "q": "Übernimmt Steliara die Deutung für mich?",
@@ -2586,7 +2577,7 @@
       "assistant": {
         "kicker": "Fragen zu Horoskopdaten",
         "title": "Ihre Frage. Eine Antwort aus dem Horoskop.",
-        "text": "Der Chat arbeitet mit den tatsächlichen Berechnungen. Fragen Sie nach Konjunktionen von Transit-Uranus zur Radix-Venus in den vergangenen und kommenden fünf Jahren – Sie erhalten die exakten Zeiträume. Oder lassen Sie sich etwas direkt auf dem Bildschirm anzeigen.",
+        "text": "Der Chat arbeitet mit den tatsächlichen Berechnungen. Fragen Sie, wann Transit-Pluto in den vergangenen und kommenden fünf Jahren exakt auf dem Radix-Mond steht – Sie erhalten jeden exakten Durchgang mit Datum. Oder lassen Sie sich etwas direkt auf dem Bildschirm anzeigen.",
         "note": "Der Chat findet die Daten. Die Deutung bleibt bei Ihnen."
       },
       "people": {
@@ -2598,6 +2589,11 @@
         "kicker": "Beratungen",
         "title": "Videogespräche mit Aufnahme und Transkription.",
         "text": "Führen Sie die Beratung direkt in Steliara. Das Gespräch wird aufgezeichnet und transkribiert, eine kurze Zusammenfassung im Profil gespeichert. Vor dem nächsten Termin müssen Sie nichts aus dem Gedächtnis rekonstruieren."
+      },
+      "shots": {
+        "workspace": "Der Arbeitsbildschirm von Steliara: Geburtshoroskop mit Transiten und den Planetenpositionen auf beiden Seiten des Rads",
+        "assistant": "Der Chat beantwortet, wann Transit-Pluto exakt auf dem Radix-Mond steht, mit dem Datum jedes Durchgangs und jeder Station",
+        "profile": "Ein Personenprofil: Horoskop, Ihre Notizen, Kontaktdaten und eine verknüpfte Person für die Synastrie"
       },
       "foundation": {
         "kicker": "Die Grundlage",
