@@ -55,9 +55,7 @@ items:
 
   - id: solar-fire-alternative
     status: shipped
-    # No PR number if GitHub Actions is again refused the right to open one; the branch
-    # is seo-agent/solar-fire-alternative either way.
-    pr: "PENDING"
+    pr: "#11"
     type: alternative-page
     slug: /solar-fire-alternative
     target_queries:
