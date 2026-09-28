@@ -177,6 +177,8 @@ async def isolate_solo_marketing_routes(request: Request, call_next):
         "/astrology-practice-management.html",
         "/record-astrology-consultations",
         "/record-astrology-consultations.html",
+        "/solar-fire-alternative",
+        "/solar-fire-alternative.html",
     }
     # A prefixed URL is the same page in another language, so it needs the same fence.
     commercial_paths |= {
@@ -419,13 +421,16 @@ _SITEMAP_PAGES = (
     ("/record-astrology-consultations", "0.9"),
     ("/astrologer-workspace", "0.9"),
     ("/cloud-astrology-software", "0.9"),
+    # An alternative page serves one narrow intent and only ranks for one brand's
+    # searchers, so it sits below the category landings rather than beside them.
+    ("/solar-fire-alternative", "0.8"),
     ("/pricing.html", "0.8"),
     ("/terms.html", "0.3"),
 )
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-09-24"
+_SITEMAP_LASTMOD = "2026-09-28"
 
 
 def _indexable_document_paths() -> frozenset:
@@ -555,6 +560,7 @@ chart, and not a consumer horoscope product.
 - Recording and transcribing consultations: {base}/record-astrology-consultations
 - Workspace with recorded, transcribed sessions: {base}/astrologer-workspace
 - Cloud astrology software (Mac and Windows): {base}/cloud-astrology-software
+- Alternative to Solar Fire, including chart import: {base}/solar-fire-alternative
 - Pricing: {base}/pricing.html
 - Terms and privacy: {base}/terms.html
 
@@ -882,6 +888,19 @@ async def conquest_recording_page():
     slots on Bing for "astrology software that records client sessions".
     """
     return _serve_frontend_page("record-astrology-consultations.html")
+
+
+@app.get("/solar-fire-alternative")
+@app.get("/solar-fire-alternative.html")
+async def conquest_solar_fire_page():
+    """SEO alternative landing: switching to a browser tool from Solar Fire.
+
+    "solar fire alternative" and "solar fire for mac" are the cheapest qualified
+    traffic in the category — the searcher has already decided to leave — and on
+    2026-09-28 the top five for both were aggregator directories, with no vendor
+    page among them.
+    """
+    return _serve_frontend_page("solar-fire-alternative.html")
 
 
 @app.get("/health")

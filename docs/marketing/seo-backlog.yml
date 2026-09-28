@@ -54,7 +54,10 @@ items:
       internal_links_from: [/astrologer-workspace, /astrology-practice-management, /]
 
   - id: solar-fire-alternative
-    status: todo
+    status: shipped
+    # No PR number if GitHub Actions is again refused the right to open one; the branch
+    # is seo-agent/solar-fire-alternative either way.
+    pr: "PENDING"
     type: alternative-page
     slug: /solar-fire-alternative
     target_queries:

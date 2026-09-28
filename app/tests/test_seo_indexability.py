@@ -35,6 +35,8 @@ PUBLIC_PATHS = [
     "/astrologer-workspace.html",
     "/cloud-astrology-software",
     "/cloud-astrology-software.html",
+    "/solar-fire-alternative",
+    "/solar-fire-alternative.html",
 ]
 
 APP_PATHS = [
