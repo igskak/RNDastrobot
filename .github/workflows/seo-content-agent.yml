@@ -29,6 +29,8 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  # To start CI on the agent's branch; see "Run CI on the agent's pull request".
+  actions: write
 
 concurrency:
   group: seo-content-agent
@@ -217,6 +219,77 @@ jobs:
       # its execution log, which is not uploaded — this repository is public and the full
       # transcript can contain anything the agent read. This pulls out just the refusals,
       # truncated, so the next quiet no-op says exactly which rule was missing.
+      # A pull request opened with the job's own GITHUB_TOKEN triggers no workflows — GitHub
+      # blocks it so Actions cannot set off chains of itself. So the agent's PR arrived on
+      # 2026-09-28 with "no checks", and the only thing standing between it and main was
+      # the agent grading its own gates.
+      #
+      # workflow_dispatch is the one event that token may trigger. This starts the real CI
+      # on the agent's branch, waits for it, and writes the verdict onto the PR — and fails
+      # this run if CI failed, so a red result is loud rather than a line in a comment.
+      #
+      # The alternative, a personal access token for the agent, makes its PRs trigger CI
+      # natively but hands a token that lives for months to a process that reads untrusted
+      # competitor pages. This keeps every token scoped to one job.
+      - name: Run CI on the agent's pull request
+        if: always() && steps.queue.outputs.queued == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PRS=$(gh pr list --label seo-agent --state open --json number,headRefName,headRefOid \
+                  --jq '.[] | "\(.number) \(.headRefName) \(.headRefOid)"')
+          if [ -z "$PRS" ]; then
+            echo "No open seo-agent pull request to check."
+            exit 0
+          fi
+
+          FAILED=0
+          while read -r NUMBER BRANCH SHA; do
+            MARK="ci-for-$SHA"
+            if gh pr view "$NUMBER" --json comments --jq '.comments[].body' | grep -q "$MARK"; then
+              echo "#$NUMBER: CI already reported for ${SHA:0:8}, skipping."
+              continue
+            fi
+
+            echo "#$NUMBER: starting CI on $BRANCH (${SHA:0:8})"
+            gh workflow run ci.yml --ref "$BRANCH"
+
+            RUN_ID=""
+            for _ in $(seq 1 20); do
+              sleep 6
+              RUN_ID=$(gh run list --workflow ci.yml --branch "$BRANCH" --event workflow_dispatch \
+                         --limit 1 --json databaseId,headSha \
+                         --jq ".[] | select(.headSha == \"$SHA\") | .databaseId")
+              [ -n "$RUN_ID" ] && break
+            done
+            if [ -z "$RUN_ID" ]; then
+              echo "::warning::#$NUMBER: CI run did not appear; check Actions by hand."
+              FAILED=1
+              continue
+            fi
+
+            # A failing CI must not end this step before the verdict is posted.
+            gh run watch "$RUN_ID" --interval 30 > /dev/null 2>&1 || true
+            CONCLUSION=$(gh run view "$RUN_ID" --json jobs \
+                           --jq '[.jobs[] | select(.name == "i18n-and-regression") | .conclusion] | first // "unknown"')
+            URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/$RUN_ID"
+
+            if [ "$CONCLUSION" = "success" ]; then
+              VERDICT="✅ **CI passed** on \`${SHA:0:8}\`: the full test suite and the organic-surface audit, run independently of the agent's own gates."
+            else
+              VERDICT="❌ **CI failed** on \`${SHA:0:8}\` (i18n-and-regression: $CONCLUSION). Do not merge until it is green."
+              FAILED=1
+            fi
+            gh pr comment "$NUMBER" --body "$VERDICT
+
+          Run: $URL
+          <!-- $MARK -->"
+            echo "#$NUMBER: $CONCLUSION"
+          done <<< "$PRS"
+
+          [ "$FAILED" = "0" ] || { echo "::error::CI failed on an seo-agent pull request."; exit 1; }
+
       - name: Report what the agent was not allowed to do
         if: always() && steps.queue.outputs.queued == 'true'
         run: |
