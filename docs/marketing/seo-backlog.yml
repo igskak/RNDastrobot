@@ -24,6 +24,46 @@ meta:
       that is not verifiable on their public pricing or feature page today.
     - No em dashes in visitor-facing copy (house voice).
     - A page is not done until it is routed, in the sitemap, and covered by a test.
+    - >-
+      An item needs a measured search volume, not only a SERP shape. On 2026-09-29 a
+      results page full of "how to install ZET on a Mac" guides was read as unmet demand;
+      Semrush then put the whole Mac cluster at about 30 searches a month and "аналог X"
+      at zero for every brand in the niche. Who ranks tells you the competition, not the
+      demand. Items still marked volume_checked false were queued on SERP shape alone.
+  ru_uk_pages:
+    # Constraints for every page written natively in Russian or Ukrainian.
+    - >-
+      Never under app/frontend/ru/ or app/frontend/uk/. The localized-pages build deletes
+      and regenerates those folders on every build, so a hand-written page there vanishes
+      on the next deploy. Use top-level files with their own routes, like the other
+      conquest pages, e.g. app/frontend/<slug>.html and app/frontend/<slug>-uk.html.
+    - >-
+      <html lang="ru"> / <html lang="uk">, og:locale ru_RU / uk_UA, and reciprocal hreflang
+      between the two versions. No hreflang to an English page (there is none); a
+      reciprocity failure fails seo_audit.py.
+    - >-
+      Static text in the document, no data-i18n (the prerender only knows catalog pages).
+    - >-
+      Do not link from the /ru/ or /uk/ home pages. They are prerendered from the
+      index.html template shared with the English home page, so the link would reach
+      English visitors too. Link the two language versions to each other instead.
+    - >-
+      Voice reference: the served /ru/ and /uk/ home pages and ru.json / uk.json. Soft and
+      human; «практика», «люди, для которых вы строите карты», not «клиенты» or CRM.
+    - >-
+      Ukrainian users mostly search in Russian: Semrush's UA volumes below are for the
+      Russian spellings. The uk page should still use Ukrainian spellings in its own copy
+      (астропроцесор, not астропроцессор); their volume was not measured.
+    - >-
+      The agent's WebSearch returns US results. For a Russian or Ukrainian query it may not
+      show the real SERP, and search engines challenge automated fetches. If the SERP cannot
+      be checked, say so plainly in the PR instead of reporting US results as the Russian
+      page one. The volumes above are measured; the competition is what needs checking.
+    - >-
+      Russia cannot pay. Visa and Mastercard do not work for Russian-issued cards, and the
+      GTM plan rules Russia out as a market. RU-database volumes are mostly Russia, so the
+      part that can convert is UA, plus Belarus, Kazakhstan and the diaspora. Size pages by
+      that share, not by the RU total.
 
 items:
   - id: record-astrology-consultations
@@ -80,71 +120,108 @@ items:
       schema: [SoftwareApplication, FAQPage]
       internal_links_from: [/cloud-astrology-software, /astrology-practice-management]
 
-  - id: zet-alternative
+  - id: astroprocessor
+    status: todo
+    type: category-guide
+    languages: [ru, uk]
+    volume_checked: true
+    slug: /astroprocessor (ru) and /astroprocessor-uk (uk)
+    target_queries:
+      # Semrush, Google only, 2026-09-29. KD = keyword difficulty.
+      primary:
+        - "астропроцессор — RU 1,600 / UA 720 / KD 14"
+        - "астропроцессор онлайн — RU 590 / UA 320 / KD 63"
+      tail:
+        - "астропроцессор zet — RU 210 / UA 90 / KD 23"
+        - "chronos астропроцессор — RU 140 / KD 14"
+        - "астропроцессор гермес — RU 50 / KD 12"
+        - "about ten more phrases, about 130 combined"
+      navigational_not_primary:
+        - "хронос астропроцессор — RU 1,300 / UA 170: people looking for Chronos itself"
+    why: >-
+      The category word, and the biggest winnable cluster found: about 4,200 a month in
+      the RU database and 1,200 in UA across the cluster, at KD 12 to 27, against about 30
+      a month for the whole ZET-for-Mac idea it replaces. Steliara does not appear for it
+      at all. After the Russia caveat in meta.ru_uk_pages, UA's 720 for the head term alone
+      is still more than every ZET query combined. Unverified — the agent must check it —
+      whether vendor pages already hold the SERP. An earlier look at a neighbouring query
+      showed "Astrodoc — Астропроцессор онлайн" and a Chronos page, so for the "онлайн"
+      variant they probably do.
+    format: >-
+      A buyer's guide, not a landing page: «Астропроцессор: какой выбрать для практики».
+      Compare ZET, Sotis, Chronos and Steliara honestly on what a practising astrologer
+      needs. This format ranks for the category word and absorbs the brand-plus-category
+      tail («астропроцессор zet», «chronos астропроцессор») that a single brand page cannot.
+    must_cover:
+      - >-
+        What an astroprocessor is, answered in the first paragraph, for the person who
+        typed the word to find out.
+      - >-
+        Who needs what: for someone calculating their own chart, free Sotis or Chronos is
+        enough, and the page says so. Steliara is for a practice: profiles for the people
+        you read for, recorded consultations, the history in one place.
+      - >-
+        ZET, Sotis and Chronos each described fairly, with what each does better than us.
+        Use the Honest gaps section of product-marketing.md. Every competitor claim needs
+        a URL and a check date in the PR, as usual.
+      - >-
+        Importing from ZET (.zbs) as the practical bridge for people moving over.
+      - >-
+        FAQ with FAQPage schema, in the page's language.
+    technical: See meta.ru_uk_pages.
+    acceptance:
+      min_words: 1200 per page
+      schema: [SoftwareApplication, FAQPage]
+      internal_links_from: [/solar-fire-alternative]
+
+  - id: zet-online
     status: todo
     type: alternative-page
     languages: [ru, uk]
-    slug: /analog-zet (ru) and /analog-zet-uk (uk)
+    volume_checked: true
+    replaces: zet-alternative (queued 2026-09-29 on SERP shape, reframed the same day)
+    slug: /zet-online (ru) and /zet-online-uk (uk)
     target_queries:
-      ru: [zet для mac, аналог zet, zet на macos, альтернатива zet астрология]
-      uk: [zet для mac, аналог zet, zet на macos]
-    why: >
-      The strongest competitor-brand opening found so far (SERP check 2026-09-29).
-      ZET is the most common desktop astrology program among the Russian- and
-      Ukrainian-speaking astrologers who are our first market, and it is Windows-only.
-      The "zet для mac" results are nothing but workaround guides: "Установка Zet 9 на
-      macOS", "Как установить Zet 9 на Mac", "Установка программы Zet на Mac OS". The
-      "аналог zet" results are listicles, a ZET/Sotis/Chronos/ZEUS comparison article and
-      the ProgSoft aggregator; no vendor page answers either query. Steliara has both
-      answers: it runs in a browser on Mac, and it imports ZET databases (.zbs) directly
-      (see product-marketing.md, chart import). Same shape as /solar-fire-alternative,
-      which opens by answering "is there Solar Fire for Mac?" with a plain "no".
+      primary:
+        - "zet 9 онлайн — RU 260 / KD 42"
+        - "астрологическая программа zet онлайн — RU 90 / KD 25"
+        - "tail: zet 8 geo онлайн, zet астропроцессор онлайн, zet geo онлайн, синастрия онлайн zet, zet соляр онлайн, программа zet онлайн — about 250 combined, KD 0"
+      do_not_chase:
+        - >-
+          натальная карта zet онлайн с расшифровкой — RU 880. The largest phrase in the
+          cluster is a person wanting their own chart interpreted. That is the anti-persona
+          in product-marketing.md, and the assistant deliberately does not interpret. Let
+          the page rank for it if it does; do not write for it.
+    why: >-
+      ZET is desktop-only and people search for it "онлайн". Excluding the consumer phrase
+      above, the practitioner part of the cluster is about 500 a month in RU, KD 0 to 42.
+      Honest expectation 100 to 200 visits a month. This was queued as "ZET alternative
+      for Mac"; Semrush found no demand for either axis, so neither is the frame now.
     must_cover:
       - >-
-        Open with the honest answer to "is there ZET for Mac": no native version, and
-        what the workarounds cost (Windows licence, emulator, Parallels).
+        The honest answer to "ZET онлайн": there is no official browser version; what a
+        browser-based astroprocessor gives and what it does not.
       - >-
-        What ZET is genuinely good at, said and meant (calculation depth, techniques,
-        it is free or cheap). Use the "Honest gaps" section of product-marketing.md.
+        What ZET is genuinely good at, said and meant.
       - >-
-        Moving a ZET database over: export .zbs, import, what carries (notes) and what
-        does not (source calculation settings). Limits: 5 MiB, 2,000 records.
+        Moving a ZET database over: export .zbs, import, what carries (notes) and what does
+        not (source calculation settings). Limits 5 MiB, 2,000 records.
       - >-
-        The consultation story: recorded audio, transcript, summary on the profile,
-        Studio plan. This is what ZET does not do at all.
+        The consultation story, which ZET does not have: recorded audio, transcript,
+        summary on the profile. Studio plan.
       - >-
-        Who should stay on ZET. A page that names nobody who should stay reads as an ad.
+        Mac as one FAQ line, not a section. The whole Mac cluster is about 30 a month.
       - >-
-        FAQ with FAQPage schema, in the page's language.
-    technical:
-      - >-
-        Do NOT put these files under app/frontend/ru/ or app/frontend/uk/. The
-        localized-pages build deletes and regenerates those folders on every build, so a
-        hand-written page there disappears on the next deploy. Use top-level files
-        (app/frontend/analog-zet.html, app/frontend/analog-zet-uk.html) with their own
-        routes, like the other conquest pages.
-      - >-
-        <html lang="ru"> / <html lang="uk">, og:locale ru_RU / uk_UA, and reciprocal
-        hreflang between the two pages (ru, uk). No hreflang to an English page: there
-        is none, and a reciprocity failure fails seo_audit.py.
-      - >-
-        Static text in the document, no data-i18n (the prerender only knows catalog pages).
-      - >-
-        Voice reference: the served /ru/ and /uk/ home pages and ru.json / uk.json. Soft,
-        human; «практика», «люди, для которых вы строите карты», not «клиенты» or CRM.
+        Who should stay on ZET.
+    technical: See meta.ru_uk_pages.
     acceptance:
       min_words: 800 per page
       schema: [SoftwareApplication, FAQPage]
-      internal_links_from: [/solar-fire-alternative]
-      internal_links_note: >-
-        The ru and uk pages link to each other. Do not add a link on the /ru/ or /uk/ home
-        pages: those are prerendered from the shared index.html template for all four
-        languages, so the link would also appear on the English home page, pointing an
-        English visitor at a Russian page. On /solar-fire-alternative a short line such
-        as "Using ZET? There is a page for you in Russian and Ukrainian" is enough.
+      internal_links_from: [/astroprocessor, /astroprocessor-uk]
 
   - id: astrolium-alternative
     status: todo
+    volume_checked: false  # queued on SERP shape; check EN volume (us db) before this comes up
     type: alternative-page
     slug: /astrolium-alternative
     target_queries:
@@ -171,6 +248,7 @@ items:
 
   - id: astro-gold-alternative
     status: todo
+    volume_checked: false  # queued on SERP shape; check EN volume (us db) before this comes up
     type: alternative-page
     slug: /astro-gold-alternative
     target_queries:
@@ -201,6 +279,7 @@ items:
 
   - id: timepassages-alternative
     status: todo
+    volume_checked: false  # queued on SERP shape; check EN volume (us db) before this comes up
     type: alternative-page
     slug: /timepassages-alternative
     target_queries:
