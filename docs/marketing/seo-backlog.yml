@@ -54,7 +54,8 @@ items:
       internal_links_from: [/astrologer-workspace, /astrology-practice-management, /]
 
   - id: solar-fire-alternative
-    status: todo
+    status: shipped
+    pr: "#11"
     type: alternative-page
     slug: /solar-fire-alternative
     target_queries:
