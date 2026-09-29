@@ -16,6 +16,9 @@ meta:
     - docs/marketing/seo-audit-2026-09.md   # why each item is here
   rules:
     - English first. RU/UK/DE mirrors are a separate item, never bundled in.
+      The one exception is a page aimed at a competitor whose market is Russian- or
+      Ukrainian-speaking (ZET, Chronos, Sotis) is written natively in those
+      languages. It is not a translation of an English page and has no English twin.
     - Every factual claim about Steliara must be traceable to product-marketing.md.
     - Competitor comparisons must be checkable and fair. No claim about a competitor
       that is not verifiable on their public pricing or feature page today.
@@ -77,6 +80,69 @@ items:
       schema: [SoftwareApplication, FAQPage]
       internal_links_from: [/cloud-astrology-software, /astrology-practice-management]
 
+  - id: zet-alternative
+    status: todo
+    type: alternative-page
+    languages: [ru, uk]
+    slug: /analog-zet (ru) and /analog-zet-uk (uk)
+    target_queries:
+      ru: [zet для mac, аналог zet, zet на macos, альтернатива zet астрология]
+      uk: [zet для mac, аналог zet, zet на macos]
+    why: >
+      The strongest competitor-brand opening found so far (SERP check 2026-09-29).
+      ZET is the most common desktop astrology program among the Russian- and
+      Ukrainian-speaking astrologers who are our first market, and it is Windows-only.
+      The "zet для mac" results are nothing but workaround guides: "Установка Zet 9 на
+      macOS", "Как установить Zet 9 на Mac", "Установка программы Zet на Mac OS". The
+      "аналог zet" results are listicles, a ZET/Sotis/Chronos/ZEUS comparison article and
+      the ProgSoft aggregator; no vendor page answers either query. Steliara has both
+      answers: it runs in a browser on Mac, and it imports ZET databases (.zbs) directly
+      (see product-marketing.md, chart import). Same shape as /solar-fire-alternative,
+      which opens by answering "is there Solar Fire for Mac?" with a plain "no".
+    must_cover:
+      - >-
+        Open with the honest answer to "is there ZET for Mac": no native version, and
+        what the workarounds cost (Windows licence, emulator, Parallels).
+      - >-
+        What ZET is genuinely good at, said and meant (calculation depth, techniques,
+        it is free or cheap). Use the "Honest gaps" section of product-marketing.md.
+      - >-
+        Moving a ZET database over: export .zbs, import, what carries (notes) and what
+        does not (source calculation settings). Limits: 5 MiB, 2,000 records.
+      - >-
+        The consultation story: recorded audio, transcript, summary on the profile,
+        Studio plan. This is what ZET does not do at all.
+      - >-
+        Who should stay on ZET. A page that names nobody who should stay reads as an ad.
+      - >-
+        FAQ with FAQPage schema, in the page's language.
+    technical:
+      - >-
+        Do NOT put these files under app/frontend/ru/ or app/frontend/uk/. The
+        localized-pages build deletes and regenerates those folders on every build, so a
+        hand-written page there disappears on the next deploy. Use top-level files
+        (app/frontend/analog-zet.html, app/frontend/analog-zet-uk.html) with their own
+        routes, like the other conquest pages.
+      - >-
+        <html lang="ru"> / <html lang="uk">, og:locale ru_RU / uk_UA, and reciprocal
+        hreflang between the two pages (ru, uk). No hreflang to an English page: there
+        is none, and a reciprocity failure fails seo_audit.py.
+      - >-
+        Static text in the document, no data-i18n (the prerender only knows catalog pages).
+      - >-
+        Voice reference: the served /ru/ and /uk/ home pages and ru.json / uk.json. Soft,
+        human; «практика», «люди, для которых вы строите карты», not «клиенты» or CRM.
+    acceptance:
+      min_words: 800 per page
+      schema: [SoftwareApplication, FAQPage]
+      internal_links_from: [/solar-fire-alternative]
+      internal_links_note: >-
+        The ru and uk pages link to each other. Do not add a link on the /ru/ or /uk/ home
+        pages: those are prerendered from the shared index.html template for all four
+        languages, so the link would also appear on the English home page, pointing an
+        English visitor at a Russian page. On /solar-fire-alternative a short line such
+        as "Using ZET? There is a page for you in Russian and Ukrainian" is enough.
+
   - id: astrolium-alternative
     status: todo
     type: alternative-page
@@ -89,6 +155,11 @@ items:
       Astrolium is the key English-language competitor (see the competitor note in the
       GTM plan) and owns the "astrologer workspace + AI" sentence. An alternative page
       is where we say what they cannot: the consultation itself is recorded.
+      Expectation, from the 2026-09-29 SERP check: Astrolium defends its own brand. #1
+      and #2 for "astrolium alternative" are its own pages ("Best astrology software
+      2026: 7 tools compared" and "Compare Astrolium"). A third-party page can realistically
+      take #3-5, not #1. Worth it because it is the competitor buyers compare us with, and
+      because an honest comparison is what AI engines cite.
     must_cover:
       - Where Astrolium is the better pick. Say it and mean it.
       - The recorded-consultation gap as the single decisive difference.
@@ -97,6 +168,61 @@ items:
       min_words: 700
       schema: [SoftwareApplication, FAQPage]
       internal_links_from: [/astrology-practice-management, /record-astrology-consultations]
+
+  - id: astro-gold-alternative
+    status: todo
+    type: alternative-page
+    slug: /astro-gold-alternative
+    target_queries:
+      - >-
+        astro gold alternative
+      - >-
+        astro gold for windows
+      - >-
+        astro gold vs
+    why: >
+      SERP check 2026-09-29: aggregators (Techjockey, Charting Stars, WorldsApps) plus one
+      vendor doing this exact play ("Astro Gold Alternative for Windows" by AstroWatch).
+      Winnable. Astro Gold is Solar Fire's Mac and iOS sibling at $249.99, with files
+      interchangeable with Solar Fire, so the .SFcht importer answers migration here too.
+    must_cover:
+      - >-
+        What Astro Gold is genuinely good at (it is the depth option on a Mac).
+      - >-
+        The platform angle reversed: Astro Gold is Apple-only, Steliara runs anywhere.
+      - >-
+        Importing .SFcht files, and what does not carry over.
+      - >-
+        Link to /solar-fire-alternative; the two audiences overlap.
+    acceptance:
+      min_words: 700
+      schema: [SoftwareApplication, FAQPage]
+      internal_links_from: [/solar-fire-alternative, /cloud-astrology-software]
+
+  - id: timepassages-alternative
+    status: todo
+    type: alternative-page
+    slug: /timepassages-alternative
+    target_queries:
+      - >-
+        timepassages alternative
+      - >-
+        timepassages vs
+    why: >
+      SERP check 2026-09-29: aggregators and two or three vendor comparison pages, none
+      dominant. TimePassages leans toward consumer and hobbyist use, so the honest
+      framing is "when your readings become a practice", not "TimePassages is worse".
+    must_cover:
+      - >-
+        What TimePassages does well, and who it is for.
+      - >-
+        The move from personal chart use to a practice: profiles, recorded sessions.
+      - >-
+        Say plainly that someone reading only their own chart does not need Steliara.
+    acceptance:
+      min_words: 700
+      schema: [SoftwareApplication, FAQPage]
+      internal_links_from: [/astrology-practice-management]
 
   - id: cloud-astrology-software-rebuild
     status: todo
