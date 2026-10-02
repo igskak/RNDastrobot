@@ -58,7 +58,7 @@ Lapsed accounts go read-only (`expired`), not locked; charts and records are kep
 
 **Western incumbents (calculators):** Solar Fire, Astro Gold, TimePassages. Powerful calculators with report writers, but desktop-era, single-user, no built-in consultations or session capture.
 - **Solar Fire V9** — $360 one-time; upgrades $99–$325. Windows 8/10/11 only; the maker says "We do not officially support Solar Fire on the Mac" and "Solar Fire 9 will NOT run with Wine" (Mac users need an emulator plus a Windows licence). 30 house systems, interpretation reports, astro-mapping, Vedic dasas. *(alabe.com/solarfireV9.html and /support/windowsmac.htm, checked 2026-09-28.)*
-- **Astro Gold for macOS** — $249.99; made by Solar Fire's creators, chart files interchangeable with Solar Fire. *(astrogold.io, checked 2026-09-28.)*
+- **Astro Gold** — $249.99 for macOS; made by Solar Fire's creators, chart files interchangeable with Solar Fire. **Not Apple-only:** astrogold.io sells Windows, macOS, iOS and Android versions. *(astrogold.io, price checked 2026-09-28, platforms 2026-10-03.)*
 - The SERP for "solar fire for mac" is a Change.org petition and a Facebook support group — unmet demand, now answered by `/solar-fire-alternative`.
 
 **⚠️ KEY ENGLISH-MARKET COMPETITOR — Astrolium (astrolium.com):** Modern cloud "one workspace for working astrologers: charts, transits, synastry, returns, built-in client CRM, and an AI trained on the craft." Nearly identical *vision* to Steliara, already shipping, English-native. Pricing **Free / $11 (Pro) / $29 (Adept) / $79 (Master, team)**, plus a $12 Personal plan *(astrolium.com/pricing, re-checked 2026-09-24)*; founding members get 6 months free. **Where Steliara still leads:** Astrolium does NOT yet host video calls, record, or transcribe — "audio session recording is on the way" (June 2026); on 2026-09-24 neither its feature page nor its pricing page mentioned recording or transcription. Say "their pages do not mention it as of <date>", never "they cannot". So Steliara's live recorded+transcribed+summarized *consultation* is a real but **time-boxed** advantage. **Strategic implications:** (1) Astrolium's Free/$11 tiers set a low reference price that undercuts Steliara's $24/$39-no-free-tier model — the "kill the cheap anchor" logic assumed no competitor anchor; one now exists. (2) Don't position as "another astrologer workspace + AI" (Astrolium owns that sentence) — position on the live consultation capture they lack. (3) Astrolium is NOT localized for UA/RU, where Chronos (calc/forecast only) doesn't do this workspace play — so RU is currently competitor-thin for this category.
@@ -77,7 +77,7 @@ Lapsed accounts go read-only (`expired`), not locked; charts and records are kep
 - Fuses "capture the consultation" + "everything in one place" into one promise with an emotional core (removes the memory burden). No competitor ships this.
 
 **PILLAR 1 — Works everywhere** *(concrete fact; conquers Solar Fire specifically)*
-- Cloud web app: macOS, Windows, any browser/device. Beats Windows-only Solar Fire and Apple-only Astro Gold. Use heavily in desktop-conquest ads.
+- Cloud web app: macOS, Windows, any browser/device. Beats Windows-only Solar Fire and ZET (ZET's own site: macOS "only through emulators" such as Parallels or CrossOver). Do **not** frame Astro Gold as Apple-only — it ships on Windows and Android too; against it the argument is the people you read for and the recorded consultation, not the platform. Use heavily in desktop-conquest ads.
 
 **PILLAR 2 — Genuinely easy / a new level of convenience** *(experience; counters "clunky / learning curve")*
 - Say it human, NOT "UX": "much simpler and nicer to use than the old programs." Support claim, not the lead (everyone claims "modern"; hard to prove in one line).
@@ -90,6 +90,7 @@ Lapsed accounts go read-only (`expired`), not locked; charts and records are kep
 - **Chart import from the tools people already use:** ZET (`.zbs`), Astro.com / AAF, Solar Fire and Astro Gold (`.SFcht`), Astrolog (`.as`), and Solar Fire text exports — up to 5 MiB and 2,000 records per file, possible duplicates flagged, notes on a source chart carried over (every format except Astrolog). Subsidiary charts inside a Solar Fire record and the source program's calculation settings are *not* carried over. *(`app/services/chart_import/`, `page.accountSettings.import` in the catalog.) For an alternative page this is the strongest line available: the incumbent's own file opens here.*
 - A profile per person you read for: notes, recordings, charts together (proof for HERO + Pillar 3).
 - Swiss Ephemeris accuracy with practice-grade orbs tuned with a professional astrologer (Alyona's table) — table-stakes credibility.
+- Tropical and sidereal zodiac, with five ayanamshas (Lahiri, Fagan-Bradley, Krishnamurti, Raman, De Luce); six house systems in the UI. *(`common.zodiac` and the house-system keys in the catalog.)*
 - A chat assistant that answers fast from the actual chart data.
 
 **Why customers choose us:** It's built for the working day of a real practicing astrologer — the consultation and the person, not just the chart — and it works anywhere, with everything in one place.
@@ -107,6 +108,7 @@ A comparison that finds nothing good about the alternative reads as marketing an
 - **One chart-wheel style**, no chart-art designer.
 - **No offline mode** — it is a cloud app.
 - **No free tier** — Astrolium has Free and $11 plans against our $24 floor.
+- **No self-serve data export.** Getting data out is a request handled under privacy §7, not a button. ⚠️ Terms §8 tells users "we recommend exporting any data you wish to keep" without a feature to do it — a product gap and a wording mismatch, flagged 2026-10-03 by the agent's cloud-page rebuild (PR #18). Do not claim one-click export.
 
 ## Objections
 | Objection | Response |
