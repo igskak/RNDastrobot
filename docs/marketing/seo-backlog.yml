@@ -202,7 +202,13 @@ items:
       schema: [SoftwareApplication, FAQPage]
 
   - id: zet-online
-    status: todo
+    status: shipped
+    # internal_links_from named /astroprocessor and /astroprocessor-uk, which do not
+    # exist: that item is still todo and this one was built out of order on request.
+    # Inbound links today come from /solar-fire-alternative (the astroprocessor item's
+    # own link source) and from the two pages to each other. When /astroprocessor
+    # ships it should add the links this item was supposed to receive.
+    pr: "#17"
     type: alternative-page
     languages: [ru, uk]
     volume_checked: true
