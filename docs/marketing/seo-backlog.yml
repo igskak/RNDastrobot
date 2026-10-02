@@ -174,6 +174,31 @@ items:
       schema: [SoftwareApplication, FAQPage]
       internal_links_from: [/solar-fire-alternative]
 
+  - id: cloud-astrology-software-rebuild
+    status: todo
+    volume_checked: true  # demand proven by real clicks, not a keyword tool (see why)
+    type: rewrite
+    slug: /cloud-astrology-software
+    target_queries:
+      - cloud astrology software
+      - web based astrology software
+      - astrology software for mac
+    why: >
+      Moved to second on 2026-10-02. Search Console, window to 2026-09-29: this page is at
+      position 7.9 and drew 7 of the site's 9 organic clicks. Lifting a page that already
+      ranks from 8th into the top 3 multiplies its click-through several times over, and
+      its demand is proven by real clicks rather than a keyword tool's estimate.
+      511 words against lunaastrology.com, which holds #1 and #2 for the head term.
+      The sister page /astrology-practice-management is #2 for its own head term on
+      690 words, so the format works and this page is simply too thin to win.
+    must_cover:
+      - A real feature table, not a bullet list.
+      - The Mac question answered directly, because that is what the query means.
+      - Offline, data ownership and export, which is the objection to cloud.
+    acceptance:
+      min_words: 900
+      schema: [SoftwareApplication, FAQPage]
+
   - id: zet-online
     status: todo
     type: alternative-page
@@ -302,26 +327,6 @@ items:
       min_words: 700
       schema: [SoftwareApplication, FAQPage]
       internal_links_from: [/astrology-practice-management]
-
-  - id: cloud-astrology-software-rebuild
-    status: todo
-    type: rewrite
-    slug: /cloud-astrology-software
-    target_queries:
-      - cloud astrology software
-      - web based astrology software
-      - astrology software for mac
-    why: >
-      511 words against lunaastrology.com, which holds #1 and #2 for the head term.
-      The sister page /astrology-practice-management is #2 for its own head term on
-      690 words, so the format works and this page is simply too thin to win.
-    must_cover:
-      - A real feature table, not a bullet list.
-      - The Mac question answered directly, because that is what the query means.
-      - Offline, data ownership and export, which is the objection to cloud.
-    acceptance:
-      min_words: 900
-      schema: [SoftwareApplication, FAQPage]
 
   - id: ai-answer-pages
     status: todo
