@@ -121,7 +121,8 @@ items:
       internal_links_from: [/cloud-astrology-software, /astrology-practice-management]
 
   - id: astroprocessor
-    status: todo
+    status: shipped
+    pr: "#17"
     type: category-guide
     languages: [ru, uk]
     volume_checked: true
