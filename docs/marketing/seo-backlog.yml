@@ -176,7 +176,8 @@ items:
       internal_links_from: [/solar-fire-alternative]
 
   - id: cloud-astrology-software-rebuild
-    status: todo
+    status: shipped
+    pr: "#18"
     volume_checked: true  # demand proven by real clicks, not a keyword tool (see why)
     type: rewrite
     slug: /cloud-astrology-software
