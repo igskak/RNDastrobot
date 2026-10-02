@@ -208,7 +208,7 @@ items:
     # Inbound links today come from /solar-fire-alternative (the astroprocessor item's
     # own link source) and from the two pages to each other. When /astroprocessor
     # ships it should add the links this item was supposed to receive.
-    pr: "#17"
+    pr: "#19"
     type: alternative-page
     languages: [ru, uk]
     volume_checked: true
