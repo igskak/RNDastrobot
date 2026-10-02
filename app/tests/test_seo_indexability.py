@@ -183,6 +183,25 @@ def test_the_astroprocessor_pair_links_both_ways(client):
         assert 'hreflang="en"' not in html, path
 
 
+def test_the_cloud_page_keeps_the_depth_it_was_rebuilt_for(client):
+    """/cloud-astrology-software was 511 words and sat at position 7.9 for its head term.
+
+    It was rebuilt on 2026-10-02 to beat lunaastrology.com, which holds the top two
+    slots, and the backlog set 900 words as the floor. The audit script only refuses a
+    page under 200, so nothing else would notice this page quietly sliding back to a
+    bullet list.
+    """
+    import re
+
+    html = client.get("/cloud-astrology-software").text
+    body = html[html.find("<body") :]
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(script|style|svg)\b.*?</\1>", " ", body))
+
+    assert len(text.split()) >= 900
+    # The comparison table is the point of the rebuild; a bullet list is what lost.
+    assert '<table class="compare">' in html
+
+
 def test_assets_are_not_given_a_robots_header(client):
     """The header belongs on documents; tagging every static file is noise."""
     response = client.get("/robots.txt")
