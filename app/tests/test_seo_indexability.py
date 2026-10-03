@@ -41,6 +41,12 @@ PUBLIC_PATHS = [
     "/astroprocessor.html",
     "/astroprocessor-uk",
     "/astroprocessor-uk.html",
+
+
+    "/zet-online",
+    "/zet-online.html",
+    "/zet-online-uk",
+    "/zet-online-uk.html",
 ]
 
 APP_PATHS = [

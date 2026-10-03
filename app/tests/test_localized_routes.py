@@ -139,3 +139,34 @@ def test_sitemap_leaves_untranslated_pages_alone(client):
 
 def test_sitemap_does_not_advertise_the_login_page(client):
     assert "login.html" not in client.get("/sitemap.xml").text
+
+
+def test_zet_online_pair_is_russian_and_ukrainian_and_points_only_at_each_other(client):
+    """The one page family written natively in RU/UK, with no English twin.
+
+    It sits at the top level rather than under /ru/ because build-localized-pages.mjs
+    deletes and regenerates those folders on every build. That also means nothing
+    generates its hreflang set, so the two documents have to carry it by hand - and a
+    set that is not reciprocal makes search engines treat the pair as duplicates
+    competing with each other.
+    """
+    russian = client.get("/zet-online")
+    ukrainian = client.get("/zet-online-uk")
+
+    assert '<html lang="ru">' in russian.text
+    assert '<html lang="uk">' in ukrainian.text
+    assert 'content="ru_RU"' in russian.text
+    assert 'content="uk_UA"' in ukrainian.text
+
+    for page in (russian, ukrainian):
+        assert 'hreflang="ru" href="https://www.steliara.com/zet-online"' in page.text
+        assert 'hreflang="uk" href="https://www.steliara.com/zet-online-uk"' in page.text
+        # There is no English version, so claiming one would send English searchers
+        # to a Russian document.
+        assert 'hreflang="en"' not in page.text
+        assert 'hreflang="x-default"' not in page.text
+
+    # Both spellings of each URL answer, because the sitemap allow-list marks both
+    # indexable and the document canonicalises to the bare one.
+    assert client.get("/zet-online.html").status_code == 200
+    assert client.get("/zet-online-uk.html").status_code == 200

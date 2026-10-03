@@ -435,6 +435,11 @@ _SITEMAP_PAGES = (
     # them. The two are a translated pair, not a page and its mirror.
     ("/astroprocessor", "0.7"),
     ("/astroprocessor-uk", "0.7"),
+    # One brand's searchers in one language, and a smaller cluster than the English
+    # alternative page above: about 500 searches a month across the practitioner half
+    # of the "ZET онлайн" cluster. Below /solar-fire-alternative, above /terms.html.
+    ("/zet-online", "0.7"),
+    ("/zet-online-uk", "0.7"),
     ("/terms.html", "0.3"),
 )
 
@@ -573,6 +578,9 @@ chart, and not a consumer horoscope product.
 - Alternative to Solar Fire, including chart import: {base}/solar-fire-alternative
 - Which astroprocessor to choose, in Russian: {base}/astroprocessor
 - Which astroprocessor to choose, in Ukrainian: {base}/astroprocessor-uk
+- "ZET онлайн": there is no browser version of ZET, and what moving a ZET
+  database to a browser astroprocessor involves (Russian): {base}/zet-online
+- The same page in Ukrainian: {base}/zet-online-uk
 - Pricing: {base}/pricing.html
 - Terms and privacy: {base}/terms.html
 
@@ -942,6 +950,28 @@ async def guide_astroprocessor_uk_page():
     hand-written page with it.
     """
     return _serve_frontend_page("astroprocessor-uk.html")
+
+
+@app.get("/zet-online")
+@app.get("/zet-online.html")
+async def conquest_zet_online_ru_page():
+    """SEO alternative landing, written natively in Russian: "ZET онлайн".
+
+    ZET is a Windows-only desktop astroprocessor and its users search for it
+    "онлайн"; the practitioner part of that cluster is about 500 searches a month in
+    the RU database at KD 0 to 42 (Semrush, 2026-09-29). Not a translation of an
+    English page and it has no English twin, so the hreflang set is this page plus
+    the Ukrainian one and nothing else. It lives at the top level rather than under
+    /ru/ because the localized-pages build wipes and regenerates that folder.
+    """
+    return _serve_frontend_page("zet-online.html")
+
+
+@app.get("/zet-online-uk")
+@app.get("/zet-online-uk.html")
+async def conquest_zet_online_uk_page():
+    """Ukrainian sibling of /zet-online, written natively rather than translated."""
+    return _serve_frontend_page("zet-online-uk.html")
 
 
 @app.get("/health")
