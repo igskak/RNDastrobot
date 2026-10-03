@@ -22,7 +22,9 @@ meta:
     - Every factual claim about Steliara must be traceable to product-marketing.md.
     - Competitor comparisons must be checkable and fair. No claim about a competitor
       that is not verifiable on their public pricing or feature page today.
-    - No em dashes in visitor-facing copy (house voice).
+    - No em dashes in visitor-facing English copy (house voice). In Russian and Ukrainian
+      the dash is grammatical where English uses "is" («Steliara — рабочее пространство»),
+      so use it there and only there; the served /ru/ and /uk/ pages already do.
     - A page is not done until it is routed, in the sitemap, and covered by a test.
     - >-
       An item needs a measured search volume, not only a SERP shape. On 2026-09-29 a
@@ -300,7 +302,9 @@ items:
       - >-
         What Astro Gold is genuinely good at (it is the depth option on a Mac).
       - >-
-        The platform angle reversed: Astro Gold is Apple-only, Steliara runs anywhere.
+        Premise corrected 2026-10-03: Astro Gold is NOT Apple-only; astrogold.io sells
+        Windows, macOS, iOS and Android versions. The platform angle does not apply here;
+        compare on the people you read for and the recorded consultation instead.
       - >-
         Importing .SFcht files, and what does not carry over.
       - >-
