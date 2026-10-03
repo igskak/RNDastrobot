@@ -37,6 +37,10 @@ PUBLIC_PATHS = [
     "/cloud-astrology-software.html",
     "/solar-fire-alternative",
     "/solar-fire-alternative.html",
+    "/astroprocessor",
+    "/astroprocessor.html",
+    "/astroprocessor-uk",
+    "/astroprocessor-uk.html",
 ]
 
 APP_PATHS = [
@@ -154,6 +158,29 @@ def test_structured_data_parses(client, path):
     for block in blocks:
         payload = json.loads(block)  # raises on malformed markup
         assert payload.get("@type"), f"{path}: JSON-LD block without an @type"
+
+
+def test_the_astroprocessor_pair_links_both_ways(client):
+    """The Russian and Ukrainian guides are a translated set with no English twin.
+
+    seo_audit.py checks reciprocity only when both URLs come back from the same
+    origin, so auditing localhost against production canonicals skips this pair
+    entirely. Without reciprocal hreflang search engines read the two as duplicates
+    competing with each other.
+    """
+    pair = {
+        "/astroprocessor": ("ru", "/astroprocessor-uk", "uk"),
+        "/astroprocessor-uk": ("uk", "/astroprocessor", "ru"),
+    }
+    for path, (own_lang, other_path, other_lang) in pair.items():
+        html = client.get(path).text
+
+        assert f'<html lang="{own_lang}">' in html, path
+        for lang, target in ((own_lang, path), (other_lang, other_path)):
+            link = f'<link rel="alternate" hreflang="{lang}" href="https://www.steliara.com{target}">'
+            assert link in html, f"{path} is missing {link}"
+        # No hreflang to an English page: there is no English version of this guide.
+        assert 'hreflang="en"' not in html, path
 
 
 def test_assets_are_not_given_a_robots_header(client):

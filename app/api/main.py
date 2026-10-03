@@ -179,6 +179,10 @@ async def isolate_solo_marketing_routes(request: Request, call_next):
         "/record-astrology-consultations.html",
         "/solar-fire-alternative",
         "/solar-fire-alternative.html",
+        "/astroprocessor",
+        "/astroprocessor.html",
+        "/astroprocessor-uk",
+        "/astroprocessor-uk.html",
     }
     # A prefixed URL is the same page in another language, so it needs the same fence.
     commercial_paths |= {
@@ -425,12 +429,18 @@ _SITEMAP_PAGES = (
     # searchers, so it sits below the category landings rather than beside them.
     ("/solar-fire-alternative", "0.8"),
     ("/pricing.html", "0.8"),
+    # The Russian and Ukrainian astroprocessor guides answer the biggest keyword
+    # cluster we found, but only the Ukrainian, Belarusian, Kazakh and diaspora share
+    # of it can actually pay, so they sit below the English pages rather than beside
+    # them. The two are a translated pair, not a page and its mirror.
+    ("/astroprocessor", "0.7"),
+    ("/astroprocessor-uk", "0.7"),
     ("/terms.html", "0.3"),
 )
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-09-28"
+_SITEMAP_LASTMOD = "2026-10-02"
 
 
 def _indexable_document_paths() -> frozenset:
@@ -561,6 +571,8 @@ chart, and not a consumer horoscope product.
 - Workspace with recorded, transcribed sessions: {base}/astrologer-workspace
 - Cloud astrology software (Mac and Windows): {base}/cloud-astrology-software
 - Alternative to Solar Fire, including chart import: {base}/solar-fire-alternative
+- Which astroprocessor to choose, in Russian: {base}/astroprocessor
+- Which astroprocessor to choose, in Ukrainian: {base}/astroprocessor-uk
 - Pricing: {base}/pricing.html
 - Terms and privacy: {base}/terms.html
 
@@ -901,6 +913,35 @@ async def conquest_solar_fire_page():
     page among them.
     """
     return _serve_frontend_page("solar-fire-alternative.html")
+
+
+@app.get("/astroprocessor")
+@app.get("/astroprocessor.html")
+async def guide_astroprocessor_ru_page():
+    """Buyer's guide to astroprocessors, written natively in Russian.
+
+    "астропроцессор" is the category word in the Russian-speaking market and the
+    largest winnable cluster in the 2026-09-29 keyword pass: about 4,200 searches a
+    month in the RU database and 1,200 in UA at low difficulty, with Steliara absent
+    from it. A guide comparing ZET, Sotis, Chronos and Steliara also absorbs the
+    brand-plus-category tail that a single brand page cannot.
+
+    This is not a translation of an English page; there is no English twin, so its
+    hreflang pair is the Ukrainian version and nothing else.
+    """
+    return _serve_frontend_page("astroprocessor.html")
+
+
+@app.get("/astroprocessor-uk")
+@app.get("/astroprocessor-uk.html")
+async def guide_astroprocessor_uk_page():
+    """Ukrainian half of the astroprocessor guide pair.
+
+    Kept at the top level rather than under /uk/ because the localized-pages build
+    deletes and regenerates that directory on every build, which would take a
+    hand-written page with it.
+    """
+    return _serve_frontend_page("astroprocessor-uk.html")
 
 
 @app.get("/health")
