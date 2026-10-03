@@ -11,8 +11,10 @@ merges. A human merges, Render deploys from `main`.
 
 ## The loop
 
-1. Read `docs/marketing/seo-backlog.yml`. Take the **first** item with `status: todo`.
-   If there is none, stop and do nothing. An empty queue is a valid outcome, not a
+1. Read `docs/marketing/seo-backlog.yml`. Take the **first** item with `status: todo`
+   that is not marked `volume_checked: false`. Those were queued on SERP shape alone and
+   wait for a measured search volume (see the rule in `meta.rules`); skip them, do not
+   measure or guess the volume yourself. If no item qualifies, stop and do nothing. An empty queue is a valid outcome, not a
    problem to solve by inventing work.
 2. Read the sources of truth listed in the backlog's `meta.source_of_truth`, plus the
    existing conquest page closest to the item (`app/frontend/astrology-practice-management.html`
