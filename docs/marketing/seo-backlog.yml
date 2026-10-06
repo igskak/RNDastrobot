@@ -255,8 +255,16 @@ items:
       internal_links_from: [/astroprocessor, /astroprocessor-uk]
 
   - id: astrolium-alternative
-    status: todo
-    volume_checked: false  # queued on SERP shape; check EN volume (us db) before this comes up
+    status: dropped
+    volume_checked: false
+    dropped: >
+      2026-10-05, by the agent (issue #22): the brand has no search footprint. Bing
+      autocomplete for "astrolium" and "astrolium a" never returns the word (it corrects
+      to astralium); the same method returns "solar fire alternatives" for Solar Fire.
+      No alternativeto.net page, no third-party review, no GSC query. An honest
+      comparison would also concede about nine rows (free tier, 23 house systems,
+      astrocartography, Vedic, horary, reports, self-serve export) against one we win.
+      Re-check later: one autocomplete call plus "does alternativeto.net list them yet".
     type: alternative-page
     slug: /astrolium-alternative
     target_queries:
@@ -283,7 +291,9 @@ items:
 
   - id: astro-gold-alternative
     status: todo
-    volume_checked: false  # queued on SERP shape; check EN volume (us db) before this comes up
+    # Bing autocomplete 2026-10-05/06 returns "astro gold alternative" as a real query, so
+    # the demand exists; its size is still unmeasured. Check EN volume (us db) first.
+    volume_checked: false
     type: alternative-page
     slug: /astro-gold-alternative
     target_queries:
@@ -315,8 +325,12 @@ items:
       internal_links_from: [/solar-fire-alternative, /cloud-astrology-software]
 
   - id: timepassages-alternative
-    status: todo
-    volume_checked: false  # queued on SERP shape; check EN volume (us db) before this comes up
+    status: dropped
+    volume_checked: false
+    dropped: >
+      2026-10-06: Bing autocomplete for "timepassages a" returns Al Stewart's song and no
+      "timepassages alternative"; Google Ads search terms show TimePassages traffic is
+      consumers looking for the app itself. No switching audience to catch.
     type: alternative-page
     slug: /timepassages-alternative
     target_queries:
