@@ -175,6 +175,106 @@
     "impressions": 83,
     "position": -19.72
   },
+  "fresh": {
+    "by_day": [
+      {
+        "clicks": 0,
+        "date": "2026-10-02",
+        "impressions": 9,
+        "position": 14.444444444444445
+      },
+      {
+        "clicks": 0,
+        "date": "2026-10-03",
+        "impressions": 6,
+        "position": 28.833333333333332
+      },
+      {
+        "clicks": 1,
+        "date": "2026-10-04",
+        "impressions": 11,
+        "position": 3.909090909090909
+      },
+      {
+        "clicks": 0,
+        "date": "2026-10-05",
+        "impressions": 7,
+        "position": 5.285714285714286
+      },
+      {
+        "clicks": 0,
+        "date": "2026-10-06",
+        "impressions": 6,
+        "position": 16.333333333333336
+      },
+      {
+        "clicks": 0,
+        "date": "2026-10-07",
+        "impressions": 0,
+        "position": 0
+      }
+    ],
+    "top_pages": [
+      {
+        "clicks": 1,
+        "impressions": 13,
+        "page": "https://www.steliara.com/cloud-astrology-software",
+        "position": 16.76923076923077
+      },
+      {
+        "clicks": 0,
+        "impressions": 12,
+        "page": "https://www.steliara.com/",
+        "position": 10
+      },
+      {
+        "clicks": 0,
+        "impressions": 2,
+        "page": "https://www.steliara.com/astrologer-workspace",
+        "position": 4.5
+      },
+      {
+        "clicks": 0,
+        "impressions": 5,
+        "page": "https://www.steliara.com/astrology-practice-management",
+        "position": 5.2
+      },
+      {
+        "clicks": 0,
+        "impressions": 2,
+        "page": "https://www.steliara.com/de/",
+        "position": 30
+      },
+      {
+        "clicks": 0,
+        "impressions": 1,
+        "page": "https://www.steliara.com/de/pricing.html",
+        "position": 10
+      },
+      {
+        "clicks": 0,
+        "impressions": 2,
+        "page": "https://www.steliara.com/pricing.html",
+        "position": 7.5
+      },
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "page": "https://www.steliara.com/record-astrology-consultations",
+        "position": 9.5
+      },
+      {
+        "clicks": 0,
+        "impressions": 1,
+        "page": "https://www.steliara.com/ru/",
+        "position": 7
+      }
+    ],
+    "window": {
+      "end": "2026-10-08",
+      "start": "2026-10-02"
+    }
+  },
   "previous_totals": {
     "clicks": 0,
     "ctr": 0.0,
