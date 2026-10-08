@@ -199,3 +199,37 @@ def test_the_assertion_we_sign_is_what_google_expects(monkeypatch):
     assert claims["iss"] == "bot@example.iam.gserviceaccount.com"
     assert claims["scope"] == gsc_report.SCOPE
     assert claims["exp"] - claims["iat"] == 3600
+
+
+def test_fresh_window_runs_up_to_today():
+    start, end = gsc_report.fresh_window(date(2026, 10, 8))
+    assert end == date(2026, 10, 8)
+    assert (end - start).days == gsc_report.FRESH_DAYS - 1
+
+
+def test_fresh_data_is_shown_apart_from_the_settled_totals():
+    report = {
+        "site": "sc-domain:steliara.com",
+        "window": {"start": "2026-09-08", "end": "2026-10-05", "days": 28},
+        "previous_window": {"start": "2026-08-11", "end": "2026-09-07"},
+        "totals": {"clicks": 11, "impressions": 158, "ctr": 0.0696, "position": 8.0},
+        "previous_totals": {"clicks": 0, "impressions": 60, "ctr": 0.0, "position": 27.0},
+        "delta": {"clicks": 11, "impressions": 98, "ctr": 0.0696, "position": -19.0},
+        "by_day": [],
+        "top_queries": [],
+        "top_pages": [],
+        "fresh": {
+            "window": {"start": "2026-10-02", "end": "2026-10-08"},
+            "by_day": [{"date": "2026-10-07", "clicks": 1, "impressions": 9, "position": 6.2}],
+            "top_pages": [{"page": "https://www.steliara.com/astroprocessor",
+                           "clicks": 0, "impressions": 3, "position": 12.0}],
+        },
+    }
+
+    output = gsc_report.render(report)
+
+    assert "Fresh, preliminary (2026-10-02 to 2026-10-08" in output
+    assert "2026-10-07" in output
+    assert "/astroprocessor" in output
+    # The settled totals are untouched by the preliminary block.
+    assert "158" in output

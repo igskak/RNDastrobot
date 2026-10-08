@@ -14,6 +14,11 @@ account only needs it to sign one assertion. HTTP is stdlib.
     GSC_SERVICE_ACCOUNT='{"type":"service_account",...}' python app/scripts/gsc_report.py
     python app/scripts/gsc_report.py --days 7 --json gsc.json
 
+The comparison windows end FRESHNESS_LAG_DAYS ago, on data Google has finalised. The
+report also carries a separate "fresh" block: the last FRESH_DAYS days up to today with
+`dataState: all`, Google's preliminary numbers. Those still move for a couple of days, so
+they are shown day by day and per page, never mixed into the windows or the alerts.
+
 Unset GSC_SERVICE_ACCOUNT and it prints a notice and exits 0, so it can be wired into a
 workflow before the credential exists.
 """
@@ -136,6 +141,15 @@ def totals(rows: list) -> dict:
     }
 
 
+FRESH_DAYS = 7
+
+
+def fresh_window(today: date | None = None) -> tuple:
+    """The last FRESH_DAYS days up to and including today, for preliminary data."""
+    end = today or date.today()
+    return (end - timedelta(days=FRESH_DAYS - 1), end)
+
+
 def window(days: int) -> tuple:
     end = date.today() - timedelta(days=FRESHNESS_LAG_DAYS)
     start = end - timedelta(days=days - 1)
@@ -147,13 +161,18 @@ def window(days: int) -> tuple:
 def collect(token: str, site: str, days: int) -> dict:
     start, end, previous_start, previous_end = window(days)
 
-    def run(dimensions, since, until, limit=25):
-        return query(token, site, {
+    def run(dimensions, since, until, limit=25, data_state=None):
+        payload = {
             "startDate": since.isoformat(),
             "endDate": until.isoformat(),
             "dimensions": dimensions,
             "rowLimit": limit,
-        })
+        }
+        if data_state:
+            payload["dataState"] = data_state
+        return query(token, site, payload)
+
+    fresh_start, fresh_end = fresh_window()
 
     current_days = run(["date"], start, end, limit=1000)
     previous_days = run(["date"], previous_start, previous_end, limit=1000)
@@ -180,6 +199,18 @@ def collect(token: str, site: str, days: int) -> dict:
             {"page": row["keys"][0], **{k: row.get(k, 0) for k in ("clicks", "impressions", "position")}}
             for row in run(["page"], start, end)
         ],
+        "fresh": {
+            "window": {"start": fresh_start.isoformat(), "end": fresh_end.isoformat()},
+            "by_day": [
+                {"date": row["keys"][0], **{k: row.get(k, 0) for k in ("clicks", "impressions", "position")}}
+                for row in sorted(run(["date"], fresh_start, fresh_end, limit=100, data_state="all"),
+                                  key=lambda r: r["keys"][0])
+            ],
+            "top_pages": [
+                {"page": row["keys"][0], **{k: row.get(k, 0) for k in ("clicks", "impressions", "position")}}
+                for row in run(["page"], fresh_start, fresh_end, data_state="all")
+            ],
+        },
     }
 
 
@@ -212,6 +243,20 @@ def render(report: dict) -> str:
         lines += ["", label, f"  {'':<52}{'impr':>7}{'clicks':>8}{'pos':>7}"]
         for row in rows[:10]:
             name = str(row[key])
+            if len(name) > 50:
+                name = name[:47] + "..."
+            lines.append(f"  {name:<52}{row['impressions']:>7}{row['clicks']:>8}{row['position']:>7.1f}")
+
+    fresh = report.get("fresh")
+    if fresh and (fresh["by_day"] or fresh["top_pages"]):
+        fw = fresh["window"]
+        lines += ["", f"Fresh, preliminary ({fw['start']} to {fw['end']}; still settling, not in the totals above)",
+                  f"  {'':<52}{'impr':>7}{'clicks':>8}{'pos':>7}"]
+        for row in fresh["by_day"]:
+            lines.append(f"  {row['date']:<52}{row['impressions']:>7}{row['clicks']:>8}{row['position']:>7.1f}")
+        lines.append("  pages:")
+        for row in fresh["top_pages"][:10]:
+            name = str(row["page"])
             if len(name) > 50:
                 name = name[:47] + "..."
             lines.append(f"  {name:<52}{row['impressions']:>7}{row['clicks']:>8}{row['position']:>7.1f}")
