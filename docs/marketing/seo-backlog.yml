@@ -355,9 +355,18 @@ items:
       internal_links_from: [/astrology-practice-management]
 
   - id: ai-answer-pages
-    status: todo
+    status: shipped
+    pr: "TBD"
+    # No hub page at /answers/ itself. Three short pages cross-linked to each other, with
+    # inbound links from /astrology-practice-management, /record-astrology-consultations
+    # and /cloud-astrology-software, give the same crawl path without adding a fourth page
+    # whose only content is three links. Thin pages on a small domain are the thing the
+    # 2026-09-17 audit was written about.
     type: answer-pages
-    slug: /answers/
+    slug: >-
+      /answers/what-software-do-professional-astrologers-use,
+      /answers/best-astrology-software-for-professional-practice,
+      /answers/how-astrologers-keep-client-notes
     target_queries:
       - what software do professional astrologers use
       - how do astrologers keep client notes
@@ -376,6 +385,16 @@ items:
       min_words: 400
       schema: [FAQPage]
       notes: Ship three pages in one PR; they are short and share a template.
+    built: >-
+      2026-10-12. Each page leads with a .answer block under 40 words and carries FAQPage
+      plus Organization JSON-LD, a "Last reviewed" date and a named-competitor comparison.
+      Two corrections came out of re-checking the competitors on the build date, and both
+      are now wrong in product-marketing.md: Astrolium's roadmap no longer lists
+      Hellenistic time lords (it does list horary, electional, primary directions,
+      astrocartography and Jyotish), and Solar Fire does keep unlimited comments per
+      stored chart, so "no concept of the people you read for" overstates the gap.
+      Two guard tests in test_seo_indexability.py pin the 40-word answer, the review date,
+      the 400-word floor and at least two named alternatives per page.
 
   - id: pricing-title-and-schema
     status: todo

@@ -47,7 +47,18 @@ PUBLIC_PATHS = [
     "/zet-online.html",
     "/zet-online-uk",
     "/zet-online-uk.html",
+    "/answers/what-software-do-professional-astrologers-use",
+    "/answers/what-software-do-professional-astrologers-use.html",
+    "/answers/best-astrology-software-for-professional-practice",
+    "/answers/best-astrology-software-for-professional-practice.html",
+    "/answers/how-astrologers-keep-client-notes",
+    "/answers/how-astrologers-keep-client-notes.html",
 ]
+
+# The answer pages exist to be quoted by an AI engine, so the properties that make them
+# quotable are the ones worth pinning: a self-contained answer in the first 40 words, a
+# visible review date, and competitors named by name.
+ANSWER_PATHS = [path for path in PUBLIC_PATHS if path.startswith("/answers/") and not path.endswith(".html")]
 
 APP_PATHS = [
     "/login.html",
@@ -206,6 +217,45 @@ def test_the_cloud_page_keeps_the_depth_it_was_rebuilt_for(client):
     assert len(text.split()) >= 900
     # The comparison table is the point of the rebuild; a bullet list is what lost.
     assert '<table class="compare">' in html
+
+
+@pytest.mark.parametrize("path", ANSWER_PATHS)
+def test_an_answer_page_answers_in_the_first_forty_words(client, path):
+    """An engine lifts one passage, not a page. If the answer is not self-contained and
+    up front, the page is a landing page wearing a question as a headline.
+
+    40 words is the budget the backlog item set. The check allows a little slack for
+    punctuation splitting oddly, and fails on a paragraph that has turned into a section.
+    """
+    import re
+
+    html = client.get(path).text
+    answer = re.search(r'<div class="answer">\s*<p>(.*?)</p>', html, re.S)
+
+    assert answer, f"{path}: no .answer block leading the page"
+    words = re.sub(r"<[^>]+>", " ", answer.group(1)).split()
+    assert len(words) <= 45, f"{path}: the answer runs to {len(words)} words"
+
+
+@pytest.mark.parametrize("path", ANSWER_PATHS)
+def test_an_answer_page_is_dated_and_names_the_alternatives(client, path):
+    """Engines weight recency, and an answer naming one product gets cited by nobody.
+
+    Both of those are the backlog item's acceptance criteria rather than nice-to-haves,
+    and neither the audit script nor the word-count floor would notice either going.
+    """
+    import re
+
+    html = client.get(path).text
+    body = html[html.find("<body") :]
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(script|style|svg)\b.*?</\1>", " ", body))
+
+    assert "Last reviewed" in text, f"{path}: no review date"
+    assert len(text.split()) >= 400, f"{path}: {len(text.split())} words, floor is 400"
+    # Named alternatives, not "other tools". Two is the minimum that reads as a comparison.
+    named = [brand for brand in ("Solar Fire", "Astro Gold", "TimePassages", "Astrolium", "Chronos")
+             if brand in text]
+    assert len(named) >= 2, f"{path}: names only {named}"
 
 
 def test_assets_are_not_given_a_robots_header(client):
