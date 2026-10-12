@@ -356,7 +356,7 @@ items:
 
   - id: ai-answer-pages
     status: shipped
-    pr: "TBD"
+    pr: "#25"
     # No hub page at /answers/ itself. Three short pages cross-linked to each other, with
     # inbound links from /astrology-practice-management, /record-astrology-consultations
     # and /cloud-astrology-software, give the same crawl path without adding a fourth page
