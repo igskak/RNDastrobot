@@ -2,12 +2,6 @@
   "by_day": [
     {
       "clicks": 0,
-      "date": "2026-09-14",
-      "impressions": 7,
-      "position": 4.571428571428571
-    },
-    {
-      "clicks": 0,
       "date": "2026-09-15",
       "impressions": 5,
       "position": 7
@@ -167,22 +161,22 @@
       "date": "2026-10-11",
       "impressions": 14,
       "position": 5.714285714285714
+    },
+    {
+      "clicks": 0,
+      "date": "2026-10-12",
+      "impressions": 11,
+      "position": 20.272727272727273
     }
   ],
   "delta": {
     "clicks": 9,
     "ctr": 0.0389,
-    "impressions": 87,
-    "position": -10.84
+    "impressions": 85,
+    "position": -9.14
   },
   "fresh": {
     "by_day": [
-      {
-        "clicks": 0,
-        "date": "2026-10-08",
-        "impressions": 15,
-        "position": 9.866666666666667
-      },
       {
         "clicks": 0,
         "date": "2026-10-09",
@@ -210,8 +204,20 @@
       {
         "clicks": 2,
         "date": "2026-10-13",
-        "impressions": 7,
-        "position": 4.285714285714286
+        "impressions": 18,
+        "position": 8.277777777777779
+      },
+      {
+        "clicks": 0,
+        "date": "2026-10-14",
+        "impressions": 10,
+        "position": 7.7
+      },
+      {
+        "clicks": 0,
+        "date": "2026-10-15",
+        "impressions": 0,
+        "position": 0
       }
     ],
     "top_pages": [
@@ -219,31 +225,31 @@
         "clicks": 2,
         "impressions": 19,
         "page": "https://www.steliara.com/",
-        "position": 12.421052631578947
+        "position": 12.631578947368421
       },
       {
         "clicks": 1,
-        "impressions": 27,
+        "impressions": 32,
         "page": "https://www.steliara.com/cloud-astrology-software",
-        "position": 9.037037037037036
+        "position": 10.15625
       },
       {
         "clicks": 1,
-        "impressions": 6,
+        "impressions": 5,
         "page": "https://www.steliara.com/de/",
-        "position": 41
+        "position": 36.2
       },
       {
         "clicks": 0,
-        "impressions": 7,
+        "impressions": 8,
         "page": "https://www.steliara.com/astrologer-workspace",
-        "position": 4.571428571428571
+        "position": 4.75
       },
       {
         "clicks": 0,
-        "impressions": 4,
+        "impressions": 5,
         "page": "https://www.steliara.com/astrology-practice-management",
-        "position": 6.5
+        "position": 6.2
       },
       {
         "clicks": 0,
@@ -265,51 +271,51 @@
       },
       {
         "clicks": 0,
-        "impressions": 7,
+        "impressions": 4,
         "page": "https://www.steliara.com/record-astrology-consultations",
-        "position": 5.571428571428571
+        "position": 7.75
       },
       {
         "clicks": 0,
-        "impressions": 1,
+        "impressions": 4,
         "page": "https://www.steliara.com/ru/",
-        "position": 10
+        "position": 8.75
       }
     ],
     "window": {
-      "end": "2026-10-14",
-      "start": "2026-10-08"
+      "end": "2026-10-15",
+      "start": "2026-10-09"
     }
   },
   "previous_totals": {
     "clicks": 2,
-    "ctr": 0.0202,
-    "impressions": 99,
-    "position": 19.99
+    "ctr": 0.019,
+    "impressions": 105,
+    "position": 19.1
   },
   "previous_window": {
-    "end": "2026-09-13",
-    "start": "2026-08-17"
+    "end": "2026-09-14",
+    "start": "2026-08-18"
   },
   "site": "sc-domain:steliara.com",
   "top_pages": [
     {
       "clicks": 9,
-      "impressions": 67,
+      "impressions": 71,
       "page": "https://www.steliara.com/cloud-astrology-software",
-      "position": 8.522388059701493
+      "position": 9.211267605633802
     },
     {
       "clicks": 1,
-      "impressions": 58,
+      "impressions": 56,
       "page": "https://www.steliara.com/",
-      "position": 9.327586206896552
+      "position": 9.660714285714286
     },
     {
       "clicks": 1,
-      "impressions": 3,
+      "impressions": 4,
       "page": "https://www.steliara.com/ru/",
-      "position": 5.666666666666667
+      "position": 6.75
     },
     {
       "clicks": 0,
@@ -325,21 +331,15 @@
     },
     {
       "clicks": 0,
-      "impressions": 6,
+      "impressions": 8,
       "page": "https://www.steliara.com/de/",
-      "position": 45.666666666666664
+      "position": 47.375
     },
     {
       "clicks": 0,
       "impressions": 1,
       "page": "https://www.steliara.com/de/pricing.html",
       "position": 10
-    },
-    {
-      "clicks": 0,
-      "impressions": 2,
-      "page": "https://www.steliara.com/index.html",
-      "position": 5
     },
     {
       "clicks": 0,
@@ -357,8 +357,8 @@
   "top_queries": [
     {
       "clicks": 1,
-      "impressions": 6,
-      "position": 8.5,
+      "impressions": 5,
+      "position": 8.8,
       "query": "cloud astrology"
     },
     {
@@ -378,6 +378,12 @@
       "impressions": 1,
       "position": 8,
       "query": "astrologer studio"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
+      "position": 45,
+      "query": "astrologie software"
     },
     {
       "clicks": 0,
@@ -405,6 +411,12 @@
     },
     {
       "clicks": 0,
+      "impressions": 1,
+      "position": 35,
+      "query": "astrology software for mac"
+    },
+    {
+      "clicks": 0,
       "impressions": 2,
       "position": 65,
       "query": "horoskopberechnung"
@@ -424,6 +436,12 @@
     {
       "clicks": 0,
       "impressions": 1,
+      "position": 60,
+      "query": "software astrologie"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
       "position": 93,
       "query": "stelaruo"
     },
@@ -432,12 +450,6 @@
       "impressions": 1,
       "position": 4,
       "query": "stelerra"
-    },
-    {
-      "clicks": 0,
-      "impressions": 1,
-      "position": 8,
-      "query": "stelira"
     },
     {
       "clicks": 0,
@@ -466,13 +478,13 @@
   ],
   "totals": {
     "clicks": 11,
-    "ctr": 0.0591,
-    "impressions": 186,
-    "position": 9.15
+    "ctr": 0.0579,
+    "impressions": 190,
+    "position": 9.96
   },
   "window": {
     "days": 28,
-    "end": "2026-10-11",
-    "start": "2026-09-14"
+    "end": "2026-10-12",
+    "start": "2026-09-15"
   }
 }
