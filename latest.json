@@ -26,7 +26,7 @@
     }
   },
   "base": "https://www.steliara.com",
-  "date": "2026-10-16",
+  "date": "2026-10-17",
   "errors": 0,
   "findings": [],
   "pages": {
@@ -44,6 +44,48 @@
       "title_length": 53,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/answers/best-astrology-software-for-professional-practice": {
+      "body_words": 1413,
+      "bytes": 19365,
+      "canonical": "https://www.steliara.com/answers/best-astrology-software-for-professional-practice",
+      "description_length": 153,
+      "empty_i18n_nodes": 0,
+      "h1": "What is the best astrology software for a professional practice?",
+      "hreflang_count": 0,
+      "jsonld_blocks": 2,
+      "status": 200,
+      "title": "Best Astrology Software for a Professional Practice | Steliara",
+      "title_length": 62,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/answers/how-astrologers-keep-client-notes": {
+      "body_words": 1343,
+      "bytes": 20507,
+      "canonical": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
+      "description_length": 161,
+      "empty_i18n_nodes": 0,
+      "h1": "How do astrologers keep client notes?",
+      "hreflang_count": 0,
+      "jsonld_blocks": 2,
+      "status": 200,
+      "title": "How Do Astrologers Keep Client Notes? | Steliara",
+      "title_length": 48,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/answers/what-software-do-professional-astrologers-use": {
+      "body_words": 1252,
+      "bytes": 18586,
+      "canonical": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
+      "description_length": 153,
+      "empty_i18n_nodes": 0,
+      "h1": "What software do professional astrologers use?",
+      "hreflang_count": 0,
+      "jsonld_blocks": 2,
+      "status": 200,
+      "title": "What Software Do Professional Astrologers Use? | Steliara",
+      "title_length": 57,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/astrologer-workspace": {
       "body_words": 566,
       "bytes": 13756,
@@ -59,8 +101,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/astrology-practice-management": {
-      "body_words": 732,
-      "bytes": 16193,
+      "body_words": 769,
+      "bytes": 16586,
       "canonical": "https://www.steliara.com/astrology-practice-management",
       "description_length": 143,
       "empty_i18n_nodes": 0,
@@ -101,8 +143,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/cloud-astrology-software": {
-      "body_words": 2224,
-      "bytes": 30008,
+      "body_words": 2245,
+      "bytes": 30227,
       "canonical": "https://www.steliara.com/cloud-astrology-software",
       "description_length": 152,
       "empty_i18n_nodes": 0,
@@ -171,8 +213,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/record-astrology-consultations": {
-      "body_words": 1609,
-      "bytes": 24676,
+      "body_words": 1643,
+      "bytes": 24956,
       "canonical": "https://www.steliara.com/record-astrology-consultations",
       "description_length": 154,
       "empty_i18n_nodes": 0,
@@ -326,6 +368,6 @@
     }
   },
   "regressions": [],
-  "sitemap_url_count": 21,
+  "sitemap_url_count": 24,
   "warnings": 0
 }

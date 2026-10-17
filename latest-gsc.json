@@ -1,12 +1,6 @@
 {
   "by_day": [
     {
-      "clicks": 1,
-      "date": "2026-09-16",
-      "impressions": 2,
-      "position": 1
-    },
-    {
       "clicks": 0,
       "date": "2026-09-17",
       "impressions": 3,
@@ -167,22 +161,22 @@
       "date": "2026-10-13",
       "impressions": 18,
       "position": 8.277777777777779
+    },
+    {
+      "clicks": 0,
+      "date": "2026-10-14",
+      "impressions": 12,
+      "position": 7.416666666666667
     }
   ],
   "delta": {
-    "clicks": 11,
-    "ctr": 0.0457,
-    "impressions": 94,
-    "position": -7.96
+    "clicks": 9,
+    "ctr": 0.0285,
+    "impressions": 105,
+    "position": -8.14
   },
   "fresh": {
     "by_day": [
-      {
-        "clicks": 0,
-        "date": "2026-10-10",
-        "impressions": 11,
-        "position": 6.363636363636363
-      },
       {
         "clicks": 1,
         "date": "2026-10-11",
@@ -208,14 +202,20 @@
         "position": 7.416666666666667
       },
       {
-        "clicks": 0,
+        "clicks": 1,
         "date": "2026-10-15",
-        "impressions": 4,
-        "position": 8.5
+        "impressions": 10,
+        "position": 7
       },
       {
         "clicks": 0,
         "date": "2026-10-16",
+        "impressions": 7,
+        "position": 17.428571428571427
+      },
+      {
+        "clicks": 0,
+        "date": "2026-10-17",
         "impressions": 0,
         "position": 0
       }
@@ -223,15 +223,15 @@
     "top_pages": [
       {
         "clicks": 2,
-        "impressions": 14,
+        "impressions": 15,
         "page": "https://www.steliara.com/",
-        "position": 4.714285714285714
+        "position": 7.666666666666667
       },
       {
-        "clicks": 1,
-        "impressions": 33,
+        "clicks": 2,
+        "impressions": 34,
         "page": "https://www.steliara.com/cloud-astrology-software",
-        "position": 10.242424242424242
+        "position": 11.029411764705882
       },
       {
         "clicks": 1,
@@ -243,13 +243,13 @@
         "clicks": 0,
         "impressions": 7,
         "page": "https://www.steliara.com/astrologer-workspace",
-        "position": 4.857142857142858
+        "position": 5.714285714285714
       },
       {
         "clicks": 0,
         "impressions": 7,
         "page": "https://www.steliara.com/astrology-practice-management",
-        "position": 6.142857142857143
+        "position": 6.428571428571429
       },
       {
         "clicks": 0,
@@ -265,7 +265,7 @@
       },
       {
         "clicks": 0,
-        "impressions": 2,
+        "impressions": 1,
         "page": "https://www.steliara.com/pricing.html",
         "position": 8
       },
@@ -277,39 +277,39 @@
       },
       {
         "clicks": 0,
-        "impressions": 4,
+        "impressions": 5,
         "page": "https://www.steliara.com/ru/",
-        "position": 8.75
+        "position": 7.4
       }
     ],
     "window": {
-      "end": "2026-10-16",
-      "start": "2026-10-10"
+      "end": "2026-10-17",
+      "start": "2026-10-11"
     }
   },
   "previous_totals": {
-    "clicks": 2,
-    "ctr": 0.0183,
-    "impressions": 109,
-    "position": 17.85
+    "clicks": 3,
+    "ctr": 0.0278,
+    "impressions": 108,
+    "position": 17.97
   },
   "previous_window": {
-    "end": "2026-09-15",
-    "start": "2026-08-19"
+    "end": "2026-09-16",
+    "start": "2026-08-20"
   },
   "site": "sc-domain:steliara.com",
   "top_pages": [
     {
-      "clicks": 9,
-      "impressions": 78,
+      "clicks": 8,
+      "impressions": 82,
       "page": "https://www.steliara.com/cloud-astrology-software",
-      "position": 9.5
+      "position": 9.634146341463415
     },
     {
       "clicks": 3,
-      "impressions": 59,
+      "impressions": 62,
       "page": "https://www.steliara.com/",
-      "position": 9.271186440677965
+      "position": 9.080645161290322
     },
     {
       "clicks": 1,
@@ -327,13 +327,13 @@
       "clicks": 0,
       "impressions": 15,
       "page": "https://www.steliara.com/astrologer-workspace",
-      "position": 5.133333333333334
+      "position": 5.466666666666667
     },
     {
       "clicks": 0,
-      "impressions": 21,
+      "impressions": 24,
       "page": "https://www.steliara.com/astrology-practice-management",
-      "position": 5.190476190476191
+      "position": 5.25
     },
     {
       "clicks": 0,
@@ -381,8 +381,8 @@
     },
     {
       "clicks": 0,
-      "impressions": 1,
-      "position": 8,
+      "impressions": 2,
+      "position": 7,
       "query": "astrologer studio"
     },
     {
@@ -448,6 +448,12 @@
     {
       "clicks": 0,
       "impressions": 1,
+      "position": 8,
+      "query": "solar fire for mac"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
       "position": 93,
       "query": "stelaruo"
     },
@@ -483,14 +489,14 @@
     }
   ],
   "totals": {
-    "clicks": 13,
-    "ctr": 0.064,
-    "impressions": 203,
-    "position": 9.89
+    "clicks": 12,
+    "ctr": 0.0563,
+    "impressions": 213,
+    "position": 9.83
   },
   "window": {
     "days": 28,
-    "end": "2026-10-13",
-    "start": "2026-09-16"
+    "end": "2026-10-14",
+    "start": "2026-09-17"
   }
 }
