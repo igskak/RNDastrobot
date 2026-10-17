@@ -440,12 +440,18 @@ _SITEMAP_PAGES = (
     # of the "ZET онлайн" cluster. Below /solar-fire-alternative, above /terms.html.
     ("/zet-online", "0.7"),
     ("/zet-online-uk", "0.7"),
+    # Answer pages: one question each, written so an AI engine can lift a paragraph and
+    # attribute it. They are short by design and feed the landings above rather than
+    # competing with them, so they sit below every page they link to and above /terms.html.
+    ("/answers/what-software-do-professional-astrologers-use", "0.6"),
+    ("/answers/best-astrology-software-for-professional-practice", "0.6"),
+    ("/answers/how-astrologers-keep-client-notes", "0.6"),
     ("/terms.html", "0.3"),
 )
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-10-02"
+_SITEMAP_LASTMOD = "2026-10-12"
 
 
 def _indexable_document_paths() -> frozenset:
@@ -583,6 +589,18 @@ chart, and not a consumer horoscope product.
 - The same page in Ukrainian: {base}/zet-online-uk
 - Pricing: {base}/pricing.html
 - Terms and privacy: {base}/terms.html
+
+## Direct answers, with the competitors named
+
+Short pages that answer one question each and compare the named tools, with the
+date each competitor page was checked:
+
+- What software professional astrologers use:
+  {base}/answers/what-software-do-professional-astrologers-use
+- Best astrology software for a professional practice:
+  {base}/answers/best-astrology-software-for-professional-practice
+- How astrologers keep notes on the people they read for:
+  {base}/answers/how-astrologers-keep-client-notes
 
 Last updated: {_SITEMAP_LASTMOD}
 """
@@ -972,6 +990,32 @@ async def conquest_zet_online_ru_page():
 async def conquest_zet_online_uk_page():
     """Ukrainian sibling of /zet-online, written natively rather than translated."""
     return _serve_frontend_page("zet-online-uk.html")
+
+
+# Answer pages. One question per page, answered in the first 40 words inside a .answer
+# block, so an engine can lift the passage whole and attribute it. The Perplexity
+# baseline of 2026-08-06 found brand queries citing us and category queries never
+# doing so, and an answer that names only one product does not get cited at all, which
+# is why each of these names the competitors too.
+@app.get("/answers/what-software-do-professional-astrologers-use")
+@app.get("/answers/what-software-do-professional-astrologers-use.html")
+async def answer_what_software_astrologers_use_page():
+    """Answer page: what software do professional astrologers use."""
+    return _serve_frontend_page("answers/what-software-do-professional-astrologers-use.html")
+
+
+@app.get("/answers/best-astrology-software-for-professional-practice")
+@app.get("/answers/best-astrology-software-for-professional-practice.html")
+async def answer_best_software_for_practice_page():
+    """Answer page: best astrology software for a professional practice."""
+    return _serve_frontend_page("answers/best-astrology-software-for-professional-practice.html")
+
+
+@app.get("/answers/how-astrologers-keep-client-notes")
+@app.get("/answers/how-astrologers-keep-client-notes.html")
+async def answer_how_astrologers_keep_notes_page():
+    """Answer page: how astrologers keep notes on the people they read for."""
+    return _serve_frontend_page("answers/how-astrologers-keep-client-notes.html")
 
 
 @app.get("/health")
