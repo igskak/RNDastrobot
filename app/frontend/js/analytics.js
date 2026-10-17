@@ -140,8 +140,15 @@
         var code = getCookie(PROMO_COOKIE);
         return code && PROMO_CODE_RE.test(code) ? code : null;
     }
+    // The signup form lets someone type a code they were given on paper. An empty or
+    // malformed value clears the cookie, so removing the code in the field removes the offer.
+    function setPromo(code) {
+        var value = String(code || '').trim().toLowerCase();
+        if (value && PROMO_CODE_RE.test(value)) setCookie(PROMO_COOKIE, value, 90);
+        else setCookie(PROMO_COOKIE, '', -1);
+    }
     capturePromo();
-    window.AstroPromo = { code: storedPromo };
+    window.AstroPromo = { code: storedPromo, set: setPromo };
 
     // If analytics is not configured, expose a safe no-op surface and bail.
     if (!POSTHOG_KEY) {

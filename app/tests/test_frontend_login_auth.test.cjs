@@ -571,3 +571,23 @@ test('google oauth callback redirects even when the session-readiness poll never
 
     delete global.FrontendI18n;
 });
+
+test('promo input is normalised the way the backend normalises it', () => {
+    assert.equal(AstroLogin.normalizePromoInput('  DAV2026 '), 'dav2026');
+    assert.equal(AstroLogin.normalizePromoInput('dav-2026_x'), 'dav-2026_x');
+    assert.equal(AstroLogin.normalizePromoInput(''), '');
+    assert.equal(AstroLogin.normalizePromoInput('-leading'), '');
+    assert.equal(AstroLogin.normalizePromoInput('a'), '');
+    assert.equal(AstroLogin.normalizePromoInput('has space'), '');
+    assert.equal(AstroLogin.normalizePromoInput('x'.repeat(65)), '');
+});
+
+test('the promo field and its messages exist in every catalog', () => {
+    const baseDir = path.join(__dirname, '..', 'frontend', 'locales');
+    for (const locale of ['en', 'de', 'ru', 'uk']) {
+        const page = JSON.parse(fs.readFileSync(path.join(baseDir, `${locale}.json`), 'utf8')).page.login;
+        assert.ok(page.fields.promoCode.label, `${locale} label`);
+        assert.ok(page.fields.promoCode.placeholder, `${locale} placeholder`);
+        assert.ok(page.promo.invalid, `${locale} invalid`);
+    }
+});

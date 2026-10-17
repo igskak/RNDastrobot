@@ -2798,7 +2798,8 @@
         "emailDeliverySpam": "Steliara befindet sich in der Startphase. Unsere E-Mails landen daher manchmal im Spamordner. Bitte sehen Sie auch dort nach."
       },
       "promo": {
-        "dav2026": "Schön, Sie auf dem DAV-Kongress zu treffen. Ihre ersten 3 Monate sind kostenlos."
+        "dav2026": "Schön, Sie auf dem DAV-Kongress zu treffen. Ihre ersten 3 Monate sind kostenlos.",
+        "invalid": "Dieser Code ist ungültig oder abgelaufen."
       },
       "status": {
         "signingIn": "Anmeldung läuft …",
@@ -2850,6 +2851,10 @@
         "confirmPassword": {
           "label": "Neues Passwort bestätigen",
           "placeholder": "Neues Passwort wiederholen"
+        },
+        "promoCode": {
+          "label": "Promo-Code (optional)",
+          "placeholder": "Code von einem Flyer oder Vortrag"
         },
         "firstName": {
           "label": "Vorname (optional)",

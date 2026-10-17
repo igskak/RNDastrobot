@@ -258,6 +258,12 @@
         return t('page.login.actions.resendCountdown', { seconds: Math.max(0, Math.ceil(seconds || 0)) });
     }
 
+    // Same shape the backend accepts (signup_promos.normalize_promo_code).
+    function normalizePromoInput(value) {
+        const code = String(value || '').trim().toLowerCase();
+        return /^[a-z0-9][a-z0-9_-]{1,63}$/.test(code) ? code : '';
+    }
+
     function validateRegistrationPayload(payload = {}) {
         const email = String(payload.email || '').trim();
         const password = String(payload.password || '');
@@ -470,6 +476,7 @@
             setFieldError(refs.registerPasswordConfirm, refs.registerPasswordConfirmError, '');
             setFieldError(refs.registerFirstName, refs.registerFirstNameError, '');
             setFieldError(refs.registerLastName, refs.registerLastNameError, '');
+            setFieldError(refs.registerPromoCode, refs.registerPromoCodeError, '');
             setFieldError(refs.verifyResendEmail, refs.verifyResendEmailError, '');
         }
 
@@ -758,25 +765,68 @@
             }
         }
 
-        async function loadSignupPromo() {
-            const code = currentPromoCode();
-            // No promo in play — skip the request entirely on ordinary sign-ins.
-            if (!code || !fetchFn) return;
+        // The promo payload when the backend says the code still grants its offer, else null.
+        async function lookupSignupPromo(code) {
+            if (!code || !fetchFn) return null;
             try {
                 const response = await apiFetch(
                     `${API_BASE}/auth/signup-promo?code=${encodeURIComponent(code)}`,
                     {},
                     fetchFn
                 );
-                if (!response.ok) return;
+                if (!response.ok) return null;
                 const payload = await response.json();
-                if (payload?.valid && payload.message_key) {
-                    state.promo = payload;
-                    render();
-                }
+                return payload?.valid && payload.message_key ? payload : null;
             } catch (_error) {
                 // A missing banner must never block signing up.
+                return null;
             }
+        }
+
+        async function loadSignupPromo() {
+            const code = currentPromoCode();
+            // No promo in play — skip the request entirely on ordinary sign-ins.
+            const payload = await lookupSignupPromo(code);
+            if (refs.registerPromoCode && code && !refs.registerPromoCode.value) {
+                refs.registerPromoCode.value = code;
+            }
+            if (payload) {
+                state.promo = payload;
+                render();
+            }
+        }
+
+        // A code typed by hand (from a flyer, read out at a talk): validate it, then store it
+        // where the QR flow stores its code, so registration and Google sign-in both pick it up.
+        // Resolves true when the field is fine to submit with. An empty field only clears the
+        // stored code when the person just emptied it (clearWhenEmpty); a submit or a Google
+        // click with an untouched empty field must not throw away the code a QR scan stored.
+        async function applyPromoField({ clearWhenEmpty = false } = {}) {
+            if (!refs.registerPromoCode) return true;
+            const raw = String(refs.registerPromoCode.value || '').trim();
+            if (!raw) {
+                if (clearWhenEmpty) {
+                    global.AstroPromo?.set?.('');
+                    state.promo = null;
+                    setFieldError(refs.registerPromoCode, refs.registerPromoCodeError, '');
+                    render();
+                }
+                return true;
+            }
+            const code = normalizePromoInput(raw);
+            const payload = code ? await lookupSignupPromo(code) : null;
+            if (!payload) {
+                global.AstroPromo?.set?.('');
+                state.promo = null;
+                setFieldError(refs.registerPromoCode, refs.registerPromoCodeError, 'page.login.promo.invalid');
+                render();
+                return false;
+            }
+            global.AstroPromo?.set?.(code);
+            state.promo = payload;
+            setFieldError(refs.registerPromoCode, refs.registerPromoCodeError, '');
+            render();
+            return true;
         }
 
         async function waitForSupabaseAccessToken(initialError = null) {
@@ -918,6 +968,9 @@
                 setStatus('page.login.errors.googleUnavailable', 'error');
                 return;
             }
+            // Google sign-in leaves the page, so a typed code has to be stored first. An
+            // invalid one is reported next to the field and does not block signing in.
+            await applyPromoField();
             setLoading('google');
             setStatus('page.login.status.googleRedirect', 'info');
             try {
@@ -945,6 +998,10 @@
             const values = validateRegisterForm();
             if (!values) {
                 render();
+                return;
+            }
+            if (!(await applyPromoField())) {
+                refs.registerPromoCode?.focus?.();
                 return;
             }
 
@@ -1310,6 +1367,7 @@
         function bindEvents() {
             refs.passwordLoginForm?.addEventListener('submit', loginWithPassword);
             refs.registerForm?.addEventListener('submit', registerWithPassword);
+            refs.registerPromoCode?.addEventListener('change', () => applyPromoField({ clearWhenEmpty: true }));
             refs.forgotPasswordForm?.addEventListener('submit', handleForgotPassword);
             refs.resetPasswordForm?.addEventListener('submit', handleResetPassword);
             refs.verifyResendForm?.addEventListener('submit', resendVerificationFromInvalid);
@@ -1411,6 +1469,8 @@
             refs.registerFirstName = documentRef.getElementById('registerFirstName');
             refs.registerLastName = documentRef.getElementById('registerLastName');
             refs.registerMarketingConsent = documentRef.getElementById('registerMarketingConsent');
+            refs.registerPromoCode = documentRef.getElementById('registerPromoCode');
+            refs.registerPromoCodeError = documentRef.getElementById('registerPromoCodeError');
             refs.verifyResendEmail = documentRef.getElementById('verifyResendEmail');
 
             refs.loginEmailError = documentRef.getElementById('loginEmailError');
@@ -1542,6 +1602,7 @@
         mapAuthErrorToKey,
         createCooldownLabel,
         validateRegistrationPayload,
+        normalizePromoInput,
         normalizeLocalRedirect,
         getPostAuthRedirect,
         createAuthApp,
