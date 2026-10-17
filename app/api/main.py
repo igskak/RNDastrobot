@@ -7,6 +7,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, RedirectResponse, Response
 import os
 import re
@@ -37,6 +38,8 @@ from app.api.routes import auth, natal, transits, solar, progressions, direction
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 from app.services.processing_pipeline import recover_stuck_sessions
+from app.database.connection import get_db
+from app.services import campaign_visits
 from app.services.recording_retention_service import start_recording_retention_worker
 from app.auth.site_mode import is_solo_request
 from app.i18n.locale import DEFAULT_LOCALE, SUPPORTED_LOCALES, normalize_locale
@@ -237,6 +240,42 @@ async def noindex_app_documents(request: Request, call_next):
     if response.headers.get("content-type", "").startswith("text/html"):
         response.headers["X-Robots-Tag"] = "noindex, follow"
     return response
+
+
+@app.middleware("http")
+async def count_campaign_landings(request: Request, call_next):
+    """Count page loads that arrive with a campaign code (?promo=dav2026, ?ref=producthunt).
+
+    Server-side and identifier-free on purpose; see app/services/campaign_visits.py.
+    """
+    response = await call_next(request)
+    try:
+        if (
+            request.method == "GET"
+            and response.status_code == 200
+            and response.headers.get("content-type", "").startswith("text/html")
+            and not request.url.path.startswith("/api/")
+            and not campaign_visits.is_probably_bot(request.headers.get("user-agent"))
+        ):
+            campaign = campaign_visits.campaign_from_query(request.query_params)
+            if campaign:
+                await run_in_threadpool(_store_campaign_visit, campaign[0], campaign[1], request.url.path)
+    except Exception:
+        logging.getLogger(__name__).warning("Campaign visit counting failed", exc_info=True)
+    return response
+
+
+def _store_campaign_visit(kind: str, code: str, path: str) -> None:
+    # Same session source the routes use, so a dependency override (tests) applies here too.
+    db_gen = app.dependency_overrides.get(get_db, get_db)()
+    db = next(db_gen)
+    try:
+        campaign_visits.record_campaign_visit(db, kind, code, path)
+    finally:
+        try:
+            next(db_gen)
+        except StopIteration:
+            pass
 
 
 _STATIC_PREFIXES = ("/css/", "/js/", "/bundles/", "/locales/", "/assets/", "/fonts/")
@@ -731,6 +770,14 @@ async def new_chart_page():
     if os.path.exists(index_path):
         return FileResponse(index_path)
     raise HTTPException(status_code=404, detail="Form page not found")
+
+
+# Short, printable link for the DAV-Kongress material. The redirect lands on the German
+# signup form with the promo in the URL, so analytics.js sets the promo cookie and the
+# landing counter (campaign_visits) records the visit exactly once, on the form itself.
+@app.get("/dav")
+async def dav_short_link():
+    return RedirectResponse(url="/de/login.html?mode=register&promo=dav2026", status_code=302)
 
 
 @app.get("/login")

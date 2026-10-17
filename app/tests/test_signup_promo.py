@@ -238,3 +238,71 @@ def test_signup_promo_endpoint_falls_back_to_the_cookie():
 
     assert payload["valid"] is True
     assert payload["code"] == PROMO_CODE
+
+
+# --- Campaign landing counter (server-side, no identifiers) -------------------------------
+
+BROWSER_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1"
+
+
+def _visits():
+    db = TestingSessionLocal()
+    try:
+        return db.query(AuditEvent).filter(AuditEvent.action == "campaign.visit").all()
+    finally:
+        db.close()
+
+
+def _get(path: str, *, ua: str = BROWSER_UA, follow_redirects: bool = False):
+    with TestClient(app) as client:
+        return client.get(path, headers={"user-agent": ua}, follow_redirects=follow_redirects)
+
+
+def test_a_promo_landing_is_counted_with_no_identifier_stored():
+    response = _get("/de/login.html?mode=register&promo=DAV2026")
+
+    assert response.status_code == 200
+    rows = _visits()
+    assert len(rows) == 1
+    row = rows[0]
+    assert (row.resource_id, row.properties["kind"]) == ("dav2026", "promo")
+    assert row.properties["path"] == "/de/login.html"
+    # The point of counting here is that nothing about the visitor is kept.
+    assert row.actor_id is None and row.ip is None and row.user_agent is None and row.session_id is None
+
+
+def test_a_known_ref_source_is_counted():
+    _get("/?ref=producthunt")
+
+    assert [(r.resource_id, r.properties["kind"]) for r in _visits()] == [("producthunt", "ref")]
+
+
+def test_codes_we_never_issued_are_not_recorded():
+    _get("/?ref=whatever")
+    _get("/de/login.html?promo=notarealcode")
+
+    assert _visits() == []
+
+
+def test_crawlers_and_link_previews_are_not_counted():
+    for ua in ("Googlebot/2.1", "WhatsApp/2.23", "curl/8.4.0", ""):
+        _get("/de/login.html?promo=dav2026", ua=ua)
+
+    assert _visits() == []
+
+
+def test_assets_and_plain_visits_are_not_counted():
+    _get("/")
+    _get("/css/shared.css?promo=dav2026")
+
+    assert _visits() == []
+
+
+def test_the_short_link_goes_to_the_german_signup_form_and_is_counted_once_there():
+    first = _get("/dav")
+    assert first.status_code == 302
+    assert first.headers["location"] == "/de/login.html?mode=register&promo=dav2026"
+    assert _visits() == []
+
+    _get(first.headers["location"])
+    assert len(_visits()) == 1
