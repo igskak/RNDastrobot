@@ -397,7 +397,8 @@ items:
       the 400-word floor and at least two named alternatives per page.
 
   - id: pricing-title-and-schema
-    status: todo
+    status: shipped
+    pr: "#27"
     type: technical
     slug: /pricing.html
     target_queries:
@@ -412,3 +413,37 @@ items:
       - Product/Offer schema matching the live plans.
     acceptance:
       schema: [Product, Offer]
+    built: >-
+      2026-10-19. Title and meta description rewritten in all four catalogs to carry the
+      category and both prices; one Product block with four Offers, one per cell of the
+      billing toggle, each with a UnitPriceSpecification whose billingDuration says how
+      many months the rate buys, so "$20" cannot be read as the monthly price. A guard
+      test pins the four offers, the title window and the per-locale offer URL. The
+      prerender used to rewrite every JSON-LD url to the home page, which would have sent
+      /de/pricing.html's offers to /de/; it now localizes the page's own URL instead.
+      Left alone deliberately: the FAQ on this page still has no FAQPage schema, because
+      the prerender cannot translate mainEntity from the catalog and English FAQ markup
+      under a German FAQ is worse than none. Queued below as pricing-faq-schema.
+
+  - id: pricing-faq-schema
+    status: todo
+    type: technical
+    slug: /pricing.html
+    target_queries:
+      - steliara free trial
+      - astrology software monthly price
+    why: >-
+      /pricing.html shows five FAQ answers and declares none of them. The conquest pages
+      all carry FAQPage; this one cannot yet, because build-localized-pages.mjs localizes
+      only a JSON-LD block's top-level url and description, so a hand-written FAQPage
+      would ship English questions under the German, Russian and Ukrainian FAQs.
+      Found on 2026-10-19 while shipping pricing-title-and-schema (PR #27).
+    must_cover:
+      - >-
+        Teach the prerender to build FAQPage mainEntity from catalog keys, so the schema
+        is generated in the page's language rather than written once in English.
+      - >-
+        The five questions already on /pricing.html, and nothing that is not visible
+        on the page.
+    acceptance:
+      schema: [FAQPage]

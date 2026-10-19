@@ -219,6 +219,53 @@ def test_the_cloud_page_keeps_the_depth_it_was_rebuilt_for(client):
     assert '<table class="compare">' in html
 
 
+PRICING_PATHS = ["/pricing.html"] + [f"/{locale}/pricing.html" for locale in sorted(PREFIXED_LOCALES)]
+
+
+@pytest.mark.parametrize("path", PRICING_PATHS)
+def test_the_pricing_page_names_the_price_and_declares_the_live_plans(client, path):
+    """The pricing pages carried an 18-character title and no JSON-LD at all.
+
+    An answer engine quotes the price it can read off a page, so the four amounts the
+    billing toggle shows exist as structured offers in every language, each saying how
+    many months it buys. Nothing else here would notice a plan price changing in the
+    markup and not in the schema, or the title sliding back to just the word "Pricing".
+    """
+    import json
+    import re
+
+    html = client.get(path).text
+
+    title = re.search(r"<title[^>]*>(.*?)</title>", html, re.S).group(1)
+    # 15-65 is the window seo_audit.py warns outside of.
+    assert 15 <= len(title) <= 65, f"{path}: title is {len(title)} chars"
+    assert "$24" in title and "$39" in title, f"{path}: title hides the price point: {title}"
+
+    products = [
+        payload
+        for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
+        for payload in (json.loads(block),)
+        if payload.get("@type") == "Product"
+    ]
+    assert len(products) == 1, f"{path}: expected exactly one Product block, found {len(products)}"
+    offers = products[0]["offers"]
+
+    assert {
+        (offer["name"], offer["price"], offer["priceSpecification"]["billingDuration"])
+        for offer in offers
+    } == {
+        ("Practitioner", "24", 1),
+        ("Practitioner", "20", 12),
+        ("Studio", "39", 1),
+        ("Studio", "32", 12),
+    }, f"{path}: offers no longer match the plans on the page"
+
+    for offer in offers:
+        assert offer["priceCurrency"] == "USD", path
+        # The offer must lead to the page the visitor is on, not to the English one.
+        assert offer["url"] == f"https://www.steliara.com{path}", f"{path}: offer at {offer['url']}"
+
+
 @pytest.mark.parametrize("path", ANSWER_PATHS)
 def test_an_answer_page_answers_in_the_first_forty_words(client, path):
     """An engine lifts one passage, not a page. If the answer is not self-contained and
