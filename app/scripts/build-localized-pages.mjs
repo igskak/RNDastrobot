@@ -178,6 +178,16 @@ function upsertMeta(document, { attribute, name, content }) {
     element.setAttribute('content', content);
 }
 
+/**
+ * Sends a URL inside JSON-LD to the same place the equivalent href goes. The pricing
+ * page's Product points at itself, so hardcoding the home page here would have told
+ * every locale that its offers live at /de/ rather than at /de/pricing.html.
+ */
+function localizeJsonLdUrl(value, locale) {
+    if (typeof value !== 'string' || !value.startsWith(`${SITE_ORIGIN}/`)) return value;
+    return `${SITE_ORIGIN}${rewriteUrl(value.slice(SITE_ORIGIN.length), locale)}`;
+}
+
 function localizeJsonLd(document, { locale, description }) {
     for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
         let payload;
@@ -186,9 +196,12 @@ function localizeJsonLd(document, { locale, description }) {
         } catch {
             continue;
         }
-        if (payload.url) payload.url = absoluteUrl('index.html', locale);
+        if (payload.url) payload.url = localizeJsonLdUrl(payload.url, locale);
         if (payload.description) payload.description = description;
         if (payload.inLanguage || payload['@type'] === 'SoftwareApplication') payload.inLanguage = locale;
+        for (const offer of [payload.offers].flat().filter(Boolean)) {
+            if (offer.url) offer.url = localizeJsonLdUrl(offer.url, locale);
+        }
         script.textContent = `\n    ${JSON.stringify(payload)}\n    `;
     }
 }
