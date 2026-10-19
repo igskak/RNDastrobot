@@ -1,6 +1,11 @@
 # Backlinks that need a person: where to ask, and what to send
 
-*Written 2026-10-20. Companion to [wave2-directory-kit.md](wave2-directory-kit.md), which owns
+*Written 2026-10-20; **corrected the same day** after the full research (see
+[outreach/contacts/README.md](outreach/contacts/README.md)): AFAN's domain now redirects to an
+unrelated site, and Gitnux, WorldMetrics and similar "top astrology software" pages are SEO
+aggregators with no author, so they are no longer targets. The complete, verified list and the
+ready-to-send texts now live in [outreach/](outreach/). Companion to
+[wave2-directory-kit.md](wave2-directory-kit.md), which owns
 LinkedIn, Crunchbase, G2/Capterra, AlternativeTo, SaaSHub, BetaList and the other
 self-serve listings. This file covers what that one does not: **links someone else has to
 choose to give us.** Do the kit's Tier 1 first; these build on it.*
@@ -39,7 +44,7 @@ from a real astrology organisation, a school or a roundup that already ranks can
 |---|--------|-----------|--------|
 | 1 | **DAV** (Deutscher Astrologen-Verband) | We already met them at the congress; a link from a national association is the strongest thing on this list | 1 email |
 | 2 | **Roundup authors** (6 pages that already rank) | They already rank for what we want; one inclusion is a link and traffic | 6 emails |
-| 3 | **Astrology associations** (NCGR, ISAR, AFAN, AFA, Astrological Association of Great Britain) | Member newsletters and "tools" pages | 5 emails |
+| 3 | **Astrology associations** (NCGR, ISAR, AFA, Astrological Association of Great Britain) | Member newsletters and "tools" pages | 5 emails |
 | 4 | **Schools** (outreach text already written in wave1 §C) | Resource pages, student discounts | per wave1 |
 | 5 | **Communities and Q&A** | Citations for AI answers; slow links | 30 min a week |
 
@@ -105,11 +110,11 @@ contact paths.**
 | Page | Query it ranks for | Likely route |
 |------|--------------------|--------------|
 | techjockey.com/category/astrology-software | astrology software for professionals | vendor listing form |
-| gitnux.org/best/professional-astrology-software/ | best professional astrology software | editorial contact |
+| ~~gitnux.org~~ (dropped: SEO aggregator, no author) | | |
 | Charting Stars (seen in the 2026-09-29 Astro Gold results) | astro gold alternative | editorial contact |
 | WorldsApps (same check) | astro gold alternative | editorial contact |
 | itechguides.com | astrology software lists | editorial contact |
-| worldmetrics.org (astrology software report) | best astrology software 2026 | editorial contact |
+| ~~worldmetrics.org~~ (dropped: SEO aggregator) | | |
 
 > **Subject:** A browser-based option for your professional astrology software list
 >
@@ -152,7 +157,7 @@ publishes before sending; check the current contact on its site.**
 |--------------|---------------|---------|
 | NCGR (National Council for Geocosmic Research, US) | member newsletter, chapter pages | newsletter mention, chapter talk |
 | ISAR (International Society for Astrological Research) | newsletter, conference | newsletter mention |
-| AFAN (Association for Astrological Networking) | member resources | resource listing |
+| ~~AFAN~~ (dropped: domain redirects elsewhere) | | |
 | AFA (American Federation of Astrologers) | publications, conference | vendor or resource listing |
 | Astrological Association of Great Britain | Astrological Journal, conference | resource mention, conference slot |
 | Faculty of Astrological Studies (UK) | student resources | tools listing for students |
@@ -230,14 +235,11 @@ places, or pasting this file's emails into forums.
 |--------|----------------------|------|-------|---------|-----------|
 | DAV | | | | | |
 | techjockey | | | | | |
-| gitnux | | | | | |
 | Charting Stars | | | | | |
 | WorldsApps | | | | | |
 | itechguides | | | | | |
-| worldmetrics | | | | | |
 | NCGR | | | | | |
 | ISAR | | | | | |
-| AFAN | | | | | |
 | AFA | | | | | |
 | Astrological Association of GB | | | | | |
 | Faculty of Astrological Studies | | | | | |
