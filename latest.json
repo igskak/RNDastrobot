@@ -26,7 +26,7 @@
     }
   },
   "base": "https://www.steliara.com",
-  "date": "2026-10-19",
+  "date": "2026-10-20",
   "errors": 0,
   "findings": [],
   "pages": {
@@ -172,16 +172,16 @@
     },
     "https://www.steliara.com/de/pricing.html": {
       "body_words": 325,
-      "bytes": 20482,
+      "bytes": 22702,
       "canonical": "https://www.steliara.com/de/pricing.html",
-      "description_length": 139,
+      "description_length": 147,
       "empty_i18n_nodes": 0,
       "h1": "Ein übersichtlicher Arbeitsbereich für Ihre astrologische Praxis",
       "hreflang_count": 5,
-      "jsonld_blocks": 0,
+      "jsonld_blocks": 1,
       "status": 200,
-      "title": "Preise – Steliara",
-      "title_length": 17,
+      "title": "Preise: Astrologie-Software, $24 oder $39 pro Monat | Steliara",
+      "title_length": 62,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/de/terms.html": {
@@ -200,16 +200,16 @@
     },
     "https://www.steliara.com/pricing.html": {
       "body_words": 312,
-      "bytes": 19844,
+      "bytes": 22072,
       "canonical": "https://www.steliara.com/pricing.html",
-      "description_length": 105,
+      "description_length": 143,
       "empty_i18n_nodes": 0,
       "h1": "A calm workspace for your astrology practice",
       "hreflang_count": 5,
-      "jsonld_blocks": 0,
+      "jsonld_blocks": 1,
       "status": 200,
-      "title": "Pricing — Steliara",
-      "title_length": 18,
+      "title": "Astrology Practice Software Pricing: $24 or $39/mo | Steliara",
+      "title_length": 61,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/record-astrology-consultations": {
@@ -242,16 +242,16 @@
     },
     "https://www.steliara.com/ru/pricing.html": {
       "body_words": 290,
-      "bytes": 21754,
+      "bytes": 24066,
       "canonical": "https://www.steliara.com/ru/pricing.html",
-      "description_length": 131,
+      "description_length": 148,
       "empty_i18n_nodes": 0,
       "h1": "Спокойное рабочее пространство для вашей астрологической практики",
       "hreflang_count": 5,
-      "jsonld_blocks": 0,
+      "jsonld_blocks": 1,
       "status": 200,
-      "title": "Тарифы — Steliara",
-      "title_length": 17,
+      "title": "Тарифы: программа для астролога, $24 или $39 в месяц | Steliara",
+      "title_length": 63,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/ru/terms.html": {
@@ -312,16 +312,16 @@
     },
     "https://www.steliara.com/uk/pricing.html": {
       "body_words": 281,
-      "bytes": 21633,
+      "bytes": 23959,
       "canonical": "https://www.steliara.com/uk/pricing.html",
-      "description_length": 121,
+      "description_length": 145,
       "empty_i18n_nodes": 0,
       "h1": "Спокійний робочий простір для вашої астрологічної практики",
       "hreflang_count": 5,
-      "jsonld_blocks": 0,
+      "jsonld_blocks": 1,
       "status": 200,
-      "title": "Тарифи — Steliara",
-      "title_length": 17,
+      "title": "Тарифи: програма для астролога, $24 або $39 на місяць | Steliara",
+      "title_length": 64,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/uk/terms.html": {
