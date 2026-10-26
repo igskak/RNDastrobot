@@ -289,41 +289,6 @@ items:
       schema: [SoftwareApplication, FAQPage]
       internal_links_from: [/astrology-practice-management, /record-astrology-consultations]
 
-  - id: astro-gold-alternative
-    status: todo
-    # Bing autocomplete 2026-10-05/06 returns "astro gold alternative" as a real query, so
-    # the demand exists; its size is still unmeasured. Check EN volume (us db) first.
-    volume_checked: false
-    type: alternative-page
-    slug: /astro-gold-alternative
-    target_queries:
-      - >-
-        astro gold alternative
-      - >-
-        astro gold for windows
-      - >-
-        astro gold vs
-    why: >
-      SERP check 2026-09-29: aggregators (Techjockey, Charting Stars, WorldsApps) plus one
-      vendor doing this exact play ("Astro Gold Alternative for Windows" by AstroWatch).
-      Winnable. Astro Gold is Solar Fire's Mac and iOS sibling at $249.99, with files
-      interchangeable with Solar Fire, so the .SFcht importer answers migration here too.
-    must_cover:
-      - >-
-        What Astro Gold is genuinely good at (it is the depth option on a Mac).
-      - >-
-        Premise corrected 2026-10-03: Astro Gold is NOT Apple-only; astrogold.io sells
-        Windows, macOS, iOS and Android versions. The platform angle does not apply here;
-        compare on the people you read for and the recorded consultation instead.
-      - >-
-        Importing .SFcht files, and what does not carry over.
-      - >-
-        Link to /solar-fire-alternative; the two audiences overlap.
-    acceptance:
-      min_words: 700
-      schema: [SoftwareApplication, FAQPage]
-      internal_links_from: [/solar-fire-alternative, /cloud-astrology-software]
-
   - id: timepassages-alternative
     status: dropped
     volume_checked: false
@@ -524,16 +489,16 @@ items:
 
   - id: astrology-software-for-mac
     status: todo
-    # Search Console 2026-10-19 shows us at position 30.5 for "astrology software for mac"
-    # (4 impressions) and 45.8 for "astrology software" (5). Demand is real but its size is
-    # unmeasured. Semrush 2026-09-29 put one adjacent Mac cluster ("ZET for Mac") at about
-    # 30 searches a month, so do not assume. Run the request in
-    # docs/marketing/semrush-request-2026-10.md; flip to true only if the cluster passes.
-    volume_checked: false
+    # Measured 2026-10-26, Semrush US: cluster sum 200 a month (UK about 80), best query
+    # "astrology software for mac" 90 with KD 27, passes the rule. Honest caveats: 90 of the 200
+    # is one query, the trend is slightly down, and Search Console has us at position 30.5 for
+    # it today (4 impressions). Expect a small page that wins a small prize, not a traffic jump.
+    volume_checked: true
     type: answer-page
     slug: /answers/best-astrology-software-for-mac
     target_queries:
       - astrology software for mac
+      - mac astrology software
       - best astrology software for mac
       - astrology software mac
     why: >
@@ -556,3 +521,47 @@ items:
       min_words: 900
       internal_links_from: [/answers/what-software-do-professional-astrologers-use, /cloud-astrology-software]
 
+  - id: astro-gold-alternative
+    status: todo
+    # Measured 2026-10-26, Semrush US. Cluster sum 110 a month, best query "astro gold software"
+    # at 50 with KD 32, so it clears the rule (100 and KD 45), but only just, and it is made of
+    # small queries: "astro gold software" 50, "astro gold for windows" 20, "astro gold vs solar
+    # fire" 20, "astro gold app" 20. "astro gold alternative" itself returned no data, and the
+    # brand queries "astrogold" (1,300) and "astro gold" (1,000) are navigational: people who
+    # want Astro Gold, not a way out of it. After the Astrolium lesson, run the SERP and
+    # demand check in step 3 of the brief honestly and stop with an issue if the page would be
+    # thin. Queued after the Mac page on purpose.
+    volume_checked: true
+    type: alternative-page
+    slug: /astro-gold-alternative
+    target_queries:
+      - >-
+        astro gold software
+      - >-
+        astro gold for windows
+      - >-
+        astro gold vs solar fire
+      - >-
+        astro gold app
+      - >-
+        astro gold alternative
+    why: >
+      SERP check 2026-09-29: aggregators (Techjockey, Charting Stars, WorldsApps) plus one
+      vendor doing this exact play ("Astro Gold Alternative for Windows" by AstroWatch).
+      Winnable. Astro Gold is Solar Fire's Mac and iOS sibling at $249.99, with files
+      interchangeable with Solar Fire, so the .SFcht importer answers migration here too.
+    must_cover:
+      - >-
+        What Astro Gold is genuinely good at (it is the depth option on a Mac).
+      - >-
+        Premise corrected 2026-10-03: Astro Gold is NOT Apple-only; astrogold.io sells
+        Windows, macOS, iOS and Android versions. The platform angle does not apply here;
+        compare on the people you read for and the recorded consultation instead.
+      - >-
+        Importing .SFcht files, and what does not carry over.
+      - >-
+        Link to /solar-fire-alternative; the two audiences overlap.
+    acceptance:
+      min_words: 700
+      schema: [SoftwareApplication, FAQPage]
+      internal_links_from: [/solar-fire-alternative, /cloud-astrology-software]
