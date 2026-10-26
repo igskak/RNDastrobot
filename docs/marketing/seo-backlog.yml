@@ -565,3 +565,29 @@ items:
       min_words: 700
       schema: [SoftwareApplication, FAQPage]
       internal_links_from: [/solar-fire-alternative, /cloud-astrology-software]
+
+  - id: mobile-voice-workspace
+    status: dropped
+    volume_checked: true
+    type: feature-landing
+    slug: none (folded into existing pages)
+    target_queries:
+      # Semrush, 2026-10-20: "astrology software for iphone" 20 a month, "for ipad" 20,
+      # android 0, no data at all in the mobile-us database. "birth chart app" 260,
+      # "natal chart app" 110 and "astrologer app" 210 are consumer apps, the wrong buyer.
+      - astrology software for iphone
+      - astrology software for ipad
+    why: >-
+      Raised by the owner on 2026-10-20: nothing in our copy mentions that the work screen
+      has a phone layout, or that you can speak to it ("add transits for November 1").
+      Verified in code the same day (product-marketing.md, phone layout and voice bullet).
+      The volume check came back near zero, so a dedicated page would be the thin page
+      the agent brief warns about. Phone and voice is a conversion and demo message, not
+      a keyword play. Do it as: a "Works on your phone" section with a real phone
+      screenshot on /cloud-astrology-software (the page that already draws real organic
+      clicks), and a line on /pricing.html where Studio lists voice.
+    must_cover:
+      - The plan line, every time: voice is Studio, the phone layout is on every plan.
+      - >-
+        Honest gaps from product-marketing.md: web app, not a store app; tap-to-talk (tap to start, tap to send);
+        desktop stays the main surface.
