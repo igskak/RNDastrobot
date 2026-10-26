@@ -188,6 +188,53 @@ function localizeJsonLdUrl(value, locale) {
     return `${SITE_ORIGIN}${rewriteUrl(value.slice(SITE_ORIGIN.length), locale)}`;
 }
 
+/**
+ * Rebuilds a FAQPage block out of the questions the page actually shows.
+ *
+ * Writing the block by hand was the obvious move and the wrong one: localizeJsonLd below
+ * translates a block's top-level `description` and nothing deeper, so hand-written
+ * `mainEntity` would have put English questions underneath the German, Russian and
+ * Ukrainian FAQs. Reading the catalog keys off the rendered entries fixes that and also
+ * makes it impossible for the schema to declare a question no visitor can see, which is
+ * the thing Google asks for and the thing an answer engine would otherwise be misled by.
+ *
+ * `data-i18n-faq` holds the selector for the entries. It survives into the output, the
+ * same way the data-i18n attributes do, so every rebuild regenerates the block.
+ */
+function buildFaqJsonLd(document, { page, locale, translate }) {
+    for (const script of document.querySelectorAll('script[type="application/ld+json"][data-i18n-faq]')) {
+        const entries = [...document.querySelectorAll(script.dataset.i18nFaq)];
+        if (!entries.length) {
+            throw new Error(
+                `[localized-pages] ${locale}/${page}: "${script.dataset.i18nFaq}" matched no FAQ entry`,
+            );
+        }
+
+        const mainEntity = entries.map((entry) => {
+            const question = entry.querySelector('summary[data-i18n]');
+            const answer = entry.querySelector('p[data-i18n]');
+            if (!question || !answer) {
+                throw new Error(
+                    `[localized-pages] ${locale}/${page}: a FAQ entry has no translated question and answer`,
+                );
+            }
+            return {
+                '@type': 'Question',
+                name: translate(question.dataset.i18n),
+                acceptedAnswer: { '@type': 'Answer', text: translate(answer.dataset.i18n) },
+            };
+        });
+
+        script.textContent = `\n    ${JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            url: absoluteUrl(page, locale),
+            inLanguage: locale,
+            mainEntity,
+        })}\n    `;
+    }
+}
+
 function localizeJsonLd(document, { locale, description }) {
     for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
         let payload;
@@ -264,6 +311,7 @@ function localizeDocument(document, { page, locale, translate }) {
         upsertMeta(document, { attribute: 'property', name: 'og:locale', content: OG_LOCALES[locale] || locale });
     }
 
+    buildFaqJsonLd(document, { page, locale, translate });
     if (description) localizeJsonLd(document, { locale, description });
 
     // English is prerendered back over its own source file, so every pass has to land on

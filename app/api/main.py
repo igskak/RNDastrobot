@@ -490,7 +490,7 @@ _SITEMAP_PAGES = (
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-10-19"
+_SITEMAP_LASTMOD = "2026-10-26"
 
 
 def _indexable_document_paths() -> frozenset:

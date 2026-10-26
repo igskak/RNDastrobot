@@ -266,6 +266,52 @@ def test_the_pricing_page_names_the_price_and_declares_the_live_plans(client, pa
         assert offer["url"] == f"https://www.steliara.com{path}", f"{path}: offer at {offer['url']}"
 
 
+PRICING_LOCALES = {"/pricing.html": "en"} | {f"/{locale}/pricing.html": locale for locale in PREFIXED_LOCALES}
+
+
+@pytest.mark.parametrize("path", PRICING_PATHS)
+def test_the_pricing_faq_is_declared_in_the_language_it_is_read_in(client, path):
+    """/pricing.html showed five answers and declared none of them until 2026-10-26.
+
+    It could not: build-localized-pages.mjs localized only a JSON-LD block's top-level
+    url and description, so a hand-written FAQPage would have shipped English questions
+    under the German, Russian and Ukrainian FAQs. The prerender now builds mainEntity
+    from the catalog keys on the page's own entries, and this compares the result against
+    the text the visitor actually sees, so neither half can drift: an answer the page
+    does not show, or a German FAQ declared in English, fails here.
+    """
+    import html as html_module
+    import json
+    import re
+
+    html = client.get(path).text
+
+    faq_pages = [
+        payload
+        for block in re.findall(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', html, re.S)
+        for payload in (json.loads(block),)
+        if payload.get("@type") == "FAQPage"
+    ]
+    assert len(faq_pages) == 1, f"{path}: expected exactly one FAQPage block, found {len(faq_pages)}"
+    faq = faq_pages[0]
+
+    assert faq["inLanguage"] == PRICING_LOCALES[path], f"{path}: declared as {faq['inLanguage']}"
+    assert faq["url"] == f"https://www.steliara.com{path}", f"{path}: FAQPage at {faq['url']}"
+
+    section = re.search(r'<section class="faq">(.*?)</section>', html, re.S)
+    assert section, f"{path}: no FAQ section to declare"
+    visible = [
+        (html_module.unescape(question), html_module.unescape(answer))
+        for question, answer in re.findall(
+            r"<summary[^>]*>(.*?)</summary>\s*<p[^>]*>(.*?)</p>", section.group(1), re.S
+        )
+    ]
+    assert len(visible) == 5, f"{path}: found {len(visible)} visible questions"
+
+    declared = [(item["name"], item["acceptedAnswer"]["text"]) for item in faq["mainEntity"]]
+    assert declared == visible, f"{path}: the schema and the page disagree about the FAQ"
+
+
 @pytest.mark.parametrize("path", ANSWER_PATHS)
 def test_an_answer_page_answers_in_the_first_forty_words(client, path):
     """An engine lifts one passage, not a page. If the answer is not self-contained and

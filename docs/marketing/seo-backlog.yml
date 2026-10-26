@@ -426,7 +426,8 @@ items:
       under a German FAQ is worse than none. Queued below as pricing-faq-schema.
 
   - id: pricing-faq-schema
-    status: todo
+    status: shipped
+    pr: "#31"
     type: technical
     slug: /pricing.html
     target_queries:
@@ -447,3 +448,19 @@ items:
         on the page.
     acceptance:
       schema: [FAQPage]
+    built: >-
+      2026-10-26. build-localized-pages.mjs now rebuilds any JSON-LD block carrying
+      data-i18n-faq from the catalog keys on the FAQ entries the selector names, so each
+      locale declares its own five questions and the schema structurally cannot hold a
+      question the page does not show. A guard test compares the declared pairs against
+      the visible summary and answer text on all four pricing URLs.
+      Caveat found while shipping, and the reason to read this item as housekeeping rather
+      than a traffic win: Google stopped showing FAQ rich results on 2026-05-07 and
+      removed the documentation on 2026-06-15 (developers.google.com Search Central
+      changelog, checked 2026-10-26). The markup is still valid and still machine-readable
+      for AI engines, which is what the ai-answer-pages item was built on, but there is no
+      Google SERP accordion to win any more. If the FAQPage blocks on the conquest pages
+      ever need re-justifying, this is the fact to re-check first.
+      Left alone deliberately: page.pricing.faq.a2 in en.json contains an em dash, against
+      the house voice rule. Fixing it means editing visitor copy in four catalogs, which is
+      not this item.
