@@ -1,0 +1,203 @@
+{
+ "kinds": {
+  "new_moon": "Nów Księżyca",
+  "full_moon": "Pełnia Księżyca"
+ },
+ "signs": [
+  "Baran",
+  "Byk",
+  "Bliźnięta",
+  "Rak",
+  "Lew",
+  "Panna",
+  "Waga",
+  "Skorpion",
+  "Strzelec",
+  "Koziorożec",
+  "Wodnik",
+  "Ryby"
+ ],
+ "signs_in": [
+  "w Baranie",
+  "w Byku",
+  "w Bliźniętach",
+  "w Raku",
+  "w Lwie",
+  "w Pannie",
+  "w Wadze",
+  "w Skorpionie",
+  "w Strzelcu",
+  "w Koziorożcu",
+  "w Wodniku",
+  "w Rybach"
+ ],
+ "date_format": "%d.%m.%Y, %H:%M",
+ "headline": "{kind} {sign_in}, w Twoim {house}. domu",
+ "frame": {
+  "rising": "Domy liczymy od Twojego ascendentu (system domów całych znaków).",
+  "sun": "Bez godziny urodzenia liczymy domy od znaku Słońca (domy słoneczne). Podaj godzinę i miejsce urodzenia, aby wynik był bardziej osobisty."
+ },
+ "universal": {
+  "new": "Zapisz jedną intencję na ten księżycowy miesiąc, w czasie teraźniejszym.",
+  "full": "Wymień trzy rzeczy, za które czujesz wdzięczność od ostatniego nowiu."
+ },
+ "houses": [
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy Ciebie i tego, jak pokazujesz się światu.",
+   "new": [
+    "Co chcesz w tym miesiącu zacząć robić tylko dla siebie?",
+    "Jak chcesz się czuć, kiedy rano się budzisz?"
+   ],
+   "full": [
+    "W jakich chwilach tego miesiąca czujesz się najbardziej sobą?",
+    "Jaki mały nawyk po cichu Cię wspiera?"
+   ],
+   "affirmation": "Daję sobie przestrzeń, by zacząć od nowa."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy tego, co cenisz, i tego, co daje Ci poczucie stabilności.",
+   "new": [
+    "Co dziś oznacza dla Ciebie poczucie bezpieczeństwa?",
+    "Którą ze swoich umiejętności chcesz wykorzystywać częściej?"
+   ],
+   "full": [
+    "Za co z tego, co już masz, czujesz wdzięczność?",
+    "Gdzie w tym miesiącu odnajdujesz stabilność?"
+   ],
+   "affirmation": "Doceniam to, co mam, i to, co mogę jeszcze rozwinąć."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy słów, nauki i codziennych kontaktów.",
+   "new": [
+    "Czego chcesz się w tym miesiącu nauczyć albo o czym poczytać?",
+    "Z kim chcesz rozmawiać częściej?"
+   ],
+   "full": [
+    "Która rozmowa z tego miesiąca wciąż jest z Tobą?",
+    "Jaki nowy pomysł budzi Twoją ciekawość?"
+   ],
+   "affirmation": "Moje słowa mogą być jasne i życzliwe."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy domu, korzeni i wewnętrznego spokoju.",
+   "new": [
+    "Co sprawi, że Twój dom będzie jeszcze bardziej Twój?",
+    "Co pomaga Ci się wyciszyć pod koniec dnia?"
+   ],
+   "full": [
+    "Za którą chwilę w domu z tego miesiąca czujesz wdzięczność?",
+    "Przy kim czujesz się ostatnio jak w domu?"
+   ],
+   "affirmation": "Tworzę miejsce spokoju w sobie i wokół siebie."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy radości, twórczości i zabawy.",
+   "new": [
+    "Co chcesz stworzyć wyłącznie dla radości?",
+    "Jak możesz w tym miesiącu znaleźć czas na zabawę?"
+   ],
+   "full": [
+    "Co w tym miesiącu wywołuje Twój uśmiech?",
+    "Czym cieszysz się całym sercem?"
+   ],
+   "affirmation": "Pozwalam sobie cieszyć się tym, co kocham."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy codziennego rytmu, pracy i troski o siebie.",
+   "new": [
+    "Jaką małą codzienną rutynę chcesz wprowadzić?",
+    "Jak Twój dzień pracy może stać się choć trochę lżejszy?"
+   ],
+   "full": [
+    "Która rutyna dobrze Ci w tym miesiącu służy?",
+    "Komu udaje Ci się pomóc i kto pomaga Tobie?"
+   ],
+   "affirmation": "Małe kroki każdego dnia wystarczą."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy bliskich relacji i partnerstwa.",
+   "new": [
+    "Co chcesz wnosić do swoich najbliższych relacji?",
+    "Z kim chcesz coś wspólnie zrobić?"
+   ],
+   "full": [
+    "Za którą osobę u swojego boku czujesz wdzięczność?",
+    "Czego uczy Cię w tym miesiącu ktoś bliski?"
+   ],
+   "affirmation": "Spotykam innych z otwartością i z szacunkiem do siebie."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy zaufania, dzielenia się i wewnętrznej przemiany.",
+   "new": [
+    "Co możesz odpuścić, by zrobić miejsce na nowe?",
+    "Gdzie chcesz budować więcej zaufania?"
+   ],
+   "full": [
+    "Jaką zmianę w sobie chcesz celebrować?",
+    "Jakie wsparcie otrzymujesz w tym miesiącu?"
+   ],
+   "affirmation": "Łagodnie odpuszczam i zatrzymuję to, co ważne."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy horyzontów: podróży, nauki i sensu.",
+   "new": [
+    "Jakie miejsce, książka lub idea Cię wołają?",
+    "Co nadaje dziś sens Twojemu życiu?"
+   ],
+   "full": [
+    "Co w tym miesiącu poszerza Twoje spojrzenie?",
+    "Jakie przekonanie wspiera Cię w tym miesiącu?"
+   ],
+   "affirmation": "Otwieram się na nowe horyzonty."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy celów, powołania i Twojej drogi.",
+   "new": [
+    "Ku któremu celowi chcesz zrobić jeden wyraźny krok?",
+    "Jak chcesz, by inni widzieli Twoją pracę?"
+   ],
+   "full": [
+    "Które osiągnięcie tego miesiąca, nawet małe, chcesz zapamiętać?",
+    "Kto wspiera Cię na Twojej drodze?"
+   ],
+   "affirmation": "Idę ku swoim celom we własnym tempie."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy przyjaźni, wspólnoty i nadziei.",
+   "new": [
+    "Jaką nadzieję na przyszłość chcesz pielęgnować?",
+    "Której przyjaźni chcesz poświęcić więcej uwagi?"
+   ],
+   "full": [
+    "Za którą przyjaźń czujesz w tym miesiącu wdzięczność?",
+    "Gdzie czujesz się częścią czegoś większego?"
+   ],
+   "affirmation": "Jestem częścią kręgu ludzi, którzy są dla mnie ważni."
+  },
+  {
+   "theme": "Ta część Twojego horoskopu dotyczy odpoczynku, ciszy i Twojego wewnętrznego świata.",
+   "new": [
+    "Jak możesz dać sobie w tym miesiącu więcej spokojnego czasu?",
+    "O co prosi Cię Twój wewnętrzny głos?"
+   ],
+   "full": [
+    "Co dają Ci w tym miesiącu odpoczynek i cisza?",
+    "Jaki sen lub przeczucie wciąż do Ciebie wraca?"
+   ],
+   "affirmation": "Pozwalam sobie odpocząć."
+  }
+ ],
+ "disclaimer": "To pytania do refleksji, a nie przepowiednie. Niebo podsuwa rytm, a to, co zapiszesz, należy do Ciebie.",
+ "email": {
+  "confirm_subject": "Potwierdź swoje listy księżycowe",
+  "confirm_body": "Dzień dobry,\n\nkliknij, aby potwierdzić, że chcesz otrzymywać e-mailem swoje osobiste pytania na każdy nów i każdą pełnię:\n{link}\n\nJeśli to pomyłka, po prostu zignoruj tę wiadomość. Nic więcej nie wyślemy.",
+  "subject": "{kind} {sign_in}: Twój {house}. dom",
+  "when": "Dokładny moment: {date} ({timezone}).",
+  "prompts_title": "Pytania na ten czas:",
+  "affirmation_title": "Afirmacja:",
+  "write": "Zapisz odpowiedzi w swoim dzienniku: {link}",
+  "footer": "Ta wiadomość przychodzi, ponieważ ten adres został zapisany na steliara.com. Wypisz się lub usuń swoje dane: {manage_link}",
+  "link_subject": "Twój link do dziennika księżycowego",
+  "link_body": "Dzień dobry,\n\noto link do Twojego dziennika księżycowego:\n{link}\n\nLink otwiera Twój dziennik, więc nie przekazuj go innym osobom. Jeśli to pomyłka, zignoruj tę wiadomość."
+ }
+}

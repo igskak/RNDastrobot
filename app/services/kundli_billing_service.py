@@ -10,8 +10,6 @@ KUNDLI_LINK_SECRET and a Stripe price id per cadence.
 """
 from __future__ import annotations
 
-import base64
-import hashlib
 import hmac
 import os
 import uuid
@@ -28,6 +26,7 @@ from app.auth import mailer
 from app.database.models import KundliSubscriber
 from app.models.kundli import CheckoutRequest
 from app.services import b2c_safety_policy as safety
+from app.services import signed_links
 from app.services import vedic_content as content
 from app.services import vedic_report_service as reports
 from app.services import vedic_service as vedic
@@ -84,26 +83,11 @@ def public_config() -> Dict[str, Any]:
 # --- signed links ---------------------------------------------------------------------
 
 def make_token(subscriber_id: uuid.UUID) -> str:
-    raw = subscriber_id.bytes
-    signature = hmac.new(_secret(), raw, hashlib.sha256).digest()[:16]
-    return base64.urlsafe_b64encode(raw + signature).decode("ascii").rstrip("=")
+    return signed_links.make_token(subscriber_id, _secret())
 
 
 def parse_token(token: str) -> Optional[uuid.UUID]:
-    try:
-        padded = token + "=" * (-len(token) % 4)
-        blob = base64.urlsafe_b64decode(padded.encode("ascii"))
-        raw, signature = blob[:16], blob[16:]
-        if len(raw) != 16 or len(signature) != 16:
-            return None
-        expected = hmac.new(_secret(), raw, hashlib.sha256).digest()[:16]
-        if not hmac.compare_digest(signature, expected):
-            return None
-        return uuid.UUID(bytes=raw)
-    except KundliBillingUnavailable:
-        raise
-    except Exception:
-        return None
+    return signed_links.parse_token(token, _secret())
 
 
 def find_by_token(db: Session, token: str) -> Optional[KundliSubscriber]:

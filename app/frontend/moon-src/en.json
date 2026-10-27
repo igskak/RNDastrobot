@@ -1,0 +1,205 @@
+{
+ "lang": "en",
+ "hreflang": "en",
+ "ogLocale": "en_US",
+ "intl": "en-US",
+ "languageName": "English",
+ "tableTimezone": "America/New_York",
+ "site": {
+  "brand": "Steliara",
+  "skip": "Skip to content",
+  "langLabel": "Language",
+  "footerNote": "Steliara makes software for professional astrologers. These moon pages are a free tool for everyone.",
+  "footerAstrologers": "For astrologers",
+  "footerTerms": "Terms and privacy"
+ },
+ "pages": {
+  "index": {
+   "title": "New Moon & Full Moon Dates 2026–2027 + Your Prompts | Steliara",
+   "description": "Every new and full moon of 2026–2027 with exact times, where each one falls in your birth chart, and free journal prompts for intentions and gratitude.",
+   "h1": "New moon and full moon 2026–2027: dates and your personal journal prompts",
+   "lead": "See where the next new moon and full moon fall in your birth chart and get a few gentle questions for your journal: an intention at the new moon, gratitude at the full moon.",
+   "tableTitle": "New and full moons from November 2026 to December 2027",
+   "tableNote": "Times are New York time (ET). The next lunation is highlighted.",
+   "sections": [
+    {
+     "h2": "A journal that follows the Moon",
+     "p": [
+      "Every month the Moon moves from new to full and back again. Many people use this rhythm for journaling: at the new moon they write down an intention, at the full moon they look back and note what they are grateful for.",
+      "We calculate the exact moment of every new and full moon with the Swiss Ephemeris and find the house of your birth chart where it falls. Each house has its own theme, so your questions change from month to month instead of repeating the same list."
+     ]
+    },
+    {
+     "h2": "What this is and what it is not",
+     "p": [
+      "These are questions for reflection, not predictions. We do not tell you what will happen; we offer a rhythm, a few questions and an affirmation, and the answers are yours.",
+      "Your answers are saved in your journal so you can find them on any device. We also keep your email and birth data for the letters. You can delete everything at any time with one click."
+     ]
+    }
+   ],
+   "faqTitle": "Questions",
+   "faq": [
+    {
+     "q": "When is the next new moon?",
+     "a": "The table on this page lists every new and full moon until the end of 2027 with the exact time, and the next one is highlighted."
+    },
+    {
+     "q": "Do I need my birth time?",
+     "a": "No. Without a birth time we count the houses from your Sun sign. With your birth time and place we count them from your rising sign, which is more personal."
+    },
+    {
+     "q": "What should I write at the new moon?",
+     "a": "One intention in the present tense and one small step for the coming days. Your personal questions depend on the house where the new moon falls in your chart."
+    },
+    {
+     "q": "What should I write at the full moon?",
+     "a": "Look back over the last two weeks and name three things you are grateful for. Your letter adds two questions for the house of the full moon."
+    },
+    {
+     "q": "Is it free?",
+     "a": "Yes. The calculator and the letters are free, and every letter has a link to unsubscribe."
+    }
+   ]
+  },
+  "letter": {
+   "title": "Your moon letter | Steliara",
+   "description": "Your personal new moon and full moon questions.",
+   "h1": "Your moon letter",
+   "lead": "Questions for your journal, for the house of your chart where the Moon is now."
+  }
+ },
+ "ui": {
+  "legend": "Your birth data",
+  "date": "Date of birth",
+  "time": "Time of birth",
+  "timeUnknown": "I don't know my birth time",
+  "place": "Place of birth",
+  "placeHint": "Start typing a city: it sets the time zone and the rising sign.",
+  "placeSearching": "Searching…",
+  "placeNone": "No places found",
+  "timezone": "Time zone",
+  "timezoneFromPlace": "Time zone set from the place of birth.",
+  "calculate": "Show my moons",
+  "calculating": "Calculating…",
+  "noscript": "This calculator needs JavaScript.",
+  "required": "Please enter your date of birth.",
+  "resultTitle": "Your next new moon and full moon",
+  "promptsTitle": "Questions for your journal",
+  "affirmationTitle": "Affirmation",
+  "signupTitle": "Get your questions at every new and full moon",
+  "signupText": "Two short emails a month, on the day of each new and full moon, with questions for the house of your chart where it falls. Free, and you can unsubscribe with one click.",
+  "email": "Email",
+  "consent": "I agree to receive these emails and to the storage of my birth data for this purpose. I can delete it at any time.",
+  "subscribe": "Send me my moon letters",
+  "subscribing": "Sending…",
+  "signupDone": "Almost done: open the email we just sent and confirm your address.",
+  "errorEmail": "Please check your email address.",
+  "errorConsent": "Please tick the consent box.",
+  "errorSignup": "We could not send the confirmation email. Please try again later.",
+  "errorUnavailable": "Signing up is not available right now. Please try again later.",
+  "errorInvalid": "Please check the date, time and time zone.",
+  "errorRateLimited": "Too many attempts. Please wait a minute and try again.",
+  "errorGeneric": "Something went wrong. Please try again.",
+  "errorNetwork": "No connection. Please check your internet and try again.",
+  "tableDate": "Date and time",
+  "tablePhase": "Phase",
+  "tableSign": "Sign",
+  "nextBadge": "next",
+  "loading": "Loading your letter…",
+  "invalidLink": "This link is not valid. You can sign up again on the moon page.",
+  "confirmed": "Thank you, your email is confirmed. Your letters arrive on the day of each new and full moon.",
+  "pending": "Your email is not confirmed yet: please use the link in the confirmation email.",
+  "unsubscribedNote": "You are unsubscribed and will not receive more letters.",
+  "currentTitle": "Your current moon",
+  "writePlaceholder": "Write here… It is saved automatically.",
+  "saved": "Saved",
+  "nextLine": "Next: {kind} on {date} {sign_in}, in your house {house}.",
+  "historyTitle": "Your journal",
+  "historyEmpty": "Your answers will appear here.",
+  "fakeTitle": "Personal month",
+  "fakePrice": "Planned price: {price}.",
+  "price": "$5 a month",
+  "fakeButton": "I'm interested, tell me when it is ready",
+  "fakeThanks": "Thank you! We will write to you when it is ready. Nothing is charged.",
+  "manageTitle": "Your letters",
+  "unsubscribe": "Unsubscribe",
+  "unsubscribed": "You are unsubscribed.",
+  "erase": "Delete my data",
+  "eraseConfirm": "Delete your email and birth data for good?",
+  "erased": "Your data has been deleted.",
+  "manageError": "That did not work. Please try again.",
+  "backToMoon": "Back to the moon calendar",
+  "saving": "Saving…",
+  "saveError": "Not saved. Please check your connection.",
+  "linkPrivacy": "This link opens your journal. Please do not forward these emails to other people.",
+  "linkTitle": "Already getting the letters?",
+  "linkText": "Enter your email and we will send you the link to your journal. It works on any device, without a password.",
+  "linkButton": "Send my link",
+  "linkSending": "Sending…",
+  "linkDone": "If this address is subscribed, the link is on its way.",
+  "fakeText": "The personal month is not available yet. If you would like it, press the button: we will write to you when it is ready. Nothing is charged."
+ },
+ "months": [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+ ],
+ "tableDateFormat": "{month} {d}, {y} · {h12}:{mm} {ampm}",
+ "plans": {
+  "title": "Free letters and the personal month",
+  "lead": "The moon letters are free and stay free. The personal month is a paid addition we are preparing. Here is an example of both.",
+  "freeTitle": "Free",
+  "freeItems": [
+   "A letter on the day of every new and full moon",
+   "The house of your chart where it falls, and what that house is about",
+   "Three questions for your journal and an affirmation",
+   "Your answers saved in your journal, on any device"
+  ],
+  "paidTitle": "Personal month",
+  "paidItems": [
+   "Everything that is free",
+   "A calendar of your own transits for the month, with dates and a question for each",
+   "A monthly look back at what you wrote, next to the sky of those days",
+   "A year book of your entries for your birthday"
+  ],
+  "exampleFreeTitle": "Example of a free letter",
+  "examplePaidTitle": "Example of a personal month",
+  "exampleNote": "Example for a fictional person born on 17 May 1990. Your own month is calculated from your birth data.",
+  "calendarTitle": "Your sky in November",
+  "calendar": [
+   {
+    "when": "3–8 Nov",
+    "what": "Venus passes over your Sun",
+    "text": "A week to notice what you appreciate in yourself and in your life.",
+    "question": "What did you like about yourself this week?"
+   },
+   {
+    "when": "14–19 Nov",
+    "what": "Mars moves through your house 4",
+    "text": "Energy for home: tidying, moving furniture, inviting people over.",
+    "question": "What would you like to change in your space?"
+   },
+   {
+    "when": "24 Nov",
+    "what": "Full Moon in your house 10",
+    "text": "A moment to look at your work and at what you have built.",
+    "question": "Which achievement of this month would you like to remember?"
+   }
+  ],
+  "reviewTitle": "Your month in your own words",
+  "review": [
+   "In November your journal has 7 entries. The words that come up most are “rest”, “sister” and “project”.",
+   "Around the full moon in your house 10 the wish for your work to be noticed comes back. The same theme appeared in August, when Jupiter passed over the top of your chart.",
+   "Question for December: what would help you feel that your work is seen?"
+  ]
+ }
+}

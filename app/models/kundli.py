@@ -11,7 +11,7 @@ from app.services import vedic_service
 from app.utils.timezones import resolve_zoneinfo
 
 _TIME = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
-_EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,255}\.[^@\s]{2,}$")
+EMAIL_PATTERN = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,255}\.[^@\s]{2,}$")
 
 
 class KundliBirth(BaseModel):
@@ -77,7 +77,7 @@ class CheckoutRequest(BaseModel):
     @classmethod
     def _email_shape(cls, value: str) -> str:
         value = value.strip()
-        if not _EMAIL.match(value):
+        if not EMAIL_PATTERN.match(value):
             raise ValueError("invalid email")
         return value
 

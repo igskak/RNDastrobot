@@ -2,7 +2,7 @@
 SQLAlchemy ORM модели для базы данных
 """
 from sqlalchemy import (
-    Column, String, Integer, Numeric, Boolean, DateTime, Date, Time,
+    Column, String, Integer, Numeric, Float, Boolean, DateTime, Date, Time,
     ForeignKey, CheckConstraint, Index, Text, Table, UniqueConstraint, JSON,
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
@@ -1801,4 +1801,63 @@ class KundliSubscriber(Base):
         UniqueConstraint('provider', 'provider_subscription_id', name='uq_kundli_subscribers_subscription'),
         Index('idx_kundli_subscribers_email', 'email'),
         Index('idx_kundli_subscribers_status', 'status'),
+    )
+
+
+class MoonSubscriber(Base):
+    """A visitor of the public /moon pages who asked for new moon and full moon prompts.
+
+    No account exists: every link carries a signed token (app/services/moon_journal_service.py).
+    The row holds what the letters need plus the counters the validation test reads; the
+    answers live in MoonJournalEntry.
+    """
+    __tablename__ = 'moon_subscribers'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(320), nullable=False)
+    locale = Column(String(8), nullable=False, default='en', server_default='en')
+    birth_date = Column(Date, nullable=False)
+    birth_time = Column(Time)
+    timezone = Column(String(64), nullable=False)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    place_label = Column(String(200))
+    status = Column(String(16), nullable=False, default='pending', server_default='pending')
+    consent_at = Column(DateTime, nullable=False)
+    confirm_sent_at = Column(DateTime)
+    confirmed_at = Column(DateTime)
+    unsubscribed_at = Column(DateTime)
+    last_lunation_at = Column(DateTime)
+    letters_sent = Column(Integer, nullable=False, default=0, server_default='0')
+    last_opened_at = Column(DateTime)
+    opens = Column(Integer, nullable=False, default=0, server_default='0')
+    journal_interest_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        CheckConstraint("status IN ('pending', 'confirmed', 'unsubscribed')", name='chk_moon_subscribers_status'),
+        UniqueConstraint('email', name='uq_moon_subscribers_email'),
+        Index('idx_moon_subscribers_status', 'status'),
+    )
+
+
+class MoonJournalEntry(Base):
+    """One answer to one question of one lunation, written on the moon letter page."""
+    __tablename__ = 'moon_journal_entries'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subscriber_id = Column(UUID(as_uuid=True), ForeignKey('moon_subscribers.id', ondelete='CASCADE'), nullable=False)
+    lunation_kind = Column(String(16), nullable=False)
+    lunation_utc = Column(DateTime, nullable=False)
+    prompt_index = Column(Integer, nullable=False)
+    question = Column(String(500))
+    answer = Column(Text, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        CheckConstraint("lunation_kind IN ('new_moon', 'full_moon')", name='chk_moon_journal_entries_kind'),
+        UniqueConstraint('subscriber_id', 'lunation_utc', 'prompt_index', name='uq_moon_journal_entries_prompt'),
+        Index('idx_moon_journal_entries_subscriber', 'subscriber_id'),
     )

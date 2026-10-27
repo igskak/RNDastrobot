@@ -1,0 +1,203 @@
+{
+ "kinds": {
+  "new_moon": "New Moon",
+  "full_moon": "Full Moon"
+ },
+ "signs": [
+  "Aries",
+  "Taurus",
+  "Gemini",
+  "Cancer",
+  "Leo",
+  "Virgo",
+  "Libra",
+  "Scorpio",
+  "Sagittarius",
+  "Capricorn",
+  "Aquarius",
+  "Pisces"
+ ],
+ "signs_in": [
+  "in Aries",
+  "in Taurus",
+  "in Gemini",
+  "in Cancer",
+  "in Leo",
+  "in Virgo",
+  "in Libra",
+  "in Scorpio",
+  "in Sagittarius",
+  "in Capricorn",
+  "in Aquarius",
+  "in Pisces"
+ ],
+ "date_format": "%d %b %Y, %H:%M",
+ "headline": "{kind} {sign_in}, in your house {house}",
+ "frame": {
+  "rising": "Houses are counted from your rising sign (whole-sign houses).",
+  "sun": "Without a birth time we count houses from your Sun sign (solar houses). Add your birth time and place for a more personal result."
+ },
+ "universal": {
+  "new": "Write one intention for this lunar month, in the present tense.",
+  "full": "Name three things you have felt grateful for since the last new moon."
+ },
+ "houses": [
+  {
+   "theme": "This part of your chart is about you and the way you show up in the world.",
+   "new": [
+    "What would you like to start doing this month simply for yourself?",
+    "How do you want to feel when you wake up in the morning?"
+   ],
+   "full": [
+    "In which moments this month do you feel most like yourself?",
+    "Which small habit is quietly supporting you?"
+   ],
+   "affirmation": "I give myself room to begin again."
+  },
+  {
+   "theme": "This part of your chart is about what you value and what makes you feel steady.",
+   "new": [
+    "What does feeling secure mean to you right now?",
+    "Which of your skills would you like to use more often?"
+   ],
+   "full": [
+    "What do you already have that you feel grateful for?",
+    "Where did you find steadiness this month?"
+   ],
+   "affirmation": "I value what I have and what I can still grow."
+  },
+  {
+   "theme": "This part of your chart is about words, learning and everyday connections.",
+   "new": [
+    "What would you like to learn or read about this month?",
+    "Who would you like to talk with more often?"
+   ],
+   "full": [
+    "Which conversation from this month is still with you?",
+    "Which new idea made you curious?"
+   ],
+   "affirmation": "My words can be clear and kind."
+  },
+  {
+   "theme": "This part of your chart is about home, roots and inner calm.",
+   "new": [
+    "What would make your home feel even more like yours?",
+    "What helps you settle into calm at the end of the day?"
+   ],
+   "full": [
+    "Which moment at home this month are you grateful for?",
+    "With whom do you feel at home these days?"
+   ],
+   "affirmation": "I create a place of calm within me and around me."
+  },
+  {
+   "theme": "This part of your chart is about joy, creativity and play.",
+   "new": [
+    "What would you like to create just for the joy of it?",
+    "How can you make time to play this month?"
+   ],
+   "full": [
+    "What made you laugh this month?",
+    "What did you enjoy with your whole heart?"
+   ],
+   "affirmation": "I allow myself to enjoy what I love."
+  },
+  {
+   "theme": "This part of your chart is about your daily rhythm, your work and caring for yourself.",
+   "new": [
+    "Which small daily routine would you like to begin?",
+    "How could your working day feel a little lighter?"
+   ],
+   "full": [
+    "Which routine served you well this month?",
+    "Whom were you able to help, and who helped you?"
+   ],
+   "affirmation": "Small steps every day are enough."
+  },
+  {
+   "theme": "This part of your chart is about close relationships and partnership.",
+   "new": [
+    "What would you like to bring to your closest relationships?",
+    "With whom would you like to work on something together?"
+   ],
+   "full": [
+    "Which person beside you are you grateful for?",
+    "What did you learn from someone close to you this month?"
+   ],
+   "affirmation": "I meet others with openness and with respect for myself."
+  },
+  {
+   "theme": "This part of your chart is about trust, sharing and inner change.",
+   "new": [
+    "What are you ready to let go of to make room for something new?",
+    "Where would you like to build more trust?"
+   ],
+   "full": [
+    "Which change in you would you like to celebrate?",
+    "What support did you receive this month?"
+   ],
+   "affirmation": "I let go gently and keep what matters."
+  },
+  {
+   "theme": "This part of your chart is about horizons: travel, study and meaning.",
+   "new": [
+    "Which place, book or idea is calling you?",
+    "What gives your life meaning right now?"
+   ],
+   "full": [
+    "What widened your view this month?",
+    "Which belief supported you this month?"
+   ],
+   "affirmation": "I open myself to new horizons."
+  },
+  {
+   "theme": "This part of your chart is about goals, vocation and your path.",
+   "new": [
+    "Which goal would you like to take one clear step toward?",
+    "How would you like your work to be seen?"
+   ],
+   "full": [
+    "Which achievement this month, however small, would you like to remember?",
+    "Who supported you along your path?"
+   ],
+   "affirmation": "I move toward my goals at my own pace."
+  },
+  {
+   "theme": "This part of your chart is about friends, community and hopes.",
+   "new": [
+    "Which hope for the future would you like to nurture?",
+    "Which friendship would you like to give more attention to?"
+   ],
+   "full": [
+    "Which friendship are you grateful for this month?",
+    "Where did you feel part of something bigger?"
+   ],
+   "affirmation": "I am part of a circle of people who matter to me."
+  },
+  {
+   "theme": "This part of your chart is about rest, quiet and your inner world.",
+   "new": [
+    "How can you give yourself more quiet time this month?",
+    "What is your inner voice asking of you?"
+   ],
+   "full": [
+    "What did rest and quiet give you this month?",
+    "Which dream or intuition keeps coming back to you?"
+   ],
+   "affirmation": "I give myself permission to rest."
+  }
+ ],
+ "disclaimer": "These are questions for reflection, not predictions. The sky offers a rhythm; what you write is yours.",
+ "email": {
+  "confirm_subject": "Confirm your moon letters",
+  "confirm_body": "Hello,\n\nplease confirm that you would like to receive your personal questions for every new moon and full moon by email:\n{link}\n\nIf you did not ask for this, simply ignore this message and nothing more will be sent.",
+  "subject": "{kind} {sign_in}: your house {house}",
+  "when": "Exact moment: {date} ({timezone}).",
+  "prompts_title": "Questions for this moon:",
+  "affirmation_title": "Affirmation:",
+  "write": "Write your answers in your journal: {link}",
+  "footer": "You receive this email because you signed up at steliara.com. Unsubscribe or delete your data: {manage_link}",
+  "link_subject": "Your moon journal link",
+  "link_body": "Hello,\n\nhere is the link to your moon journal:\n{link}\n\nThe link opens your journal, so please do not forward it. If you did not ask for it, simply ignore this message."
+ }
+}

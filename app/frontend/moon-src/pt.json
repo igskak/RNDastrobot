@@ -1,0 +1,205 @@
+{
+ "lang": "pt-BR",
+ "hreflang": "pt-BR",
+ "ogLocale": "pt_BR",
+ "intl": "pt-BR",
+ "languageName": "Português",
+ "tableTimezone": "America/Sao_Paulo",
+ "site": {
+  "brand": "Steliara",
+  "skip": "Ir para o conteúdo",
+  "langLabel": "Idioma",
+  "footerNote": "A Steliara cria software para astrólogos profissionais. Estas páginas sobre a Lua são uma ferramenta gratuita para todos.",
+  "footerAstrologers": "Para astrólogos",
+  "footerTerms": "Termos e privacidade"
+ },
+ "pages": {
+  "index": {
+   "title": "Lua nova e lua cheia 2026–2027: datas | Steliara",
+   "description": "Todas as luas novas e cheias de 2026–2027 com horário exato, a casa do seu mapa astral para cada lunação e perguntas gratuitas para o seu diário da gratidão.",
+   "h1": "Lua nova e lua cheia 2026–2027: datas e suas perguntas pessoais para o diário",
+   "lead": "Veja em qual casa do seu mapa astral caem a próxima lua nova e a próxima lua cheia e receba algumas perguntas gentis para o seu diário: uma intenção na lua nova, gratidão na lua cheia.",
+   "tableTitle": "Luas novas e luas cheias de novembro de 2026 a dezembro de 2027",
+   "tableNote": "Horário de Brasília. A próxima lunação aparece em destaque.",
+   "sections": [
+    {
+     "h2": "Um diário no ritmo da Lua",
+     "p": [
+      "Todo mês a Lua passa de nova a cheia e volta. Muitas pessoas escrevem um diário nesse ritmo: na lua nova anotam uma intenção e na lua cheia olham para trás e registram aquilo pelo que sentem gratidão.",
+      "Calculamos o momento exato de cada lua nova e de cada lua cheia com a Swiss Ephemeris e encontramos a casa do seu mapa astral onde ela cai. Cada casa tem o seu tema, então as suas perguntas mudam de um mês para o outro."
+     ]
+    },
+    {
+     "h2": "O que é e o que não é",
+     "p": [
+      "São perguntas para reflexão, não previsões. Não dizemos o que vai acontecer; oferecemos um ritmo, algumas perguntas e uma afirmação, e as respostas são suas.",
+      "Suas respostas ficam salvas no seu diário para você encontrá-las em qualquer dispositivo. Também guardamos seu e-mail e seus dados de nascimento para as cartas. Você pode apagar tudo a qualquer momento com um clique."
+     ]
+    }
+   ],
+   "faqTitle": "Perguntas",
+   "faq": [
+    {
+     "q": "Quando é a próxima lua nova?",
+     "a": "A tabela desta página traz todas as luas novas e cheias até o fim de 2027 com o horário exato; a próxima aparece em destaque."
+    },
+    {
+     "q": "Preciso da minha hora de nascimento?",
+     "a": "Não. Sem a hora de nascimento, contamos as casas a partir do seu signo solar. Com a hora e o local de nascimento, contamos a partir do seu ascendente, o que é mais pessoal."
+    },
+    {
+     "q": "O que escrever na lua nova?",
+     "a": "Uma intenção no presente e um pequeno passo para os próximos dias. Suas perguntas pessoais dependem da casa onde cai a lua nova."
+    },
+    {
+     "q": "O que escrever na lua cheia?",
+     "a": "Olhe para as duas últimas semanas e anote três coisas pelas quais você sente gratidão. Sua carta traz mais duas perguntas para a casa da lua cheia."
+    },
+    {
+     "q": "É gratuito?",
+     "a": "Sim. A calculadora e as cartas são gratuitas, e toda carta tem um link para cancelar a inscrição."
+    }
+   ]
+  },
+  "letter": {
+   "title": "Sua carta da Lua | Steliara",
+   "description": "Suas perguntas pessoais para a lua nova e a lua cheia.",
+   "h1": "Sua carta da Lua",
+   "lead": "Perguntas para o seu diário, para a casa do seu mapa onde a Lua está agora."
+  }
+ },
+ "ui": {
+  "legend": "Seus dados de nascimento",
+  "date": "Data de nascimento",
+  "time": "Hora de nascimento",
+  "timeUnknown": "Não sei minha hora de nascimento",
+  "place": "Local de nascimento",
+  "placeHint": "Comece a digitar uma cidade: ela define o fuso horário e o ascendente.",
+  "placeSearching": "Buscando…",
+  "placeNone": "Nenhum local encontrado",
+  "timezone": "Fuso horário",
+  "timezoneFromPlace": "Fuso horário definido pelo local de nascimento.",
+  "calculate": "Ver minhas luas",
+  "calculating": "Calculando…",
+  "noscript": "Esta calculadora precisa de JavaScript.",
+  "required": "Informe sua data de nascimento.",
+  "resultTitle": "Sua próxima lua nova e lua cheia",
+  "promptsTitle": "Perguntas para o seu diário",
+  "affirmationTitle": "Afirmação",
+  "signupTitle": "Receba suas perguntas a cada lua nova e lua cheia",
+  "signupText": "Dois e-mails curtos por mês, no dia de cada lua nova e de cada lua cheia, com perguntas para a casa do seu mapa onde ela cai. Grátis, e você cancela com um clique.",
+  "email": "E-mail",
+  "consent": "Aceito receber estes e-mails e o armazenamento dos meus dados de nascimento para esse fim. Posso apagá-los a qualquer momento.",
+  "subscribe": "Quero receber minhas cartas da Lua",
+  "subscribing": "Enviando…",
+  "signupDone": "Quase lá: abra o e-mail que acabamos de enviar e confirme seu endereço.",
+  "errorEmail": "Verifique seu endereço de e-mail.",
+  "errorConsent": "Marque a caixa de consentimento.",
+  "errorSignup": "Não conseguimos enviar o e-mail de confirmação. Tente novamente mais tarde.",
+  "errorUnavailable": "A inscrição não está disponível agora. Tente novamente mais tarde.",
+  "errorInvalid": "Verifique a data, a hora e o fuso horário.",
+  "errorRateLimited": "Muitas tentativas. Aguarde um minuto e tente de novo.",
+  "errorGeneric": "Algo deu errado. Tente novamente.",
+  "errorNetwork": "Sem conexão. Verifique sua internet e tente de novo.",
+  "tableDate": "Data e hora",
+  "tablePhase": "Fase",
+  "tableSign": "Signo",
+  "nextBadge": "próxima",
+  "loading": "Carregando sua carta…",
+  "invalidLink": "Este link não é válido. Você pode se inscrever de novo na página da Lua.",
+  "confirmed": "Obrigado, seu e-mail está confirmado. Suas cartas chegam no dia de cada lua nova e de cada lua cheia.",
+  "pending": "Seu e-mail ainda não foi confirmado: use o link do e-mail de confirmação.",
+  "unsubscribedNote": "Sua inscrição foi cancelada e você não receberá mais cartas.",
+  "currentTitle": "Sua Lua de agora",
+  "writePlaceholder": "Escreva aqui… Fica salvo automaticamente.",
+  "saved": "Salvo",
+  "nextLine": "Próxima: {kind} em {date} {sign_in}, na sua casa {house}.",
+  "historyTitle": "Seu diário",
+  "historyEmpty": "Suas respostas vão aparecer aqui.",
+  "fakeTitle": "Mês pessoal",
+  "fakePrice": "Preço previsto: {price}.",
+  "price": "R$ 19,90 por mês",
+  "fakeButton": "Tenho interesse, me avisem quando estiver pronto",
+  "fakeThanks": "Obrigado! Vamos escrever quando estiver pronto. Nada é cobrado.",
+  "manageTitle": "Suas cartas",
+  "unsubscribe": "Cancelar inscrição",
+  "unsubscribed": "Inscrição cancelada.",
+  "erase": "Apagar meus dados",
+  "eraseConfirm": "Apagar para sempre seu e-mail e seus dados de nascimento?",
+  "erased": "Seus dados foram apagados.",
+  "manageError": "Não funcionou. Tente novamente.",
+  "backToMoon": "Voltar ao calendário lunar",
+  "saving": "Salvando…",
+  "saveError": "Não foi salvo. Verifique sua conexão.",
+  "linkPrivacy": "Este link abre o seu diário. Não encaminhe estes e-mails para outras pessoas.",
+  "linkTitle": "Já recebe as cartas?",
+  "linkText": "Informe seu e-mail e enviaremos o link para o seu diário. Funciona em qualquer dispositivo, sem senha.",
+  "linkButton": "Enviar meu link",
+  "linkSending": "Enviando…",
+  "linkDone": "Se este endereço estiver inscrito, o link já está a caminho.",
+  "fakeText": "O mês pessoal ainda não está disponível. Se você quiser, aperte o botão: vamos escrever quando estiver pronto. Nada é cobrado."
+ },
+ "months": [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro"
+ ],
+ "tableDateFormat": "{d} de {month} de {y}, {hh}:{mm}",
+ "plans": {
+  "title": "Cartas gratuitas e mês pessoal",
+  "lead": "As cartas da Lua são gratuitas e vão continuar assim. O mês pessoal é um complemento pago que estamos preparando. Veja um exemplo de cada um.",
+  "freeTitle": "Grátis",
+  "freeItems": [
+   "Uma carta no dia de cada lua nova e de cada lua cheia",
+   "A casa do seu mapa onde ela cai, com o seu significado",
+   "Três perguntas para o seu diário e uma afirmação",
+   "Suas respostas salvas no seu diário, em qualquer dispositivo"
+  ],
+  "paidTitle": "Mês pessoal",
+  "paidItems": [
+   "Tudo o que é gratuito",
+   "Um calendário dos seus próprios trânsitos do mês, com datas e uma pergunta para cada um",
+   "Um olhar mensal sobre o que você escreveu, ao lado do céu daqueles dias",
+   "Um livro do ano com suas anotações, para o seu aniversário"
+  ],
+  "exampleFreeTitle": "Exemplo de carta gratuita",
+  "examplePaidTitle": "Exemplo de mês pessoal",
+  "exampleNote": "Exemplo para uma pessoa fictícia nascida em 17 de maio de 1990. O seu mês é calculado com os seus dados de nascimento.",
+  "calendarTitle": "Seu céu em novembro",
+  "calendar": [
+   {
+    "when": "3–8 de novembro",
+    "what": "Vênus passa sobre o seu Sol",
+    "text": "Uma semana para notar o que você valoriza em si e na sua vida.",
+    "question": "O que em você te agradou nesta semana?"
+   },
+   {
+    "when": "14–19 de novembro",
+    "what": "Marte percorre a sua casa 4",
+    "text": "Energia para o lar: arrumar, mudar os móveis de lugar, receber pessoas.",
+    "question": "O que você quer mudar no seu espaço?"
+   },
+   {
+    "when": "24 de novembro",
+    "what": "Lua Cheia na sua casa 10",
+    "text": "Um momento para olhar para o seu trabalho e para o que você construiu.",
+    "question": "De qual conquista deste mês você quer se lembrar?"
+   }
+  ],
+  "reviewTitle": "Seu mês nas suas palavras",
+  "review": [
+   "Em novembro, seu diário tem 7 anotações. As palavras que mais aparecem são “descanso”, “irmã” e “projeto”.",
+   "Perto da lua cheia na sua casa 10 volta o desejo de que seu trabalho seja notado. O mesmo tema apareceu em agosto, quando Júpiter passava pelo ponto mais alto do seu mapa.",
+   "Pergunta para dezembro: o que ajudaria você a sentir que seu trabalho é visto?"
+  ]
+ }
+}

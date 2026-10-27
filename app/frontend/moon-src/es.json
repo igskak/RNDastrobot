@@ -1,0 +1,205 @@
+{
+ "lang": "es",
+ "hreflang": "es",
+ "ogLocale": "es_ES",
+ "intl": "es-ES",
+ "languageName": "Español",
+ "tableTimezone": "Europe/Madrid",
+ "site": {
+  "brand": "Steliara",
+  "skip": "Ir al contenido",
+  "langLabel": "Idioma",
+  "footerNote": "Steliara crea software para astrólogos profesionales. Estas páginas sobre la Luna son una herramienta gratuita para todos.",
+  "footerAstrologers": "Para astrólogos",
+  "footerTerms": "Condiciones y privacidad"
+ },
+ "pages": {
+  "index": {
+   "title": "Luna nueva y luna llena 2026–2027: fechas | Steliara",
+   "description": "Todas las lunas nuevas y llenas de 2026–2027 con la hora exacta, la casa de tu carta natal para cada lunación y preguntas gratuitas para tu diario de gratitud.",
+   "h1": "Luna nueva y luna llena 2026–2027: fechas y tus preguntas personales para el diario",
+   "lead": "Descubre en qué casa de tu carta natal caen la próxima luna nueva y la próxima luna llena y recibe algunas preguntas amables para tu diario: una intención en luna nueva, gratitud en luna llena.",
+   "tableTitle": "Lunas nuevas y lunas llenas de noviembre de 2026 a diciembre de 2027",
+   "tableNote": "Horas peninsulares de España. La próxima lunación aparece destacada.",
+   "sections": [
+    {
+     "h2": "Un diario al ritmo de la Luna",
+     "p": [
+      "Cada mes la Luna pasa de nueva a llena y vuelve. Mucha gente escribe su diario siguiendo este ritmo: en luna nueva anota una intención y en luna llena mira hacia atrás y escribe aquello por lo que siente gratitud.",
+      "Calculamos el momento exacto de cada luna nueva y cada luna llena con la Swiss Ephemeris y buscamos la casa de tu carta natal donde cae. Cada casa tiene su propio tema, así que tus preguntas cambian de un mes a otro."
+     ]
+    },
+    {
+     "h2": "Qué es y qué no es",
+     "p": [
+      "Son preguntas para reflexionar, no predicciones. No decimos qué va a pasar; ofrecemos un ritmo, algunas preguntas y una afirmación, y las respuestas son tuyas.",
+      "Tus respuestas se guardan en tu diario para que las tengas en cualquier dispositivo. También guardamos tu correo y tus datos de nacimiento para las cartas. Puedes borrarlo todo en cualquier momento con un clic."
+     ]
+    }
+   ],
+   "faqTitle": "Preguntas",
+   "faq": [
+    {
+     "q": "¿Cuándo es la próxima luna nueva?",
+     "a": "La tabla de esta página recoge todas las lunas nuevas y llenas hasta finales de 2027 con la hora exacta; la próxima aparece destacada."
+    },
+    {
+     "q": "¿Necesito mi hora de nacimiento?",
+     "a": "No. Sin hora de nacimiento contamos las casas desde tu signo solar. Con la hora y el lugar de nacimiento las contamos desde tu ascendente, que es más personal."
+    },
+    {
+     "q": "¿Qué escribir en luna nueva?",
+     "a": "Una intención en presente y un pequeño paso para los próximos días. Tus preguntas personales dependen de la casa donde cae la luna nueva."
+    },
+    {
+     "q": "¿Qué escribir en luna llena?",
+     "a": "Mira las dos últimas semanas y anota tres cosas por las que sientes gratitud. Tu carta añade dos preguntas para la casa de la luna llena."
+    },
+    {
+     "q": "¿Es gratis?",
+     "a": "Sí. La calculadora y las cartas son gratuitas, y cada carta tiene un enlace para darte de baja."
+    }
+   ]
+  },
+  "letter": {
+   "title": "Tu carta de la Luna | Steliara",
+   "description": "Tus preguntas personales para la luna nueva y la luna llena.",
+   "h1": "Tu carta de la Luna",
+   "lead": "Preguntas para tu diario, para la casa de tu carta donde está ahora la Luna."
+  }
+ },
+ "ui": {
+  "legend": "Tus datos de nacimiento",
+  "date": "Fecha de nacimiento",
+  "time": "Hora de nacimiento",
+  "timeUnknown": "No sé mi hora de nacimiento",
+  "place": "Lugar de nacimiento",
+  "placeHint": "Empieza a escribir una ciudad: fija la zona horaria y el ascendente.",
+  "placeSearching": "Buscando…",
+  "placeNone": "No se encontraron lugares",
+  "timezone": "Zona horaria",
+  "timezoneFromPlace": "Zona horaria según el lugar de nacimiento.",
+  "calculate": "Ver mis lunas",
+  "calculating": "Calculando…",
+  "noscript": "Esta calculadora necesita JavaScript.",
+  "required": "Introduce tu fecha de nacimiento.",
+  "resultTitle": "Tu próxima luna nueva y luna llena",
+  "promptsTitle": "Preguntas para tu diario",
+  "affirmationTitle": "Afirmación",
+  "signupTitle": "Recibe tus preguntas en cada luna nueva y luna llena",
+  "signupText": "Dos correos breves al mes, el día de cada luna nueva y cada luna llena, con preguntas para la casa de tu carta donde cae. Gratis, y puedes darte de baja con un clic.",
+  "email": "Correo electrónico",
+  "consent": "Acepto recibir estos correos y que se guarden mis datos de nacimiento con este fin. Puedo borrarlos en cualquier momento.",
+  "subscribe": "Enviadme mis cartas de la Luna",
+  "subscribing": "Enviando…",
+  "signupDone": "Casi listo: abre el correo que acabamos de enviarte y confirma tu dirección.",
+  "errorEmail": "Revisa tu dirección de correo.",
+  "errorConsent": "Marca la casilla de consentimiento.",
+  "errorSignup": "No pudimos enviar el correo de confirmación. Inténtalo más tarde.",
+  "errorUnavailable": "La suscripción no está disponible ahora mismo. Inténtalo más tarde.",
+  "errorInvalid": "Revisa la fecha, la hora y la zona horaria.",
+  "errorRateLimited": "Demasiados intentos. Espera un minuto y vuelve a intentarlo.",
+  "errorGeneric": "Algo no ha funcionado. Inténtalo de nuevo.",
+  "errorNetwork": "Sin conexión. Revisa tu internet e inténtalo de nuevo.",
+  "tableDate": "Fecha y hora",
+  "tablePhase": "Fase",
+  "tableSign": "Signo",
+  "nextBadge": "próxima",
+  "loading": "Cargando tu carta…",
+  "invalidLink": "Este enlace no es válido. Puedes suscribirte de nuevo en la página de la Luna.",
+  "confirmed": "Gracias, tu correo está confirmado. Tus cartas llegan el día de cada luna nueva y cada luna llena.",
+  "pending": "Tu correo aún no está confirmado: usa el enlace del correo de confirmación.",
+  "unsubscribedNote": "Te has dado de baja y no recibirás más cartas.",
+  "currentTitle": "Tu Luna de ahora",
+  "writePlaceholder": "Escribe aquí… Se guarda automáticamente.",
+  "saved": "Guardado",
+  "nextLine": "Próxima: {kind} el {date} {sign_in}, en tu casa {house}.",
+  "historyTitle": "Tu diario",
+  "historyEmpty": "Aquí aparecerán tus respuestas.",
+  "fakeTitle": "Mes personal",
+  "fakePrice": "Precio previsto: {price}.",
+  "price": "4 € al mes",
+  "fakeButton": "Me interesa, avisadme cuando esté listo",
+  "fakeThanks": "¡Gracias! Te escribiremos cuando esté listo. No se cobra nada.",
+  "manageTitle": "Tus cartas",
+  "unsubscribe": "Darme de baja",
+  "unsubscribed": "Te has dado de baja.",
+  "erase": "Borrar mis datos",
+  "eraseConfirm": "¿Borrar para siempre tu correo y tus datos de nacimiento?",
+  "erased": "Tus datos se han borrado.",
+  "manageError": "No ha funcionado. Inténtalo de nuevo.",
+  "backToMoon": "Volver al calendario lunar",
+  "saving": "Guardando…",
+  "saveError": "No se ha guardado. Revisa tu conexión.",
+  "linkPrivacy": "Este enlace abre tu diario. No reenvíes estos correos a otras personas.",
+  "linkTitle": "¿Ya recibes las cartas?",
+  "linkText": "Escribe tu correo y te enviaremos el enlace a tu diario. Funciona en cualquier dispositivo, sin contraseña.",
+  "linkButton": "Enviarme mi enlace",
+  "linkSending": "Enviando…",
+  "linkDone": "Si esta dirección está suscrita, el enlace ya va de camino.",
+  "fakeText": "El mes personal todavía no está disponible. Si lo quieres, pulsa el botón: te escribiremos cuando esté listo. No se cobra nada."
+ },
+ "months": [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre"
+ ],
+ "tableDateFormat": "{d} de {month} de {y}, {hh}:{mm}",
+ "plans": {
+  "title": "Cartas gratuitas y mes personal",
+  "lead": "Las cartas de la Luna son gratuitas y lo seguirán siendo. El mes personal es un complemento de pago que estamos preparando. Aquí tienes un ejemplo de cada uno.",
+  "freeTitle": "Gratis",
+  "freeItems": [
+   "Una carta el día de cada luna nueva y cada luna llena",
+   "La casa de tu carta natal donde cae, con su significado",
+   "Tres preguntas para tu diario y una afirmación",
+   "Tus respuestas guardadas en tu diario, en cualquier dispositivo"
+  ],
+  "paidTitle": "Mes personal",
+  "paidItems": [
+   "Todo lo gratuito",
+   "Un calendario de tus propios tránsitos del mes, con fechas y una pregunta para cada uno",
+   "Una mirada mensual a lo que escribiste, junto al cielo de esos días",
+   "Un libro del año con tus notas, para tu cumpleaños"
+  ],
+  "exampleFreeTitle": "Ejemplo de carta gratuita",
+  "examplePaidTitle": "Ejemplo de mes personal",
+  "exampleNote": "Ejemplo para una persona ficticia nacida el 17 de mayo de 1990. Tu propio mes se calcula con tus datos de nacimiento.",
+  "calendarTitle": "Tu cielo en noviembre",
+  "calendar": [
+   {
+    "when": "3–8 de noviembre",
+    "what": "Venus pasa sobre tu Sol",
+    "text": "Una semana para notar lo que valoras de ti y de tu vida.",
+    "question": "¿Qué te gustó de ti esta semana?"
+   },
+   {
+    "when": "14–19 de noviembre",
+    "what": "Marte recorre tu casa 4",
+    "text": "Energía para el hogar: ordenar, mover muebles, invitar a gente.",
+    "question": "¿Qué quieres cambiar en tu espacio?"
+   },
+   {
+    "when": "24 de noviembre",
+    "what": "Luna llena en tu casa 10",
+    "text": "Un momento para mirar tu trabajo y lo que has construido.",
+    "question": "¿Qué logro de este mes quieres recordar?"
+   }
+  ],
+  "reviewTitle": "Tu mes en tus palabras",
+  "review": [
+   "En noviembre tu diario tiene 7 notas. Las palabras que más se repiten son «descanso», «hermana» y «proyecto».",
+   "Alrededor de la luna llena en tu casa 10 vuelve el deseo de que tu trabajo se note. El mismo tema apareció en agosto, cuando Júpiter pasaba por lo más alto de tu carta.",
+   "Pregunta para diciembre: ¿qué te ayudaría a sentir que tu trabajo se ve?"
+  ]
+ }
+}

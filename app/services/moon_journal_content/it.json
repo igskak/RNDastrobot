@@ -1,0 +1,203 @@
+{
+ "kinds": {
+  "new_moon": "Luna Nuova",
+  "full_moon": "Luna Piena"
+ },
+ "signs": [
+  "Ariete",
+  "Toro",
+  "Gemelli",
+  "Cancro",
+  "Leone",
+  "Vergine",
+  "Bilancia",
+  "Scorpione",
+  "Sagittario",
+  "Capricorno",
+  "Acquario",
+  "Pesci"
+ ],
+ "signs_in": [
+  "in Ariete",
+  "in Toro",
+  "in Gemelli",
+  "in Cancro",
+  "in Leone",
+  "in Vergine",
+  "in Bilancia",
+  "in Scorpione",
+  "in Sagittario",
+  "in Capricorno",
+  "in Acquario",
+  "in Pesci"
+ ],
+ "date_format": "%d/%m/%Y, ore %H:%M",
+ "headline": "{kind} {sign_in}, nella tua casa {house}",
+ "frame": {
+  "rising": "Contiamo le case dal tuo ascendente (case a segno intero).",
+  "sun": "Senza l'ora di nascita contiamo le case dal tuo segno solare (case solari). Aggiungi ora e luogo di nascita per un risultato più personale."
+ },
+ "universal": {
+  "new": "Scrivi un'intenzione per questo mese lunare, al presente.",
+  "full": "Elenca tre cose per cui provi gratitudine dall'ultima luna nuova."
+ },
+ "houses": [
+  {
+   "theme": "Questa parte del tuo tema parla di te e del modo in cui ti mostri al mondo.",
+   "new": [
+    "Che cosa vuoi iniziare questo mese solo per te?",
+    "Come vuoi sentirti al risveglio?"
+   ],
+   "full": [
+    "In quali momenti di questo mese ti riconosci di più?",
+    "Quale piccola abitudine ti sostiene in silenzio?"
+   ],
+   "affirmation": "Mi concedo lo spazio per ricominciare."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla di ciò che conta per te e di ciò che ti dà stabilità.",
+   "new": [
+    "Che cosa significa per te sentirti al sicuro in questo momento?",
+    "Quale tua capacità vorresti usare più spesso?"
+   ],
+   "full": [
+    "Per che cosa, tra ciò che hai già, provi gratitudine?",
+    "Dove hai trovato stabilità questo mese?"
+   ],
+   "affirmation": "Apprezzo ciò che ho e ciò che posso ancora far crescere."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla di parole, apprendimento e legami quotidiani.",
+   "new": [
+    "Che cosa vorresti imparare o leggere questo mese?",
+    "Con chi vorresti parlare più spesso?"
+   ],
+   "full": [
+    "Quale conversazione di questo mese ti è rimasta dentro?",
+    "Quale nuova idea ha acceso la tua curiosità?"
+   ],
+   "affirmation": "Le mie parole possono essere chiare e gentili."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla di casa, radici e calma interiore.",
+   "new": [
+    "Che cosa renderebbe la tua casa ancora più tua?",
+    "Che cosa ti aiuta a ritrovare la calma la sera?"
+   ],
+   "full": [
+    "Per quale momento a casa, questo mese, provi gratitudine?",
+    "Con chi ti senti a casa in questo periodo?"
+   ],
+   "affirmation": "Creo un luogo di calma dentro e intorno a me."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla di gioia, creatività e gioco.",
+   "new": [
+    "Che cosa vorresti creare solo per il piacere di farlo?",
+    "Come puoi trovare tempo per giocare questo mese?"
+   ],
+   "full": [
+    "Che cosa ti ha fatto ridere questo mese?",
+    "Di che cosa hai goduto con tutto il cuore?"
+   ],
+   "affirmation": "Mi permetto di godere di ciò che amo."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla della tua quotidianità, del lavoro e della cura di te.",
+   "new": [
+    "Quale piccola abitudine quotidiana vorresti iniziare?",
+    "Come potrebbe la tua giornata di lavoro diventare un po' più leggera?"
+   ],
+   "full": [
+    "Quale abitudine ti ha fatto bene questo mese?",
+    "Chi hai potuto aiutare, e chi ha aiutato te?"
+   ],
+   "affirmation": "Piccoli passi ogni giorno bastano."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla delle relazioni strette e della collaborazione.",
+   "new": [
+    "Che cosa vuoi portare nelle tue relazioni più vicine?",
+    "Con chi vorresti realizzare qualcosa insieme?"
+   ],
+   "full": [
+    "Per quale persona al tuo fianco provi gratitudine?",
+    "Che cosa hai imparato questo mese da una persona cara?"
+   ],
+   "affirmation": "Incontro gli altri con apertura e con rispetto per me."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla di fiducia, condivisione e trasformazione interiore.",
+   "new": [
+    "Che cosa puoi lasciar andare per fare spazio al nuovo?",
+    "Dove vorresti costruire più fiducia?"
+   ],
+   "full": [
+    "Quale cambiamento in te vorresti celebrare?",
+    "Quale sostegno hai ricevuto questo mese?"
+   ],
+   "affirmation": "Lascio andare con dolcezza e tengo ciò che conta."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla di orizzonti: viaggi, studio e significato.",
+   "new": [
+    "Quale luogo, libro o idea ti sta chiamando?",
+    "Che cosa dà senso alla tua vita in questo momento?"
+   ],
+   "full": [
+    "Che cosa ha allargato il tuo sguardo questo mese?",
+    "Quale convinzione è stata un sostegno per te questo mese?"
+   ],
+   "affirmation": "Mi apro a nuovi orizzonti."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla di obiettivi, vocazione e del tuo cammino.",
+   "new": [
+    "Verso quale obiettivo vuoi fare un passo chiaro?",
+    "Come vorresti che fosse visto il tuo lavoro?"
+   ],
+   "full": [
+    "Di quale traguardo di questo mese, anche piccolo, vuoi ricordarti?",
+    "Chi è stato un sostegno lungo il tuo cammino?"
+   ],
+   "affirmation": "Vado verso i miei obiettivi al mio ritmo."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla di amicizie, comunità e speranze.",
+   "new": [
+    "Quale speranza per il futuro vuoi coltivare?",
+    "A quale amicizia vorresti dedicare più attenzione?"
+   ],
+   "full": [
+    "Per quale amicizia provi gratitudine questo mese?",
+    "Dove hai sentito di far parte di qualcosa di più grande?"
+   ],
+   "affirmation": "Faccio parte di una cerchia di persone che contano per me."
+  },
+  {
+   "theme": "Questa parte del tuo tema parla di riposo, silenzio e del tuo mondo interiore.",
+   "new": [
+    "Come puoi regalarti più tempo di quiete questo mese?",
+    "Che cosa ti chiede la tua voce interiore?"
+   ],
+   "full": [
+    "Che cosa ti hanno dato il riposo e il silenzio questo mese?",
+    "Quale sogno o intuizione ti torna ancora in mente?"
+   ],
+   "affirmation": "Mi concedo di riposare."
+  }
+ ],
+ "disclaimer": "Sono domande per riflettere, non previsioni. Il cielo offre un ritmo; ciò che scrivi è tuo.",
+ "email": {
+  "confirm_subject": "Conferma le tue lettere della Luna",
+  "confirm_body": "Ciao,\n\nconferma che vuoi ricevere via e-mail le tue domande personali a ogni luna nuova e a ogni luna piena:\n{link}\n\nSe non l'hai chiesto tu, ignora semplicemente questo messaggio: non invieremo altro.",
+  "subject": "{kind} {sign_in}: la tua casa {house}",
+  "when": "Momento esatto: {date} ({timezone}).",
+  "prompts_title": "Domande per questa lunazione:",
+  "affirmation_title": "Affermazione:",
+  "write": "Scrivi le tue risposte nel tuo diario: {link}",
+  "footer": "Questa e-mail arriva in seguito alla tua iscrizione su steliara.com. Annulla l'iscrizione o elimina i tuoi dati: {manage_link}",
+  "link_subject": "Il link al tuo diario della Luna",
+  "link_body": "Ciao,\n\necco il link al tuo diario della Luna:\n{link}\n\nIl link apre il tuo diario, quindi non inoltrarlo. Se non l'hai chiesto tu, ignora semplicemente questo messaggio."
+ }
+}

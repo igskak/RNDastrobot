@@ -1,0 +1,28 @@
+name: Moon letters
+
+# Emails every confirmed /moon subscriber the letter for the latest new or full moon. The
+# service sends each lunation once per subscriber and nothing once the lunation is more than
+# 36 hours old, so an hourly run is harmless. Calling the public URL also wakes a sleeping
+# free-plan instance. The site URL is the same secret the kundli job uses.
+on:
+  schedule:
+    - cron: "41 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ask the site to send due moon letters
+        env:
+          SITE_BASE_URL: ${{ secrets.KUNDLI_SITE_BASE_URL }}
+          CRON_SECRET: ${{ secrets.MOON_CRON_SECRET }}
+        run: |
+          # Until the secrets exist the letters are simply off; skip quietly instead of failing every hour.
+          test -n "$SITE_BASE_URL" && test -n "$CRON_SECRET" || { echo "::notice::KUNDLI_SITE_BASE_URL or MOON_CRON_SECRET is not set; moon letters are off"; exit 0; }
+          curl --fail --silent --show-error --max-time 120 --retry 3 --retry-delay 20 \
+            -X POST -H "X-Moon-Cron: $CRON_SECRET" "$SITE_BASE_URL/api/v1/moon/internal/send-letters"

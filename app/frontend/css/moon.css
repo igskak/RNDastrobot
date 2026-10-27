@@ -1,0 +1,70 @@
+/* Public moon pages. Loaded after kundli.css, which carries the shared public-tool base
+   (tokens, header, form, buttons, tables); this file adds only what the moon pages need. */
+:root {
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --moon: #C9B37E;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --moon: #E3D3A6; }
+}
+
+/* Language switch: every market language, one line that wraps on a phone. */
+.langs { display: flex; flex: 1; flex-wrap: wrap; justify-content: flex-end; gap: 0 12px; }
+.langs a { color: var(--text-2); text-decoration: none; padding: 8px 2px; min-height: 44px; display: inline-flex; align-items: center; font-size: 0.95rem; }
+.langs a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+.langs a:hover { color: var(--accent); }
+
+/* One lunation in the calculator result and on the letter page. */
+.lunation + .lunation { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.lunation h3 { margin-top: 0; display: flex; align-items: center; gap: 10px; }
+.lunation .when { color: var(--text-2); margin-bottom: 8px; }
+.prompts { padding-left: 20px; margin: 8px 0 12px; }
+.prompts li { margin-bottom: 6px; }
+.affirmation { font-style: italic; border-left: 3px solid var(--moon); padding-left: 12px; }
+.affirmation strong { display: block; font-style: normal; font-size: 0.85rem; color: var(--text-2); }
+
+/* Phase marks: a filled disc for the new moon, an outlined one for the full moon. */
+.phase { display: inline-block; width: 0.9em; height: 0.9em; border-radius: 50%; margin-right: 8px; vertical-align: -0.1em; flex: none; }
+.phase-new { background: var(--text); }
+.phase-full { background: var(--moon); box-shadow: 0 0 0 1px var(--border); }
+
+tr.next td { background: var(--accent-soft); font-weight: 600; }
+td:not(:first-child):not(:last-child) { white-space: normal; }
+
+/* Letter page: an answer field under every question. */
+.answer { margin: 4px 0 16px; }
+.answer label { font-weight: 400; }
+textarea {
+  width: 100%; min-height: 96px; padding: 10px 12px; font: inherit; font-size: 16px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; resize: vertical;
+}
+.saved { color: var(--text-2); font-size: 0.85rem; margin: 4px 0 0; min-height: 1.2em; }
+.entry + .entry { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+.entry h3 { margin-top: 0; }
+.offer { border-color: var(--moon); }
+.manage { display: block; }
+.manage .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.signup .check { margin-bottom: 12px; }
+
+/* Free vs personal month: two plan cards, then an example of each. */
+.plans { margin-top: 8px; }
+.plans-grid, .examples { display: grid; gap: 12px; margin: 12px 0; }
+.plan { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.plan h3 { margin: 0 0 4px; }
+.plan ul { padding-left: 18px; margin: 8px 0 0; }
+.plan li { margin-bottom: 6px; }
+.plan.paid { border-color: var(--moon); }
+.price { font-weight: 600; color: var(--accent); margin: 0; }
+.example { background: var(--surface-2); border: 1px dashed var(--border); border-radius: var(--radius); padding: 16px; }
+.example h4 { display: flex; align-items: center; margin: 12px 0 4px; }
+.example-label { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); margin: 0; }
+.calendar { list-style: none; padding: 0; margin: 8px 0; }
+.calendar li { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.calendar li:last-child { border-bottom: 0; }
+.calendar .when { color: var(--text-2); font-size: 0.9rem; }
+.calendar p { margin: 4px 0 0; }
+.question { font-style: italic; }
+@media (min-width: 640px) {
+  .plans-grid, .examples { grid-template-columns: 1fr 1fr; }
+  .offer .examples { grid-template-columns: 1fr; }
+}

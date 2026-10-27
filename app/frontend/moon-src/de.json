@@ -1,0 +1,205 @@
+{
+ "lang": "de",
+ "hreflang": "de",
+ "ogLocale": "de_DE",
+ "intl": "de-DE",
+ "languageName": "Deutsch",
+ "tableTimezone": "Europe/Berlin",
+ "site": {
+  "brand": "Steliara",
+  "skip": "Zum Inhalt springen",
+  "langLabel": "Sprache",
+  "footerNote": "Steliara entwickelt Software für professionelle Astrologinnen und Astrologen. Diese Mondseiten sind ein kostenloses Werkzeug für alle.",
+  "footerAstrologers": "Für Astrologen",
+  "footerTerms": "AGB und Datenschutz"
+ },
+ "pages": {
+  "index": {
+   "title": "Neumond & Vollmond 2026–2027: Termine und Fragen | Steliara",
+   "description": "Alle Neumonde und Vollmonde 2026–2027 mit genauer Uhrzeit, das Haus deines Horoskops für jede Lunation und kostenlose Fragen für dein Dankbarkeitstagebuch.",
+   "h1": "Neumond und Vollmond 2026–2027: Termine und deine persönlichen Journal-Fragen",
+   "lead": "Sieh nach, in welches Haus deines Geburtshoroskops der nächste Neumond und der nächste Vollmond fallen, und erhalte ein paar sanfte Fragen für dein Journal: eine Absicht zum Neumond, Dankbarkeit zum Vollmond.",
+   "tableTitle": "Neumonde und Vollmonde von November 2026 bis Dezember 2027",
+   "tableNote": "Zeiten in deutscher Zeit (MEZ/MESZ). Die nächste Lunation ist hervorgehoben.",
+   "sections": [
+    {
+     "h2": "Ein Journal im Rhythmus des Mondes",
+     "p": [
+      "Jeden Monat wandert der Mond vom Neumond zum Vollmond und zurück. Viele Menschen schreiben in diesem Rhythmus Tagebuch: Zum Neumond notieren sie eine Absicht, zum Vollmond blicken sie zurück und halten fest, wofür sie dankbar sind.",
+      "Den genauen Zeitpunkt jedes Neumonds und Vollmonds berechnen wir mit der Swiss Ephemeris und bestimmen das Haus deines Geburtshoroskops, in das er fällt. Jedes Haus hat sein eigenes Thema, deshalb ändern sich deine Fragen von Monat zu Monat."
+     ]
+    },
+    {
+     "h2": "Was das ist und was nicht",
+     "p": [
+      "Das sind Fragen zum Nachdenken, keine Vorhersagen. Wir sagen nicht, was passieren wird; wir bieten einen Rhythmus, ein paar Fragen und eine Affirmation, und die Antworten gehören dir.",
+      "Deine Antworten speichern wir in deinem Journal, damit du sie auf jedem Gerät findest. Außerdem speichern wir deine E-Mail-Adresse und deine Geburtsdaten für die Briefe. Du kannst alles jederzeit mit einem Klick löschen."
+     ]
+    }
+   ],
+   "faqTitle": "Fragen",
+   "faq": [
+    {
+     "q": "Wann ist der nächste Neumond?",
+     "a": "Die Tabelle auf dieser Seite enthält alle Neumonde und Vollmonde bis Ende 2027 mit genauer Uhrzeit; der nächste ist hervorgehoben."
+    },
+    {
+     "q": "Brauche ich meine Geburtszeit?",
+     "a": "Nein. Ohne Geburtszeit zählen wir die Häuser ab deinem Sonnenzeichen. Mit Geburtszeit und Geburtsort zählen wir sie ab deinem Aszendenten, das ist persönlicher."
+    },
+    {
+     "q": "Was schreibe ich zum Neumond?",
+     "a": "Eine Absicht in der Gegenwartsform und einen kleinen Schritt für die nächsten Tage. Deine persönlichen Fragen hängen vom Haus ab, in das der Neumond fällt."
+    },
+    {
+     "q": "Was schreibe ich zum Vollmond?",
+     "a": "Blicke auf die letzten zwei Wochen zurück und nenne drei Dinge, für die du dankbar bist. Dein Brief ergänzt zwei Fragen für das Haus des Vollmonds."
+    },
+    {
+     "q": "Ist das kostenlos?",
+     "a": "Ja. Der Rechner und die Briefe sind kostenlos, und jeder Brief enthält einen Link zum Abmelden."
+    }
+   ]
+  },
+  "letter": {
+   "title": "Dein Mondbrief | Steliara",
+   "description": "Deine persönlichen Fragen zu Neumond und Vollmond.",
+   "h1": "Dein Mondbrief",
+   "lead": "Fragen für dein Journal, für das Haus deines Horoskops, in dem der Mond gerade steht."
+  }
+ },
+ "ui": {
+  "legend": "Deine Geburtsdaten",
+  "date": "Geburtsdatum",
+  "time": "Geburtszeit",
+  "timeUnknown": "Ich kenne meine Geburtszeit nicht",
+  "place": "Geburtsort",
+  "placeHint": "Tippe eine Stadt ein: Sie bestimmt die Zeitzone und den Aszendenten.",
+  "placeSearching": "Suche…",
+  "placeNone": "Keine Orte gefunden",
+  "timezone": "Zeitzone",
+  "timezoneFromPlace": "Zeitzone nach dem Geburtsort eingestellt.",
+  "calculate": "Meine Mondphasen zeigen",
+  "calculating": "Berechne…",
+  "noscript": "Dieser Rechner braucht JavaScript.",
+  "required": "Bitte gib dein Geburtsdatum ein.",
+  "resultTitle": "Dein nächster Neumond und Vollmond",
+  "promptsTitle": "Fragen für dein Journal",
+  "affirmationTitle": "Affirmation",
+  "signupTitle": "Erhalte deine Fragen zu jedem Neumond und Vollmond",
+  "signupText": "Zwei kurze E-Mails im Monat, am Tag jedes Neumonds und Vollmonds, mit Fragen für das Haus deines Horoskops, in das er fällt. Kostenlos und mit einem Klick abbestellbar.",
+  "email": "E-Mail",
+  "consent": "Ich möchte diese E-Mails erhalten und bin einverstanden, dass meine Geburtsdaten dafür gespeichert werden. Ich kann sie jederzeit löschen.",
+  "subscribe": "Schick mir meine Mondbriefe",
+  "subscribing": "Wird gesendet…",
+  "signupDone": "Fast geschafft: Öffne die E-Mail, die wir gerade gesendet haben, und bestätige deine Adresse.",
+  "errorEmail": "Bitte prüfe deine E-Mail-Adresse.",
+  "errorConsent": "Bitte setze das Häkchen bei der Einwilligung.",
+  "errorSignup": "Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte versuche es später noch einmal.",
+  "errorUnavailable": "Die Anmeldung ist gerade nicht möglich. Bitte versuche es später noch einmal.",
+  "errorInvalid": "Bitte prüfe Datum, Uhrzeit und Zeitzone.",
+  "errorRateLimited": "Zu viele Versuche. Bitte warte eine Minute.",
+  "errorGeneric": "Etwas hat nicht geklappt. Bitte versuche es noch einmal.",
+  "errorNetwork": "Keine Verbindung. Bitte prüfe dein Internet.",
+  "tableDate": "Datum und Uhrzeit",
+  "tablePhase": "Phase",
+  "tableSign": "Zeichen",
+  "nextBadge": "als Nächstes",
+  "loading": "Dein Brief wird geladen…",
+  "invalidLink": "Dieser Link ist nicht gültig. Du kannst dich auf der Mondseite neu anmelden.",
+  "confirmed": "Danke, deine E-Mail-Adresse ist bestätigt. Deine Briefe kommen am Tag jedes Neumonds und Vollmonds.",
+  "pending": "Deine Adresse ist noch nicht bestätigt: Bitte nutze den Link in der Bestätigungs-E-Mail.",
+  "unsubscribedNote": "Du bist abgemeldet und erhältst keine weiteren Briefe.",
+  "currentTitle": "Dein aktueller Mond",
+  "writePlaceholder": "Schreib hier… Es wird automatisch gespeichert.",
+  "saved": "Gespeichert",
+  "nextLine": "Als Nächstes: {kind} am {date} {sign_in}, in deinem {house}. Haus.",
+  "historyTitle": "Dein Journal",
+  "historyEmpty": "Hier erscheinen deine Antworten.",
+  "fakeTitle": "Persönlicher Monat",
+  "fakePrice": "Geplanter Preis: {price}.",
+  "price": "4 € im Monat",
+  "fakeButton": "Interessiert mich, sagt mir Bescheid, wenn es fertig ist",
+  "fakeThanks": "Danke! Wir schreiben dir, sobald es fertig ist. Es wird nichts berechnet.",
+  "manageTitle": "Deine Briefe",
+  "unsubscribe": "Abmelden",
+  "unsubscribed": "Du bist abgemeldet.",
+  "erase": "Meine Daten löschen",
+  "eraseConfirm": "E-Mail-Adresse und Geburtsdaten endgültig löschen?",
+  "erased": "Deine Daten wurden gelöscht.",
+  "manageError": "Das hat nicht geklappt. Bitte versuche es noch einmal.",
+  "backToMoon": "Zurück zum Mondkalender",
+  "saving": "Wird gespeichert…",
+  "saveError": "Nicht gespeichert. Bitte prüfe deine Verbindung.",
+  "linkPrivacy": "Dieser Link öffnet dein Journal. Leite diese E-Mails bitte nicht weiter.",
+  "linkTitle": "Schon angemeldet?",
+  "linkText": "Gib deine E-Mail-Adresse ein, und wir senden dir den Link zu deinem Journal. Er funktioniert auf jedem Gerät, ohne Passwort.",
+  "linkButton": "Meinen Link senden",
+  "linkSending": "Wird gesendet…",
+  "linkDone": "Wenn diese Adresse angemeldet ist, ist der Link unterwegs.",
+  "fakeText": "Den persönlichen Monat gibt es noch nicht. Wenn du ihn möchtest, drück den Knopf: Wir schreiben dir, sobald er fertig ist. Es wird nichts berechnet."
+ },
+ "months": [
+  "Januar",
+  "Februar",
+  "März",
+  "April",
+  "Mai",
+  "Juni",
+  "Juli",
+  "August",
+  "September",
+  "Oktober",
+  "November",
+  "Dezember"
+ ],
+ "tableDateFormat": "{d}. {month} {y}, {hh}:{mm} Uhr",
+ "plans": {
+  "title": "Kostenlose Mondbriefe und dein persönlicher Monat",
+  "lead": "Die Mondbriefe sind kostenlos und bleiben es. Der persönliche Monat ist eine kostenpflichtige Ergänzung, die wir vorbereiten. Hier ein Beispiel für beides.",
+  "freeTitle": "Kostenlos",
+  "freeItems": [
+   "Ein Brief am Tag jedes Neumonds und Vollmonds",
+   "Das Haus deines Horoskops, in das er fällt, und sein Thema",
+   "Drei Fragen für dein Journal und eine Affirmation",
+   "Deine Antworten in deinem Journal gespeichert, auf jedem Gerät"
+  ],
+  "paidTitle": "Persönlicher Monat",
+  "paidItems": [
+   "Alles, was kostenlos ist",
+   "Ein Kalender deiner eigenen Transite für den Monat, mit Daten und einer Frage zu jedem",
+   "Ein monatlicher Rückblick auf das, was du geschrieben hast, neben dem Himmel dieser Tage",
+   "Ein Jahrbuch deiner Einträge zu deinem Geburtstag"
+  ],
+  "exampleFreeTitle": "Beispiel eines kostenlosen Briefs",
+  "examplePaidTitle": "Beispiel eines persönlichen Monats",
+  "exampleNote": "Beispiel für eine erfundene Person, geboren am 17. Mai 1990. Dein eigener Monat wird aus deinen Geburtsdaten berechnet.",
+  "calendarTitle": "Dein Himmel im November",
+  "calendar": [
+   {
+    "when": "3.–8. November",
+    "what": "Venus läuft über deine Sonne",
+    "text": "Eine Woche, um zu bemerken, was du an dir und an deinem Leben schätzt.",
+    "question": "Was hat dir diese Woche an dir selbst gefallen?"
+   },
+   {
+    "when": "14.–19. November",
+    "what": "Mars durchläuft dein 4. Haus",
+    "text": "Energie für dein Zuhause: aufräumen, umstellen, Menschen einladen.",
+    "question": "Was möchtest du in deinem Raum verändern?"
+   },
+   {
+    "when": "24. November",
+    "what": "Vollmond in deinem 10. Haus",
+    "text": "Ein Moment, um auf deine Arbeit und auf das Aufgebaute zu schauen.",
+    "question": "An welchen Erfolg dieses Monats möchtest du dich erinnern?"
+   }
+  ],
+  "reviewTitle": "Dein Monat in deinen Worten",
+  "review": [
+   "Im November hat dein Journal 7 Einträge. Am häufigsten kommen die Wörter „Ruhe“, „Schwester“ und „Projekt“ vor.",
+   "Rund um den Vollmond in deinem 10. Haus kehrt der Wunsch zurück, dass deine Arbeit gesehen wird. Dasselbe Thema tauchte im August auf, als Jupiter über die Spitze deines Horoskops lief.",
+   "Frage für Dezember: Was würde dir helfen zu spüren, dass deine Arbeit gesehen wird?"
+  ]
+ }
+}

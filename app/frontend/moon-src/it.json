@@ -1,0 +1,205 @@
+{
+ "lang": "it",
+ "hreflang": "it",
+ "ogLocale": "it_IT",
+ "intl": "it-IT",
+ "languageName": "Italiano",
+ "tableTimezone": "Europe/Rome",
+ "site": {
+  "brand": "Steliara",
+  "skip": "Vai al contenuto",
+  "langLabel": "Lingua",
+  "footerNote": "Steliara crea software per astrologi professionisti. Queste pagine sulla Luna sono uno strumento gratuito per tutti.",
+  "footerAstrologers": "Per gli astrologi",
+  "footerTerms": "Termini e privacy"
+ },
+ "pages": {
+  "index": {
+   "title": "Luna nuova e luna piena 2026–2027: date | Steliara",
+   "description": "Tutte le lune nuove e piene del 2026–2027 con l'ora esatta, la casa del tuo tema natale per ogni lunazione e domande gratuite per il tuo diario della gratitudine.",
+   "h1": "Luna nuova e luna piena 2026–2027: date e domande personali per il tuo diario",
+   "lead": "Scopri in quale casa del tuo tema natale cadono la prossima luna nuova e la prossima luna piena e ricevi alcune domande gentili per il tuo diario: un'intenzione alla luna nuova, gratitudine alla luna piena.",
+   "tableTitle": "Lune nuove e lune piene da novembre 2026 a dicembre 2027",
+   "tableNote": "Orari in ora italiana. La prossima lunazione è evidenziata.",
+   "sections": [
+    {
+     "h2": "Un diario al ritmo della Luna",
+     "p": [
+      "Ogni mese la Luna passa da nuova a piena e poi ritorna. Molte persone tengono un diario seguendo questo ritmo: alla luna nuova scrivono un'intenzione, alla luna piena si guardano indietro e annotano ciò per cui provano gratitudine.",
+      "Calcoliamo il momento esatto di ogni luna nuova e luna piena con la Swiss Ephemeris e troviamo la casa del tuo tema natale in cui cade. Ogni casa ha un suo tema, quindi le tue domande cambiano di mese in mese."
+     ]
+    },
+    {
+     "h2": "Che cos'è e che cosa non è",
+     "p": [
+      "Sono domande per riflettere, non previsioni. Non diciamo che cosa accadrà; offriamo un ritmo, qualche domanda e un'affermazione, e le risposte sono tue.",
+      "Le tue risposte vengono salvate nel tuo diario, così le ritrovi su ogni dispositivo. Conserviamo anche la tua e-mail e i dati di nascita per le lettere. Puoi eliminare tutto in qualsiasi momento con un clic."
+     ]
+    }
+   ],
+   "faqTitle": "Domande",
+   "faq": [
+    {
+     "q": "Quando è la prossima luna nuova?",
+     "a": "La tabella di questa pagina elenca tutte le lune nuove e piene fino alla fine del 2027 con l'ora esatta; la prossima è evidenziata."
+    },
+    {
+     "q": "Mi serve l'ora di nascita?",
+     "a": "No. Senza l'ora di nascita contiamo le case dal tuo segno solare. Con ora e luogo di nascita le contiamo dal tuo ascendente, e il risultato è più personale."
+    },
+    {
+     "q": "Che cosa scrivere alla luna nuova?",
+     "a": "Un'intenzione al presente e un piccolo passo per i prossimi giorni. Le tue domande personali dipendono dalla casa in cui cade la luna nuova."
+    },
+    {
+     "q": "Che cosa scrivere alla luna piena?",
+     "a": "Guarda le ultime due settimane ed elenca tre cose per cui provi gratitudine. La tua lettera aggiunge due domande per la casa della luna piena."
+    },
+    {
+     "q": "È gratuito?",
+     "a": "Sì. Il calcolatore e le lettere sono gratuiti e ogni lettera contiene un link per annullare l'iscrizione."
+    }
+   ]
+  },
+  "letter": {
+   "title": "La tua lettera della Luna | Steliara",
+   "description": "Le tue domande personali per la luna nuova e la luna piena.",
+   "h1": "La tua lettera della Luna",
+   "lead": "Domande per il tuo diario, per la casa del tuo tema in cui si trova ora la Luna."
+  }
+ },
+ "ui": {
+  "legend": "I tuoi dati di nascita",
+  "date": "Data di nascita",
+  "time": "Ora di nascita",
+  "timeUnknown": "Non conosco l'ora di nascita",
+  "place": "Luogo di nascita",
+  "placeHint": "Inizia a scrivere una città: imposta il fuso orario e l'ascendente.",
+  "placeSearching": "Ricerca…",
+  "placeNone": "Nessun luogo trovato",
+  "timezone": "Fuso orario",
+  "timezoneFromPlace": "Fuso orario impostato dal luogo di nascita.",
+  "calculate": "Mostra le mie lune",
+  "calculating": "Calcolo…",
+  "noscript": "Questo calcolatore richiede JavaScript.",
+  "required": "Inserisci la data di nascita.",
+  "resultTitle": "La tua prossima luna nuova e luna piena",
+  "promptsTitle": "Domande per il tuo diario",
+  "affirmationTitle": "Affermazione",
+  "signupTitle": "Ricevi le tue domande a ogni luna nuova e luna piena",
+  "signupText": "Due brevi e-mail al mese, nel giorno di ogni luna nuova e luna piena, con domande per la casa del tuo tema in cui cade. Gratis, e puoi annullare l'iscrizione con un clic.",
+  "email": "E-mail",
+  "consent": "Accetto di ricevere queste e-mail e la conservazione dei miei dati di nascita per questo scopo. Posso eliminarli in qualsiasi momento.",
+  "subscribe": "Inviatemi le lettere della Luna",
+  "subscribing": "Invio…",
+  "signupDone": "Ci siamo quasi: apri l'e-mail che ti abbiamo appena inviato e conferma l'indirizzo.",
+  "errorEmail": "Controlla l'indirizzo e-mail.",
+  "errorConsent": "Seleziona la casella del consenso.",
+  "errorSignup": "Non è stato possibile inviare l'e-mail di conferma. Riprova più tardi.",
+  "errorUnavailable": "L'iscrizione non è disponibile in questo momento. Riprova più tardi.",
+  "errorInvalid": "Controlla data, ora e fuso orario.",
+  "errorRateLimited": "Troppi tentativi. Attendi un minuto e riprova.",
+  "errorGeneric": "Qualcosa non ha funzionato. Riprova.",
+  "errorNetwork": "Nessuna connessione. Controlla internet e riprova.",
+  "tableDate": "Data e ora",
+  "tablePhase": "Fase",
+  "tableSign": "Segno",
+  "nextBadge": "prossima",
+  "loading": "Caricamento della tua lettera…",
+  "invalidLink": "Questo link non è valido. Puoi iscriverti di nuovo dalla pagina della Luna.",
+  "confirmed": "Grazie, il tuo indirizzo è confermato. Le lettere arrivano nel giorno di ogni luna nuova e luna piena.",
+  "pending": "Il tuo indirizzo non è ancora confermato: usa il link nell'e-mail di conferma.",
+  "unsubscribedNote": "L'iscrizione è annullata e non riceverai altre lettere.",
+  "currentTitle": "La tua Luna di adesso",
+  "writePlaceholder": "Scrivi qui… Viene salvato automaticamente.",
+  "saved": "Salvato",
+  "nextLine": "Prossima: {kind} il {date} {sign_in}, nella tua casa {house}.",
+  "historyTitle": "Il tuo diario",
+  "historyEmpty": "Qui appariranno le tue risposte.",
+  "fakeTitle": "Mese personale",
+  "fakePrice": "Prezzo previsto: {price}.",
+  "price": "4 € al mese",
+  "fakeButton": "Mi interessa, avvisatemi quando sarà pronto",
+  "fakeThanks": "Grazie! Ti scriveremo quando sarà pronto. Non viene addebitato nulla.",
+  "manageTitle": "Le tue lettere",
+  "unsubscribe": "Annulla l'iscrizione",
+  "unsubscribed": "Iscrizione annullata.",
+  "erase": "Elimina i miei dati",
+  "eraseConfirm": "Eliminare per sempre e-mail e dati di nascita?",
+  "erased": "I tuoi dati sono stati eliminati.",
+  "manageError": "Non ha funzionato. Riprova.",
+  "backToMoon": "Torna al calendario lunare",
+  "saving": "Salvataggio…",
+  "saveError": "Non salvato. Controlla la connessione.",
+  "linkPrivacy": "Questo link apre il tuo diario. Non inoltrare queste e-mail ad altre persone.",
+  "linkTitle": "Ricevi già le lettere?",
+  "linkText": "Inserisci la tua e-mail e ti invieremo il link al tuo diario. Funziona su ogni dispositivo, senza password.",
+  "linkButton": "Inviami il mio link",
+  "linkSending": "Invio…",
+  "linkDone": "Se questo indirizzo è iscritto, il link è in arrivo.",
+  "fakeText": "Il mese personale non è ancora disponibile. Se ti interessa, premi il pulsante: ti scriveremo quando sarà pronto. Non viene addebitato nulla."
+ },
+ "months": [
+  "gennaio",
+  "febbraio",
+  "marzo",
+  "aprile",
+  "maggio",
+  "giugno",
+  "luglio",
+  "agosto",
+  "settembre",
+  "ottobre",
+  "novembre",
+  "dicembre"
+ ],
+ "tableDateFormat": "{d} {month} {y}, ore {hh}:{mm}",
+ "plans": {
+  "title": "Lettere gratuite e mese personale",
+  "lead": "Le lettere della Luna sono gratuite e lo resteranno. Il mese personale è un'aggiunta a pagamento che stiamo preparando. Ecco un esempio di entrambi.",
+  "freeTitle": "Gratis",
+  "freeItems": [
+   "Una lettera nel giorno di ogni luna nuova e luna piena",
+   "La casa del tuo tema in cui cade, con il suo significato",
+   "Tre domande per il tuo diario e un'affermazione",
+   "Le tue risposte salvate nel tuo diario, su ogni dispositivo"
+  ],
+  "paidTitle": "Mese personale",
+  "paidItems": [
+   "Tutto ciò che è gratuito",
+   "Un calendario dei tuoi transiti personali del mese, con le date e una domanda per ciascuno",
+   "Uno sguardo mensile su ciò che hai scritto, accanto al cielo di quei giorni",
+   "Un libro dell'anno con i tuoi appunti, per il tuo compleanno"
+  ],
+  "exampleFreeTitle": "Esempio di lettera gratuita",
+  "examplePaidTitle": "Esempio di mese personale",
+  "exampleNote": "Esempio per una persona immaginaria nata il 17 maggio 1990. Il tuo mese viene calcolato dai tuoi dati di nascita.",
+  "calendarTitle": "Il tuo cielo a novembre",
+  "calendar": [
+   {
+    "when": "3–8 novembre",
+    "what": "Venere passa sul tuo Sole",
+    "text": "Una settimana per notare che cosa apprezzi di te e della tua vita.",
+    "question": "Che cosa ti è piaciuto di te questa settimana?"
+   },
+   {
+    "when": "14–19 novembre",
+    "what": "Marte attraversa la tua casa 4",
+    "text": "Energia per la casa: riordinare, spostare i mobili, invitare persone.",
+    "question": "Che cosa vuoi cambiare nel tuo spazio?"
+   },
+   {
+    "when": "24 novembre",
+    "what": "Luna piena nella tua casa 10",
+    "text": "Un momento per guardare il tuo lavoro e ciò che hai costruito.",
+    "question": "Di quale traguardo di questo mese vuoi ricordarti?"
+   }
+  ],
+  "reviewTitle": "Il tuo mese con le tue parole",
+  "review": [
+   "A novembre il tuo diario ha 7 note. Le parole che tornano più spesso sono «riposo», «sorella» e «progetto».",
+   "Intorno alla luna piena nella tua casa 10 torna il desiderio che il tuo lavoro venga notato. Lo stesso tema compariva ad agosto, quando Giove passava sul punto più alto del tuo tema.",
+   "Domanda per dicembre: che cosa ti aiuterebbe a sentire che il tuo lavoro è visto?"
+  ]
+ }
+}

@@ -73,6 +73,9 @@ jobs:
       - name: Verify the public kundli pages match their catalogs
         run: npm --prefix app run check:kundli-pages
 
+      - name: Verify the public moon pages match their catalogs
+        run: npm --prefix app run check:moon-pages
+
       - name: Python syntax smoke checks
         run: python -m compileall -q app/api app/database app/services app/models app/utils app/i18n
 
@@ -115,7 +118,8 @@ jobs:
             app/tests/test_forecast_timeline_utils.test.cjs \
             app/tests/test_chat_markdown.test.cjs \
             app/tests/test_client_profile_dates.test.cjs \
-            app/tests/test_kundli_pages.test.cjs
+            app/tests/test_kundli_pages.test.cjs \
+            app/tests/test_moon_pages.test.cjs
 
       # Forecast workspace tests are self-running scripts (process.exit on failure),
       # not `node --test` suites — invoke each directly so a red assertion fails CI.

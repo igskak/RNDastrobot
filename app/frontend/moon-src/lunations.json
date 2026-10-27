@@ -1,0 +1,180 @@
+{
+ "start": "2026-11-01",
+ "end": "2027-12-31",
+ "lunations": [
+  {
+   "kind": "new_moon",
+   "utc": "2026-11-09T07:02:07Z",
+   "sign": 7,
+   "degree": 16
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2026-11-24T14:53:34Z",
+   "sign": 2,
+   "degree": 2
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2026-12-09T00:51:51Z",
+   "sign": 8,
+   "degree": 16
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2026-12-24T01:28:14Z",
+   "sign": 3,
+   "degree": 2
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-01-07T20:24:23Z",
+   "sign": 9,
+   "degree": 17
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-01-22T12:17:23Z",
+   "sign": 4,
+   "degree": 2
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-02-06T15:56:07Z",
+   "sign": 10,
+   "degree": 17
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-02-20T23:23:39Z",
+   "sign": 5,
+   "degree": 2
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-03-08T09:29:29Z",
+   "sign": 11,
+   "degree": 17
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-03-22T10:43:48Z",
+   "sign": 6,
+   "degree": 1
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-04-06T23:51:10Z",
+   "sign": 0,
+   "degree": 16
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-04-20T22:27:09Z",
+   "sign": 7,
+   "degree": 0
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-05-06T10:58:38Z",
+   "sign": 1,
+   "degree": 15
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-05-20T10:59:01Z",
+   "sign": 7,
+   "degree": 29
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-06-04T19:40:21Z",
+   "sign": 2,
+   "degree": 13
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-06-19T00:44:21Z",
+   "sign": 8,
+   "degree": 27
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-07-04T03:02:05Z",
+   "sign": 3,
+   "degree": 11
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-07-18T15:44:56Z",
+   "sign": 9,
+   "degree": 25
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-08-02T10:05:14Z",
+   "sign": 4,
+   "degree": 9
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-08-17T07:28:42Z",
+   "sign": 10,
+   "degree": 24
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-08-31T17:41:11Z",
+   "sign": 5,
+   "degree": 8
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-09-15T23:03:31Z",
+   "sign": 11,
+   "degree": 22
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-09-30T02:36:05Z",
+   "sign": 6,
+   "degree": 6
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-10-15T13:47:01Z",
+   "sign": 0,
+   "degree": 21
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-10-29T13:36:34Z",
+   "sign": 7,
+   "degree": 5
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-11-14T03:25:56Z",
+   "sign": 1,
+   "degree": 21
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-11-28T03:24:26Z",
+   "sign": 8,
+   "degree": 5
+  },
+  {
+   "kind": "full_moon",
+   "utc": "2027-12-13T16:08:48Z",
+   "sign": 2,
+   "degree": 21
+  },
+  {
+   "kind": "new_moon",
+   "utc": "2027-12-27T20:12:20Z",
+   "sign": 9,
+   "degree": 5
+  }
+ ]
+}

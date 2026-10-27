@@ -7,7 +7,9 @@
     "build:localized": "node scripts/build-localized-pages.mjs",
     "check:localized-pages": "npm run build:localized && git -C .. diff --exit-code -- app/frontend/*.html app/frontend/de app/frontend/ru app/frontend/uk",
     "build:kundli": "node scripts/build-kundli-pages.mjs",
-    "check:kundli-pages": "node scripts/build-kundli-pages.mjs --check"
+    "check:kundli-pages": "node scripts/build-kundli-pages.mjs --check",
+    "build:moon": "node scripts/build-moon-pages.mjs",
+    "check:moon-pages": "node scripts/build-moon-pages.mjs --check"
   },
   "devDependencies": {
     "esbuild": "^0.25.9",

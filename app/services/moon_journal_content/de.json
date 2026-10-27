@@ -1,0 +1,203 @@
+{
+ "kinds": {
+  "new_moon": "Neumond",
+  "full_moon": "Vollmond"
+ },
+ "signs": [
+  "Widder",
+  "Stier",
+  "Zwillinge",
+  "Krebs",
+  "Löwe",
+  "Jungfrau",
+  "Waage",
+  "Skorpion",
+  "Schütze",
+  "Steinbock",
+  "Wassermann",
+  "Fische"
+ ],
+ "signs_in": [
+  "im Widder",
+  "im Stier",
+  "in den Zwillingen",
+  "im Krebs",
+  "im Löwen",
+  "in der Jungfrau",
+  "in der Waage",
+  "im Skorpion",
+  "im Schützen",
+  "im Steinbock",
+  "im Wassermann",
+  "in den Fischen"
+ ],
+ "date_format": "%d.%m.%Y, %H:%M Uhr",
+ "headline": "{kind} {sign_in}, in deinem {house}. Haus",
+ "frame": {
+  "rising": "Die Häuser zählen wir ab deinem Aszendenten (ganze Zeichen als Häuser).",
+  "sun": "Ohne Geburtszeit zählen wir die Häuser ab deinem Sonnenzeichen (Sonnenhäuser). Mit Geburtszeit und Geburtsort wird das Ergebnis persönlicher."
+ },
+ "universal": {
+  "new": "Schreibe eine Absicht für diesen Mondmonat auf, in der Gegenwartsform.",
+  "full": "Nenne drei Dinge, für die du seit dem letzten Neumond dankbar bist."
+ },
+ "houses": [
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um dich und darum, wie du dich der Welt zeigst.",
+   "new": [
+    "Was möchtest du in diesem Monat ganz für dich selbst beginnen?",
+    "Wie möchtest du dich morgens beim Aufwachen fühlen?"
+   ],
+   "full": [
+    "In welchen Momenten dieses Monats fühlst du dich am meisten wie du selbst?",
+    "Welche kleine Gewohnheit unterstützt dich ganz leise?"
+   ],
+   "affirmation": "Ich gebe mir Raum, neu zu beginnen."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es darum, was dir wichtig ist und was dir Halt gibt.",
+   "new": [
+    "Was bedeutet Sicherheit für dich gerade?",
+    "Welche deiner Fähigkeiten möchtest du öfter nutzen?"
+   ],
+   "full": [
+    "Wofür von dem, was du schon hast, bist du dankbar?",
+    "Wo hast du in diesem Monat Halt gefunden?"
+   ],
+   "affirmation": "Ich schätze, was ich habe und was ich noch wachsen lassen kann."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um Worte, Lernen und alltägliche Begegnungen.",
+   "new": [
+    "Was möchtest du in diesem Monat lernen oder lesen?",
+    "Mit wem möchtest du öfter sprechen?"
+   ],
+   "full": [
+    "Welches Gespräch dieses Monats klingt in dir nach?",
+    "Welche neue Idee hat deine Neugier geweckt?"
+   ],
+   "affirmation": "Meine Worte dürfen klar und freundlich sein."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um Zuhause, Wurzeln und innere Ruhe.",
+   "new": [
+    "Was würde dein Zuhause noch mehr zu deinem machen?",
+    "Was hilft dir, am Abend zur Ruhe zu kommen?"
+   ],
+   "full": [
+    "Für welchen Moment zu Hause bist du in diesem Monat dankbar?",
+    "Bei wem fühlst du dich zurzeit zu Hause?"
+   ],
+   "affirmation": "Ich schaffe Ruhe in mir und um mich herum."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um Freude, Kreativität und Spiel.",
+   "new": [
+    "Was möchtest du einfach aus Freude erschaffen?",
+    "Wie kannst du in diesem Monat Zeit zum Spielen finden?"
+   ],
+   "full": [
+    "Was hat dich in diesem Monat zum Lachen gebracht?",
+    "Was hast du mit ganzem Herzen genossen?"
+   ],
+   "affirmation": "Ich erlaube mir, zu genießen, was ich liebe."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um deinen Alltag, deine Arbeit und die Fürsorge für dich selbst.",
+   "new": [
+    "Welche kleine tägliche Routine möchtest du beginnen?",
+    "Wie könnte sich dein Arbeitstag ein wenig leichter anfühlen?"
+   ],
+   "full": [
+    "Welche Routine hat dir in diesem Monat gutgetan?",
+    "Wem konntest du helfen, und wer hat dir geholfen?"
+   ],
+   "affirmation": "Kleine Schritte jeden Tag sind genug."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um enge Beziehungen und Partnerschaft.",
+   "new": [
+    "Was möchtest du in deine engsten Beziehungen einbringen?",
+    "Mit wem möchtest du etwas gemeinsam angehen?"
+   ],
+   "full": [
+    "Für welchen Menschen an deiner Seite bist du dankbar?",
+    "Was hast du in diesem Monat von einem nahestehenden Menschen gelernt?"
+   ],
+   "affirmation": "Ich begegne anderen offen und mit Respekt für mich selbst."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um Vertrauen, Teilen und innere Wandlung.",
+   "new": [
+    "Was bist du bereit loszulassen, um Platz für Neues zu schaffen?",
+    "Wo möchtest du mehr Vertrauen aufbauen?"
+   ],
+   "full": [
+    "Welche Veränderung in dir möchtest du feiern?",
+    "Welche Unterstützung hast du in diesem Monat erfahren?"
+   ],
+   "affirmation": "Ich lasse sanft los und behalte, was zählt."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um Horizonte: Reisen, Lernen und Sinn.",
+   "new": [
+    "Welcher Ort, welches Buch oder welche Idee ruft dich?",
+    "Was gibt deinem Leben gerade Sinn?"
+   ],
+   "full": [
+    "Was hat in diesem Monat deinen Blick geweitet?",
+    "Welche Überzeugung hat dich in diesem Monat getragen?"
+   ],
+   "affirmation": "Ich öffne mich für neue Horizonte."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um Ziele, Berufung und deinen Weg.",
+   "new": [
+    "Auf welches Ziel möchtest du einen klaren Schritt zugehen?",
+    "Wie möchtest du, dass deine Arbeit gesehen wird?"
+   ],
+   "full": [
+    "An welchen Erfolg dieses Monats, auch einen kleinen, möchtest du dich erinnern?",
+    "Wer hat dich auf deinem Weg unterstützt?"
+   ],
+   "affirmation": "Ich gehe in meinem eigenen Tempo auf meine Ziele zu."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um Freundschaften, Gemeinschaft und Hoffnungen.",
+   "new": [
+    "Welche Hoffnung für die Zukunft möchtest du nähren?",
+    "Welcher Freundschaft möchtest du mehr Aufmerksamkeit schenken?"
+   ],
+   "full": [
+    "Für welche Freundschaft bist du in diesem Monat dankbar?",
+    "Wo hast du dich als Teil von etwas Größerem gefühlt?"
+   ],
+   "affirmation": "Ich bin Teil eines Kreises von Menschen, die mir wichtig sind."
+  },
+  {
+   "theme": "In diesem Teil deines Horoskops geht es um Ruhe, Stille und deine innere Welt.",
+   "new": [
+    "Wie kannst du dir in diesem Monat mehr stille Zeit schenken?",
+    "Worum bittet dich deine innere Stimme?"
+   ],
+   "full": [
+    "Was haben dir Ruhe und Stille in diesem Monat geschenkt?",
+    "Welcher Traum oder welche Ahnung kehrt immer wieder zu dir zurück?"
+   ],
+   "affirmation": "Ich erlaube mir, mich auszuruhen."
+  }
+ ],
+ "disclaimer": "Das sind Fragen zum Nachdenken, keine Vorhersagen. Der Himmel gibt einen Rhythmus vor; was du schreibst, gehört dir.",
+ "email": {
+  "confirm_subject": "Bitte bestätige deine Mondbriefe",
+  "confirm_body": "Hallo,\n\nbitte bestätige, dass du deine persönlichen Fragen zu jedem Neumond und Vollmond per E-Mail erhalten möchtest:\n{link}\n\nWenn du das nicht angefordert hast, ignoriere diese Nachricht einfach. Dann senden wir nichts weiter.",
+  "subject": "{kind} {sign_in}: dein {house}. Haus",
+  "when": "Genauer Zeitpunkt: {date} ({timezone}).",
+  "prompts_title": "Fragen für diese Mondphase:",
+  "affirmation_title": "Affirmation:",
+  "write": "Schreibe deine Antworten in dein Journal: {link}",
+  "footer": "Du erhältst diese E-Mail, weil du dich auf steliara.com angemeldet hast. Abmelden oder Daten löschen: {manage_link}",
+  "link_subject": "Dein Link zum Mondjournal",
+  "link_body": "Hallo,\n\nhier ist der Link zu deinem Mondjournal:\n{link}\n\nDer Link öffnet dein Journal, gib ihn also bitte nicht weiter. Wenn du ihn nicht angefordert hast, ignoriere diese Nachricht einfach."
+ }
+}

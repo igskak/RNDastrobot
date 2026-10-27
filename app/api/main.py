@@ -35,13 +35,14 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, charts, chart_imports, persons, assistant, billing, lunar, electional, composite, forecast, profections, antiscia, asteroids, dominants, fixed_stars, declination, client_memory, conversions, ops, kundli
+from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, charts, chart_imports, persons, assistant, billing, lunar, electional, composite, forecast, profections, antiscia, asteroids, dominants, fixed_stars, declination, client_memory, conversions, ops, kundli, moon_journal
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 from app.services.processing_pipeline import recover_stuck_sessions
 from app.database.connection import get_db
 from app.services import campaign_visits, vedic_service
 from app.services.vedic_content import reviewed_locales as kundli_reviewed_locales
+from app.services.moon_journal_service import LOCALES as MOON_LOCALES, page_path as moon_page_path
 from app.services.recording_retention_service import start_recording_retention_worker
 from app.auth.site_mode import is_solo_request
 from app.i18n.locale import DEFAULT_LOCALE, SUPPORTED_LOCALES, normalize_locale
@@ -193,6 +194,7 @@ async def isolate_solo_marketing_routes(request: Request, call_next):
     commercial_paths |= {
         _kundli_path(locale, slug) for locale in ("en", "hi") for slug in ("index", *_KUNDLI_SLUGS)
     }
+    commercial_paths |= {moon_page_path(locale) for locale in MOON_LOCALES}
     # A prefixed URL is the same page in another language, so it needs the same fence.
     commercial_paths |= {
         localized_path_for("/pricing.html", locale) for locale in PREFIXED_LOCALES
@@ -337,6 +339,7 @@ app.include_router(assistant.router, prefix="/api/v1", tags=["Assistant"])
 app.include_router(ops.router, prefix="/api/v1", tags=["Ops"])
 app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])
 app.include_router(kundli.router, prefix="/api/v1", tags=["Kundli"])
+app.include_router(moon_journal.router, prefix="/api/v1", tags=["Moon"])
 app.include_router(lunar.router, prefix="/api/v1", tags=["Lunar"])
 app.include_router(electional.router, prefix="/api/v1", tags=["Electional"])
 app.include_router(composite.router, prefix="/api/v1", tags=["Composite"])
@@ -517,7 +520,18 @@ def _kundli_sitemap_pages() -> tuple:
     return tuple(pages)
 
 
-_SITEMAP_PAGES = _SITEMAP_PAGES[:-1] + _kundli_sitemap_pages() + _SITEMAP_PAGES[-1:]
+# Public moon pages: one calculator page per market language, all one hreflang set. The
+# letter page sits behind a signed link and stays out of the sitemap (so it is noindexed).
+_MOON_HREFLANG = {"en": "en", "pl": "pl", "de": "de", "fr": "fr", "it": "it", "es": "es", "pt": "pt-BR"}
+_MOON_PAGES = ("index", "letter")
+
+
+def _moon_sitemap_pages() -> tuple:
+    return tuple((moon_page_path(locale), "0.6") for locale in MOON_LOCALES)
+
+
+_SITEMAP_PAGES = _SITEMAP_PAGES[:-1] + _kundli_sitemap_pages() + _moon_sitemap_pages() + _SITEMAP_PAGES[-1:]
+_MOON_INDEX_PATHS = frozenset(moon_page_path(locale) for locale in MOON_LOCALES)
 _KUNDLI_ALTERNATES = {
     _kundli_path(locale, slug): slug for locale in ("en", "hi") for slug in ("index", *_KUNDLI_SLUGS)
 }
@@ -543,7 +557,7 @@ def _indexable_document_paths() -> frozenset:
         # two contradictory instructions about the same page.
         if path != "/" and not path.endswith(".html"):
             paths.add(f"{path}.html")
-        if path in _KUNDLI_ALTERNATES:
+        if path in _KUNDLI_ALTERNATES or path in _MOON_INDEX_PATHS:
             paths.add(f"{path}/")
         if path in LOCALIZABLE_BARE_PATHS:
             paths.update(localized_path_for(path, locale) for locale in PREFIXED_LOCALES)
@@ -590,6 +604,12 @@ async def sitemap_xml():
             alternates = "".join(
                 f'<xhtml:link rel="alternate" hreflang="{hreflang}" href="{base}{href}"/>' for hreflang, href in pair
             ) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{base}{_kundli_path("en", slug)}"/>'
+            locale_paths = [path]
+        elif path in _MOON_INDEX_PATHS:
+            alternates = "".join(
+                f'<xhtml:link rel="alternate" hreflang="{_MOON_HREFLANG[locale]}" href="{base}{moon_page_path(locale)}"/>'
+                for locale in MOON_LOCALES
+            ) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{base}{moon_page_path("en")}"/>'
             locale_paths = [path]
         else:
             alternates = ""
@@ -1019,6 +1039,38 @@ async def kundli_page_hi(page: str):
 async def kundli_page(page: str):
     """Free kundli tools, English pages (and the report page behind a signed link)."""
     return _kundli_document("en", page)
+
+
+@app.get("/moon")
+@app.get("/moon/")
+async def moon_hub_page():
+    """Free moon pages: calculator and letters signup (English)."""
+    return _serve_frontend_page("moon/index.html")
+
+
+def _moon_document(locale: str, page: str):
+    page = page[:-5] if page.endswith(".html") else page
+    if page not in _MOON_PAGES:
+        raise HTTPException(status_code=404, detail="Page not found")
+    folder = "moon" if locale == "en" else f"moon/{locale}"
+    return _serve_frontend_page(f"{folder}/{page}.html")
+
+
+@app.get("/moon/{locale}/{page}")
+async def moon_page_localized(locale: str, page: str):
+    """Free moon pages in another language (the letter page behind a signed link)."""
+    if locale not in MOON_LOCALES or locale == "en":
+        raise HTTPException(status_code=404, detail="Page not found")
+    return _moon_document(locale, page)
+
+
+@app.get("/moon/{segment}")
+@app.get("/moon/{segment}/")
+async def moon_page(segment: str):
+    """/moon/pl is the Polish calculator; /moon/letter is the English letter page."""
+    if segment in MOON_LOCALES and segment != "en":
+        return _moon_document(segment, "index")
+    return _moon_document("en", segment)
 
 
 @app.get("/cloud-astrology-software")
