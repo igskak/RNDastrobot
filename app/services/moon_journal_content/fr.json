@@ -38,8 +38,8 @@
   "sun": "Sans heure de naissance, nous comptons les maisons à partir de ton signe solaire (maisons solaires). Ajoute ton heure et ton lieu de naissance pour un résultat plus personnel."
  },
  "universal": {
-  "new": "Écris une intention pour ce mois lunaire, au présent.",
-  "full": "Note trois choses qui t'ont rempli de gratitude depuis la dernière nouvelle lune."
+  "new": "Termine cette phrase : Pendant ce mois lunaire, je choisis de...",
+  "full": "Nomme trois moments depuis la dernière nouvelle lune que tu aimerais revivre. Qu'avaient-ils en commun ?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "J'apprécie ce que j'ai et ce que je peux encore faire grandir."
   },
   {
-   "theme": "Cette partie de ton thème parle des mots, de l'apprentissage et des liens du quotidien.",
+   "theme": "Cette partie de ton thème contient les mots que tu répètes, les questions que tu poursuis et les conversations ordinaires qui façonnent discrètement tes choix.",
    "new": [
-    "Qu'aimerais-tu apprendre ou lire ce mois-ci ?",
-    "Avec qui aimerais-tu parler plus souvent ?"
+    "Quelle conversation répètes-tu dans ta tête ? Écris-en la première phrase sincère.",
+    "Quel sujet revient sans cesse dans tes onglets, tes notes ou tes publications enregistrées ? Qu'est-ce qu'une heure d'attention entière pourrait ouvrir ?"
    ],
    "full": [
-    "Quelle conversation de ce mois t'accompagne encore ?",
-    "Quelle idée nouvelle a éveillé ta curiosité ?"
+    "Quelle conversation a changé ton avis — ou révélé ce que tu savais déjà ?",
+    "À quelle idée es-tu revenu·e plus d'une fois ? Nomme une petite façon de la mettre à l'épreuve dans la vie réelle."
    ],
-   "affirmation": "Mes mots peuvent être clairs et bienveillants."
+   "affirmation": "Je me fais confiance pour dire les choses clairement et avec bienveillance."
   },
   {
    "theme": "Cette partie de ton thème parle du foyer, des racines et du calme intérieur.",

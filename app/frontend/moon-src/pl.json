@@ -105,6 +105,7 @@
   "tablePhase": "Faza",
   "tableSign": "Znak",
   "nextBadge": "najbliższa",
+  "selectedBadge": "Wybrana",
   "loading": "Wczytuję Twój list…",
   "invalidLink": "Ten link jest nieprawidłowy. Możesz zapisać się ponownie na stronie o Księżycu.",
   "confirmed": "Dziękujemy, adres jest potwierdzony. Listy przychodzą w dniu każdego nowiu i każdej pełni.",
@@ -132,8 +133,13 @@
   "saving": "Zapisuję…",
   "saveError": "Nie zapisano. Sprawdź połączenie.",
   "linkPrivacy": "Ten link otwiera Twój dziennik. Nie przekazuj tych wiadomości innym osobom.",
-  "linkTitle": "Masz już subskrypcję?",
-  "linkText": "Podaj e-mail, a wyślemy link do Twojego dziennika. Działa na każdym urządzeniu, bez hasła.",
+  "linkTitle": "Twój księżycowy dziennik",
+  "linkText": "Wybierz drogę odpowiednią dla miejsca, w którym jesteś dzisiaj.",
+  "linkNewTitle": "Jesteś tu pierwszy raz?",
+  "linkNewText": "Zacznij od danych urodzenia. Zobaczysz, gdzie w Twoim horoskopie wypada najbliższy nów i pełnia, a potem możesz wybrać bezpłatne osobiste listy.",
+  "linkNewButton": "Zobacz moje najbliższe lunacje",
+  "linkReturningTitle": "Otrzymujesz już listy?",
+  "linkReturningText": "Podaj e-mail, a wyślemy nowy link do Twojego prywatnego dziennika. Działa na każdym urządzeniu, bez hasła.",
   "linkButton": "Wyślij mój link",
   "linkSending": "Wysyłam…",
   "linkDone": "Jeśli ten adres jest zapisany, link już jest w drodze.",
@@ -155,22 +161,25 @@
  ],
  "tableDateFormat": "{d} {month} {y}, {hh}:{mm}",
  "plans": {
-  "title": "Bezpłatne listy i osobisty miesiąc",
-  "lead": "Listy księżycowe są bezpłatne i takie zostaną. Osobisty miesiąc to płatny dodatek, który przygotowujemy. Poniżej przykład jednego i drugiego.",
-  "freeTitle": "Bezpłatnie",
+  "title": "Dwa sposoby, by być bliżej własnego rytmu",
+  "lead": "Niebo nie ma mówić Ci, co się wydarzy. Może dać chwilę, by zauważyć to, co już prosi o Twoją uwagę — przy każdym nowiu i pełni albo jako głębszą opowieść rozwijającą się przez cały miesiąc.",
+  "freeTitle": "Twój list księżycowy",
+  "freeIntro": "Dwa razy w miesiącu krótki list spotyka Cię w naturalnym momencie zmiany. Tłumaczy nów lub pełnię przez Twój własny horoskop i daje spokojną przestrzeń, w której łatwiej usłyszeć siebie.",
   "freeItems": [
-   "List w dniu każdego nowiu i każdej pełni",
-   "Dom Twojego horoskopu, w którym wypada lunacja, i jego temat",
-   "Trzy pytania do dziennika i afirmacja",
-   "Twoje odpowiedzi zapisane w dzienniku, na każdym urządzeniu"
+   {"title": "Twoje niebo, ludzkim językiem", "text": "Zobacz, której części życia dotyka ta lunacja i dlaczego może być teraz bardziej wyczuwalna — bez żargonu i nieodwołalnych przepowiedni."},
+   {"title": "Pytania, które coś otwierają", "text": "Trzy starannie dobrane pytania pomagają nazwać to, czego pragniesz, co się zmieniło i co chcesz zabrać ze sobą dalej."},
+   {"title": "Dziennik, który pamięta", "text": "Twoje odpowiedzi zostają razem w prywatnym dzienniku, dzięki czemu przelotne odczucie z czasem może odsłonić ważny wzorzec."}
   ],
-  "paidTitle": "Osobisty miesiąc",
+  "freeClosing": "Bezpłatnie, dwa razy w miesiącu. Kilka uważnych minut, które należą tylko do Ciebie.",
+  "paidTitle": "Twój Osobisty Miesiąc",
+  "paidIntro": "Osobisty Miesiąc pokazuje szerszy obraz. Zamiast przechodzić przez miesiąc jak przez rozmyty ciąg dat, widzisz jego emocjonalny rytm: okresy, które mogą coś poruszyć, pytania warte zatrzymania i nić łączącą wszystko w całość.",
   "paidItems": [
-   "Wszystko, co bezpłatne",
-   "Kalendarz Twoich własnych tranzytów na miesiąc, z datami i pytaniem do każdego",
-   "Comiesięczne spojrzenie wstecz na to, co piszesz, obok nieba z tych dni",
-   "Księga roku z Twoimi wpisami na urodziny"
+   {"title": "Daty, które mają znaczenie dla Ciebie", "text": "Osobisty kalendarz najsilniejszych tranzytów miesiąca, przełożonych na sytuacje, które możesz rozpoznać w pracy, relacjach, domu i swoim wewnętrznym świecie."},
+   {"title": "Wskazówki, z których da się skorzystać", "text": "Każdy okres przynosi skupioną refleksję — nie polecenie — aby pomóc Ci dokonać własnego wyboru z większą świadomością."},
+   {"title": "Wzorce, które odsłania dopiero czas", "text": "Pod koniec miesiąca Twoje wpisy wracają obok nieba z tych dni, pokazując powracające potrzeby, napięcia i pragnienia."},
+   {"title": "Twój rok jako opowieść", "text": "W dniu urodzin te miesiące stają się prywatną księgą roku: nie listą przepowiedni, lecz portretem Twojej zmiany."}
   ],
+  "paidClosing": "Dla osoby, która chce nie tylko wiedzieć, co dzieje się na niebie, ale rozumieć, co otwiera się przez to w jej własnym życiu.",
   "exampleFreeTitle": "Przykład bezpłatnego listu",
   "examplePaidTitle": "Przykład osobistego miesiąca",
   "exampleNote": "Przykład dla fikcyjnej osoby urodzonej 17 maja 1990 r. Twój miesiąc obliczamy z Twoich danych urodzenia.",
@@ -178,28 +187,28 @@
   "calendar": [
    {
     "when": "3–8 listopada",
-    "what": "Wenus przechodzi przez Twoje Słońce",
-    "text": "Tydzień, by zauważyć, co cenisz w sobie i w swoim życiu.",
-    "question": "Co w tym tygodniu podoba Ci się w Tobie?"
+    "what": "Wenus spotyka Twoje Słońce — widoczność i poczucie własnej wartości",
+    "text": "Komplementy mogą w tym tygodniu mocniej do Ciebie docierać — albo wyraźniej zobaczysz chwile, w których umniejszasz sobie. Zwróć uwagę na ubrania, ludzi i wybory, przy których czujesz się bardziej sobą, a nie tylko osobą łatwiejszą do zaakceptowania.",
+    "question": "Gdzie możesz przestać prosić o pozwolenie, by cieszyć się sobą?"
    },
    {
     "when": "14–19 listopada",
-    "what": "Mars przechodzi przez Twój 4. dom",
-    "text": "Energia dla domu: porządki, przestawianie mebli, zapraszanie gości.",
-    "question": "Co chcesz zmienić w swojej przestrzeni?"
+    "what": "Mars aktywuje Twój 4. dom — dom i poczucie przynależności",
+    "text": "Możesz poczuć potrzebę opróżnienia kąta, nazwania napięcia w domu albo zawalczenia o więcej własnej przestrzeni. Zamiast zmieniać wszystko, zauważ jedno miejsce — lub relację — przy których trudno Ci swobodnie odetchnąć.",
+    "question": "Gdyby Twój dom miał wspierać osobę, którą się stajesz, co zmienisz najpierw — i dlaczego?"
    },
    {
     "when": "24 listopada",
-    "what": "Pełnia w Twoim 10. domu",
-    "text": "Chwila, by spojrzeć na swoją pracę i na to, co już zbudowane.",
-    "question": "Które osiągnięcie tego miesiąca chcesz zapamiętać?"
+    "what": "Pełnia w Twoim 10. domu — praca i uznanie",
+    "text": "Wynik, termin lub rozmowa mogą pokazać Ci wyraźnie, jak daleko już jesteś. Zanim pobiegniesz do kolejnego celu, zobacz, co zostało przez Ciebie zbudowane — i czy sukces, za którym gonisz, nadal jest naprawdę Twój.",
+    "question": "Co z dumą uznajesz za własne i czyją aprobatą nie chcesz już mierzyć swojej wartości?"
    }
   ],
   "reviewTitle": "Twój miesiąc Twoimi słowami",
   "review": [
-   "W listopadzie w dzienniku pojawia się 7 wpisów. Najczęstsze słowa to „odpoczynek”, „siostra” i „projekt”.",
-   "W okolicy pełni w Twoim 10. domu wraca pragnienie, by Twoja praca była zauważona. Ten sam temat pojawia się w sierpniu, gdy Jowisz przechodzi przez szczyt Twojego horoskopu.",
-   "Pytanie na grudzień: co pomoże Ci poczuć, że Twoja praca jest widoczna?"
+   "W siedmiu listopadowych wpisach powracają trzy słowa: „odpoczynek”, „siostra” i „projekt”. Życie prywatne i widoczna praca zdają się jednocześnie prosić o uwagę.",
+   "W pobliżu pełni w 10. domu zapisujesz: „Chcę, by moja praca była widoczna, ale nie za cenę powrotów do domu bez sił”. To samo napięcie pojawiło się w sierpniu, gdy Jowisz przechodził przez szczyt Twojego horoskopu.",
+   "Zabierz do grudnia pytanie: jak wyglądałby widoczny sukces, który zostawia miejsce także na Twoje prawdziwe życie?"
   ]
  }
 }

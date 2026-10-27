@@ -38,8 +38,8 @@
   "sun": "Ohne Geburtszeit zählen wir die Häuser ab deinem Sonnenzeichen (Sonnenhäuser). Mit Geburtszeit und Geburtsort wird das Ergebnis persönlicher."
  },
  "universal": {
-  "new": "Schreibe eine Absicht für diesen Mondmonat auf, in der Gegenwartsform.",
-  "full": "Nenne drei Dinge, für die du seit dem letzten Neumond dankbar bist."
+  "new": "Vervollständige den Satz: In diesem Mondmonat entscheide ich mich dafür,...",
+  "full": "Nenne drei Momente seit dem letzten Neumond, die du noch einmal erleben möchtest. Was hatten sie gemeinsam?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "Ich schätze, was ich habe und was ich noch wachsen lassen kann."
   },
   {
-   "theme": "In diesem Teil deines Horoskops geht es um Worte, Lernen und alltägliche Begegnungen.",
+   "theme": "Dieser Teil deines Horoskops umfasst die Worte, die du wiederholst, die Fragen, denen du folgst, und die alltäglichen Gespräche, die deine Entscheidungen leise prägen.",
    "new": [
-    "Was möchtest du in diesem Monat lernen oder lesen?",
-    "Mit wem möchtest du öfter sprechen?"
+    "Welches Gespräch spielst du in Gedanken immer wieder durch? Schreibe den ersten ehrlichen Satz auf.",
+    "Welches Thema taucht immer wieder in deinen Tabs, Notizen oder gespeicherten Beiträgen auf? Was könnte eine konzentrierte Stunde damit eröffnen?"
    ],
    "full": [
-    "Welches Gespräch dieses Monats klingt in dir nach?",
-    "Welche neue Idee hat deine Neugier geweckt?"
+    "Welches Gespräch hat deine Meinung verändert — oder dir gezeigt, was du längst wusstest?",
+    "Zu welcher Idee bist du mehr als einmal zurückgekehrt? Nenne einen kleinen Weg, sie im echten Leben zu erproben."
    ],
-   "affirmation": "Meine Worte dürfen klar und freundlich sein."
+   "affirmation": "Ich vertraue mir, das Klare freundlich auszusprechen."
   },
   {
    "theme": "In diesem Teil deines Horoskops geht es um Zuhause, Wurzeln und innere Ruhe.",

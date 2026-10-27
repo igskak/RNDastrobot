@@ -110,9 +110,12 @@ ${indexable ? jsonLd(locale, catalog) + '\n' : ''}</head>`;
 
 function header(locale, slug, catalog, catalogs) {
     const langs = slug === 'index'
-        ? `<nav class="langs" aria-label="${esc(catalog.site.langLabel)}">${LOCALES.map((l) => (
-            `<a href="${pagePath(l)}" hreflang="${catalogs[l].hreflang}" lang="${catalogs[l].lang}"${l === locale ? ' aria-current="page"' : ''}>${esc(catalogs[l].languageName)}</a>`
-        )).join('')}</nav>`
+        ? `<div class="language-picker">
+        <label class="language-label" for="language-select">${esc(catalog.site.langLabel)}</label>
+        <select id="language-select" aria-label="${esc(catalog.site.langLabel)}">${LOCALES.map((l) => (
+            `<option value="${pagePath(l)}"${l === locale ? ' selected' : ''}>${esc(catalogs[l].languageName)}</option>`
+        )).join('')}</select>
+      </div>`
         : '';
     return `<header class="site-header">
     <div class="shell bar">
@@ -166,12 +169,12 @@ function lunationTable(catalog, letters, lunations) {
     const ui = catalog.ui;
     const rows = lunations.map((lun) => `
             <tr data-utc="${lun.utc}">
-              <td>${esc(formatDate(lun.utc, catalog))}<span class="badge" hidden> · ${esc(ui.nextBadge)}</span></td>
+              <td><button class="lunation-pick" type="button">${esc(formatDate(lun.utc, catalog))}</button><span class="badge" hidden> · ${esc(ui.nextBadge)}</span></td>
               <td><span class="phase phase-${lun.kind === 'new_moon' ? 'new' : 'full'}" aria-hidden="true"></span>${esc(letters.kinds[lun.kind])}</td>
               <td>${esc(letters.signs[lun.sign])} ${lun.degree}°</td>
             </tr>`).join('');
     return `
-      <section class="lunations" aria-labelledby="lunations-title">
+      <section class="lunations reveal-on-scroll" aria-labelledby="lunations-title">
         <h2 id="lunations-title">${esc(catalog.pages.index.tableTitle)}</h2>
         <p class="hint">${esc(catalog.pages.index.tableNote)}</p>
         <div class="table-wrap">
@@ -226,18 +229,20 @@ function paidExample(catalog) {
 
 function planCards(catalog) {
     const p = catalog.plans;
-    const items = (list) => list.map((item) => `<li>${esc(item)}</li>`).join('');
+    const items = (list) => list.map((item) => typeof item === 'string'
+        ? `<li>${esc(item)}</li>`
+        : `<li><strong>${esc(item.title)}</strong><span>${esc(item.text)}</span></li>`).join('');
     return `
         <div class="plans-grid">
-          <div class="plan"><h3>${esc(p.freeTitle)}</h3><ul>${items(p.freeItems)}</ul></div>
-          <div class="plan paid"><h3>${esc(p.paidTitle)}</h3><p class="price">${esc(catalog.ui.price)}</p><ul>${items(p.paidItems)}</ul></div>
+          <article class="plan"><h3>${esc(p.freeTitle)}</h3><p class="plan-intro">${esc(p.freeIntro)}</p><ul>${items(p.freeItems)}</ul><p class="plan-closing">${esc(p.freeClosing)}</p></article>
+          <article class="plan paid"><h3>${esc(p.paidTitle)}</h3><p class="price">${esc(catalog.ui.price)}</p><p class="plan-intro">${esc(p.paidIntro)}</p><ul>${items(p.paidItems)}</ul><p class="plan-closing">${esc(p.paidClosing)}</p></article>
         </div>`;
 }
 
 function plans(catalog, letters, lunations) {
     const p = catalog.plans;
     return `
-      <section class="plans" aria-labelledby="plans-title">
+      <section class="plans reveal-on-scroll" aria-labelledby="plans-title">
         <h2 id="plans-title">${esc(p.title)}</h2>
         <p>${esc(p.lead)}</p>${planCards(catalog)}
         <div class="examples">${freeExample(catalog, letters, lunations)}${paidExample(catalog)}
@@ -247,29 +252,40 @@ function plans(catalog, letters, lunations) {
 
 function linkCard(ui) {
     return `
-      <section id="link-card" class="card" aria-labelledby="link-title">
+      <section id="link-card" class="card reveal-on-scroll" aria-labelledby="link-title">
         <h2 id="link-title">${esc(ui.linkTitle)}</h2>
         <p>${esc(ui.linkText)}</p>
-        <form id="link-form" novalidate>
-          <div class="field">
-            <label for="link-email">${esc(ui.email)}</label>
-            <input id="link-email" type="email" autocomplete="email" required>
+        <div class="link-paths">
+          <div class="link-path link-new">
+            <h3>${esc(ui.linkNewTitle)}</h3>
+            <p>${esc(ui.linkNewText)}</p>
+            <a class="btn" href="#moon-form">${esc(ui.linkNewButton)}</a>
           </div>
-          <p id="link-error" class="error" role="alert" hidden></p>
-          <p id="link-done" class="note" role="status" hidden></p>
-          <button class="btn ghost" type="submit">${esc(ui.linkButton)}</button>
-        </form>
+          <div class="link-path link-returning">
+            <h3>${esc(ui.linkReturningTitle)}</h3>
+            <p>${esc(ui.linkReturningText)}</p>
+            <form id="link-form" novalidate>
+              <div class="field">
+                <label for="link-email">${esc(ui.email)}</label>
+                <input id="link-email" type="email" autocomplete="email" required>
+              </div>
+              <p id="link-error" class="error" role="alert" hidden></p>
+              <p id="link-done" class="note" role="status" hidden></p>
+              <button class="btn ghost" type="submit">${esc(ui.linkButton)}</button>
+            </form>
+          </div>
+        </div>
       </section>`;
 }
 
 function copy(page) {
     const sections = page.sections.map((section) => `
-      <section class="copy">
+      <section class="copy reveal-on-scroll">
         <h2>${esc(section.h2)}</h2>
         ${section.p.map((p) => `<p>${esc(p)}</p>`).join('\n        ')}
       </section>`).join('');
     const faq = `
-      <section class="copy faq">
+      <section class="copy faq reveal-on-scroll">
         <h2>${esc(page.faqTitle)}</h2>
         ${page.faq.map((item) => `<h3>${esc(item.q)}</h3>\n        <p>${esc(item.a)}</p>`).join('\n        ')}
       </section>`;
@@ -279,29 +295,40 @@ function copy(page) {
 function indexMain(catalog, letters, lunations) {
     const page = catalog.pages.index;
     const ui = catalog.ui;
-    return `<main id="main" class="shell tool">
+    return `<main id="main" class="shell tool moon-page">
       <h1>${esc(page.h1)}</h1>
       <p class="lead">${esc(page.lead)}</p>
-      <form id="moon-form" class="card" novalidate>${birthFields(catalog)}
-        <p id="form-error" class="error" role="alert" hidden></p>
-        <button class="btn" type="submit" data-label="${esc(ui.calculate)}" data-busy="${esc(ui.calculating)}">${esc(ui.calculate)}</button>
-        <noscript><p class="error">${esc(ui.noscript)}</p></noscript>
-      </form>
-      <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>
-      <section id="signup" class="card signup" hidden aria-labelledby="signup-title">
-        <h2 id="signup-title">${esc(ui.signupTitle)}</h2>
-        <p>${esc(ui.signupText)}</p>
-        <form id="signup-form" novalidate>
-          <div class="field">
-            <label for="signup-email">${esc(ui.email)}</label>
-            <input id="signup-email" type="email" autocomplete="email" required>
-          </div>
-          <label class="check"><input id="signup-consent" type="checkbox"> ${esc(ui.consent)}</label>
-          <p id="signup-error" class="error" role="alert" hidden></p>
-          <p id="signup-done" class="note" role="status" hidden></p>
-          <button class="btn" type="submit">${esc(ui.subscribe)}</button>
-        </form>
-      </section>${lunationTable(catalog, letters, lunations)}${plans(catalog, letters, lunations)}${linkCard(ui)}${copy(page)}
+      <div class="moon-grid">
+        <div class="moon-primary">
+          <form id="moon-form" class="card" novalidate>${birthFields(catalog)}
+            <p id="form-error" class="error" role="alert" hidden></p>
+            <button class="btn" type="submit" data-label="${esc(ui.calculate)}" data-busy="${esc(ui.calculating)}">${esc(ui.calculate)}</button>
+            <noscript><p class="error">${esc(ui.noscript)}</p></noscript>
+          </form>
+          <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>
+          <section id="signup" class="card signup" hidden aria-labelledby="signup-title">
+            <h2 id="signup-title">${esc(ui.signupTitle)}</h2>
+            <p>${esc(ui.signupText)}</p>
+            <form id="signup-form" novalidate>
+              <div class="field">
+                <label for="signup-email">${esc(ui.email)}</label>
+                <input id="signup-email" type="email" autocomplete="email" required>
+              </div>
+              <label class="check"><input id="signup-consent" type="checkbox"> ${esc(ui.consent)}</label>
+              <p id="signup-error" class="error" role="alert" hidden></p>
+              <p id="signup-done" class="note" role="status" hidden></p>
+              <button class="btn" type="submit">${esc(ui.subscribe)}</button>
+            </form>
+          </section>
+        </div>
+        <aside class="moon-rail">
+          <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
+            <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
+            <div class="moon-highlight-copy"></div>
+          </section>
+${lunationTable(catalog, letters, lunations)}
+        </aside>
+      </div>${plans(catalog, letters, lunations)}${linkCard(ui)}${copy(page)}
     </main>`;
 }
 

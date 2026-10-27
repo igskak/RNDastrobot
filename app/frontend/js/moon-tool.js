@@ -53,19 +53,128 @@
         node.hidden = !text;
     }
 
-    /* ---- the next lunation in the table ---- */
+    (function setupLanguagePicker() {
+        var picker = document.getElementById('language-select');
+        if (!picker) return;
+        picker.addEventListener('change', function () {
+            if (picker.value) window.location.assign(picker.value);
+        });
+    })();
+
+    /* ---- table interaction and reveal motion ---- */
+    function updateHighlight(row, animate) {
+        var highlight = document.getElementById('moon-highlight');
+        if (!highlight) return;
+        var cells = row.querySelectorAll('td');
+        var phase = cells[1] && cells[1].querySelector('.phase');
+        var dateButton = cells[0] && cells[0].querySelector('.lunation-pick');
+        var title = el('h2', { id: 'moon-highlight-title', text: cells[1] ? cells[1].textContent.trim() : '' });
+        var copy = highlight.querySelector('.moon-highlight-copy');
+        copy.textContent = '';
+        copy.appendChild(el('p', { class: 'eyebrow', text: row.classList.contains('next') ? t('nextBadge') : t('selectedBadge') }));
+        copy.appendChild(title);
+        copy.appendChild(el('p', { class: 'moon-highlight-date', text: dateButton ? dateButton.textContent.trim() : '' }));
+        copy.appendChild(el('p', { class: 'moon-highlight-sign', text: cells[2] ? cells[2].textContent.trim() : '' }));
+        var isFull = Boolean(phase && phase.classList.contains('phase-full'));
+        highlight.classList.toggle('is-full', isFull);
+        highlight.classList.toggle('is-new', !isFull);
+        if (animate) {
+            highlight.classList.remove('is-changing');
+            requestAnimationFrame(function () { highlight.classList.add('is-changing'); });
+        }
+        highlight.hidden = false;
+    }
+
+    (function setupLunationPicker() {
+        var rows = document.querySelectorAll('tr[data-utc]');
+        [].forEach.call(rows, function (row) {
+            var button = row.querySelector('.lunation-pick');
+            if (!button) return;
+            button.addEventListener('click', function () {
+                [].forEach.call(rows, function (item) { item.classList.remove('is-selected'); });
+                row.classList.add('is-selected');
+                updateHighlight(row, true);
+            });
+        });
+    })();
+
     (function markNext() {
         var now = Date.now();
         var rows = document.querySelectorAll('tr[data-utc]');
         for (var i = 0; i < rows.length; i++) {
             if (Date.parse(rows[i].getAttribute('data-utc')) > now) {
-                rows[i].className = 'next';
+                rows[i].classList.add('next', 'is-selected');
                 rows[i].setAttribute('aria-current', 'true');
                 var badge = rows[i].querySelector('.badge');
                 if (badge) badge.hidden = false;
+                updateHighlight(rows[i], false);
                 return;
             }
         }
+    })();
+
+    (function setupScrollReveal() {
+        var items = document.querySelectorAll('.reveal-on-scroll');
+        if (!items.length) return;
+        if (!('IntersectionObserver' in window)) {
+            [].forEach.call(items, function (item) { item.classList.add('is-visible'); });
+            return;
+        }
+        document.body.classList.add('motion-ready');
+        var observer = new IntersectionObserver(function (entries, self) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('is-visible');
+                self.unobserve(entry.target);
+            });
+        }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+        [].forEach.call(items, function (item) { observer.observe(item); });
+    })();
+
+    (function setupCalendarMotion() {
+        var page = document.querySelector('.moon-page');
+        var tableWrap = document.querySelector('.moon-rail .table-wrap');
+        if (!page) return;
+        var frame = 0;
+        function updatePageProgress() {
+            frame = 0;
+            var max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+            document.body.style.setProperty('--calendar-progress', (window.scrollY / max).toFixed(3));
+        }
+        window.addEventListener('scroll', function () {
+            if (frame) return;
+            frame = requestAnimationFrame(updatePageProgress);
+        }, { passive: true });
+        updatePageProgress();
+
+        if (!tableWrap) return;
+        var rows = tableWrap.querySelectorAll('tr[data-utc]');
+        var selected = tableWrap.querySelector('tr.is-selected');
+        var tableFrame = 0;
+        function followTable() {
+            tableFrame = 0;
+            var box = tableWrap.getBoundingClientRect();
+            var target = box.top + Math.min(box.height * .34, 150);
+            var closest = null;
+            var distance = Infinity;
+            [].forEach.call(rows, function (row) {
+                var rect = row.getBoundingClientRect();
+                var nextDistance = Math.abs(rect.top + rect.height / 2 - target);
+                if (rect.bottom > box.top && rect.top < box.bottom && nextDistance < distance) {
+                    closest = row;
+                    distance = nextDistance;
+                }
+            });
+            if (!closest || closest === selected) return;
+            selected = closest;
+            [].forEach.call(rows, function (row) { row.classList.remove('is-selected'); });
+            selected.classList.add('is-selected');
+            updateHighlight(selected, false);
+        }
+        tableWrap.addEventListener('scroll', function () {
+            if (tableFrame) return;
+            tableFrame = requestAnimationFrame(followTable);
+        }, { passive: true });
     })();
 
     /* ---- birth fields with place autocomplete ---- */
@@ -92,6 +201,10 @@
     }
 
     try { setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone); } catch (e) { /* keep the page default */ }
+
+    function syncFormState() { form.classList.toggle('is-ready', Boolean(dateInput.value)); }
+    dateInput.addEventListener('input', syncFormState);
+    syncFormState();
 
     unknown.addEventListener('change', function () {
         timeInput.disabled = unknown.checked;

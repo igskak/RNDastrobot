@@ -33,13 +33,18 @@
   <header class="site-header">
     <div class="shell bar">
       <a class="brand" href="/moon/pl">Steliara</a>
-      <nav class="langs" aria-label="Język"><a href="/moon" hreflang="en" lang="en">English</a><a href="/moon/pl" hreflang="pl" lang="pl" aria-current="page">Polski</a><a href="/moon/de" hreflang="de" lang="de">Deutsch</a><a href="/moon/fr" hreflang="fr" lang="fr">Français</a><a href="/moon/it" hreflang="it" lang="it">Italiano</a><a href="/moon/es" hreflang="es" lang="es">Español</a><a href="/moon/pt" hreflang="pt-BR" lang="pt-BR">Português</a></nav>
+      <div class="language-picker">
+        <label class="language-label" for="language-select">Język</label>
+        <select id="language-select" aria-label="Język"><option value="/moon">English</option><option value="/moon/pl" selected>Polski</option><option value="/moon/de">Deutsch</option><option value="/moon/fr">Français</option><option value="/moon/it">Italiano</option><option value="/moon/es">Español</option><option value="/moon/pt">Português</option></select>
+      </div>
     </div>
   </header>
-  <main id="main" class="shell tool">
+  <main id="main" class="shell tool moon-page">
       <h1>Nów i pełnia Księżyca 2026–2027: daty i Twoje osobiste pytania do dziennika</h1>
       <p class="lead">Sprawdź, w którym domu Twojego horoskopu wypada najbliższy nów i najbliższa pełnia, i otrzymaj kilka spokojnych pytań do dziennika: intencję na nów, wdzięczność na pełnię.</p>
-      <form id="moon-form" class="card" novalidate>
+      <div class="moon-grid">
+        <div class="moon-primary">
+          <form id="moon-form" class="card" novalidate>
         <fieldset class="person">
           <legend>Twoje dane urodzenia</legend>
           <div class="field">
@@ -64,26 +69,33 @@
             <p class="hint" id="birth-tz-hint" aria-live="polite"></p>
           </div>
         </fieldset>
-        <p id="form-error" class="error" role="alert" hidden></p>
-        <button class="btn" type="submit" data-label="Pokaż moje lunacje" data-busy="Obliczam…">Pokaż moje lunacje</button>
-        <noscript><p class="error">Ten kalkulator wymaga JavaScriptu.</p></noscript>
-      </form>
-      <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>
-      <section id="signup" class="card signup" hidden aria-labelledby="signup-title">
-        <h2 id="signup-title">Otrzymuj swoje pytania na każdy nów i każdą pełnię</h2>
-        <p>Dwa krótkie e-maile w miesiącu, w dniu nowiu i pełni, z pytaniami dla domu Twojego horoskopu, w którym wypada lunacja. Bezpłatnie, a wypisać się można jednym kliknięciem.</p>
-        <form id="signup-form" novalidate>
-          <div class="field">
-            <label for="signup-email">E-mail</label>
-            <input id="signup-email" type="email" autocomplete="email" required>
-          </div>
-          <label class="check"><input id="signup-consent" type="checkbox"> Zgadzam się na otrzymywanie tych wiadomości i przechowywanie moich danych urodzenia w tym celu. Mogę je usunąć w każdej chwili.</label>
-          <p id="signup-error" class="error" role="alert" hidden></p>
-          <p id="signup-done" class="note" role="status" hidden></p>
-          <button class="btn" type="submit">Wysyłaj mi listy księżycowe</button>
-        </form>
-      </section>
-      <section class="lunations" aria-labelledby="lunations-title">
+            <p id="form-error" class="error" role="alert" hidden></p>
+            <button class="btn" type="submit" data-label="Pokaż moje lunacje" data-busy="Obliczam…">Pokaż moje lunacje</button>
+            <noscript><p class="error">Ten kalkulator wymaga JavaScriptu.</p></noscript>
+          </form>
+          <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>
+          <section id="signup" class="card signup" hidden aria-labelledby="signup-title">
+            <h2 id="signup-title">Otrzymuj swoje pytania na każdy nów i każdą pełnię</h2>
+            <p>Dwa krótkie e-maile w miesiącu, w dniu nowiu i pełni, z pytaniami dla domu Twojego horoskopu, w którym wypada lunacja. Bezpłatnie, a wypisać się można jednym kliknięciem.</p>
+            <form id="signup-form" novalidate>
+              <div class="field">
+                <label for="signup-email">E-mail</label>
+                <input id="signup-email" type="email" autocomplete="email" required>
+              </div>
+              <label class="check"><input id="signup-consent" type="checkbox"> Zgadzam się na otrzymywanie tych wiadomości i przechowywanie moich danych urodzenia w tym celu. Mogę je usunąć w każdej chwili.</label>
+              <p id="signup-error" class="error" role="alert" hidden></p>
+              <p id="signup-done" class="note" role="status" hidden></p>
+              <button class="btn" type="submit">Wysyłaj mi listy księżycowe</button>
+            </form>
+          </section>
+        </div>
+        <aside class="moon-rail">
+          <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
+            <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
+            <div class="moon-highlight-copy"></div>
+          </section>
+
+      <section class="lunations reveal-on-scroll" aria-labelledby="lunations-title">
         <h2 id="lunations-title">Nowie i pełnie od listopada 2026 do grudnia 2027</h2>
         <p class="hint">Godziny podajemy według czasu polskiego. Najbliższa lunacja jest wyróżniona.</p>
         <div class="table-wrap">
@@ -91,147 +103,147 @@
             <thead><tr><th scope="col">Data i godzina</th><th scope="col">Faza</th><th scope="col">Znak</th></tr></thead>
             <tbody>
             <tr data-utc="2026-11-09T07:02:07Z">
-              <td>9 listopada 2026, 08:02<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">9 listopada 2026, 08:02</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Skorpion 16°</td>
             </tr>
             <tr data-utc="2026-11-24T14:53:34Z">
-              <td>24 listopada 2026, 15:53<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">24 listopada 2026, 15:53</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Bliźnięta 2°</td>
             </tr>
             <tr data-utc="2026-12-09T00:51:51Z">
-              <td>9 grudnia 2026, 01:51<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">9 grudnia 2026, 01:51</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Strzelec 16°</td>
             </tr>
             <tr data-utc="2026-12-24T01:28:14Z">
-              <td>24 grudnia 2026, 02:28<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">24 grudnia 2026, 02:28</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Rak 2°</td>
             </tr>
             <tr data-utc="2027-01-07T20:24:23Z">
-              <td>7 stycznia 2027, 21:24<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">7 stycznia 2027, 21:24</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Koziorożec 17°</td>
             </tr>
             <tr data-utc="2027-01-22T12:17:23Z">
-              <td>22 stycznia 2027, 13:17<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">22 stycznia 2027, 13:17</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Lew 2°</td>
             </tr>
             <tr data-utc="2027-02-06T15:56:07Z">
-              <td>6 lutego 2027, 16:56<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">6 lutego 2027, 16:56</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Wodnik 17°</td>
             </tr>
             <tr data-utc="2027-02-20T23:23:39Z">
-              <td>21 lutego 2027, 00:23<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">21 lutego 2027, 00:23</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Panna 2°</td>
             </tr>
             <tr data-utc="2027-03-08T09:29:29Z">
-              <td>8 marca 2027, 10:29<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">8 marca 2027, 10:29</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Ryby 17°</td>
             </tr>
             <tr data-utc="2027-03-22T10:43:48Z">
-              <td>22 marca 2027, 11:43<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">22 marca 2027, 11:43</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Waga 1°</td>
             </tr>
             <tr data-utc="2027-04-06T23:51:10Z">
-              <td>7 kwietnia 2027, 01:51<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">7 kwietnia 2027, 01:51</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Baran 16°</td>
             </tr>
             <tr data-utc="2027-04-20T22:27:09Z">
-              <td>21 kwietnia 2027, 00:27<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">21 kwietnia 2027, 00:27</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Skorpion 0°</td>
             </tr>
             <tr data-utc="2027-05-06T10:58:38Z">
-              <td>6 maja 2027, 12:58<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">6 maja 2027, 12:58</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Byk 15°</td>
             </tr>
             <tr data-utc="2027-05-20T10:59:01Z">
-              <td>20 maja 2027, 12:59<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">20 maja 2027, 12:59</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Skorpion 29°</td>
             </tr>
             <tr data-utc="2027-06-04T19:40:21Z">
-              <td>4 czerwca 2027, 21:40<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">4 czerwca 2027, 21:40</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Bliźnięta 13°</td>
             </tr>
             <tr data-utc="2027-06-19T00:44:21Z">
-              <td>19 czerwca 2027, 02:44<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">19 czerwca 2027, 02:44</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Strzelec 27°</td>
             </tr>
             <tr data-utc="2027-07-04T03:02:05Z">
-              <td>4 lipca 2027, 05:02<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">4 lipca 2027, 05:02</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Rak 11°</td>
             </tr>
             <tr data-utc="2027-07-18T15:44:56Z">
-              <td>18 lipca 2027, 17:44<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">18 lipca 2027, 17:44</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Koziorożec 25°</td>
             </tr>
             <tr data-utc="2027-08-02T10:05:14Z">
-              <td>2 sierpnia 2027, 12:05<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">2 sierpnia 2027, 12:05</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Lew 9°</td>
             </tr>
             <tr data-utc="2027-08-17T07:28:42Z">
-              <td>17 sierpnia 2027, 09:28<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">17 sierpnia 2027, 09:28</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Wodnik 24°</td>
             </tr>
             <tr data-utc="2027-08-31T17:41:11Z">
-              <td>31 sierpnia 2027, 19:41<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">31 sierpnia 2027, 19:41</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Panna 8°</td>
             </tr>
             <tr data-utc="2027-09-15T23:03:31Z">
-              <td>16 września 2027, 01:03<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">16 września 2027, 01:03</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Ryby 22°</td>
             </tr>
             <tr data-utc="2027-09-30T02:36:05Z">
-              <td>30 września 2027, 04:36<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">30 września 2027, 04:36</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Waga 6°</td>
             </tr>
             <tr data-utc="2027-10-15T13:47:01Z">
-              <td>15 października 2027, 15:47<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">15 października 2027, 15:47</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Baran 21°</td>
             </tr>
             <tr data-utc="2027-10-29T13:36:34Z">
-              <td>29 października 2027, 15:36<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">29 października 2027, 15:36</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Skorpion 5°</td>
             </tr>
             <tr data-utc="2027-11-14T03:25:56Z">
-              <td>14 listopada 2027, 04:25<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">14 listopada 2027, 04:25</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Byk 21°</td>
             </tr>
             <tr data-utc="2027-11-28T03:24:26Z">
-              <td>28 listopada 2027, 04:24<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">28 listopada 2027, 04:24</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Strzelec 5°</td>
             </tr>
             <tr data-utc="2027-12-13T16:08:48Z">
-              <td>13 grudnia 2027, 17:08<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">13 grudnia 2027, 17:08</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Pełnia Księżyca</td>
               <td>Bliźnięta 21°</td>
             </tr>
             <tr data-utc="2027-12-27T20:12:20Z">
-              <td>27 grudnia 2027, 21:12<span class="badge" hidden> · najbliższa</span></td>
+              <td><button class="lunation-pick" type="button">27 grudnia 2027, 21:12</button><span class="badge" hidden> · najbliższa</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca</td>
               <td>Koziorożec 5°</td>
             </tr>
@@ -239,65 +251,78 @@
           </table>
         </div>
       </section>
-      <section class="plans" aria-labelledby="plans-title">
-        <h2 id="plans-title">Bezpłatne listy i osobisty miesiąc</h2>
-        <p>Listy księżycowe są bezpłatne i takie zostaną. Osobisty miesiąc to płatny dodatek, który przygotowujemy. Poniżej przykład jednego i drugiego.</p>
+        </aside>
+      </div>
+      <section class="plans reveal-on-scroll" aria-labelledby="plans-title">
+        <h2 id="plans-title">Dwa sposoby, by być bliżej własnego rytmu</h2>
+        <p>Niebo nie ma mówić Ci, co się wydarzy. Może dać chwilę, by zauważyć to, co już prosi o Twoją uwagę — przy każdym nowiu i pełni albo jako głębszą opowieść rozwijającą się przez cały miesiąc.</p>
         <div class="plans-grid">
-          <div class="plan"><h3>Bezpłatnie</h3><ul><li>List w dniu każdego nowiu i każdej pełni</li><li>Dom Twojego horoskopu, w którym wypada lunacja, i jego temat</li><li>Trzy pytania do dziennika i afirmacja</li><li>Twoje odpowiedzi zapisane w dzienniku, na każdym urządzeniu</li></ul></div>
-          <div class="plan paid"><h3>Osobisty miesiąc</h3><p class="price">19 zł miesięcznie</p><ul><li>Wszystko, co bezpłatne</li><li>Kalendarz Twoich własnych tranzytów na miesiąc, z datami i pytaniem do każdego</li><li>Comiesięczne spojrzenie wstecz na to, co piszesz, obok nieba z tych dni</li><li>Księga roku z Twoimi wpisami na urodziny</li></ul></div>
+          <article class="plan"><h3>Twój list księżycowy</h3><p class="plan-intro">Dwa razy w miesiącu krótki list spotyka Cię w naturalnym momencie zmiany. Tłumaczy nów lub pełnię przez Twój własny horoskop i daje spokojną przestrzeń, w której łatwiej usłyszeć siebie.</p><ul><li><strong>Twoje niebo, ludzkim językiem</strong><span>Zobacz, której części życia dotyka ta lunacja i dlaczego może być teraz bardziej wyczuwalna — bez żargonu i nieodwołalnych przepowiedni.</span></li><li><strong>Pytania, które coś otwierają</strong><span>Trzy starannie dobrane pytania pomagają nazwać to, czego pragniesz, co się zmieniło i co chcesz zabrać ze sobą dalej.</span></li><li><strong>Dziennik, który pamięta</strong><span>Twoje odpowiedzi zostają razem w prywatnym dzienniku, dzięki czemu przelotne odczucie z czasem może odsłonić ważny wzorzec.</span></li></ul><p class="plan-closing">Bezpłatnie, dwa razy w miesiącu. Kilka uważnych minut, które należą tylko do Ciebie.</p></article>
+          <article class="plan paid"><h3>Twój Osobisty Miesiąc</h3><p class="price">19 zł miesięcznie</p><p class="plan-intro">Osobisty Miesiąc pokazuje szerszy obraz. Zamiast przechodzić przez miesiąc jak przez rozmyty ciąg dat, widzisz jego emocjonalny rytm: okresy, które mogą coś poruszyć, pytania warte zatrzymania i nić łączącą wszystko w całość.</p><ul><li><strong>Daty, które mają znaczenie dla Ciebie</strong><span>Osobisty kalendarz najsilniejszych tranzytów miesiąca, przełożonych na sytuacje, które możesz rozpoznać w pracy, relacjach, domu i swoim wewnętrznym świecie.</span></li><li><strong>Wskazówki, z których da się skorzystać</strong><span>Każdy okres przynosi skupioną refleksję — nie polecenie — aby pomóc Ci dokonać własnego wyboru z większą świadomością.</span></li><li><strong>Wzorce, które odsłania dopiero czas</strong><span>Pod koniec miesiąca Twoje wpisy wracają obok nieba z tych dni, pokazując powracające potrzeby, napięcia i pragnienia.</span></li><li><strong>Twój rok jako opowieść</strong><span>W dniu urodzin te miesiące stają się prywatną księgą roku: nie listą przepowiedni, lecz portretem Twojej zmiany.</span></li></ul><p class="plan-closing">Dla osoby, która chce nie tylko wiedzieć, co dzieje się na niebie, ale rozumieć, co otwiera się przez to w jej własnym życiu.</p></article>
         </div>
         <div class="examples">
           <article class="example">
             <p class="example-label">Przykład bezpłatnego listu</p>
             <h4><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca w Skorpionie, w Twoim 3. domu</h4>
             <p class="when">9 listopada 2026, 08:02</p>
-            <p>Ta część Twojego horoskopu dotyczy słów, nauki i codziennych kontaktów.</p>
-            <ol class="prompts"><li>Czego chcesz się w tym miesiącu nauczyć albo o czym poczytać?</li><li>Z kim chcesz rozmawiać częściej?</li><li>Zapisz jedną intencję na ten księżycowy miesiąc, w czasie teraźniejszym.</li></ol>
-            <p class="affirmation"><strong>Afirmacja</strong>Moje słowa mogą być jasne i życzliwe.</p>
+            <p>Ta część Twojego horoskopu obejmuje słowa, które powtarzasz, pytania, za którymi podążasz, i codzienne rozmowy, które po cichu kształtują Twoje wybory.</p>
+            <ol class="prompts"><li>Którą rozmowę wciąż ćwiczysz w myślach? Zapisz jej pierwsze szczere zdanie.</li><li>Jaki temat stale wraca w Twoich kartach, notatkach lub zapisanych postach? Co mogłaby otworzyć jedna godzina pełnego skupienia na nim?</li><li>Dokończ zdanie: W tym miesiącu księżycowym wybieram...</li></ol>
+            <p class="affirmation"><strong>Afirmacja</strong>Ufam sobie, że potrafię powiedzieć to jasno i życzliwie.</p>
           </article>
           <article class="example paid">
             <p class="example-label">Przykład osobistego miesiąca</p>
             <p class="hint">Przykład dla fikcyjnej osoby urodzonej 17 maja 1990 r. Twój miesiąc obliczamy z Twoich danych urodzenia.</p>
             <h4>Twoje niebo w listopadzie</h4>
             <ul class="calendar">
-              <li><span class="when">3–8 listopada</span> <strong>Wenus przechodzi przez Twoje Słońce</strong>
-                <p>Tydzień, by zauważyć, co cenisz w sobie i w swoim życiu.</p><p class="question">Co w tym tygodniu podoba Ci się w Tobie?</p></li>
-              <li><span class="when">14–19 listopada</span> <strong>Mars przechodzi przez Twój 4. dom</strong>
-                <p>Energia dla domu: porządki, przestawianie mebli, zapraszanie gości.</p><p class="question">Co chcesz zmienić w swojej przestrzeni?</p></li>
-              <li><span class="when">24 listopada</span> <strong>Pełnia w Twoim 10. domu</strong>
-                <p>Chwila, by spojrzeć na swoją pracę i na to, co już zbudowane.</p><p class="question">Które osiągnięcie tego miesiąca chcesz zapamiętać?</p></li>
+              <li><span class="when">3–8 listopada</span> <strong>Wenus spotyka Twoje Słońce — widoczność i poczucie własnej wartości</strong>
+                <p>Komplementy mogą w tym tygodniu mocniej do Ciebie docierać — albo wyraźniej zobaczysz chwile, w których umniejszasz sobie. Zwróć uwagę na ubrania, ludzi i wybory, przy których czujesz się bardziej sobą, a nie tylko osobą łatwiejszą do zaakceptowania.</p><p class="question">Gdzie możesz przestać prosić o pozwolenie, by cieszyć się sobą?</p></li>
+              <li><span class="when">14–19 listopada</span> <strong>Mars aktywuje Twój 4. dom — dom i poczucie przynależności</strong>
+                <p>Możesz poczuć potrzebę opróżnienia kąta, nazwania napięcia w domu albo zawalczenia o więcej własnej przestrzeni. Zamiast zmieniać wszystko, zauważ jedno miejsce — lub relację — przy których trudno Ci swobodnie odetchnąć.</p><p class="question">Gdyby Twój dom miał wspierać osobę, którą się stajesz, co zmienisz najpierw — i dlaczego?</p></li>
+              <li><span class="when">24 listopada</span> <strong>Pełnia w Twoim 10. domu — praca i uznanie</strong>
+                <p>Wynik, termin lub rozmowa mogą pokazać Ci wyraźnie, jak daleko już jesteś. Zanim pobiegniesz do kolejnego celu, zobacz, co zostało przez Ciebie zbudowane — i czy sukces, za którym gonisz, nadal jest naprawdę Twój.</p><p class="question">Co z dumą uznajesz za własne i czyją aprobatą nie chcesz już mierzyć swojej wartości?</p></li>
             </ul>
             <h4>Twój miesiąc Twoimi słowami</h4>
-            <p>W listopadzie w dzienniku pojawia się 7 wpisów. Najczęstsze słowa to „odpoczynek”, „siostra” i „projekt”.</p>
-            <p>W okolicy pełni w Twoim 10. domu wraca pragnienie, by Twoja praca była zauważona. Ten sam temat pojawia się w sierpniu, gdy Jowisz przechodzi przez szczyt Twojego horoskopu.</p>
-            <p>Pytanie na grudzień: co pomoże Ci poczuć, że Twoja praca jest widoczna?</p>
+            <p>W siedmiu listopadowych wpisach powracają trzy słowa: „odpoczynek”, „siostra” i „projekt”. Życie prywatne i widoczna praca zdają się jednocześnie prosić o uwagę.</p>
+            <p>W pobliżu pełni w 10. domu zapisujesz: „Chcę, by moja praca była widoczna, ale nie za cenę powrotów do domu bez sił”. To samo napięcie pojawiło się w sierpniu, gdy Jowisz przechodził przez szczyt Twojego horoskopu.</p>
+            <p>Zabierz do grudnia pytanie: jak wyglądałby widoczny sukces, który zostawia miejsce także na Twoje prawdziwe życie?</p>
           </article>
         </div>
       </section>
-      <section id="link-card" class="card" aria-labelledby="link-title">
-        <h2 id="link-title">Masz już subskrypcję?</h2>
-        <p>Podaj e-mail, a wyślemy link do Twojego dziennika. Działa na każdym urządzeniu, bez hasła.</p>
-        <form id="link-form" novalidate>
-          <div class="field">
-            <label for="link-email">E-mail</label>
-            <input id="link-email" type="email" autocomplete="email" required>
+      <section id="link-card" class="card reveal-on-scroll" aria-labelledby="link-title">
+        <h2 id="link-title">Twój księżycowy dziennik</h2>
+        <p>Wybierz drogę odpowiednią dla miejsca, w którym jesteś dzisiaj.</p>
+        <div class="link-paths">
+          <div class="link-path link-new">
+            <h3>Jesteś tu pierwszy raz?</h3>
+            <p>Zacznij od danych urodzenia. Zobaczysz, gdzie w Twoim horoskopie wypada najbliższy nów i pełnia, a potem możesz wybrać bezpłatne osobiste listy.</p>
+            <a class="btn" href="#moon-form">Zobacz moje najbliższe lunacje</a>
           </div>
-          <p id="link-error" class="error" role="alert" hidden></p>
-          <p id="link-done" class="note" role="status" hidden></p>
-          <button class="btn ghost" type="submit">Wyślij mój link</button>
-        </form>
+          <div class="link-path link-returning">
+            <h3>Otrzymujesz już listy?</h3>
+            <p>Podaj e-mail, a wyślemy nowy link do Twojego prywatnego dziennika. Działa na każdym urządzeniu, bez hasła.</p>
+            <form id="link-form" novalidate>
+              <div class="field">
+                <label for="link-email">E-mail</label>
+                <input id="link-email" type="email" autocomplete="email" required>
+              </div>
+              <p id="link-error" class="error" role="alert" hidden></p>
+              <p id="link-done" class="note" role="status" hidden></p>
+              <button class="btn ghost" type="submit">Wyślij mój link</button>
+            </form>
+          </div>
+        </div>
       </section>
-      <section class="copy">
+      <section class="copy reveal-on-scroll">
         <h2>Dziennik w rytmie Księżyca</h2>
         <p>Co miesiąc Księżyc przechodzi od nowiu do pełni i z powrotem. Wiele osób prowadzi dziennik w tym rytmie: na nów zapisuje intencję, a na pełnię patrzy wstecz i notuje, za co czuje wdzięczność.</p>
         <p>Dokładny moment każdego nowiu i każdej pełni obliczamy za pomocą Swiss Ephemeris i sprawdzamy, w którym domu Twojego horoskopu urodzeniowego wypada. Każdy dom ma swój temat, dlatego pytania zmieniają się z miesiąca na miesiąc.</p>
       </section>
-      <section class="copy">
+      <section class="copy reveal-on-scroll">
         <h2>Czym to jest, a czym nie jest</h2>
         <p>To pytania do refleksji, a nie przepowiednie. Nie mówimy, co się wydarzy; proponujemy rytm, kilka pytań i afirmację, a odpowiedzi należą do Ciebie.</p>
         <p>Twoje odpowiedzi zapisujemy w Twoim dzienniku, aby były dostępne na każdym urządzeniu. Przechowujemy też adres e-mail i dane urodzenia potrzebne do listów. Wszystko możesz usunąć w każdej chwili jednym kliknięciem.</p>
       </section>
-      <section class="copy faq">
+      <section class="copy faq reveal-on-scroll">
         <h2>Pytania</h2>
         <h3>Kiedy jest najbliższy nów Księżyca?</h3>
         <p>Tabela na tej stronie zawiera wszystkie nowie i pełnie do końca 2027 roku z dokładną godziną, a najbliższa lunacja jest wyróżniona.</p>
@@ -317,7 +342,7 @@
       <p class="links"><a href="/">Dla astrologów</a> · <a href="/terms.html">Regulamin i prywatność</a></p>
     </div>
   </footer>
-  <script type="application/json" id="moon-i18n">{"legend":"Twoje dane urodzenia","date":"Data urodzenia","time":"Godzina urodzenia","timeUnknown":"Nie znam godziny urodzenia","place":"Miejsce urodzenia","placeHint":"Zacznij wpisywać miasto: ustawi strefę czasową i ascendent.","placeSearching":"Szukam…","placeNone":"Nie znaleziono miejsc","timezone":"Strefa czasowa","timezoneFromPlace":"Strefa czasowa ustawiona według miejsca urodzenia.","calculate":"Pokaż moje lunacje","calculating":"Obliczam…","noscript":"Ten kalkulator wymaga JavaScriptu.","required":"Podaj datę urodzenia.","resultTitle":"Twój najbliższy nów i najbliższa pełnia","promptsTitle":"Pytania do dziennika","affirmationTitle":"Afirmacja","signupTitle":"Otrzymuj swoje pytania na każdy nów i każdą pełnię","signupText":"Dwa krótkie e-maile w miesiącu, w dniu nowiu i pełni, z pytaniami dla domu Twojego horoskopu, w którym wypada lunacja. Bezpłatnie, a wypisać się można jednym kliknięciem.","email":"E-mail","consent":"Zgadzam się na otrzymywanie tych wiadomości i przechowywanie moich danych urodzenia w tym celu. Mogę je usunąć w każdej chwili.","subscribe":"Wysyłaj mi listy księżycowe","subscribing":"Wysyłam…","signupDone":"Prawie gotowe: otwórz wiadomość, którą właśnie wysłaliśmy, i potwierdź adres.","errorEmail":"Sprawdź adres e-mail.","errorConsent":"Zaznacz zgodę.","errorSignup":"Nie udało się wysłać wiadomości z potwierdzeniem. Spróbuj ponownie później.","errorUnavailable":"Zapisy są teraz niedostępne. Spróbuj ponownie później.","errorInvalid":"Sprawdź datę, godzinę i strefę czasową.","errorRateLimited":"Zbyt wiele prób. Odczekaj minutę i spróbuj ponownie.","errorGeneric":"Coś poszło nie tak. Spróbuj ponownie.","errorNetwork":"Brak połączenia. Sprawdź internet i spróbuj ponownie.","tableDate":"Data i godzina","tablePhase":"Faza","tableSign":"Znak","nextBadge":"najbliższa","loading":"Wczytuję Twój list…","invalidLink":"Ten link jest nieprawidłowy. Możesz zapisać się ponownie na stronie o Księżycu.","confirmed":"Dziękujemy, adres jest potwierdzony. Listy przychodzą w dniu każdego nowiu i każdej pełni.","pending":"Adres nie jest jeszcze potwierdzony: użyj linku z wiadomości z potwierdzeniem.","unsubscribedNote":"Subskrypcja jest wyłączona i kolejne listy nie będą wysyłane.","currentTitle":"Twój obecny Księżyc","writePlaceholder":"Pisz tutaj… Zapisuje się automatycznie.","saved":"Zapisano","nextLine":"Następna lunacja: {kind}, {date}, {sign_in}, w Twoim {house}. domu.","historyTitle":"Twój dziennik","historyEmpty":"Tutaj pojawią się Twoje odpowiedzi.","fakeTitle":"Osobisty miesiąc","fakePrice":"Planowana cena: {price}.","price":"19 zł miesięcznie","fakeButton":"Interesuje mnie to, dajcie znać, gdy będzie gotowe","fakeThanks":"Dziękujemy! Napiszemy, gdy będzie gotowe. Nic nie jest pobierane.","manageTitle":"Twoje listy","unsubscribe":"Wypisz się","unsubscribed":"Subskrypcja wyłączona.","erase":"Usuń moje dane","eraseConfirm":"Na pewno usunąć adres e-mail i dane urodzenia?","erased":"Twoje dane zostały usunięte.","manageError":"Nie udało się. Spróbuj ponownie.","backToMoon":"Wróć do kalendarza Księżyca","saving":"Zapisuję…","saveError":"Nie zapisano. Sprawdź połączenie.","linkPrivacy":"Ten link otwiera Twój dziennik. Nie przekazuj tych wiadomości innym osobom.","linkTitle":"Masz już subskrypcję?","linkText":"Podaj e-mail, a wyślemy link do Twojego dziennika. Działa na każdym urządzeniu, bez hasła.","linkButton":"Wyślij mój link","linkSending":"Wysyłam…","linkDone":"Jeśli ten adres jest zapisany, link już jest w drodze.","fakeText":"Osobisty miesiąc nie jest jeszcze dostępny. Jeśli go chcesz, naciśnij przycisk: napiszemy, gdy będzie gotowy. Nic nie jest pobierane."}</script>
+  <script type="application/json" id="moon-i18n">{"legend":"Twoje dane urodzenia","date":"Data urodzenia","time":"Godzina urodzenia","timeUnknown":"Nie znam godziny urodzenia","place":"Miejsce urodzenia","placeHint":"Zacznij wpisywać miasto: ustawi strefę czasową i ascendent.","placeSearching":"Szukam…","placeNone":"Nie znaleziono miejsc","timezone":"Strefa czasowa","timezoneFromPlace":"Strefa czasowa ustawiona według miejsca urodzenia.","calculate":"Pokaż moje lunacje","calculating":"Obliczam…","noscript":"Ten kalkulator wymaga JavaScriptu.","required":"Podaj datę urodzenia.","resultTitle":"Twój najbliższy nów i najbliższa pełnia","promptsTitle":"Pytania do dziennika","affirmationTitle":"Afirmacja","signupTitle":"Otrzymuj swoje pytania na każdy nów i każdą pełnię","signupText":"Dwa krótkie e-maile w miesiącu, w dniu nowiu i pełni, z pytaniami dla domu Twojego horoskopu, w którym wypada lunacja. Bezpłatnie, a wypisać się można jednym kliknięciem.","email":"E-mail","consent":"Zgadzam się na otrzymywanie tych wiadomości i przechowywanie moich danych urodzenia w tym celu. Mogę je usunąć w każdej chwili.","subscribe":"Wysyłaj mi listy księżycowe","subscribing":"Wysyłam…","signupDone":"Prawie gotowe: otwórz wiadomość, którą właśnie wysłaliśmy, i potwierdź adres.","errorEmail":"Sprawdź adres e-mail.","errorConsent":"Zaznacz zgodę.","errorSignup":"Nie udało się wysłać wiadomości z potwierdzeniem. Spróbuj ponownie później.","errorUnavailable":"Zapisy są teraz niedostępne. Spróbuj ponownie później.","errorInvalid":"Sprawdź datę, godzinę i strefę czasową.","errorRateLimited":"Zbyt wiele prób. Odczekaj minutę i spróbuj ponownie.","errorGeneric":"Coś poszło nie tak. Spróbuj ponownie.","errorNetwork":"Brak połączenia. Sprawdź internet i spróbuj ponownie.","tableDate":"Data i godzina","tablePhase":"Faza","tableSign":"Znak","nextBadge":"najbliższa","selectedBadge":"Wybrana","loading":"Wczytuję Twój list…","invalidLink":"Ten link jest nieprawidłowy. Możesz zapisać się ponownie na stronie o Księżycu.","confirmed":"Dziękujemy, adres jest potwierdzony. Listy przychodzą w dniu każdego nowiu i każdej pełni.","pending":"Adres nie jest jeszcze potwierdzony: użyj linku z wiadomości z potwierdzeniem.","unsubscribedNote":"Subskrypcja jest wyłączona i kolejne listy nie będą wysyłane.","currentTitle":"Twój obecny Księżyc","writePlaceholder":"Pisz tutaj… Zapisuje się automatycznie.","saved":"Zapisano","nextLine":"Następna lunacja: {kind}, {date}, {sign_in}, w Twoim {house}. domu.","historyTitle":"Twój dziennik","historyEmpty":"Tutaj pojawią się Twoje odpowiedzi.","fakeTitle":"Osobisty miesiąc","fakePrice":"Planowana cena: {price}.","price":"19 zł miesięcznie","fakeButton":"Interesuje mnie to, dajcie znać, gdy będzie gotowe","fakeThanks":"Dziękujemy! Napiszemy, gdy będzie gotowe. Nic nie jest pobierane.","manageTitle":"Twoje listy","unsubscribe":"Wypisz się","unsubscribed":"Subskrypcja wyłączona.","erase":"Usuń moje dane","eraseConfirm":"Na pewno usunąć adres e-mail i dane urodzenia?","erased":"Twoje dane zostały usunięte.","manageError":"Nie udało się. Spróbuj ponownie.","backToMoon":"Wróć do kalendarza Księżyca","saving":"Zapisuję…","saveError":"Nie zapisano. Sprawdź połączenie.","linkPrivacy":"Ten link otwiera Twój dziennik. Nie przekazuj tych wiadomości innym osobom.","linkTitle":"Twój księżycowy dziennik","linkText":"Wybierz drogę odpowiednią dla miejsca, w którym jesteś dzisiaj.","linkNewTitle":"Jesteś tu pierwszy raz?","linkNewText":"Zacznij od danych urodzenia. Zobaczysz, gdzie w Twoim horoskopie wypada najbliższy nów i pełnia, a potem możesz wybrać bezpłatne osobiste listy.","linkNewButton":"Zobacz moje najbliższe lunacje","linkReturningTitle":"Otrzymujesz już listy?","linkReturningText":"Podaj e-mail, a wyślemy nowy link do Twojego prywatnego dziennika. Działa na każdym urządzeniu, bez hasła.","linkButton":"Wyślij mój link","linkSending":"Wysyłam…","linkDone":"Jeśli ten adres jest zapisany, link już jest w drodze.","fakeText":"Osobisty miesiąc nie jest jeszcze dostępny. Jeśli go chcesz, naciśnij przycisk: napiszemy, gdy będzie gotowy. Nic nie jest pobierane."}</script>
   <script src="/js/moon-tool.js?v=1" defer></script>
 </body>
 </html>

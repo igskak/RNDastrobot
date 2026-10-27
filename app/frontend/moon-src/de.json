@@ -105,6 +105,7 @@
   "tablePhase": "Phase",
   "tableSign": "Zeichen",
   "nextBadge": "als Nächstes",
+  "selectedBadge": "Ausgewählt",
   "loading": "Dein Brief wird geladen…",
   "invalidLink": "Dieser Link ist nicht gültig. Du kannst dich auf der Mondseite neu anmelden.",
   "confirmed": "Danke, deine E-Mail-Adresse ist bestätigt. Deine Briefe kommen am Tag jedes Neumonds und Vollmonds.",
@@ -132,8 +133,13 @@
   "saving": "Wird gespeichert…",
   "saveError": "Nicht gespeichert. Bitte prüfe deine Verbindung.",
   "linkPrivacy": "Dieser Link öffnet dein Journal. Leite diese E-Mails bitte nicht weiter.",
-  "linkTitle": "Schon angemeldet?",
-  "linkText": "Gib deine E-Mail-Adresse ein, und wir senden dir den Link zu deinem Journal. Er funktioniert auf jedem Gerät, ohne Passwort.",
+  "linkTitle": "Dein Mondjournal",
+  "linkText": "Wähle den Weg, der zu dem passt, wo du heute stehst.",
+  "linkNewTitle": "Zum ersten Mal hier?",
+  "linkNewText": "Beginne mit deinen Geburtsdaten. Du siehst, wo der nächste Neu- und Vollmond in deinem Horoskop fällt, und kannst danach deine kostenlosen persönlichen Briefe wählen.",
+  "linkNewButton": "Meine nächsten Monde sehen",
+  "linkReturningTitle": "Du erhältst die Briefe bereits?",
+  "linkReturningText": "Gib deine E-Mail-Adresse ein, und wir senden dir einen neuen Link zu deinem privaten Journal. Er funktioniert auf jedem Gerät, ohne Passwort.",
   "linkButton": "Meinen Link senden",
   "linkSending": "Wird gesendet…",
   "linkDone": "Wenn diese Adresse angemeldet ist, ist der Link unterwegs.",
@@ -155,22 +161,25 @@
  ],
  "tableDateFormat": "{d}. {month} {y}, {hh}:{mm} Uhr",
  "plans": {
-  "title": "Kostenlose Mondbriefe und dein persönlicher Monat",
-  "lead": "Die Mondbriefe sind kostenlos und bleiben es. Der persönliche Monat ist eine kostenpflichtige Ergänzung, die wir vorbereiten. Hier ein Beispiel für beides.",
-  "freeTitle": "Kostenlos",
+  "title": "Zwei Wege, deinem eigenen Rhythmus näher zu sein",
+  "lead": "Der Himmel soll dir nicht sagen, was geschehen wird. Er kann dir einen Moment geben, um wahrzunehmen, was bereits um deine Aufmerksamkeit bittet — bei jedem Neu- und Vollmond oder als tiefere Geschichte, die sich über den ganzen Monat entfaltet.",
+  "freeTitle": "Dein Mondbrief",
+  "freeIntro": "Zweimal im Monat begegnet dir ein kurzer Brief an einem natürlichen Wendepunkt. Er übersetzt den Neu- oder Vollmond durch dein eigenes Horoskop und schenkt dir einen stillen Raum, in dem du dich selbst klarer hören kannst.",
   "freeItems": [
-   "Ein Brief am Tag jedes Neumonds und Vollmonds",
-   "Das Haus deines Horoskops, in das er fällt, und sein Thema",
-   "Drei Fragen für dein Journal und eine Affirmation",
-   "Deine Antworten in deinem Journal gespeichert, auf jedem Gerät"
+   {"title": "Dein Himmel in menschlicher Sprache", "text": "Erkenne, welchen Lebensbereich dieser Mond berührt und warum er sich gerade lebendiger anfühlen kann — ohne Fachsprache oder festgelegte Vorhersagen."},
+   {"title": "Fragen, die etwas öffnen", "text": "Drei sorgfältig gewählte Impulse helfen dir zu benennen, was du willst, was sich verändert hat und was du mitnehmen möchtest."},
+   {"title": "Ein Journal, das sich erinnert", "text": "Deine Antworten bleiben in einem privaten Journal zusammen, sodass ein flüchtiges Gefühl mit der Zeit zu einem erkennbaren Muster werden kann."}
   ],
-  "paidTitle": "Persönlicher Monat",
+  "freeClosing": "Kostenlos, zweimal im Monat. Ein paar aufmerksame Minuten, die nur dir gehören.",
+  "paidTitle": "Dein persönlicher Monat",
+  "paidIntro": "Der persönliche Monat zeigt dir das größere Bild. Statt den Monat als verschwommene Folge von Daten zu erleben, erkennst du seinen emotionalen Rhythmus: Zeiten, die etwas bewegen können, Fragen, bei denen es sich lohnt zu verweilen, und den Faden, der alles verbindet.",
   "paidItems": [
-   "Alles, was kostenlos ist",
-   "Ein Kalender deiner eigenen Transite für den Monat, mit Daten und einer Frage zu jedem",
-   "Ein monatlicher Rückblick auf das, was du geschrieben hast, neben dem Himmel dieser Tage",
-   "Ein Jahrbuch deiner Einträge zu deinem Geburtstag"
+   {"title": "Deine bedeutungsvollen Daten", "text": "Ein persönlicher Kalender der stärksten Transite des Monats, übersetzt in Situationen, die du in Arbeit, Beziehungen, Zuhause und Innenleben wiedererkennen kannst."},
+   {"title": "Orientierung, die du wirklich nutzen kannst", "text": "Jeder Zeitraum bringt eine fokussierte Reflexion — keine Anweisung — damit du deine eigene Entscheidung bewusster treffen kannst."},
+   {"title": "Muster, die erst die Zeit sichtbar macht", "text": "Am Monatsende begegnen dir deine Einträge neben dem Himmel jener Tage wieder und zeigen wiederkehrende Bedürfnisse, Spannungen und Wünsche."},
+   {"title": "Dein Jahr als Geschichte", "text": "An deinem Geburtstag werden diese Monate zu einem privaten Jahrbuch: keine Liste von Vorhersagen, sondern ein Porträt deiner Veränderung."}
   ],
+  "paidClosing": "Für Menschen, die nicht nur wissen möchten, was am Himmel geschieht, sondern verstehen wollen, was sich dadurch im eigenen Leben öffnet.",
   "exampleFreeTitle": "Beispiel eines kostenlosen Briefs",
   "examplePaidTitle": "Beispiel eines persönlichen Monats",
   "exampleNote": "Beispiel für eine erfundene Person, geboren am 17. Mai 1990. Dein eigener Monat wird aus deinen Geburtsdaten berechnet.",
@@ -178,28 +187,28 @@
   "calendar": [
    {
     "when": "3.–8. November",
-    "what": "Venus läuft über deine Sonne",
-    "text": "Eine Woche, um zu bemerken, was du an dir und an deinem Leben schätzt.",
-    "question": "Was hat dir diese Woche an dir selbst gefallen?"
+    "what": "Venus trifft deine Sonne — Sichtbarkeit und Selbstwert",
+    "text": "Komplimente können dich diese Woche tiefer erreichen — oder du bemerkst deutlicher, wann du dich selbst klein machst. Achte auf Kleidung, Menschen und Entscheidungen, bei denen du dich mehr wie du selbst fühlst, nicht bloß akzeptabler.",
+    "question": "Wo bist du bereit, nicht länger um Erlaubnis zu bitten, du selbst zu sein und das zu genießen?"
    },
    {
     "when": "14.–19. November",
-    "what": "Mars durchläuft dein 4. Haus",
-    "text": "Energie für dein Zuhause: aufräumen, umstellen, Menschen einladen.",
-    "question": "Was möchtest du in deinem Raum verändern?"
+    "what": "Mars aktiviert dein 4. Haus — Zuhause und Zugehörigkeit",
+    "text": "Vielleicht möchtest du plötzlich eine Ecke freiräumen, eine Spannung zu Hause ansprechen oder mehr eigenen Raum einfordern. Statt alles zu verändern, spüre dem einen Ort — oder der einen Beziehung — nach, an dem du nicht mehr frei ausatmen kannst.",
+    "question": "Wenn dein Zuhause die Person unterstützen könnte, zu der du wirst: Was würdest du zuerst verändern — und warum?"
    },
    {
     "when": "24. November",
-    "what": "Vollmond in deinem 10. Haus",
-    "text": "Ein Moment, um auf deine Arbeit und auf das Aufgebaute zu schauen.",
-    "question": "An welchen Erfolg dieses Monats möchtest du dich erinnern?"
+    "what": "Vollmond in deinem 10. Haus — Arbeit und Anerkennung",
+    "text": "Ein Ergebnis, eine Frist oder ein Gespräch kann sichtbar machen, wie weit du gekommen bist. Bevor du zum nächsten Ziel eilst, sieh dir an, was du aufgebaut hast — und ob die Vorstellung von Erfolg, der du nachjagst, noch deine eigene ist.",
+    "question": "Was erkennst du mit Stolz als deine eigene Leistung an — und wessen Zustimmung soll nicht länger dein Maßstab sein?"
    }
   ],
   "reviewTitle": "Dein Monat in deinen Worten",
   "review": [
-   "Im November hat dein Journal 7 Einträge. Am häufigsten kommen die Wörter „Ruhe“, „Schwester“ und „Projekt“ vor.",
-   "Rund um den Vollmond in deinem 10. Haus kehrt der Wunsch zurück, dass deine Arbeit gesehen wird. Dasselbe Thema tauchte im August auf, als Jupiter über die Spitze deines Horoskops lief.",
-   "Frage für Dezember: Was würde dir helfen zu spüren, dass deine Arbeit gesehen wird?"
+   "In sieben November-Einträgen kehren drei Wörter wieder: „Ruhe“, „Schwester“ und „Projekt“. Dein privates Leben und deine sichtbare Arbeit scheinen gleichzeitig um Aufmerksamkeit zu bitten.",
+   "Nahe dem Vollmond in deinem 10. Haus schreibst du: „Ich möchte, dass meine Arbeit gesehen wird, aber nicht um den Preis, erschöpft nach Hause zu kommen.“ Dieselbe Spannung zeigte sich im August, als Jupiter über die Spitze deines Horoskops lief.",
+   "Nimm diese Frage mit in den Dezember: Wie sähe sichtbarer Erfolg aus, wenn er auch Raum für dein echtes Leben ließe?"
   ]
  }
 }
