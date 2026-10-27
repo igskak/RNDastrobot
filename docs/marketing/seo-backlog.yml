@@ -419,6 +419,32 @@ items:
     acceptance:
       schema: [FAQPage]
 
+  - id: india-kundli-tools
+    status: shipped
+    pr: "branch claude/semrush-steliara-keyword-research-0bd235 (not yet opened)"
+    type: tool-pages
+    slug: /kundli
+    target_queries:
+      - dasha calculator
+      - sade sati calculator
+      - free kundali matching
+    why: >-
+      Semrush India, 2026-10-26: dasha calculator 12,100 a month (KD 14), sade sati
+      calculator 6,600 (KD 16), free kundali matching 5,400 (KD 15), with the head terms
+      kundali matching 301,000 (KD 42) and kundli matching 135,000 (KD 45). Clicks cost
+      $0.01-0.07, so these pages earn only through the optional weekly forecast, and the
+      pilot exists to measure that conversion, not to sell ads. Plan and kill criteria:
+      docs/marketing/india-b2c-pilot-plan.md. English and Hindi, calculators free, no
+      account; Hindi stays noindexed until a native speaker has reviewed it
+      (KUNDLI_REVIEWED_LOCALES). Semrush returns no data for Devanagari queries, so Hindi
+      demand is unmeasured; read it from Search Console after launch.
+    must_cover:
+      - A working calculator above the fold, a plain explanation below it.
+      - Nothing that frightens: the safety law in app/services/b2c_safety_policy.py applies to page copy too (test_kundli_pages.py).
+    acceptance:
+      min_words: 200
+      schema: [WebApplication, FAQPage]
+
   # ---------------------------------------------------------------------------------------
   # Queue refilled 2026-10-26 from Search Console (28 days to 2026-10-19), after the first
   # five pages shipped and the agent started inventing its own housekeeping items.

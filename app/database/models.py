@@ -1761,3 +1761,44 @@ class AssistantSurvey(Base):
         Index('idx_assistant_surveys_owner',
               'astrologer_id', 'chart_user_id', 'created_at'),
     )
+
+
+class KundliSubscriber(Base):
+    """A paying (or about-to-pay) visitor of the public kundli tools.
+
+    No account exists: access to the report is a signed link (see
+    app/services/kundli_billing_service.py). Birth data is personal data, so the table holds
+    only what the forecasts need and a visitor can erase the row at any time.
+    """
+    __tablename__ = 'kundli_subscribers'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(320), nullable=False)
+    locale = Column(String(8), nullable=False, default='en', server_default='en')
+    display_name = Column(String(40))
+    birth_date = Column(Date, nullable=False)
+    birth_time = Column(Time)
+    timezone = Column(String(64), nullable=False)
+    place_label = Column(String(200))
+    cadence = Column(String(16), nullable=False, default='weekly', server_default='weekly')
+    status = Column(String(32), nullable=False, default='pending', server_default='pending')
+    provider = Column(String(32), nullable=False, default='stripe', server_default='stripe')
+    provider_customer_id = Column(String(255))
+    provider_subscription_id = Column(String(255))
+    current_period_end = Column(DateTime)
+    cancel_at_period_end = Column(Boolean, nullable=False, default=False, server_default='false')
+    consent_at = Column(DateTime, nullable=False)
+    last_digest_sent_at = Column(DateTime)
+    welcome_sent_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        CheckConstraint("cadence IN ('weekly', 'biweekly')", name='chk_kundli_subscribers_cadence'),
+        CheckConstraint(
+            "status IN ('pending', 'active', 'past_due', 'canceled')", name='chk_kundli_subscribers_status'
+        ),
+        UniqueConstraint('provider', 'provider_subscription_id', name='uq_kundli_subscribers_subscription'),
+        Index('idx_kundli_subscribers_email', 'email'),
+        Index('idx_kundli_subscribers_status', 'status'),
+    )

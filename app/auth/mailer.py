@@ -126,6 +126,11 @@ def _send_via_smtp(*, recipient: str, subject: str, body_text: str) -> bool:
     return True
 
 
+def send_transactional_email(*, recipient: str, subject: str, body_text: str) -> bool:
+    """Plain-text email through the configured provider (used by the kundli forecasts)."""
+    return _send_auth_email(recipient=recipient, subject=subject, body_text=body_text)
+
+
 def _send_auth_email(*, recipient: str, subject: str, body_text: str) -> bool:
     provider = os.getenv("EMAIL_PROVIDER", "").strip().lower()
 

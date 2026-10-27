@@ -1,0 +1,202 @@
+{
+  "site": {
+    "brand": "Steliara",
+    "navHub": "Kundli tools",
+    "navDasha": "Dasha",
+    "navSadeSati": "Sade Sati",
+    "navMatching": "Matching",
+    "langSwitch": "हिन्दी",
+    "langSwitchLabel": "Hindi version",
+    "footerNote": "A reflective, tradition-based guide for personal inspiration. It does not replace the advice of qualified professionals.",
+    "footerAstrologers": "Steliara for practising astrologers",
+    "skip": "Skip to content",
+    "footerTerms": "Terms"
+  },
+  "pages": {
+    "index": {
+      "title": "Free Kundli Tools: Dasha, Sade Sati and Matching",
+      "description": "Free kundli tools with no sign-up: Vimshottari dasha calculator, Sade Sati calculator and Ashtakoota kundli matching, calculated with the Swiss Ephemeris.",
+      "h1": "Free kundli tools",
+      "lead": "Enter a birth date, time and place and see your dasha timeline, your Sade Sati season or how two charts match. No sign-up and no payment for the calculations.",
+      "cards": [
+        {"slug": "dasha-calculator", "title": "Dasha calculator", "text": "Your Vimshottari timeline: the planetary period you are in now and every period of your life."},
+        {"slug": "sade-sati-calculator", "title": "Sade Sati calculator", "text": "Find out whether Saturn is passing through the signs around your Moon, and when the next season begins."},
+        {"slug": "kundli-matching", "title": "Kundli matching", "text": "Compare two Moon placements across the eight Ashtakoota areas for a score out of 36."}
+      ],
+      "sections": [
+        {"h2": "What you can calculate", "p": [
+          "The dasha calculator shows the Vimshottari timeline of life seasons, which starts from the nakshatra your Moon occupied at birth. The Sade Sati calculator shows when Saturn passes through the three signs around your Moon. Kundli matching compares two Moon placements across the eight Ashtakoota areas and gives a score out of 36."
+        ]},
+        {"h2": "How the calculations are made", "p": [
+          "Positions come from the Swiss Ephemeris, the astronomical engine behind professional astrology software. The tools use the sidereal zodiac with the Lahiri ayanamsha, the standard in India, and a dasha year of 365.25 days. Your birth place is turned into a time zone so that the local birth time becomes the right moment in world time."
+        ]},
+        {"h2": "A gentle way to read the results", "p": [
+          "These tools describe traditional timelines and scores. Treat them as a mirror for reflection and conversation, not as a prediction of events. Where a tradition treats something as challenging, you will see it described as a theme to be aware of, together with a practical step."
+        ]}
+      ],
+      "faq": [
+        {"q": "Is it really free?", "a": "Yes. The calculators are free and need no account. An optional weekly forecast is available if you would like a personal reading each week."},
+        {"q": "Do I need my exact birth time?", "a": "The Moon moves about thirteen degrees a day, so the time matters. If you do not know it, the tools use midday and tell you when the result could differ."},
+        {"q": "Which zodiac is used?", "a": "The sidereal zodiac with the Lahiri ayanamsha, which is the standard used for kundli in India. It can differ from the sign in a western horoscope."},
+        {"q": "Where is my data kept?", "a": "The free calculators do not store your birth details. If you subscribe, only what is needed to prepare your forecast is kept, and you can delete it from your report page at any time."}
+      ]
+    },
+    "dasha-calculator": {
+      "title": "Dasha Calculator: Free Vimshottari Dasha Online",
+      "description": "Free Vimshottari dasha calculator. Enter date, time and place of birth to see your mahadasha, antardasha and the full 120-year timeline. No sign-up.",
+      "h1": "Dasha calculator (Vimshottari)",
+      "lead": "See the planetary period you are in now and your whole life timeline, from your date, time and place of birth.",
+      "sections": [
+        {"h2": "How the dasha works", "p": [
+          "Vimshottari dasha divides a 120-year cycle among nine planets. Where the cycle begins depends on the nakshatra the Moon occupied at your birth, and how far the Moon had travelled through that nakshatra sets how much of the first period remained at birth."
+        ]},
+        {"h2": "Mahadasha and antardasha", "p": [
+          "The mahadasha is the major period and lasts between six and twenty years. Inside it, nine antardasha sub-periods follow the same planetary order, each led by its own planet. The tool lists both with their dates, and marks the one running today."
+        ]},
+        {"h2": "Reading the result", "p": [
+          "Each planet is shown with a theme such as growth, patience or curiosity. Use it as an invitation to notice where your attention naturally goes in each season of life, not as a forecast of what will happen."
+        ]}
+      ],
+      "faq": [
+        {"q": "What is a mahadasha?", "a": "It is the major planetary period in the Vimshottari system. The nine periods together make a 120-year cycle, and each one is divided into nine sub-periods called antardasha."},
+        {"q": "Why does birth time matter?", "a": "The Moon travels about thirteen degrees a day, so a few hours can move it into a different nakshatra and shift every date in the timeline. If you do not know the time, the tool says so when the result could change."},
+        {"q": "Which year length is used?", "a": "A dasha year of 365.25 days. Other programs use slightly different year lengths, which can move dates by a few days."},
+        {"q": "Can I get a forecast for the coming year?", "a": "Yes. The optional report below the result lists your sub-periods for the next twelve months and a weekly forecast, with a gentle practice for each season."}
+      ]
+    },
+    "sade-sati-calculator": {
+      "title": "Sade Sati Calculator: Check Your Saturn Season",
+      "description": "Free Sade Sati calculator. Find out whether Saturn is passing through the signs around your Moon and see every season of your life with dates.",
+      "h1": "Sade Sati calculator",
+      "lead": "Find out whether you are in your Sade Sati season, which phase it is, and when the next one begins.",
+      "sections": [
+        {"h2": "What Sade Sati means", "p": [
+          "Sade Sati is the roughly seven and a half years in which Saturn passes through the sign before your Moon sign, your Moon sign, and the sign after it. A full season comes around about once every thirty years."
+        ]},
+        {"h2": "The three phases", "p": [
+          "The rising phase begins when Saturn enters the sign before your Moon sign. The peak is Saturn in your Moon sign. The setting phase is Saturn in the following sign. Because Saturn sometimes steps back into a sign before moving on, two phases can show overlapping dates."
+        ]},
+        {"h2": "A season of consolidation", "p": [
+          "Many people describe this period as one of maturity, focus and steady work. The tool presents it as a season for building routines and laying careful foundations, and the optional report adds a gentle practice for it."
+        ]}
+      ],
+      "faq": [
+        {"q": "How long does Sade Sati last?", "a": "About seven and a half years in total, with each of the three phases lasting around two and a half years."},
+        {"q": "How do I know my Moon sign?", "a": "Enter your date, time and place of birth and the tool works it out. It uses the sidereal zodiac, so it can differ from the Moon sign in a western horoscope."},
+        {"q": "What if I do not know my birth time?", "a": "The tool uses midday and tells you when the Moon changes sign during that day, because then the result could differ."},
+        {"q": "Is this a prediction?", "a": "No. It is a traditional timing marker based on where Saturn is. It is best used as a prompt for reflection."}
+      ]
+    },
+    "kundli-matching": {
+      "title": "Free Kundli Matching: Ashtakoota Guna Milan Online",
+      "description": "Free kundli matching by date of birth. Compare two Moon placements across the eight Ashtakoota areas for a score out of 36, with plain-language notes.",
+      "h1": "Kundli matching (Ashtakoota guna milan)",
+      "lead": "Enter the birth details of two people and see how their Moon placements line up across the eight traditional areas, scored out of 36.",
+      "sections": [
+        {"h2": "How Ashtakoota works", "p": [
+          "Ashtakoota compares the nakshatra and sign of each person's Moon across eight areas: Varna, Vashya, Tara, Yoni, Graha Maitri, Gana, Bhakoot and Nadi. The areas carry from one to eight points and add up to 36."
+        ]},
+        {"h2": "How to read the score", "p": [
+          "Tradition uses 18 as a reference point. A higher total shows more areas lining up naturally, and a lower total shows more areas to nurture. It is one lens among many: values, communication and commitment shape a relationship far more than any number."
+        ]},
+        {"h2": "Different almanacs, slightly different numbers", "p": [
+          "The tables for Vashya, Gana and Yoni vary a little between traditions and websites, so another site may show a slightly different total. This tool uses the common Parashari tables and explains each area in plain language."
+        ]}
+      ],
+      "faq": [
+        {"q": "What does a score below 18 mean?", "a": "It means this lens highlights more areas to nurture. No score can decide a relationship; your values, communication and commitment matter far more."},
+        {"q": "Why do other sites show a different score?", "a": "Some tables, such as Vashya, Gana and Yoni, differ slightly between almanacs. The method is the same, so totals can differ by a point or two."},
+        {"q": "Who is the first and who is the second person?", "a": "Tradition names them groom and bride because the tables were written that way. The labels only decide which table row is read, and anyone can use the tool."},
+        {"q": "Do I need both birth times?", "a": "The Moon moves quickly, so the time helps. If a time is missing the tool uses midday and tells you when the Moon changes nakshatra or sign that day."}
+      ]
+    },
+    "report": {
+      "title": "Your kundli report and weekly forecast",
+      "description": "Your personal kundli report: dasha timeline, Sade Sati season and your forecast for the days ahead, kept private behind your own link.",
+      "h1": "Your report",
+      "lead": "Your private report. Keep this page's link to yourself."
+    },
+    "thanks": {
+      "title": "Thank you: your forecast is on its way",
+      "description": "Your payment is confirmed. A private link to your kundli report and weekly forecast is being sent to your email.",
+      "h1": "Thank you",
+      "lead": "Your payment is confirmed. A private link to your report is on its way to your email, and it usually arrives within a few minutes. If it does not appear, please check your spam folder."
+    }
+  },
+  "ui": {
+    "name": "Name (optional)",
+    "namePlaceholder": "How should we address you?",
+    "date": "Date of birth",
+    "time": "Time of birth",
+    "timeUnknown": "I do not know my time of birth",
+    "place": "Place of birth",
+    "placeHint": "Start typing a city, then choose it from the list. This sets the time zone.",
+    "placeSearching": "Searching places...",
+    "placeNone": "No place found. Choose a time zone below instead.",
+    "timezone": "Time zone",
+    "timezoneFromPlace": "Set from the place you chose.",
+    "first": "First person (traditionally the groom)",
+    "second": "Second person (traditionally the bride)",
+    "calculate": "Calculate",
+    "calculating": "Calculating...",
+    "retry": "Try again",
+    "errorGeneric": "Something went wrong on our side. Please try again in a moment.",
+    "errorNetwork": "We could not reach the server. Please check your connection and try again.",
+    "errorInvalid": "Please check the date, time and time zone and try again.",
+    "errorRateLimited": "That was a lot of requests in a short time. Please wait a minute and try again.",
+    "required": "Please fill in the date of birth.",
+    "resultTitle": "Your result",
+    "moonLine": "Moon: {rashi}, nakshatra {nakshatra}, pada {pada}",
+    "periodHeader": "Period",
+    "fromHeader": "From",
+    "toHeader": "To",
+    "yearsHeader": "Years",
+    "now": "now",
+    "mahadashaTitle": "Mahadasha timeline",
+    "antardashaTitle": "Sub-periods of the current mahadasha",
+    "balanceLine": "Balance of the first period at birth: {lord}, {years} years.",
+    "noCurrent": "The 120-year cycle has completed for today's date.",
+    "sadeSatiStatus": "Saturn now: {sign}",
+    "episodesTitle": "Your Sade Sati seasons",
+    "episodesEmpty": "No season found in the supported range.",
+    "phaseRising": "rising",
+    "phasePeak": "peak",
+    "phaseSetting": "setting",
+    "scoreLabel": "{total} out of {max}",
+    "areaHeader": "Area",
+    "pointsHeader": "Points",
+    "notesHeader": "In plain words",
+    "timeNoteNakshatra": "Without a birth time the Moon could be in a different nakshatra that day, so these dates may differ. Add the time for an exact result.",
+    "timeNoteRashi": "Without a birth time the Moon could be in a different sign that day, so the result may differ. Add the time for an exact result.",
+    "timeNoteGeneral": "No birth time was given, so midday was used.",
+    "matchingPersonNote": "Result for the pair, using each person's Moon.",
+    "upsellTitle": "Get your weekly forecast",
+    "upsellText": "Your personal report, a forecast for the days ahead and a gentle practice for your current season, sent by email on a schedule you choose. Cancel any time.",
+    "upsellFree": "The calculation above is free. The report below is optional.",
+    "email": "Email",
+    "cadenceWeekly": "Every week",
+    "cadenceBiweekly": "Every two weeks",
+    "consent": "I agree to the terms and to receive my forecasts by email.",
+    "subscribe": "Continue to payment",
+    "subscribing": "Opening payment...",
+    "errorEmail": "Please enter a valid email address.",
+    "errorConsent": "Please tick the box to continue.",
+    "errorCheckout": "We could not start the payment. Please try again later.",
+    "matchingNext": "Want your own forecast? Try the dasha calculator.",
+    "reportLoading": "Loading your report...",
+    "reportInvalid": "This link does not look right. Please use the link from your email.",
+    "reportNoAccess": "This subscription is not active right now. You can manage it below.",
+    "reportError": "We could not load your report. Please try again later.",
+    "manage": "Manage or cancel subscription",
+    "managing": "Opening...",
+    "erase": "Delete my data",
+    "eraseConfirm": "This cancels your subscription and deletes your birth details and report. Continue?",
+    "erased": "Your data has been deleted and the subscription is cancelled.",
+    "eraseError": "We could not delete your data right now. Please try again later.",
+    "weekTitle": "Your week ahead",
+    "sectionDasha": "Your dasha timeline",
+    "sectionSadeSati": "Your Sade Sati season",
+    "noscript": "Please turn on JavaScript to use the calculator.",
+    "faqTitle": "Frequently asked questions"
+  }
+}

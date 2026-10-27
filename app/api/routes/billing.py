@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, create_audit_event, require_auth
 from app.database.connection import get_db
+from app.services import kundli_billing_service
 from app.services.billing_service import (
     BILLING_PROVIDER_PADDLE,
     BILLING_PROVIDER_STRIPE,
@@ -145,6 +146,12 @@ async def _handle_billing_webhook(request: Request, db: Session, expected_provid
             ignore_reason,
         )
         return {"status": "ignored", "reason": ignore_reason}
+
+    # Public kundli subscriptions share the Stripe endpoint but not the workspace tables.
+    if expected_provider == BILLING_PROVIDER_STRIPE:
+        kundli_result = kundli_billing_service.process_event(db, payload)
+        if kundli_result is not None:
+            return kundli_result
 
     return process_billing_webhook(db, provider=provider, payload=payload)
 
