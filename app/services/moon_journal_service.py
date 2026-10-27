@@ -16,6 +16,7 @@ Off until MOON_LINK_SECRET is set (signup) and MOON_CRON_SECRET is set (the sche
 from __future__ import annotations
 
 import hmac
+from html import escape
 import json
 import os
 import uuid
@@ -241,14 +242,63 @@ def _frame_of(sub: MoonSubscriber) -> Frame:
     return natal_frame(sub.birth_date, birth_time, sub.timezone, sub.latitude, sub.longitude)
 
 
-def _send(sub: MoonSubscriber, subject: str, body: str) -> bool:
-    return mailer.send_transactional_email(recipient=sub.email, subject=subject, body_text=body)
+def _send(sub: MoonSubscriber, subject: str, body: str, html_body: Optional[str] = None) -> bool:
+    return mailer.send_transactional_email(
+        recipient=sub.email,
+        subject=subject,
+        body_text=body,
+        **({"html_body": html_body} if html_body else {}),
+    )
+
+
+def _confirmation_html(email: Dict[str, str], link: str, locale: str = "en") -> str:
+    """Build a compact, email-client-safe confirmation email with a real CTA link."""
+    safe_link = escape(link, quote=True)
+    heading = escape(email.get("confirm_heading", email["confirm_subject"]))
+    intro = escape(email.get("confirm_intro", "")).replace("\n", "<br>")
+    button = escape(email.get("confirm_button", "Confirm my email"))
+    note = escape(email.get("confirm_note", "")).replace("\n", "<br>")
+    fallback = escape(
+        email.get("confirm_fallback", "If the button does not work, copy and paste this link into your browser:")
+    )
+    lang = escape(normalize_locale(locale), quote=True)
+    return f"""<!doctype html>
+<html lang="{lang}">
+  <body style="margin:0;background:#0d1222;color:#f7f4ee;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{intro}</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0d1222;padding:32px 16px;">
+      <tr><td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#171e34;border:1px solid #303a59;border-radius:24px;overflow:hidden;">
+          <tr><td style="padding:28px 32px 20px;border-bottom:1px solid #303a59;">
+            <div style="color:#f4c879;font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;">STELIARA · MOON LETTERS</div>
+            <div style="margin-top:20px;color:#f7f4ee;font-family:Georgia,'Times New Roman',serif;font-size:34px;line-height:1.12;">☾</div>
+          </td></tr>
+          <tr><td style="padding:32px;">
+            <h1 style="margin:0 0 16px;color:#f7f4ee;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.15;font-weight:500;">{heading}</h1>
+            <p style="margin:0;color:#c8cde0;font-size:16px;line-height:1.65;">{intro}</p>
+            <div style="padding:26px 0 22px;">
+              <a href="{safe_link}" style="display:inline-block;background:#f4c879;color:#17131a;text-decoration:none;border-radius:999px;padding:14px 22px;font-size:15px;font-weight:700;">{button} &nbsp;→</a>
+            </div>
+            <p style="margin:0;color:#8f98b2;font-size:13px;line-height:1.6;">{note}</p>
+            <div style="margin-top:26px;padding-top:20px;border-top:1px solid #303a59;">
+              <p style="margin:0 0 8px;color:#8f98b2;font-size:12px;line-height:1.5;">{fallback}</p>
+              <a href="{safe_link}" style="color:#f4c879;font-size:12px;line-height:1.5;word-break:break-all;">{safe_link}</a>
+            </div>
+          </td></tr>
+        </table>
+        <p style="max-width:560px;margin:18px auto 0;color:#69738e;font-size:12px;line-height:1.5;">A quiet place to notice what is changing — and choose what comes next.</p>
+      </td></tr>
+    </table>
+  </body>
+</html>"""
 
 
 def _send_confirmation(sub: MoonSubscriber, base: str) -> bool:
     c = content(sub.locale)
-    body = c["email"]["confirm_body"].format(link=_letter_link(sub, "&confirm=1", base))
-    return _send(sub, c["email"]["confirm_subject"], body)
+    email = c["email"]
+    link = _letter_link(sub, "&confirm=1", base)
+    body = email["confirm_body"].format(link=link)
+    return _send(sub, email["confirm_subject"], body, _confirmation_html(email, link, sub.locale))
 
 
 def _require_links(fallback_base_url: str) -> str:
