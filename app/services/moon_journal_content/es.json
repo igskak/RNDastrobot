@@ -38,8 +38,8 @@
   "sun": "Sin hora de nacimiento contamos las casas desde tu signo solar (casas solares). Añade la hora y el lugar de nacimiento para un resultado más personal."
  },
  "universal": {
-  "new": "Escribe una intención para este mes lunar, en presente.",
-  "full": "Anota tres cosas por las que has sentido gratitud desde la última luna nueva."
+  "new": "Completa la frase: En este mes lunar elijo...",
+  "full": "Nombra tres momentos desde la última luna nueva que querrías volver a vivir. ¿Qué tenían en común?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "Valoro lo que tengo y lo que todavía puedo hacer crecer."
   },
   {
-   "theme": "Esta parte de tu carta habla de palabras, aprendizaje y vínculos cotidianos.",
+   "theme": "Esta parte de tu carta contiene las palabras que repites, las preguntas que sigues y las conversaciones cotidianas que moldean en silencio tus decisiones.",
    "new": [
-    "¿Qué te gustaría aprender o leer este mes?",
-    "¿Con quién te gustaría hablar más a menudo?"
+    "¿Qué conversación sigues ensayando en tu cabeza? Escribe su primera frase honesta.",
+    "¿Qué tema sigue apareciendo en tus pestañas, notas o publicaciones guardadas? ¿Qué podría abrir una hora de atención completa?"
    ],
    "full": [
-    "¿Qué conversación de este mes sigue contigo?",
-    "¿Qué idea nueva despertó tu curiosidad?"
+    "¿Qué conversación te hizo cambiar de opinión — o reveló lo que ya sabías?",
+    "¿A qué idea has vuelto más de una vez? Nombra una pequeña manera de probarla en la vida real."
    ],
-   "affirmation": "Mis palabras pueden ser claras y amables."
+   "affirmation": "Confío en mí para decir lo claro con amabilidad."
   },
   {
    "theme": "Esta parte de tu carta habla del hogar, las raíces y la calma interior.",

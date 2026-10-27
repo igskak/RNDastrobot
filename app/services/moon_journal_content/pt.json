@@ -38,8 +38,8 @@
   "sun": "Sem a hora de nascimento, contamos as casas a partir do seu signo solar (casas solares). Informe a hora e o local de nascimento para um resultado mais pessoal."
  },
  "universal": {
-  "new": "Escreva uma intenção para este mês lunar, no presente.",
-  "full": "Anote três coisas pelas quais você sentiu gratidão desde a última lua nova."
+  "new": "Complete a frase: Neste mês lunar, eu escolho...",
+  "full": "Nomeie três momentos desde a última lua nova que você gostaria de viver outra vez. O que eles tinham em comum?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "Valorizo o que tenho e o que ainda posso fazer crescer."
   },
   {
-   "theme": "Esta parte do seu mapa fala de palavras, aprendizado e conexões do dia a dia.",
+   "theme": "Esta parte do seu mapa contém as palavras que você repete, as perguntas que acompanha e as conversas cotidianas que moldam silenciosamente as suas escolhas.",
    "new": [
-    "O que você gostaria de aprender ou ler este mês?",
-    "Com quem você gostaria de conversar mais vezes?"
+    "Qual conversa você continua ensaiando na cabeça? Escreva a primeira frase sincera.",
+    "Qual assunto continua aparecendo nas suas abas, notas ou publicações salvas? O que uma hora de atenção completa poderia abrir?"
    ],
    "full": [
-    "Qual conversa deste mês ainda está com você?",
-    "Que ideia nova despertou sua curiosidade?"
+    "Qual conversa mudou a sua opinião — ou revelou o que você já sabia?",
+    "A qual ideia você voltou mais de uma vez? Nomeie uma pequena forma de testá-la na vida real."
    ],
-   "affirmation": "Minhas palavras podem ser claras e gentis."
+   "affirmation": "Confio em mim para dizer o que é claro com gentileza."
   },
   {
    "theme": "Esta parte do seu mapa fala do lar, das raízes e da calma interior.",

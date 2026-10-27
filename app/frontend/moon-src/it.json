@@ -105,6 +105,7 @@
   "tablePhase": "Fase",
   "tableSign": "Segno",
   "nextBadge": "prossima",
+  "selectedBadge": "Selezionata",
   "loading": "Caricamento della tua lettera…",
   "invalidLink": "Questo link non è valido. Puoi iscriverti di nuovo dalla pagina della Luna.",
   "confirmed": "Grazie, il tuo indirizzo è confermato. Le lettere arrivano nel giorno di ogni luna nuova e luna piena.",
@@ -132,8 +133,13 @@
   "saving": "Salvataggio…",
   "saveError": "Non salvato. Controlla la connessione.",
   "linkPrivacy": "Questo link apre il tuo diario. Non inoltrare queste e-mail ad altre persone.",
-  "linkTitle": "Ricevi già le lettere?",
-  "linkText": "Inserisci la tua e-mail e ti invieremo il link al tuo diario. Funziona su ogni dispositivo, senza password.",
+  "linkTitle": "Il tuo diario della Luna",
+  "linkText": "Scegli il percorso adatto al punto in cui ti trovi oggi.",
+  "linkNewTitle": "Sei qui per la prima volta?",
+  "linkNewText": "Inizia dai tuoi dati di nascita. Vedrai dove cadono la prossima luna nuova e piena nel tuo tema, poi potrai scegliere di ricevere le tue lettere personali gratuite.",
+  "linkNewButton": "Vedere le mie prossime lune",
+  "linkReturningTitle": "Ricevi già le lettere?",
+  "linkReturningText": "Inserisci la tua e-mail e ti invieremo un nuovo link al tuo diario privato. Funziona su ogni dispositivo, senza password.",
   "linkButton": "Inviami il mio link",
   "linkSending": "Invio…",
   "linkDone": "Se questo indirizzo è iscritto, il link è in arrivo.",
@@ -155,22 +161,25 @@
  ],
  "tableDateFormat": "{d} {month} {y}, ore {hh}:{mm}",
  "plans": {
-  "title": "Lettere gratuite e mese personale",
-  "lead": "Le lettere della Luna sono gratuite e lo resteranno. Il mese personale è un'aggiunta a pagamento che stiamo preparando. Ecco un esempio di entrambi.",
-  "freeTitle": "Gratis",
+  "title": "Due modi per restare vicino al tuo ritmo",
+  "lead": "Il cielo non è qui per dirti che cosa accadrà. Può offrirti un momento per notare ciò che sta già chiedendo la tua attenzione — a ogni luna nuova e piena, oppure come una storia più profonda che si sviluppa lungo tutto il mese.",
+  "freeTitle": "La tua lettera della Luna",
+  "freeIntro": "Due volte al mese, una breve lettera ti incontra in un naturale momento di passaggio. Traduce la luna nuova o piena attraverso il tuo tema e ti offre uno spazio quieto in cui ascoltarti con più chiarezza.",
   "freeItems": [
-   "Una lettera nel giorno di ogni luna nuova e luna piena",
-   "La casa del tuo tema in cui cade, con il suo significato",
-   "Tre domande per il tuo diario e un'affermazione",
-   "Le tue risposte salvate nel tuo diario, su ogni dispositivo"
+   {"title": "Il tuo cielo, in parole umane", "text": "Scopri quale area della vita viene toccata da questa luna e perché ora può sembrare più viva — senza gergo né previsioni prestabilite."},
+   {"title": "Domande che aprono qualcosa", "text": "Tre inviti scelti con cura ti aiutano a dare un nome a ciò che desideri, a ciò che è cambiato e a ciò che vuoi portare con te."},
+   {"title": "Un diario che ricorda", "text": "Le tue risposte restano insieme in un diario privato, così una sensazione passeggera può diventare nel tempo uno schema che riconosci."}
   ],
-  "paidTitle": "Mese personale",
+  "freeClosing": "Gratis, due volte al mese. Qualche minuto di attenzione che appartiene soltanto a te.",
+  "paidTitle": "Il tuo Mese personale",
+  "paidIntro": "Il Mese personale ti offre la visione d'insieme. Invece di attraversare il mese come una sfocatura di date, ne vedi il ritmo emotivo: i periodi che possono smuovere qualcosa, le domande su cui vale la pena restare e il filo che unisce tutto.",
   "paidItems": [
-   "Tutto ciò che è gratuito",
-   "Un calendario dei tuoi transiti personali del mese, con le date e una domanda per ciascuno",
-   "Uno sguardo mensile su ciò che hai scritto, accanto al cielo di quei giorni",
-   "Un libro dell'anno con i tuoi appunti, per il tuo compleanno"
+   {"title": "Le date significative per te", "text": "Un calendario personale dei transiti più forti del mese, tradotti in situazioni che puoi riconoscere nel lavoro, nelle relazioni, in casa e nella tua vita interiore."},
+   {"title": "Una guida che puoi davvero usare", "text": "Ogni periodo porta una riflessione mirata — non un ordine — per aiutarti a compiere la tua scelta con maggiore consapevolezza."},
+   {"title": "Schemi che solo il tempo rivela", "text": "Alla fine del mese, i tuoi appunti tornano accanto al cielo di quei giorni e mostrano bisogni, tensioni e desideri ricorrenti."},
+   {"title": "Il tuo anno come una storia", "text": "Al tuo compleanno, quei mesi diventano un annuario privato: non una lista di previsioni, ma il ritratto di come sei cambiato·a."}
   ],
+  "paidClosing": "Per chi non vuole soltanto sapere che cosa accade nel cielo, ma capire che cosa sta aprendo nella propria vita.",
   "exampleFreeTitle": "Esempio di lettera gratuita",
   "examplePaidTitle": "Esempio di mese personale",
   "exampleNote": "Esempio per una persona immaginaria nata il 17 maggio 1990. Il tuo mese viene calcolato dai tuoi dati di nascita.",
@@ -178,28 +187,28 @@
   "calendar": [
    {
     "when": "3–8 novembre",
-    "what": "Venere passa sul tuo Sole",
-    "text": "Una settimana per notare che cosa apprezzi di te e della tua vita.",
-    "question": "Che cosa ti è piaciuto di te questa settimana?"
+    "what": "Venere incontra il tuo Sole — visibilità e autostima",
+    "text": "Questa settimana i complimenti potrebbero arrivarti più in profondità — oppure potresti notare meglio quando ti sminuisci. Osserva i vestiti, le persone e le scelte che ti fanno sentire più te, non soltanto più accettabile.",
+    "question": "Dove sei pronto·a a smettere di chiedere il permesso di goderti la persona che sei?"
    },
    {
     "when": "14–19 novembre",
-    "what": "Marte attraversa la tua casa 4",
-    "text": "Energia per la casa: riordinare, spostare i mobili, invitare persone.",
-    "question": "Che cosa vuoi cambiare nel tuo spazio?"
+    "what": "Marte attiva la tua casa 4 — casa e appartenenza",
+    "text": "Potresti sentire il bisogno di liberare un angolo, affrontare una tensione in casa o chiedere più spazio per te. Invece di cambiare tutto, nota il luogo — o la relazione — che non ti lascia più respirare liberamente.",
+    "question": "Se la tua casa potesse sostenere la persona che stai diventando, che cosa cambieresti per prima cosa — e perché?"
    },
    {
     "when": "24 novembre",
-    "what": "Luna piena nella tua casa 10",
-    "text": "Un momento per guardare il tuo lavoro e ciò che hai costruito.",
-    "question": "Di quale traguardo di questo mese vuoi ricordarti?"
+    "what": "Luna piena nella tua casa 10 — lavoro e riconoscimento",
+    "text": "Un risultato, una scadenza o una conversazione potrebbe rendere visibili i tuoi progressi. Prima di correre verso il prossimo obiettivo, guarda ciò che hai costruito — e chiediti se l'idea di successo che insegui ti appartiene ancora.",
+    "question": "Che cosa rivendichi con orgoglio come tuo — e l'approvazione di chi non vuoi più usare come misura?"
    }
   ],
   "reviewTitle": "Il tuo mese con le tue parole",
   "review": [
-   "A novembre il tuo diario ha 7 note. Le parole che tornano più spesso sono «riposo», «sorella» e «progetto».",
-   "Intorno alla luna piena nella tua casa 10 torna il desiderio che il tuo lavoro venga notato. Lo stesso tema compariva ad agosto, quando Giove passava sul punto più alto del tuo tema.",
-   "Domanda per dicembre: che cosa ti aiuterebbe a sentire che il tuo lavoro è visto?"
+   "Nelle sette note di novembre tornano tre parole: «riposo», «sorella» e «progetto». La tua vita privata e il tuo lavoro visibile sembrano chiedere attenzione nello stesso momento.",
+   "Vicino alla luna piena nella casa 10 scrivi: «Voglio che il mio lavoro venga visto, ma non al prezzo di tornare a casa senza energie». La stessa tensione compariva ad agosto, quando Giove passava sul punto più alto del tuo tema.",
+   "Porta con te a dicembre questa domanda: come sarebbe un successo visibile che lasci spazio anche alla tua vita vera?"
   ]
  }
 }

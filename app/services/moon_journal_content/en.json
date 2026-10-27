@@ -38,8 +38,8 @@
   "sun": "Without a birth time we count houses from your Sun sign (solar houses). Add your birth time and place for a more personal result."
  },
  "universal": {
-  "new": "Write one intention for this lunar month, in the present tense.",
-  "full": "Name three things you have felt grateful for since the last new moon."
+  "new": "Finish this sentence: This lunar month, I am choosing to...",
+  "full": "Name three moments since the last new moon that you would want to live again. What did they have in common?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "I value what I have and what I can still grow."
   },
   {
-   "theme": "This part of your chart is about words, learning and everyday connections.",
+   "theme": "This part of your chart holds the words you repeat, the questions you follow and the everyday conversations that quietly shape your choices.",
    "new": [
-    "What would you like to learn or read about this month?",
-    "Who would you like to talk with more often?"
+    "Which conversation have you been rehearsing in your head? Write the first honest sentence.",
+    "What subject keeps appearing in your tabs, notes or saved posts? What might one focused hour with it open up?"
    ],
    "full": [
-    "Which conversation from this month is still with you?",
-    "Which new idea made you curious?"
+    "Which conversation changed your mind — or revealed what you already knew?",
+    "Which idea have you returned to more than once? Name one small way to test it in real life."
    ],
-   "affirmation": "My words can be clear and kind."
+   "affirmation": "I trust myself to say the clear, kind thing."
   },
   {
    "theme": "This part of your chart is about home, roots and inner calm.",

@@ -182,6 +182,13 @@
         return el('div', { class: 'table-wrap' }, el('table', {}, [el('thead', {}, head), el('tbody', {}, bodyRows)]));
     }
 
+    function details(summary, children) {
+        var node = el('details', { class: 'result-details' });
+        node.appendChild(el('summary', { text: summary }));
+        children.forEach(function (child) { node.appendChild(child); });
+        return node;
+    }
+
     function timeNotes(info) {
         var notes = [];
         if (info && info.time_known === false) {
@@ -205,18 +212,19 @@
         var nodes = head(report);
         nodes.push(el('p', { text: t('moonLine', { rashi: calc.moon.rashi_label, nakshatra: calc.moon.nakshatra_label, pada: calc.moon.pada }) }));
         nodes.push(el('p', { text: t('balanceLine', { lord: calc.birth_balance.lord_label || calc.mahadashas[0].lord_label, years: calc.birth_balance.years_remaining }) }));
-        nodes.push(el('h3', { text: t('mahadashaTitle') }));
-        nodes.push(table([t('periodHeader'), t('fromHeader'), t('toHeader'), t('yearsHeader')], calc.mahadashas.map(function (m) {
+        var timeline = [el('h3', { text: t('mahadashaTitle') })];
+        timeline.push(table([t('periodHeader'), t('fromHeader'), t('toHeader'), t('yearsHeader')], calc.mahadashas.map(function (m) {
             return { current: m.current, cells: [m.lord_label + (m.current ? ' (' + t('now') + ')' : ''), m.start, m.end, String(m.years)] };
         })));
         if (calc.antardashas.length) {
-            nodes.push(el('h3', { text: t('antardashaTitle') }));
-            nodes.push(table([t('periodHeader'), t('fromHeader'), t('toHeader')], calc.antardashas.map(function (a) {
+            timeline.push(el('h3', { text: t('antardashaTitle') }));
+            timeline.push(table([t('periodHeader'), t('fromHeader'), t('toHeader')], calc.antardashas.map(function (a) {
                 return { current: a.current, cells: [a.lord_label + (a.current ? ' (' + t('now') + ')' : ''), a.start, a.end] };
             })));
         } else {
-            nodes.push(el('p', { text: t('noCurrent') }));
+            timeline.push(el('p', { text: t('noCurrent') }));
         }
+        nodes.push(details(t('mahadashaTitle'), timeline));
         return nodes.concat(timeNotes(data.birth));
     }
 
@@ -228,15 +236,16 @@
         var nodes = head(report);
         nodes.push(el('p', { text: t('moonLine', { rashi: data.moon.rashi_label, nakshatra: data.moon.nakshatra_label, pada: data.moon.pada }) }));
         nodes.push(el('p', { text: t('sadeSatiStatus', { sign: calc.saturn_sign_label }) }));
-        nodes.push(el('h3', { text: t('episodesTitle') }));
+        var episodeNodes = [el('h3', { text: t('episodesTitle') })];
         if (!calc.episodes.length) {
-            nodes.push(el('p', { text: t('episodesEmpty') }));
+            episodeNodes.push(el('p', { text: t('episodesEmpty') }));
         } else {
-            nodes.push(table([t('fromHeader'), t('toHeader'), t('periodHeader')], calc.episodes.map(function (e) {
+            episodeNodes.push(table([t('fromHeader'), t('toHeader'), t('periodHeader')], calc.episodes.map(function (e) {
                 var phases = e.phases.map(function (p) { return t(PHASE[p.phase]) + ': ' + p.sign_label; }).join(' · ');
                 return { current: e.active, cells: [e.start, e.end, phases] };
             })));
         }
+        nodes.push(details(t('episodesTitle'), episodeNodes));
         return nodes.concat(timeNotes(data.birth));
     }
 
