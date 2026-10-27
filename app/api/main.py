@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse, RedirectResponse, Response
 import os
 import re
 import sys
+import threading
 import time
 import logging
 from typing import List, Optional
@@ -34,12 +35,13 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, charts, chart_imports, persons, assistant, billing, lunar, electional, composite, forecast, profections, antiscia, asteroids, dominants, fixed_stars, declination, client_memory, conversions, ops
+from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, charts, chart_imports, persons, assistant, billing, lunar, electional, composite, forecast, profections, antiscia, asteroids, dominants, fixed_stars, declination, client_memory, conversions, ops, kundli
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 from app.services.processing_pipeline import recover_stuck_sessions
 from app.database.connection import get_db
-from app.services import campaign_visits
+from app.services import campaign_visits, vedic_service
+from app.services.vedic_content import reviewed_locales as kundli_reviewed_locales
 from app.services.recording_retention_service import start_recording_retention_worker
 from app.auth.site_mode import is_solo_request
 from app.i18n.locale import DEFAULT_LOCALE, SUPPORTED_LOCALES, normalize_locale
@@ -49,6 +51,7 @@ from app.i18n.locale import DEFAULT_LOCALE, SUPPORTED_LOCALES, normalize_locale
 async def lifespan(app: FastAPI):
     recover_stuck_sessions()   # re-queue any sessions stuck mid-processing
     start_recording_retention_worker()   # delete consultation audio after 180 days
+    threading.Thread(target=vedic_service.warm_up, name="vedic-warm-up", daemon=True).start()
     yield
 
 # Путь к frontend
@@ -186,6 +189,9 @@ async def isolate_solo_marketing_routes(request: Request, call_next):
         "/astroprocessor.html",
         "/astroprocessor-uk",
         "/astroprocessor-uk.html",
+    }
+    commercial_paths |= {
+        _kundli_path(locale, slug) for locale in ("en", "hi") for slug in ("index", *_KUNDLI_SLUGS)
     }
     # A prefixed URL is the same page in another language, so it needs the same fence.
     commercial_paths |= {
@@ -330,6 +336,7 @@ app.include_router(assistant.router, prefix="/api/v1", tags=["Assistant"])
 # Owner-only ops view. Inert unless OPS_OWNER_EMAILS is set (see routes/ops.py).
 app.include_router(ops.router, prefix="/api/v1", tags=["Ops"])
 app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])
+app.include_router(kundli.router, prefix="/api/v1", tags=["Kundli"])
 app.include_router(lunar.router, prefix="/api/v1", tags=["Lunar"])
 app.include_router(electional.router, prefix="/api/v1", tags=["Electional"])
 app.include_router(composite.router, prefix="/api/v1", tags=["Composite"])
@@ -488,6 +495,33 @@ _SITEMAP_PAGES = (
     ("/terms.html", "0.3"),
 )
 
+# Public kundli tools (English, Hindi). Each tool is a translated pair with its own hreflang
+# set; Hindi pages are advertised only once their text has been reviewed by a native speaker
+# (KUNDLI_REVIEWED_LOCALES contains "hi"). Until then they are served but noindexed, because
+# anything absent from the sitemap is noindexed by default.
+_KUNDLI_SLUGS = ("dasha-calculator", "sade-sati-calculator", "kundli-matching")
+_KUNDLI_PAGES = ("index", *_KUNDLI_SLUGS, "report", "thanks")
+
+
+def _kundli_path(locale: str, slug: str) -> str:
+    base = "/kundli/hi" if locale == "hi" else "/kundli"
+    return base if slug == "index" else f"{base}/{slug}"
+
+
+def _kundli_sitemap_pages() -> tuple:
+    locales = ("en", "hi") if "hi" in kundli_reviewed_locales() else ("en",)
+    pages = []
+    for slug in ("index", *_KUNDLI_SLUGS):
+        priority = "0.6" if slug == "index" else "0.7"
+        pages += [(_kundli_path(locale, slug), priority) for locale in locales]
+    return tuple(pages)
+
+
+_SITEMAP_PAGES = _SITEMAP_PAGES[:-1] + _kundli_sitemap_pages() + _SITEMAP_PAGES[-1:]
+_KUNDLI_ALTERNATES = {
+    _kundli_path(locale, slug): slug for locale in ("en", "hi") for slug in ("index", *_KUNDLI_SLUGS)
+}
+
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
 _SITEMAP_LASTMOD = "2026-10-19"
@@ -509,6 +543,8 @@ def _indexable_document_paths() -> frozenset:
         # two contradictory instructions about the same page.
         if path != "/" and not path.endswith(".html"):
             paths.add(f"{path}.html")
+        if path in _KUNDLI_ALTERNATES:
+            paths.add(f"{path}/")
         if path in LOCALIZABLE_BARE_PATHS:
             paths.update(localized_path_for(path, locale) for locale in PREFIXED_LOCALES)
     # localized_path_for collapses /index.html onto /de/, so the second spelling of a
@@ -546,6 +582,15 @@ async def sitemap_xml():
         if path in LOCALIZABLE_BARE_PATHS:
             alternates = _sitemap_alternates(base, path)
             locale_paths = [path] + [localized_path_for(path, locale) for locale in sorted(PREFIXED_LOCALES)]
+        elif path in _KUNDLI_ALTERNATES:
+            slug = _KUNDLI_ALTERNATES[path]
+            pair = [("en", _kundli_path("en", slug))]
+            if "hi" in kundli_reviewed_locales():
+                pair.append(("hi", _kundli_path("hi", slug)))
+            alternates = "".join(
+                f'<xhtml:link rel="alternate" hreflang="{hreflang}" href="{base}{href}"/>' for hreflang, href in pair
+            ) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{base}{_kundli_path("en", slug)}"/>'
+            locale_paths = [path]
         else:
             alternates = ""
             locale_paths = [path]
@@ -940,6 +985,40 @@ def _serve_frontend_page(filename: str):
     if os.path.exists(page_path):
         return FileResponse(page_path)
     raise HTTPException(status_code=404, detail="Page not found")
+
+
+@app.get("/kundli")
+@app.get("/kundli/")
+async def kundli_hub_page():
+    """Free kundli tools: hub page (English)."""
+    return _serve_frontend_page("kundli/index.html")
+
+
+@app.get("/kundli/hi")
+@app.get("/kundli/hi/")
+async def kundli_hub_page_hi():
+    """Free kundli tools: hub page (Hindi)."""
+    return _serve_frontend_page("kundli/hi/index.html")
+
+
+def _kundli_document(locale: str, page: str):
+    page = page[:-5] if page.endswith(".html") else page
+    if page not in _KUNDLI_PAGES:
+        raise HTTPException(status_code=404, detail="Page not found")
+    folder = "kundli/hi" if locale == "hi" else "kundli"
+    return _serve_frontend_page(f"{folder}/{page}.html")
+
+
+@app.get("/kundli/hi/{page}")
+async def kundli_page_hi(page: str):
+    """Free kundli tools, Hindi pages."""
+    return _kundli_document("hi", page)
+
+
+@app.get("/kundli/{page}")
+async def kundli_page(page: str):
+    """Free kundli tools, English pages (and the report page behind a signed link)."""
+    return _kundli_document("en", page)
 
 
 @app.get("/cloud-astrology-software")

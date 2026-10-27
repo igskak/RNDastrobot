@@ -1,0 +1,26 @@
+name: Kundli forecasts
+
+# Emails every kundli subscriber whose next forecast is due. The service decides who is due
+# from each subscriber's cadence and last send, so an extra run sends nothing twice. Calling
+# the public URL also wakes a sleeping free-plan instance.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ask the site to send due forecasts
+        env:
+          SITE_BASE_URL: ${{ secrets.KUNDLI_SITE_BASE_URL }}
+          CRON_SECRET: ${{ secrets.KUNDLI_CRON_SECRET }}
+        run: |
+          test -n "$SITE_BASE_URL" && test -n "$CRON_SECRET" || { echo "KUNDLI_SITE_BASE_URL and KUNDLI_CRON_SECRET are not set"; exit 1; }
+          curl --fail --silent --show-error --max-time 120 --retry 3 --retry-delay 20 \
+            -X POST -H "X-Kundli-Cron: $CRON_SECRET" "$SITE_BASE_URL/api/v1/kundli/internal/send-digests"

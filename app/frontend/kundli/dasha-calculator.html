@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+    <title>Dasha Calculator: Free Vimshottari Dasha Online</title>
+    <meta name="description" content="Free Vimshottari dasha calculator. Enter date, time and place of birth to see your mahadasha, antardasha and the full 120-year timeline. No sign-up.">
+    <link rel="canonical" href="https://www.steliara.com/kundli/dasha-calculator">
+    <link rel="alternate" hreflang="en" href="https://www.steliara.com/kundli/dasha-calculator">
+    <link rel="alternate" hreflang="hi" href="https://www.steliara.com/kundli/hi/dasha-calculator">
+    <link rel="alternate" hreflang="x-default" href="https://www.steliara.com/kundli/dasha-calculator">
+    <meta property="og:title" content="Dasha Calculator: Free Vimshottari Dasha Online">
+    <meta property="og:description" content="Free Vimshottari dasha calculator. Enter date, time and place of birth to see your mahadasha, antardasha and the full 120-year timeline. No sign-up.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.steliara.com/kundli/dasha-calculator">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:image" content="https://www.steliara.com/assets/brand/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="/css/kundli.css?v=1">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Dasha calculator (Vimshottari)","url":"https://www.steliara.com/kundli/dasha-calculator","description":"Free Vimshottari dasha calculator. Enter date, time and place of birth to see your mahadasha, antardasha and the full 120-year timeline. No sign-up.","applicationCategory":"LifestyleApplication","operatingSystem":"Web","inLanguage":"en","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a mahadasha?","acceptedAnswer":{"@type":"Answer","text":"It is the major planetary period in the Vimshottari system. The nine periods together make a 120-year cycle, and each one is divided into nine sub-periods called antardasha."}},{"@type":"Question","name":"Why does birth time matter?","acceptedAnswer":{"@type":"Answer","text":"The Moon travels about thirteen degrees a day, so a few hours can move it into a different nakshatra and shift every date in the timeline. If you do not know the time, the tool says so when the result could change."}},{"@type":"Question","name":"Which year length is used?","acceptedAnswer":{"@type":"Answer","text":"A dasha year of 365.25 days. Other programs use slightly different year lengths, which can move dates by a few days."}},{"@type":"Question","name":"Can I get a forecast for the coming year?","acceptedAnswer":{"@type":"Answer","text":"Yes. The optional report below the result lists your sub-periods for the next twelve months and a weekly forecast, with a gentle practice for each season."}}]}</script>
+</head>
+<body data-tool="dasha" data-locale="en">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="shell bar">
+      <a class="brand" href="/kundli">Steliara</a>
+      <nav class="nav" aria-label="Kundli tools"><a href="/kundli">Kundli tools</a><a href="/kundli/dasha-calculator" aria-current="page">Dasha</a><a href="/kundli/sade-sati-calculator">Sade Sati</a><a href="/kundli/kundli-matching">Matching</a></nav>
+      <a class="lang" href="/kundli/hi/dasha-calculator" hreflang="hi" lang="hi" aria-label="Hindi version">हिन्दी</a>
+    </div>
+  </header>
+  <main id="main" class="shell tool">
+      <h1>Dasha calculator (Vimshottari)</h1>
+      <p class="lead">See the planetary period you are in now and your whole life timeline, from your date, time and place of birth.</p>
+      <form id="tool-form" class="card" novalidate>
+      <fieldset class="person" data-person="p1">
+        <legend>Dasha calculator (Vimshottari)</legend>
+        <div class="field">
+          <label for="p1-name">Name (optional)</label>
+          <input id="p1-name" name="name" type="text" maxlength="40" autocomplete="off" placeholder="How should we address you?">
+        </div>
+        <div class="field">
+          <label for="p1-date">Date of birth</label>
+          <input id="p1-date" name="date" type="date" min="1900-01-01" max="2100-12-31" required>
+        </div>
+        <div class="field">
+          <label for="p1-time">Time of birth</label>
+          <input id="p1-time" name="time" type="time">
+          <label class="check"><input id="p1-unknown" name="unknown" type="checkbox"> I do not know my time of birth</label>
+        </div>
+        <div class="field place">
+          <label for="p1-place">Place of birth</label>
+          <input id="p1-place" name="place" type="text" autocomplete="off" role="combobox"
+                 aria-autocomplete="list" aria-expanded="false" aria-controls="p1-places" aria-describedby="p1-place-hint">
+          <ul id="p1-places" class="suggestions" role="listbox" hidden></ul>
+          <p id="p1-place-hint" class="hint">Start typing a city, then choose it from the list. This sets the time zone.</p>
+        </div>
+        <div class="field">
+          <label for="p1-tz">Time zone</label>
+          <select id="p1-tz" name="timezone"><option value="Asia/Kolkata" selected>Asia/Kolkata</option><option value="Asia/Kathmandu">Asia/Kathmandu</option><option value="Asia/Dhaka">Asia/Dhaka</option><option value="Asia/Colombo">Asia/Colombo</option><option value="Asia/Karachi">Asia/Karachi</option><option value="Asia/Dubai">Asia/Dubai</option><option value="Asia/Singapore">Asia/Singapore</option><option value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur</option><option value="Europe/London">Europe/London</option><option value="Europe/Berlin">Europe/Berlin</option><option value="America/New_York">America/New_York</option><option value="America/Chicago">America/Chicago</option><option value="America/Denver">America/Denver</option><option value="America/Los_Angeles">America/Los_Angeles</option><option value="America/Toronto">America/Toronto</option><option value="Australia/Sydney">Australia/Sydney</option><option value="Africa/Nairobi">Africa/Nairobi</option><option value="UTC">UTC</option></select>
+          <p class="hint" id="p1-tz-hint" aria-live="polite"></p>
+        </div>
+      </fieldset>
+        <p id="form-error" class="error" role="alert" hidden></p>
+        <button class="btn" type="submit" data-label="Calculate" data-busy="Calculating...">Calculate</button>
+        <noscript><p class="error">Please turn on JavaScript to use the calculator.</p></noscript>
+      </form>
+      <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>
+      <section id="upsell" class="card upsell" hidden aria-labelledby="upsell-title">
+        <h2 id="upsell-title">Get your weekly forecast</h2>
+        <p>Your personal report, a forecast for the days ahead and a gentle practice for your current season, sent by email on a schedule you choose. Cancel any time.</p>
+        <p class="hint">The calculation above is free. The report below is optional.</p>
+        <form id="upsell-form" novalidate>
+          <div class="field">
+            <label for="up-email">Email</label>
+            <input id="up-email" type="email" autocomplete="email" required>
+          </div>
+          <fieldset class="cadence">
+            <label class="check"><input type="radio" name="cadence" value="weekly" checked> <span data-price="weekly">Every week</span></label>
+            <label class="check"><input type="radio" name="cadence" value="biweekly"> <span data-price="biweekly">Every two weeks</span></label>
+          </fieldset>
+          <label class="check"><input id="up-consent" type="checkbox"> I agree to the terms and to receive my forecasts by email.</label>
+          <p id="upsell-error" class="error" role="alert" hidden></p>
+          <button class="btn" type="submit">Continue to payment</button>
+        </form>
+      </section>
+      <section class="copy">
+        <h2>How the dasha works</h2>
+        <p>Vimshottari dasha divides a 120-year cycle among nine planets. Where the cycle begins depends on the nakshatra the Moon occupied at your birth, and how far the Moon had travelled through that nakshatra sets how much of the first period remained at birth.</p>
+      </section>
+      <section class="copy">
+        <h2>Mahadasha and antardasha</h2>
+        <p>The mahadasha is the major period and lasts between six and twenty years. Inside it, nine antardasha sub-periods follow the same planetary order, each led by its own planet. The tool lists both with their dates, and marks the one running today.</p>
+      </section>
+      <section class="copy">
+        <h2>Reading the result</h2>
+        <p>Each planet is shown with a theme such as growth, patience or curiosity. Use it as an invitation to notice where your attention naturally goes in each season of life, not as a forecast of what will happen.</p>
+      </section>
+      <section class="copy faq">
+        <h2>Frequently asked questions</h2>
+        <h3>What is a mahadasha?</h3>
+        <p>It is the major planetary period in the Vimshottari system. The nine periods together make a 120-year cycle, and each one is divided into nine sub-periods called antardasha.</p>
+        <h3>Why does birth time matter?</h3>
+        <p>The Moon travels about thirteen degrees a day, so a few hours can move it into a different nakshatra and shift every date in the timeline. If you do not know the time, the tool says so when the result could change.</p>
+        <h3>Which year length is used?</h3>
+        <p>A dasha year of 365.25 days. Other programs use slightly different year lengths, which can move dates by a few days.</p>
+        <h3>Can I get a forecast for the coming year?</h3>
+        <p>Yes. The optional report below the result lists your sub-periods for the next twelve months and a weekly forecast, with a gentle practice for each season.</p>
+      </section>
+    </main>
+  <footer class="site-footer">
+    <div class="shell">
+      <p class="disclaimer">A reflective, tradition-based guide for personal inspiration. It does not replace the advice of qualified professionals.</p>
+      <p class="links"><a href="/">Steliara for practising astrologers</a> · <a href="/terms.html">Terms</a></p>
+    </div>
+  </footer>
+  <script type="application/json" id="kundli-i18n">{"name":"Name (optional)","namePlaceholder":"How should we address you?","date":"Date of birth","time":"Time of birth","timeUnknown":"I do not know my time of birth","place":"Place of birth","placeHint":"Start typing a city, then choose it from the list. This sets the time zone.","placeSearching":"Searching places...","placeNone":"No place found. Choose a time zone below instead.","timezone":"Time zone","timezoneFromPlace":"Set from the place you chose.","first":"First person (traditionally the groom)","second":"Second person (traditionally the bride)","calculate":"Calculate","calculating":"Calculating...","retry":"Try again","errorGeneric":"Something went wrong on our side. Please try again in a moment.","errorNetwork":"We could not reach the server. Please check your connection and try again.","errorInvalid":"Please check the date, time and time zone and try again.","errorRateLimited":"That was a lot of requests in a short time. Please wait a minute and try again.","required":"Please fill in the date of birth.","resultTitle":"Your result","moonLine":"Moon: {rashi}, nakshatra {nakshatra}, pada {pada}","periodHeader":"Period","fromHeader":"From","toHeader":"To","yearsHeader":"Years","now":"now","mahadashaTitle":"Mahadasha timeline","antardashaTitle":"Sub-periods of the current mahadasha","balanceLine":"Balance of the first period at birth: {lord}, {years} years.","noCurrent":"The 120-year cycle has completed for today's date.","sadeSatiStatus":"Saturn now: {sign}","episodesTitle":"Your Sade Sati seasons","episodesEmpty":"No season found in the supported range.","phaseRising":"rising","phasePeak":"peak","phaseSetting":"setting","scoreLabel":"{total} out of {max}","areaHeader":"Area","pointsHeader":"Points","notesHeader":"In plain words","timeNoteNakshatra":"Without a birth time the Moon could be in a different nakshatra that day, so these dates may differ. Add the time for an exact result.","timeNoteRashi":"Without a birth time the Moon could be in a different sign that day, so the result may differ. Add the time for an exact result.","timeNoteGeneral":"No birth time was given, so midday was used.","matchingPersonNote":"Result for the pair, using each person's Moon.","upsellTitle":"Get your weekly forecast","upsellText":"Your personal report, a forecast for the days ahead and a gentle practice for your current season, sent by email on a schedule you choose. Cancel any time.","upsellFree":"The calculation above is free. The report below is optional.","email":"Email","cadenceWeekly":"Every week","cadenceBiweekly":"Every two weeks","consent":"I agree to the terms and to receive my forecasts by email.","subscribe":"Continue to payment","subscribing":"Opening payment...","errorEmail":"Please enter a valid email address.","errorConsent":"Please tick the box to continue.","errorCheckout":"We could not start the payment. Please try again later.","matchingNext":"Want your own forecast? Try the dasha calculator.","reportLoading":"Loading your report...","reportInvalid":"This link does not look right. Please use the link from your email.","reportNoAccess":"This subscription is not active right now. You can manage it below.","reportError":"We could not load your report. Please try again later.","manage":"Manage or cancel subscription","managing":"Opening...","erase":"Delete my data","eraseConfirm":"This cancels your subscription and deletes your birth details and report. Continue?","erased":"Your data has been deleted and the subscription is cancelled.","eraseError":"We could not delete your data right now. Please try again later.","weekTitle":"Your week ahead","sectionDasha":"Your dasha timeline","sectionSadeSati":"Your Sade Sati season","noscript":"Please turn on JavaScript to use the calculator.","faqTitle":"Frequently asked questions"}</script>
+  <script src="/js/kundli-tool.js?v=1" defer></script>
+</body>
+</html>
