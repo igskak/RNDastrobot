@@ -289,41 +289,6 @@ items:
       schema: [SoftwareApplication, FAQPage]
       internal_links_from: [/astrology-practice-management, /record-astrology-consultations]
 
-  - id: astro-gold-alternative
-    status: todo
-    # Bing autocomplete 2026-10-05/06 returns "astro gold alternative" as a real query, so
-    # the demand exists; its size is still unmeasured. Check EN volume (us db) first.
-    volume_checked: false
-    type: alternative-page
-    slug: /astro-gold-alternative
-    target_queries:
-      - >-
-        astro gold alternative
-      - >-
-        astro gold for windows
-      - >-
-        astro gold vs
-    why: >
-      SERP check 2026-09-29: aggregators (Techjockey, Charting Stars, WorldsApps) plus one
-      vendor doing this exact play ("Astro Gold Alternative for Windows" by AstroWatch).
-      Winnable. Astro Gold is Solar Fire's Mac and iOS sibling at $249.99, with files
-      interchangeable with Solar Fire, so the .SFcht importer answers migration here too.
-    must_cover:
-      - >-
-        What Astro Gold is genuinely good at (it is the depth option on a Mac).
-      - >-
-        Premise corrected 2026-10-03: Astro Gold is NOT Apple-only; astrogold.io sells
-        Windows, macOS, iOS and Android versions. The platform angle does not apply here;
-        compare on the people you read for and the recorded consultation instead.
-      - >-
-        Importing .SFcht files, and what does not carry over.
-      - >-
-        Link to /solar-fire-alternative; the two audiences overlap.
-    acceptance:
-      min_words: 700
-      schema: [SoftwareApplication, FAQPage]
-      internal_links_from: [/solar-fire-alternative, /cloud-astrology-software]
-
   - id: timepassages-alternative
     status: dropped
     volume_checked: false
@@ -426,7 +391,13 @@ items:
       under a German FAQ is worse than none. Queued below as pricing-faq-schema.
 
   - id: pricing-faq-schema
-    status: todo
+    status: dropped
+    dropped: >-
+      2026-10-26 (PR #31 closed by the owner). Google removed FAQ rich results on 2026-05-07,
+      so the markup buys no SERP feature; the remaining value is answer-engine citation, which
+      does not justify carrying about 145 lines of prerender machinery. The agent flagged this
+      itself in the PR. The FAQPage blocks already on the conquest pages stay as they are;
+      do not extend FAQPage to new pages without a reason other than the rich result.
     type: technical
     slug: /pricing.html
     target_queries:
@@ -473,3 +444,176 @@ items:
     acceptance:
       min_words: 200
       schema: [WebApplication, FAQPage]
+
+  # ---------------------------------------------------------------------------------------
+  # Queue refilled 2026-10-26 from Search Console (28 days to 2026-10-19), after the first
+  # five pages shipped and the agent started inventing its own housekeeping items.
+  # Two are technical and need no search-volume check: their evidence is impressions we
+  # already have. Two are new pages and wait for a measured volume (see
+  # docs/marketing/semrush-request-2026-10.md).
+  # ---------------------------------------------------------------------------------------
+
+  - id: ctr-title-meta-pass
+    status: todo
+    type: technical
+    slug: >-
+      /record-astrology-consultations, /astrology-practice-management, /astrologer-workspace
+    target_queries:
+      - the queries these pages already rank for (read them from the page; do not add new ones)
+    why: >
+      The cheapest measured win left. Search Console, 28 days to 2026-10-19: these three
+      pages sit at positions 5.4 to 6.1 (25, 16 and 13 impressions) and have produced zero
+      clicks, while /cloud-astrology-software at 11.7 has 10. Position five or six normally
+      earns a few percent of impressions, so the likelier cause is a title and snippet that
+      do not make anyone click. The sample is small (54 impressions): treat this as a cheap
+      test, not a certainty, and do not over-claim in the PR.
+    must_cover:
+      - >-
+        Title and meta description rewritten so each states who the page is for and the one
+        concrete thing it gives, in the words a searcher would use. Keep the head term where
+        it is; do not change what the page is about.
+      - >-
+        Titles inside the 15-65 character window and descriptions inside 70-165 that
+        seo_audit.py enforces. No em dashes in English. Every claim traceable to
+        product-marketing.md (recording is Studio only, audio only).
+      - >-
+        Whichever locales these pages exist in, through the catalogs, not by editing the
+        prerendered HTML. check:localized-pages must stay clean.
+      - >-
+        Do not touch /pricing.html (retitled in PR #27) or /cloud-astrology-software (our one
+        converting page; changing it risks the clicks it has).
+    acceptance:
+      guard_test: a test pinning the new titles and the length windows
+
+  - id: internal-links-to-new-pages
+    status: todo
+    type: technical
+    slug: >-
+      /cloud-astrology-software, /astrology-practice-management, /record-astrology-consultations,
+      /astrologer-workspace, /solar-fire-alternative
+    target_queries:
+      - none; this passes authority and crawl paths to pages that exist
+    why: >
+      Five new pages are indexed and starting to show (/astroprocessor, three /answers/ pages,
+      /solar-fire-alternative) but have 1 to 10 impressions each, while the pages that already
+      rank carry the site's authority. A few contextual links from the pages that rank to the
+      pages that need to be found is the lowest-risk way to move it. First check what links
+      already exist; do not add what is there.
+    must_cover:
+      - >-
+        Two or three contextual links per source page, inside the prose where the topic is
+        relevant, with descriptive anchor text. No footer link farms, no "related" blocks of
+        ten links, no sitewide links.
+      - >-
+        Every new page ends with at least two inbound links from other indexable pages, one of
+        them from a page that has clicks today.
+      - >-
+        RU and UK pages (/astroprocessor, /zet-online and their twins) get links from the
+        Russian and Ukrainian pages that exist, not from English ones.
+    acceptance:
+      guard_test: a test that each listed page has at least two inbound internal links
+
+  - id: astrology-software-for-mac
+    status: todo
+    # Measured 2026-10-26, Semrush US: cluster sum 200 a month (UK about 80), best query
+    # "astrology software for mac" 90 with KD 27, passes the rule. Honest caveats: 90 of the 200
+    # is one query, the trend is slightly down, and Search Console has us at position 30.5 for
+    # it today (4 impressions). Expect a small page that wins a small prize, not a traffic jump.
+    volume_checked: true
+    type: answer-page
+    slug: /answers/best-astrology-software-for-mac
+    target_queries:
+      - astrology software for mac
+      - mac astrology software
+      - best astrology software for mac
+      - astrology software mac
+    why: >
+      An answer page of the same shape as the three shipped on 2026-10-17: one question,
+      answered in the first 40 words, named alternatives with price, platform and what each
+      leaves out. The SERP for the head terms is aggregators and vendors; no practitioner-run
+      Mac comparison was found. Not a platform story for Steliara (it is a browser app, so
+      Mac is no advantage over Windows); the honest framing is "what runs on a Mac and what
+      does not".
+    must_cover:
+      - >-
+        What runs natively on macOS (Astro Gold, TimePassages) and what does not (Solar Fire
+        has no native Mac version; its maker links to running Windows programs on a Mac).
+        Every platform and price claim checked on the vendor's page on the build date.
+      - >-
+        Browser tools as the no-install option (Astrolium, Astrologer, Steliara), and where
+        Steliara is the weaker choice (six house systems, no astrocartography, no Vedic dashas).
+      - A direct answer in the first 40 words. A table of programs with platform and price.
+    acceptance:
+      min_words: 900
+      internal_links_from: [/answers/what-software-do-professional-astrologers-use, /cloud-astrology-software]
+
+  - id: astro-gold-alternative
+    status: todo
+    # Measured 2026-10-26, Semrush US. Cluster sum 110 a month, best query "astro gold software"
+    # at 50 with KD 32, so it clears the rule (100 and KD 45), but only just, and it is made of
+    # small queries: "astro gold software" 50, "astro gold for windows" 20, "astro gold vs solar
+    # fire" 20, "astro gold app" 20. "astro gold alternative" itself returned no data, and the
+    # brand queries "astrogold" (1,300) and "astro gold" (1,000) are navigational: people who
+    # want Astro Gold, not a way out of it. After the Astrolium lesson, run the SERP and
+    # demand check in step 3 of the brief honestly and stop with an issue if the page would be
+    # thin. Queued after the Mac page on purpose.
+    volume_checked: true
+    type: alternative-page
+    slug: /astro-gold-alternative
+    target_queries:
+      - >-
+        astro gold software
+      - >-
+        astro gold for windows
+      - >-
+        astro gold vs solar fire
+      - >-
+        astro gold app
+      - >-
+        astro gold alternative
+    why: >
+      SERP check 2026-09-29: aggregators (Techjockey, Charting Stars, WorldsApps) plus one
+      vendor doing this exact play ("Astro Gold Alternative for Windows" by AstroWatch).
+      Winnable. Astro Gold is Solar Fire's Mac and iOS sibling at $249.99, with files
+      interchangeable with Solar Fire, so the .SFcht importer answers migration here too.
+    must_cover:
+      - >-
+        What Astro Gold is genuinely good at (it is the depth option on a Mac).
+      - >-
+        Premise corrected 2026-10-03: Astro Gold is NOT Apple-only; astrogold.io sells
+        Windows, macOS, iOS and Android versions. The platform angle does not apply here;
+        compare on the people you read for and the recorded consultation instead.
+      - >-
+        Importing .SFcht files, and what does not carry over.
+      - >-
+        Link to /solar-fire-alternative; the two audiences overlap.
+    acceptance:
+      min_words: 700
+      schema: [SoftwareApplication, FAQPage]
+      internal_links_from: [/solar-fire-alternative, /cloud-astrology-software]
+
+  - id: mobile-voice-workspace
+    status: dropped
+    volume_checked: true
+    type: feature-landing
+    slug: none (folded into existing pages)
+    target_queries:
+      # Semrush, 2026-10-20: "astrology software for iphone" 20 a month, "for ipad" 20,
+      # android 0, no data at all in the mobile-us database. "birth chart app" 260,
+      # "natal chart app" 110 and "astrologer app" 210 are consumer apps, the wrong buyer.
+      - astrology software for iphone
+      - astrology software for ipad
+    why: >-
+      Raised by the owner on 2026-10-20: nothing in our copy mentions that the work screen
+      has a phone layout, or that you can speak to it ("add transits for November 1").
+      Verified in code the same day (product-marketing.md, phone layout and voice bullet).
+      The volume check came back near zero, so a dedicated page would be the thin page
+      the agent brief warns about. Phone and voice is a conversion and demo message, not
+      a keyword play. Do it as: a "Works on your phone" section with a real phone
+      screenshot on /cloud-astrology-software (the page that already draws real organic
+      clicks), and a line on /pricing.html where Studio lists voice.
+    must_cover:
+      - The plan line, every time: voice is Studio, the phone layout is on every plan.
+      - >-
+        Honest gaps from product-marketing.md: web app, not a store app; tap-to-talk (tap to start, tap to send);
+        desktop stays the main surface.
