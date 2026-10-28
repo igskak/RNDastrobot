@@ -309,6 +309,29 @@ def test_the_mac_answer_keeps_the_depth_and_the_solar_fire_x_fact(client):
     assert "no Mac version" not in text
 
 
+# Solar Fire X shipped as a native Mac app (macOS 14+, US$360) and Solar Fire 9 stopped being
+# sold. Several pages said "Solar Fire has no Mac version" until 2026-10-28. A competitor
+# claim that goes stale is worse than none (agent brief, writing rules), so the phrases that
+# made it are held out of every public page.
+STALE_SOLAR_FIRE_PHRASES = [
+    "Solar Fire has no Mac version",
+    "no Mac version",
+    "Solar Fire is Windows only",
+    "does not officially support it on the Mac",
+    "Solar Fire is the one to rule out",
+    "Solar Fire V9",
+    "Windows-only Solar Fire",
+]
+
+
+@pytest.mark.parametrize("path", sorted({p for p in PUBLIC_PATHS if not p.endswith(".html")}))
+def test_no_page_says_solar_fire_has_no_mac_version(client, path):
+    html = client.get(path).text
+
+    for phrase in STALE_SOLAR_FIRE_PHRASES:
+        assert phrase not in html, f"{path} still says: {phrase}"
+
+
 PRICING_PATHS = ["/pricing.html"] + [f"/{locale}/pricing.html" for locale in sorted(PREFIXED_LOCALES)]
 
 
