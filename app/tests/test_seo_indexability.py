@@ -219,6 +219,75 @@ def test_the_cloud_page_keeps_the_depth_it_was_rebuilt_for(client):
     assert '<table class="compare">' in html
 
 
+# Titles and descriptions rewritten on 2026-10-28 for pages that sat at positions 5 to 6
+# with 54 impressions and no clicks (backlog item ctr-title-meta-pass). Held here so a
+# later edit cannot quietly put the generic wording back or push a title past the point
+# where search engines cut it.
+CTR_PAGES = {
+    "/record-astrology-consultations": "Astrology Software That Records & Summarizes Sessions | Steliara",
+    "/astrology-practice-management": "Astrology Practice Management Software for Astrologers | Steliara",
+    "/astrologer-workspace": "Astrologer Workspace for Charts, People and Sessions | Steliara",
+}
+
+
+@pytest.mark.parametrize("path,title", sorted(CTR_PAGES.items()))
+def test_the_ctr_pages_keep_their_rewritten_snippets(client, path, title):
+    import html as htmllib
+    import re
+
+    page = client.get(path).text
+    page_title = htmllib.unescape(re.search(r"<title>(.*?)</title>", page).group(1))
+    description = htmllib.unescape(re.search(r'name="description" content="(.*?)"', page).group(1))
+
+    assert page_title == title
+    assert 15 <= len(page_title) <= 65
+    assert 70 <= len(description) <= 165
+    assert "\u2014" not in page_title + description  # house voice: no em dashes in English
+    og_title = htmllib.unescape(re.search(r'property="og:title" content="(.*?)"', page).group(1))
+    assert og_title == page_title
+
+
+# Pages that exist to be found. Each needs at least two inbound links from other indexable
+# pages, or search engines take months to discover it (backlog item
+# internal-links-to-new-pages). Language twins link each other by design, so they count.
+LINK_TARGETS = [
+    "/astroprocessor",
+    "/astroprocessor-uk",
+    "/zet-online",
+    "/zet-online-uk",
+    "/solar-fire-alternative",
+    "/answers/what-software-do-professional-astrologers-use",
+    "/answers/best-astrology-software-for-professional-practice",
+    "/answers/how-astrologers-keep-client-notes",
+]
+
+
+def _internal_links(client, path):
+    import re
+
+    html = client.get(path).text
+    body = html[html.find("<body") :]
+    return {m.group(1).rstrip("/").removesuffix(".html") for m in re.finditer(r'href="(/[^"#?]*)', body)}
+
+
+@pytest.mark.parametrize("target", LINK_TARGETS)
+def test_new_pages_have_inbound_links(client, target):
+    sources = [p for p in PUBLIC_PATHS if not p.endswith(".html") and p != "/" and p != target]
+    sources += ["/", "/pricing.html"]
+    inbound = [src for src in sources if target in _internal_links(client, src)]
+
+    assert len(inbound) >= 2, f"{target} is linked from {inbound}"
+
+
+def test_the_notes_answer_is_linked_from_a_page_that_already_ranks(client):
+    """/answers/how-astrologers-keep-client-notes was linked only from pages with no clicks.
+    /cloud-astrology-software is off limits (it is the one page that converts), so the link
+    comes from the practice-management page, which holds position 5."""
+    target = "/answers/how-astrologers-keep-client-notes"
+
+    assert target in _internal_links(client, "/astrology-practice-management")
+
+
 PRICING_PATHS = ["/pricing.html"] + [f"/{locale}/pricing.html" for locale in sorted(PREFIXED_LOCALES)]
 
 

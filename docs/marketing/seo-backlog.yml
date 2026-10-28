@@ -454,7 +454,10 @@ items:
   # ---------------------------------------------------------------------------------------
 
   - id: ctr-title-meta-pass
-    status: todo
+    status: shipped
+    pr: "claude/seo-optimization-b38a2f (2026-10-28, PR not yet opened)"
+    # Measure from 2026-11-11: clicks per impression on these three pages against the 0 of 54
+    # before. The sample is tiny; read nothing from fewer than ~100 impressions.
     type: technical
     slug: >-
       /record-astrology-consultations, /astrology-practice-management, /astrologer-workspace
@@ -486,7 +489,11 @@ items:
       guard_test: a test pinning the new titles and the length windows
 
   - id: internal-links-to-new-pages
-    status: todo
+    status: shipped
+    pr: "claude/seo-optimization-b38a2f (2026-10-28, PR not yet opened)"
+    # Audit found every listed page already had 2+ inbound links. The one gap was
+    # /answers/how-astrologers-keep-client-notes (no link from a page with clicks), now
+    # linked from /astrology-practice-management. A test holds the 2-link floor.
     type: technical
     slug: >-
       /cloud-astrology-software, /astrology-practice-management, /record-astrology-consultations,
