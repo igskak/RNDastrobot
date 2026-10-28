@@ -26,7 +26,7 @@
     }
   },
   "base": "https://www.steliara.com",
-  "date": "2026-10-27",
+  "date": "2026-10-28",
   "errors": 0,
   "findings": [],
   "pages": {
@@ -44,9 +44,23 @@
       "title_length": 53,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/answers/best-astrology-software-for-mac": {
+      "body_words": 1272,
+      "bytes": 17147,
+      "canonical": "https://www.steliara.com/answers/best-astrology-software-for-mac",
+      "description_length": 157,
+      "empty_i18n_nodes": 0,
+      "h1": "What is the best astrology software for a Mac?",
+      "hreflang_count": 0,
+      "jsonld_blocks": 2,
+      "status": 200,
+      "title": "Best Astrology Software for Mac: What Runs Natively | Steliara",
+      "title_length": 62,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/answers/best-astrology-software-for-professional-practice": {
-      "body_words": 1413,
-      "bytes": 19365,
+      "body_words": 1491,
+      "bytes": 20332,
       "canonical": "https://www.steliara.com/answers/best-astrology-software-for-professional-practice",
       "description_length": 153,
       "empty_i18n_nodes": 0,
@@ -59,8 +73,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/how-astrologers-keep-client-notes": {
-      "body_words": 1343,
-      "bytes": 20507,
+      "body_words": 1362,
+      "bytes": 20605,
       "canonical": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
       "description_length": 161,
       "empty_i18n_nodes": 0,
@@ -73,8 +87,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/what-software-do-professional-astrologers-use": {
-      "body_words": 1252,
-      "bytes": 18586,
+      "body_words": 1315,
+      "bytes": 19504,
       "canonical": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
       "description_length": 153,
       "empty_i18n_nodes": 0,
@@ -88,30 +102,30 @@
     },
     "https://www.steliara.com/astrologer-workspace": {
       "body_words": 566,
-      "bytes": 13756,
+      "bytes": 13788,
       "canonical": "https://www.steliara.com/astrologer-workspace",
-      "description_length": 149,
+      "description_length": 163,
       "empty_i18n_nodes": 0,
       "h1": "More than charts and a client list",
       "hreflang_count": 0,
       "jsonld_blocks": 3,
       "status": 200,
-      "title": "Astrologer Workspace with Recorded Sessions | Steliara",
-      "title_length": 54,
+      "title": "Astrologer Workspace for Charts, People and Sessions | Steliara",
+      "title_length": 63,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/astrology-practice-management": {
-      "body_words": 769,
-      "bytes": 16586,
+      "body_words": 803,
+      "bytes": 16930,
       "canonical": "https://www.steliara.com/astrology-practice-management",
-      "description_length": 143,
+      "description_length": 156,
       "empty_i18n_nodes": 0,
       "h1": "Run your whole astrology practice in one place",
       "hreflang_count": 0,
       "jsonld_blocks": 3,
       "status": 200,
-      "title": "Astrology Practice Management Software | Steliara",
-      "title_length": 49,
+      "title": "Astrology Practice Management Software for Astrologers | Steliara",
+      "title_length": 65,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/astroprocessor": {
@@ -143,8 +157,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/cloud-astrology-software": {
-      "body_words": 2245,
-      "bytes": 30227,
+      "body_words": 2316,
+      "bytes": 30455,
       "canonical": "https://www.steliara.com/cloud-astrology-software",
       "description_length": 152,
       "empty_i18n_nodes": 0,
@@ -311,8 +325,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon": {
-      "body_words": 1270,
-      "bytes": 27972,
+      "body_words": 1703,
+      "bytes": 33792,
       "canonical": "https://www.steliara.com/moon",
       "description_length": 151,
       "empty_i18n_nodes": 0,
@@ -325,8 +339,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de": {
-      "body_words": 1131,
-      "bytes": 29144,
+      "body_words": 1582,
+      "bytes": 35608,
       "canonical": "https://www.steliara.com/moon/de",
       "description_length": 155,
       "empty_i18n_nodes": 0,
@@ -339,8 +353,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es": {
-      "body_words": 1235,
-      "bytes": 28549,
+      "body_words": 1723,
+      "bytes": 34826,
       "canonical": "https://www.steliara.com/moon/es",
       "description_length": 159,
       "empty_i18n_nodes": 0,
@@ -353,8 +367,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr": {
-      "body_words": 1276,
-      "bytes": 29415,
+      "body_words": 1784,
+      "bytes": 35924,
       "canonical": "https://www.steliara.com/moon/fr",
       "description_length": 159,
       "empty_i18n_nodes": 0,
@@ -367,8 +381,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it": {
-      "body_words": 1203,
-      "bytes": 28568,
+      "body_words": 1679,
+      "bytes": 34752,
       "canonical": "https://www.steliara.com/moon/it",
       "description_length": 162,
       "empty_i18n_nodes": 0,
@@ -381,8 +395,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl": {
-      "body_words": 1036,
-      "bytes": 28793,
+      "body_words": 1429,
+      "bytes": 35039,
       "canonical": "https://www.steliara.com/moon/pl",
       "description_length": 157,
       "empty_i18n_nodes": 0,
@@ -395,8 +409,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt": {
-      "body_words": 1270,
-      "bytes": 28625,
+      "body_words": 1749,
+      "bytes": 34879,
       "canonical": "https://www.steliara.com/moon/pt",
       "description_length": 157,
       "empty_i18n_nodes": 0,
@@ -424,16 +438,16 @@
     },
     "https://www.steliara.com/record-astrology-consultations": {
       "body_words": 1643,
-      "bytes": 24956,
+      "bytes": 24979,
       "canonical": "https://www.steliara.com/record-astrology-consultations",
-      "description_length": 154,
+      "description_length": 163,
       "empty_i18n_nodes": 0,
       "h1": "Astrology software that records your consultations",
       "hreflang_count": 0,
       "jsonld_blocks": 3,
       "status": 200,
-      "title": "Astrology Software That Records Your Consultations | Steliara",
-      "title_length": 61,
+      "title": "Astrology Software That Records & Summarizes Sessions | Steliara",
+      "title_length": 64,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/ru/": {
@@ -479,12 +493,12 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/solar-fire-alternative": {
-      "body_words": 2042,
-      "bytes": 28539,
+      "body_words": 2354,
+      "bytes": 30688,
       "canonical": "https://www.steliara.com/solar-fire-alternative",
-      "description_length": 138,
+      "description_length": 162,
       "empty_i18n_nodes": 0,
-      "h1": "A Solar Fire alternative that opens on your Mac",
+      "h1": "A Solar Fire alternative that runs in any browser",
       "hreflang_count": 0,
       "jsonld_blocks": 3,
       "status": 200,
@@ -578,6 +592,6 @@
     }
   },
   "regressions": [],
-  "sitemap_url_count": 39,
+  "sitemap_url_count": 40,
   "warnings": 0
 }
