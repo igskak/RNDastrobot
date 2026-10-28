@@ -521,7 +521,12 @@ items:
       guard_test: a test that each listed page has at least two inbound internal links
 
   - id: astrology-software-for-mac
-    status: todo
+    status: shipped
+    pr: "claude/seo-mac-answer (2026-10-28)"
+    # Built on 2026-10-28 against the vendors' live pages. NOTE: Solar Fire X is a native Mac
+    # app (macOS 14+, Intel or Apple silicon, US$360) and Solar Fire 9 is no longer sold, so the
+    # premise below ("Solar Fire has no native Mac version") is out of date; see the follow-up
+    # for the pages that still say it.
     # Measured 2026-10-26, Semrush US: cluster sum 200 a month (UK about 80), best query
     # "astrology software for mac" 90 with KD 27, passes the rule. Honest caveats: 90 of the 200
     # is one query, the trend is slightly down, and Search Console has us at position 30.5 for

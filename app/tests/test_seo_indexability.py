@@ -53,6 +53,8 @@ PUBLIC_PATHS = [
     "/answers/best-astrology-software-for-professional-practice.html",
     "/answers/how-astrologers-keep-client-notes",
     "/answers/how-astrologers-keep-client-notes.html",
+    "/answers/best-astrology-software-for-mac",
+    "/answers/best-astrology-software-for-mac.html",
 ]
 
 # The answer pages exist to be quoted by an AI engine, so the properties that make them
@@ -259,6 +261,7 @@ LINK_TARGETS = [
     "/answers/what-software-do-professional-astrologers-use",
     "/answers/best-astrology-software-for-professional-practice",
     "/answers/how-astrologers-keep-client-notes",
+    "/answers/best-astrology-software-for-mac",
 ]
 
 
@@ -286,6 +289,24 @@ def test_the_notes_answer_is_linked_from_a_page_that_already_ranks(client):
     target = "/answers/how-astrologers-keep-client-notes"
 
     assert target in _internal_links(client, "/astrology-practice-management")
+
+
+def test_the_mac_answer_keeps_the_depth_and_the_solar_fire_x_fact(client):
+    """The backlog set 900 words as the floor for /answers/best-astrology-software-for-mac.
+
+    It also pins the fact that made the page worth rewriting on 2026-10-28: Solar Fire X is
+    a native Mac app. Earlier pages said Solar Fire had no Mac version, which stopped being
+    true, so this one must never say it again.
+    """
+    import re
+
+    html = client.get("/answers/best-astrology-software-for-mac").text
+    body = html[html.find("<body") :]
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(script|style|svg)\b.*?</\1>", " ", body))
+
+    assert len(text.split()) >= 900
+    assert "Solar Fire X" in text and "native Mac" in text
+    assert "no Mac version" not in text
 
 
 PRICING_PATHS = ["/pricing.html"] + [f"/{locale}/pricing.html" for locale in sorted(PREFIXED_LOCALES)]
