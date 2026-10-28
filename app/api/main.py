@@ -495,6 +495,7 @@ _SITEMAP_PAGES = (
     ("/answers/what-software-do-professional-astrologers-use", "0.6"),
     ("/answers/best-astrology-software-for-professional-practice", "0.6"),
     ("/answers/how-astrologers-keep-client-notes", "0.6"),
+    ("/answers/best-astrology-software-for-mac", "0.6"),
     ("/terms.html", "0.3"),
 )
 
@@ -705,6 +706,8 @@ date each competitor page was checked:
   {base}/answers/best-astrology-software-for-professional-practice
 - How astrologers keep notes on the people they read for:
   {base}/answers/how-astrologers-keep-client-notes
+- Best astrology software for a Mac, native and browser:
+  {base}/answers/best-astrology-software-for-mac
 
 Last updated: {_SITEMAP_LASTMOD}
 """
@@ -1194,6 +1197,13 @@ async def answer_best_software_for_practice_page():
 async def answer_how_astrologers_keep_notes_page():
     """Answer page: how astrologers keep notes on the people they read for."""
     return _serve_frontend_page("answers/how-astrologers-keep-client-notes.html")
+
+
+@app.get("/answers/best-astrology-software-for-mac")
+@app.get("/answers/best-astrology-software-for-mac.html")
+async def answer_best_astrology_software_for_mac_page():
+    """Answer page: which astrology programs run on a Mac, native and browser."""
+    return _serve_frontend_page("answers/best-astrology-software-for-mac.html")
 
 
 @app.get("/health")
