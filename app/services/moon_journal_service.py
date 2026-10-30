@@ -24,7 +24,7 @@ from datetime import date, datetime, time as time_type, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import swisseph as swe
 from fastapi import HTTPException, status
@@ -33,6 +33,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.auth import mailer
+from app.analytics.posthog import capture_anonymous
 from app.database.models import MoonJournalEntry, MoonSubscriber
 from app.models.moon_journal import JournalEntryRequest, MoonBirth, MoonSubscribeRequest
 from app.services import b2c_safety_policy as safety
@@ -65,6 +66,32 @@ class MoonLettersUnavailable(HTTPException):
 def normalize_locale(locale: Optional[str]) -> str:
     value = (locale or "en").strip().lower()[:2]
     return value if value in LOCALES else "en"
+
+
+# --- product events ---------------------------------------------------------------------
+
+_BOT_MARKERS = (
+    "bot", "crawl", "spider", "slurp", "preview", "headless", "monitor", "curl/", "wget", "python-", "go-http",
+    "facebookexternalhit", "lighthouse", "pingdom", "uptime",
+)
+
+
+def track(event: str, locale: str, **props: Any) -> None:
+    """One anonymous product event for the moon test, shown on the owner's PostHog dashboard.
+
+    Events are named ``moon.<event>`` and carry the language and a few non-identifying facts,
+    never an email, a birth date or an address. See app/analytics/posthog.capture_anonymous.
+    """
+    capture_anonymous(f"moon.{event}", {"locale": normalize_locale(locale), **props})
+
+
+def track_page_view(locale: str, page: str, user_agent: Optional[str], referer: Optional[str]) -> None:
+    """Count a visit to a moon page. Crawlers are left out; the referrer is reduced to its host."""
+    agent = (user_agent or "").lower()
+    if not agent or any(marker in agent for marker in _BOT_MARKERS):
+        return
+    host = (urlsplit(referer or "").hostname or "").removeprefix("www.")
+    track("page_view", locale, page=page, referrer_host=host or "direct")
 
 
 @lru_cache(maxsize=None)
@@ -302,6 +329,7 @@ def subscribe(db: Session, request: MoonSubscribeRequest, *, fallback_base_url: 
         raise _email_failed()
     sub.confirm_sent_at = now
     db.flush()
+    track("signup_requested", sub.locale, frame="rising" if sub.latitude is not None and sub.birth_time else "sun")
 
 
 def send_link(db: Session, email: str, *, fallback_base_url: str = "") -> None:
@@ -325,6 +353,7 @@ def send_link(db: Session, email: str, *, fallback_base_url: str = "") -> None:
         raise _email_failed()
     sub.confirm_sent_at = now
     db.flush()
+    track("link_requested", sub.locale)
 
 
 # --- journal --------------------------------------------------------------------------
@@ -354,13 +383,16 @@ def save_entry(db: Session, sub: MoonSubscriber, request: JournalEntryRequest) -
             db.delete(row)
             db.flush()
         return
-    if row is None:
+    created = row is None
+    if created:
         row = MoonJournalEntry(subscriber_id=sub.id, lunation_utc=when, prompt_index=request.index)
         db.add(row)
     row.lunation_kind = request.kind
     row.question = request.question
     row.answer = request.answer
     db.flush()
+    if created:  # an edit while typing is not a new answer
+        track("journal_entry", sub.locale, kind=request.kind)
 
 
 def journal(db: Session, sub: MoonSubscriber) -> List[Dict[str, Any]]:
@@ -389,6 +421,7 @@ def letter_page(db: Session, sub: MoonSubscriber, *, confirm: bool, now: Optiona
     now = now or utcnow()
     if confirm and sub.status == "pending":
         sub.status, sub.confirmed_at = "confirmed", now
+        track("confirmed", sub.locale)
     if sub.status == "confirmed":
         sub.opens = (sub.opens or 0) + 1
         sub.last_opened_at = now
@@ -410,15 +443,18 @@ def record_interest(db: Session, sub: MoonSubscriber) -> None:
     if sub.journal_interest_at is None:
         sub.journal_interest_at = utcnow()
         db.flush()
+        track("interest_clicked", sub.locale)
 
 
 def unsubscribe(db: Session, sub: MoonSubscriber) -> None:
     if sub.status != "unsubscribed":
         sub.status, sub.unsubscribed_at = "unsubscribed", utcnow()
         db.flush()
+        track("unsubscribed", sub.locale)
 
 
 def erase(db: Session, sub: MoonSubscriber) -> None:
+    track("erased", sub.locale)
     # The foreign key cascades on PostgreSQL; deleting the entries first keeps every engine honest.
     db.query(MoonJournalEntry).filter(MoonJournalEntry.subscriber_id == sub.id).delete(synchronize_session=False)
     db.delete(sub)
@@ -472,6 +508,7 @@ def send_due_letters(db: Session, now: Optional[datetime] = None, limit: int = 2
                 sub.last_lunation_at = lun.utc
                 sub.letters_sent = (sub.letters_sent or 0) + 1
                 result["sent"] += 1
+                track("letter_sent", sub.locale, kind=lun.kind)
             else:
                 result["failed"] += 1
         except Exception as exc:  # one bad row must not stop the run

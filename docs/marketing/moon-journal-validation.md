@@ -75,6 +75,37 @@ volume; IT, ES and BR are harder and are included because the page costs nothing
    and a sentence in `/terms.html` about the moon letters' data (email, birth data, journal entries,
    deletion on request).
 
+## PostHog dashboard (separate from the astrologer metrics)
+
+The moon pages run without cookies or a consent banner, so they send nothing from the browser.
+The server sends anonymous events to the same PostHog project as the app (`POSTHOG_PROJECT_API_KEY`,
+write-only token): every event gets a fresh random id, no person profile and no GeoIP, and carries
+only the language and a few non-identifying facts (never an email, birth data or answers). Counts are
+exact, unique visitors cannot be counted by design. Crawlers and empty user agents are not counted.
+
+| Event | Sent when | Properties |
+|---|---|---|
+| `moon.page_view` | a /moon page is opened (calculator or letter page) | `locale`, `page` (index / letter), `referrer_host` (host only, or `direct`) |
+| `moon.chart_calculated` | someone presses "Show my moons" | `locale`, `frame` (rising / sun) |
+| `moon.signup_requested` | the confirmation email goes out | `locale`, `frame` |
+| `moon.confirmed` | the address is confirmed | `locale` |
+| `moon.journal_entry` | a new answer is saved (editing is not counted) | `locale`, `kind` |
+| `moon.interest_clicked` | "I'm interested" on the personal month, once per person | `locale` |
+| `moon.letter_sent` | a lunation letter is delivered | `locale`, `kind` |
+| `moon.link_requested`, `moon.unsubscribed`, `moon.erased` | self service | `locale` |
+
+Build one dashboard named "Moon pages (free, B2C)", kept apart from the astrologer dashboards, with
+these insights (all events start with `moon.`, so a search for `moon.` finds them):
+
+1. **Visits per day by language**: Trends, `moon.page_view` where `page` = `index`, breakdown `locale`, stacked bars, last 30 days.
+2. **Where visits come from**: Trends, `moon.page_view` where `page` = `index`, breakdown `referrer_host`, table, total value.
+3. **Journey in numbers**: Trends, total value, series `moon.page_view` (page = index), `moon.chart_calculated`, `moon.signup_requested`, `moon.confirmed`, `moon.journal_entry`, `moon.interest_clicked`; breakdown `locale`. Read it as ratios: calculated / visits, signups / calculated, confirmed / signups.
+4. **Letters**: Trends, `moon.letter_sent`, breakdown `kind`, by week.
+5. **Leaving**: Trends, `moon.unsubscribed` and `moon.erased` per week.
+
+Per-language funnel numbers with exact confirmed / writers / interested counts remain in the stats
+endpoint below; PostHog is for traffic and the shape of the journey.
+
 ## Reading the result
 
 ```bash

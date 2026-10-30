@@ -60,7 +60,9 @@ def _subscriber(db: Session, token: str):
 
 @router.post("/chart", summary="Next new and full moon in your houses (free)", dependencies=[Depends(_calc_limit)])
 def moon_chart(payload: MoonChartRequest) -> Dict[str, Any]:
-    return _guarded(lambda: moon.chart(payload.birth, payload.locale))
+    result = _guarded(lambda: moon.chart(payload.birth, payload.locale))
+    moon.track("chart_calculated", payload.locale, frame=result["frame"])
+    return result
 
 
 @router.post("/subscribe", summary="Ask for the moon letters", dependencies=[Depends(_subscribe_limit)])

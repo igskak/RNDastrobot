@@ -364,3 +364,77 @@ def test_scheduler_and_stats_hide_behind_the_cron_secret(client, env, sent, db_f
     stats = client.get("/api/v1/moon/internal/stats", headers={"X-Moon-Cron": CRON}).json()
     assert stats["by_locale"]["en"]["signups"] == 1 and stats["by_locale"]["en"]["confirmed"] == 1
     assert stats["by_locale"]["en"]["writers"] == 0 and stats["by_locale"]["en"]["entries"] == 0
+
+
+# --- product events (PostHog) ----------------------------------------------------------
+
+@pytest.fixture
+def events(monkeypatch):
+    sent_events = []
+    monkeypatch.setenv("POSTHOG_PROJECT_API_KEY", "phc_test_key")
+    monkeypatch.setattr("app.analytics.posthog._dispatch", sent_events.append)
+    return sent_events
+
+
+def _names(events):
+    return [(e["event"], e["properties"].get("locale")) for e in events]
+
+
+def test_page_views_are_counted_without_identifying_anyone(client, events):
+    human = {"User-Agent": "Mozilla/5.0 (iPhone) Safari/604.1", "Referer": "https://www.google.com/search?q=neumond"}
+    assert client.get("/moon/de", headers=human).status_code == 200
+    assert client.get("/moon", headers={"User-Agent": "Mozilla/5.0 Macintosh"}).status_code == 200
+    assert client.get("/moon/pl/letter", headers=human).status_code == 200
+    for bot in ("Googlebot/2.1 (+http://www.google.com/bot.html)", "curl/8.4.0", "Mozilla/5.0 HeadlessChrome", ""):
+        client.get("/moon/fr", headers={"User-Agent": bot})
+    assert client.get("/moon/nonsense", headers=human).status_code == 404
+
+    assert _names(events) == [("moon.page_view", "de"), ("moon.page_view", "en"), ("moon.page_view", "pl")]
+    first = events[0]["properties"]
+    assert first["page"] == "index" and first["referrer_host"] == "google.com"
+    assert events[1]["properties"]["referrer_host"] == "direct" and events[2]["properties"]["page"] == "letter"
+    for event in events:
+        props = event["properties"]
+        assert props["$process_person_profile"] is False and props["$geoip_disable"] is True
+        assert len(event["distinct_id"]) == 32 and "token" not in json.dumps(event).lower().replace("api_key", "")
+    assert len({e["distinct_id"] for e in events}) == 3  # no visitor can be followed across events
+
+
+def test_nothing_is_sent_without_a_project_key(client, monkeypatch):
+    sent_events = []
+    monkeypatch.delenv("POSTHOG_PROJECT_API_KEY", raising=False)
+    monkeypatch.setattr("app.analytics.posthog._dispatch", sent_events.append)
+    client.get("/moon/de", headers={"User-Agent": "Mozilla/5.0"})
+    assert sent_events == []
+
+
+def test_the_whole_journey_is_visible_in_the_events(client, env, sent, events, db_factory):
+    client.post("/api/v1/moon/chart", json={"birth": BIRTH, "locale": "pl"})
+    _subscribe(client)
+    token = _token_from(sent[0][2])
+    current = client.post("/api/v1/moon/letter", json={"token": token, "confirm": True}).json()["current"]
+    _save(client, token, current)
+    _save(client, token, current, answer="Read two books")  # an edit, not a new answer
+    client.post("/api/v1/moon/interest", json={"token": token})
+    client.post("/api/v1/moon/interest", json={"token": token})  # counted once
+    client.post("/api/v1/moon/unsubscribe", json={"token": token})
+    client.post("/api/v1/moon/erase", json={"token": token})
+
+    assert _names(events) == [
+        ("moon.chart_calculated", "pl"), ("moon.signup_requested", "pl"), ("moon.confirmed", "pl"),
+        ("moon.journal_entry", "pl"), ("moon.interest_clicked", "pl"), ("moon.unsubscribed", "pl"),
+        ("moon.erased", "pl"),
+    ]
+    serialized = json.dumps(events)
+    for private in ("ola@example.com", "1990-05-17", "Read one book", "Read two books", "Warszawa", token):
+        assert private not in serialized
+
+
+def test_letters_and_links_are_counted(env, sent, events, db_factory, client):
+    _confirmed(db_factory, "a@example.com", locale="de")
+    lun = moon.latest_lunation(NEW_MOON_NOV_2026 + timedelta(hours=1))
+    with db_factory() as db:
+        moon.send_due_letters(db, now=lun.utc + timedelta(hours=1))
+        db.commit()
+    assert _names(events) == [("moon.letter_sent", "de")]
+    assert events[0]["properties"]["kind"] == lun.kind

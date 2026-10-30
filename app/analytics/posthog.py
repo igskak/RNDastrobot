@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import threading
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 from urllib import request as urllib_request
@@ -80,6 +81,32 @@ def _post_capture(payload: dict) -> None:
         logger.debug("PostHog capture failed: %s", exc)
 
 
+def _dispatch(payload: dict) -> None:
+    threading.Thread(target=_post_capture, args=(payload,), daemon=True).start()
+
+
+def capture_anonymous(event: str, properties: Optional[dict] = None) -> None:
+    """Send an event that identifies nobody: a fresh random distinct_id per event, no person
+    profile, no GeoIP lookup. Counts are exact, unique visitors are deliberately not
+    possible. Used by the public pages that run without cookies or a consent banner
+    (the moon pages). No-op without a project key. Never raises."""
+    try:
+        key = _posthog_key()
+        if not key:
+            return
+        props = dict(properties or {})
+        props.update({"source": "server", "$process_person_profile": False, "$geoip_disable": True})
+        _dispatch({
+            "api_key": key,
+            "event": event,
+            "distinct_id": uuid.uuid4().hex,
+            "properties": props,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+    except Exception as exc:  # pragma: no cover - best effort
+        logger.debug("capture_anonymous skipped: %s", exc)
+
+
 def mirror_audit_event(
     *,
     actor_id,
@@ -117,6 +144,6 @@ def mirror_audit_event(
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-        threading.Thread(target=_post_capture, args=(payload,), daemon=True).start()
+        _dispatch(payload)
     except Exception as exc:  # pragma: no cover - best effort
         logger.debug("mirror_audit_event skipped: %s", exc)

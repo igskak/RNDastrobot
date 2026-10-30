@@ -42,7 +42,11 @@ from app.services.processing_pipeline import recover_stuck_sessions
 from app.database.connection import get_db
 from app.services import campaign_visits, vedic_service
 from app.services.vedic_content import reviewed_locales as kundli_reviewed_locales
-from app.services.moon_journal_service import LOCALES as MOON_LOCALES, page_path as moon_page_path
+from app.services.moon_journal_service import (
+    LOCALES as MOON_LOCALES,
+    page_path as moon_page_path,
+    track_page_view as moon_track_page_view,
+)
 from app.services.recording_retention_service import start_recording_retention_worker
 from app.auth.site_mode import is_solo_request
 from app.i18n.locale import DEFAULT_LOCALE, SUPPORTED_LOCALES, normalize_locale
@@ -1043,34 +1047,36 @@ async def kundli_page(page: str):
 
 @app.get("/moon")
 @app.get("/moon/")
-async def moon_hub_page():
+async def moon_hub_page(request: Request):
     """Free moon pages: calculator and letters signup (English)."""
-    return _serve_frontend_page("moon/index.html")
+    return _moon_document(request, "en", "index")
 
 
-def _moon_document(locale: str, page: str):
+def _moon_document(request: Request, locale: str, page: str):
     page = page[:-5] if page.endswith(".html") else page
     if page not in _MOON_PAGES:
         raise HTTPException(status_code=404, detail="Page not found")
     folder = "moon" if locale == "en" else f"moon/{locale}"
-    return _serve_frontend_page(f"{folder}/{page}.html")
+    response = _serve_frontend_page(f"{folder}/{page}.html")
+    moon_track_page_view(locale, page, request.headers.get("user-agent"), request.headers.get("referer"))
+    return response
 
 
 @app.get("/moon/{locale}/{page}")
-async def moon_page_localized(locale: str, page: str):
+async def moon_page_localized(request: Request, locale: str, page: str):
     """Free moon pages in another language (the letter page behind a signed link)."""
     if locale not in MOON_LOCALES or locale == "en":
         raise HTTPException(status_code=404, detail="Page not found")
-    return _moon_document(locale, page)
+    return _moon_document(request, locale, page)
 
 
 @app.get("/moon/{segment}")
 @app.get("/moon/{segment}/")
-async def moon_page(segment: str):
+async def moon_page(request: Request, segment: str):
     """/moon/pl is the Polish calculator; /moon/letter is the English letter page."""
     if segment in MOON_LOCALES and segment != "en":
-        return _moon_document(segment, "index")
-    return _moon_document("en", segment)
+        return _moon_document(request, segment, "index")
+    return _moon_document(request, "en", segment)
 
 
 @app.get("/cloud-astrology-software")
