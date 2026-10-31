@@ -33,13 +33,18 @@
   <header class="site-header">
     <div class="shell bar">
       <a class="brand" href="/moon/es">Steliara</a>
-      <nav class="langs" aria-label="Idioma"><a href="/moon" hreflang="en" lang="en">English</a><a href="/moon/pl" hreflang="pl" lang="pl">Polski</a><a href="/moon/de" hreflang="de" lang="de">Deutsch</a><a href="/moon/fr" hreflang="fr" lang="fr">Français</a><a href="/moon/it" hreflang="it" lang="it">Italiano</a><a href="/moon/es" hreflang="es" lang="es" aria-current="page">Español</a><a href="/moon/pt" hreflang="pt-BR" lang="pt-BR">Português</a></nav>
+      <div class="language-picker">
+        <label class="language-label" for="language-select">Idioma</label>
+        <select id="language-select" aria-label="Idioma"><option value="/moon">English</option><option value="/moon/pl">Polski</option><option value="/moon/de">Deutsch</option><option value="/moon/fr">Français</option><option value="/moon/it">Italiano</option><option value="/moon/es" selected>Español</option><option value="/moon/pt">Português</option></select>
+      </div>
     </div>
   </header>
-  <main id="main" class="shell tool">
+  <main id="main" class="shell tool moon-page">
       <h1>Luna nueva y luna llena 2026–2027: fechas y tus preguntas personales para el diario</h1>
       <p class="lead">Descubre en qué casa de tu carta natal caen la próxima luna nueva y la próxima luna llena y recibe algunas preguntas amables para tu diario: una intención en luna nueva, gratitud en luna llena.</p>
-      <form id="moon-form" class="card" novalidate>
+      <div class="moon-grid">
+        <div class="moon-primary">
+          <form id="moon-form" class="card" novalidate>
         <fieldset class="person">
           <legend>Tus datos de nacimiento</legend>
           <div class="field">
@@ -64,26 +69,33 @@
             <p class="hint" id="birth-tz-hint" aria-live="polite"></p>
           </div>
         </fieldset>
-        <p id="form-error" class="error" role="alert" hidden></p>
-        <button class="btn" type="submit" data-label="Ver mis lunas" data-busy="Calculando…">Ver mis lunas</button>
-        <noscript><p class="error">Esta calculadora necesita JavaScript.</p></noscript>
-      </form>
-      <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>
-      <section id="signup" class="card signup" hidden aria-labelledby="signup-title">
-        <h2 id="signup-title">Recibe tus preguntas en cada luna nueva y luna llena</h2>
-        <p>Dos correos breves al mes, el día de cada luna nueva y cada luna llena, con preguntas para la casa de tu carta donde cae. Gratis, y puedes darte de baja con un clic.</p>
-        <form id="signup-form" novalidate>
-          <div class="field">
-            <label for="signup-email">Correo electrónico</label>
-            <input id="signup-email" type="email" autocomplete="email" required>
-          </div>
-          <label class="check"><input id="signup-consent" type="checkbox"> Acepto recibir estos correos y que se guarden mis datos de nacimiento con este fin. Puedo borrarlos en cualquier momento.</label>
-          <p id="signup-error" class="error" role="alert" hidden></p>
-          <p id="signup-done" class="note" role="status" hidden></p>
-          <button class="btn" type="submit">Enviadme mis cartas de la Luna</button>
-        </form>
-      </section>
-      <section class="lunations" aria-labelledby="lunations-title">
+            <p id="form-error" class="error" role="alert" hidden></p>
+            <button class="btn" type="submit" data-label="Ver mis lunas" data-busy="Calculando…">Ver mis lunas</button>
+            <noscript><p class="error">Esta calculadora necesita JavaScript.</p></noscript>
+          </form>
+          <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>
+          <section id="signup" class="card signup" hidden aria-labelledby="signup-title">
+            <h2 id="signup-title">Recibe tus preguntas en cada luna nueva y luna llena</h2>
+            <p>Dos correos breves al mes, el día de cada luna nueva y cada luna llena, con preguntas para la casa de tu carta donde cae. Gratis, y puedes darte de baja con un clic.</p>
+            <form id="signup-form" novalidate>
+              <div class="field">
+                <label for="signup-email">Correo electrónico</label>
+                <input id="signup-email" type="email" autocomplete="email" required>
+              </div>
+              <label class="check"><input id="signup-consent" type="checkbox"> Acepto recibir estos correos y que se guarden mis datos de nacimiento con este fin. Puedo borrarlos en cualquier momento.</label>
+              <p id="signup-error" class="error" role="alert" hidden></p>
+              <p id="signup-done" class="note" role="status" hidden></p>
+              <button class="btn" type="submit">Enviadme mis cartas de la Luna</button>
+            </form>
+          </section>
+        </div>
+        <aside class="moon-rail">
+          <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
+            <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
+            <div class="moon-highlight-copy"></div>
+          </section>
+
+      <section class="lunations reveal-on-scroll" aria-labelledby="lunations-title">
         <h2 id="lunations-title">Lunas nuevas y lunas llenas de noviembre de 2026 a diciembre de 2027</h2>
         <p class="hint">Horas peninsulares de España. La próxima lunación aparece destacada.</p>
         <div class="table-wrap">
@@ -91,147 +103,147 @@
             <thead><tr><th scope="col">Fecha y hora</th><th scope="col">Fase</th><th scope="col">Signo</th></tr></thead>
             <tbody>
             <tr data-utc="2026-11-09T07:02:07Z">
-              <td>9 de noviembre de 2026, 08:02<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">9 de noviembre de 2026, 08:02</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Escorpio 16°</td>
             </tr>
             <tr data-utc="2026-11-24T14:53:34Z">
-              <td>24 de noviembre de 2026, 15:53<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">24 de noviembre de 2026, 15:53</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Géminis 2°</td>
             </tr>
             <tr data-utc="2026-12-09T00:51:51Z">
-              <td>9 de diciembre de 2026, 01:51<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">9 de diciembre de 2026, 01:51</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Sagitario 16°</td>
             </tr>
             <tr data-utc="2026-12-24T01:28:14Z">
-              <td>24 de diciembre de 2026, 02:28<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">24 de diciembre de 2026, 02:28</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Cáncer 2°</td>
             </tr>
             <tr data-utc="2027-01-07T20:24:23Z">
-              <td>7 de enero de 2027, 21:24<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">7 de enero de 2027, 21:24</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Capricornio 17°</td>
             </tr>
             <tr data-utc="2027-01-22T12:17:23Z">
-              <td>22 de enero de 2027, 13:17<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">22 de enero de 2027, 13:17</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Leo 2°</td>
             </tr>
             <tr data-utc="2027-02-06T15:56:07Z">
-              <td>6 de febrero de 2027, 16:56<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">6 de febrero de 2027, 16:56</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Acuario 17°</td>
             </tr>
             <tr data-utc="2027-02-20T23:23:39Z">
-              <td>21 de febrero de 2027, 00:23<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">21 de febrero de 2027, 00:23</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Virgo 2°</td>
             </tr>
             <tr data-utc="2027-03-08T09:29:29Z">
-              <td>8 de marzo de 2027, 10:29<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">8 de marzo de 2027, 10:29</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Piscis 17°</td>
             </tr>
             <tr data-utc="2027-03-22T10:43:48Z">
-              <td>22 de marzo de 2027, 11:43<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">22 de marzo de 2027, 11:43</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Libra 1°</td>
             </tr>
             <tr data-utc="2027-04-06T23:51:10Z">
-              <td>7 de abril de 2027, 01:51<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">7 de abril de 2027, 01:51</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Aries 16°</td>
             </tr>
             <tr data-utc="2027-04-20T22:27:09Z">
-              <td>21 de abril de 2027, 00:27<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">21 de abril de 2027, 00:27</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Escorpio 0°</td>
             </tr>
             <tr data-utc="2027-05-06T10:58:38Z">
-              <td>6 de mayo de 2027, 12:58<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">6 de mayo de 2027, 12:58</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Tauro 15°</td>
             </tr>
             <tr data-utc="2027-05-20T10:59:01Z">
-              <td>20 de mayo de 2027, 12:59<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">20 de mayo de 2027, 12:59</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Escorpio 29°</td>
             </tr>
             <tr data-utc="2027-06-04T19:40:21Z">
-              <td>4 de junio de 2027, 21:40<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">4 de junio de 2027, 21:40</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Géminis 13°</td>
             </tr>
             <tr data-utc="2027-06-19T00:44:21Z">
-              <td>19 de junio de 2027, 02:44<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">19 de junio de 2027, 02:44</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Sagitario 27°</td>
             </tr>
             <tr data-utc="2027-07-04T03:02:05Z">
-              <td>4 de julio de 2027, 05:02<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">4 de julio de 2027, 05:02</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Cáncer 11°</td>
             </tr>
             <tr data-utc="2027-07-18T15:44:56Z">
-              <td>18 de julio de 2027, 17:44<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">18 de julio de 2027, 17:44</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Capricornio 25°</td>
             </tr>
             <tr data-utc="2027-08-02T10:05:14Z">
-              <td>2 de agosto de 2027, 12:05<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">2 de agosto de 2027, 12:05</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Leo 9°</td>
             </tr>
             <tr data-utc="2027-08-17T07:28:42Z">
-              <td>17 de agosto de 2027, 09:28<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">17 de agosto de 2027, 09:28</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Acuario 24°</td>
             </tr>
             <tr data-utc="2027-08-31T17:41:11Z">
-              <td>31 de agosto de 2027, 19:41<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">31 de agosto de 2027, 19:41</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Virgo 8°</td>
             </tr>
             <tr data-utc="2027-09-15T23:03:31Z">
-              <td>16 de septiembre de 2027, 01:03<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">16 de septiembre de 2027, 01:03</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Piscis 22°</td>
             </tr>
             <tr data-utc="2027-09-30T02:36:05Z">
-              <td>30 de septiembre de 2027, 04:36<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">30 de septiembre de 2027, 04:36</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Libra 6°</td>
             </tr>
             <tr data-utc="2027-10-15T13:47:01Z">
-              <td>15 de octubre de 2027, 15:47<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">15 de octubre de 2027, 15:47</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Aries 21°</td>
             </tr>
             <tr data-utc="2027-10-29T13:36:34Z">
-              <td>29 de octubre de 2027, 15:36<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">29 de octubre de 2027, 15:36</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Escorpio 5°</td>
             </tr>
             <tr data-utc="2027-11-14T03:25:56Z">
-              <td>14 de noviembre de 2027, 04:25<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">14 de noviembre de 2027, 04:25</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Tauro 21°</td>
             </tr>
             <tr data-utc="2027-11-28T03:24:26Z">
-              <td>28 de noviembre de 2027, 04:24<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">28 de noviembre de 2027, 04:24</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Sagitario 5°</td>
             </tr>
             <tr data-utc="2027-12-13T16:08:48Z">
-              <td>13 de diciembre de 2027, 17:08<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">13 de diciembre de 2027, 17:08</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-full" aria-hidden="true"></span>Luna llena</td>
               <td>Géminis 21°</td>
             </tr>
             <tr data-utc="2027-12-27T20:12:20Z">
-              <td>27 de diciembre de 2027, 21:12<span class="badge" hidden> · próxima</span></td>
+              <td><button class="lunation-pick" type="button">27 de diciembre de 2027, 21:12</button><span class="badge" hidden> · próxima</span></td>
               <td><span class="phase phase-new" aria-hidden="true"></span>Luna nueva</td>
               <td>Capricornio 5°</td>
             </tr>
@@ -239,65 +251,78 @@
           </table>
         </div>
       </section>
-      <section class="plans" aria-labelledby="plans-title">
-        <h2 id="plans-title">Cartas gratuitas y mes personal</h2>
-        <p>Las cartas de la Luna son gratuitas y lo seguirán siendo. El mes personal es un complemento de pago que estamos preparando. Aquí tienes un ejemplo de cada uno.</p>
+        </aside>
+      </div>
+      <section class="plans reveal-on-scroll" aria-labelledby="plans-title">
+        <h2 id="plans-title">Dos formas de estar más cerca de tu propio ritmo</h2>
+        <p>El cielo no está aquí para decirte lo que va a suceder. Puede darte un momento para notar lo que ya está pidiendo tu atención — en cada luna nueva y llena, o como una historia más profunda que se despliega a lo largo de todo el mes.</p>
         <div class="plans-grid">
-          <div class="plan"><h3>Gratis</h3><ul><li>Una carta el día de cada luna nueva y cada luna llena</li><li>La casa de tu carta natal donde cae, con su significado</li><li>Tres preguntas para tu diario y una afirmación</li><li>Tus respuestas guardadas en tu diario, en cualquier dispositivo</li></ul></div>
-          <div class="plan paid"><h3>Mes personal</h3><p class="price">4 € al mes</p><ul><li>Todo lo gratuito</li><li>Un calendario de tus propios tránsitos del mes, con fechas y una pregunta para cada uno</li><li>Una mirada mensual a lo que escribiste, junto al cielo de esos días</li><li>Un libro del año con tus notas, para tu cumpleaños</li></ul></div>
+          <article class="plan"><h3>Tu carta de la Luna</h3><p class="plan-intro">Dos veces al mes, una carta breve te encuentra en un momento natural de cambio. Traduce la luna nueva o llena a través de tu propia carta natal y te ofrece un espacio tranquilo donde puedes escucharte con más claridad.</p><ul><li><strong>Tu cielo, en lenguaje humano</strong><span>Descubre qué área de tu vida toca esta luna y por qué puede sentirse más viva ahora — sin jerga ni predicciones cerradas.</span></li><li><strong>Preguntas que abren algo</strong><span>Tres invitaciones cuidadosamente elegidas te ayudan a nombrar lo que quieres, lo que ha cambiado y lo que estás listo para llevar contigo.</span></li><li><strong>Un diario que recuerda</strong><span>Tus respuestas permanecen juntas en un diario privado, para que una sensación pasajera pueda convertirse con el tiempo en un patrón que reconoces.</span></li></ul><p class="plan-closing">Gratis, dos veces al mes. Unos minutos de atención que te pertenecen solo a ti.</p></article>
+          <article class="plan paid"><h3>Tu Mes personal</h3><p class="price">4 € al mes</p><p class="plan-intro">El Mes personal te ofrece la visión completa. En lugar de vivir el mes como una sucesión borrosa de fechas, ves su ritmo emocional: los periodos que pueden remover algo, las preguntas con las que merece la pena quedarse y el hilo que lo conecta todo.</p><ul><li><strong>Tus fechas significativas</strong><span>Un calendario personal de los tránsitos más fuertes del mes, traducidos en situaciones que puedes reconocer en el trabajo, las relaciones, el hogar y tu vida interior.</span></li><li><strong>Orientación que realmente puedes usar</strong><span>Cada periodo llega con una reflexión concreta — no una instrucción — para que puedas tomar tu propia decisión con más conciencia.</span></li><li><strong>Patrones que solo revela el tiempo</strong><span>Al final del mes, tus notas vuelven junto al cielo de aquellos días y muestran necesidades, tensiones y deseos que se repiten.</span></li><li><strong>Tu año como una historia</strong><span>En tu cumpleaños, esos meses se convierten en un anuario privado: no una lista de predicciones, sino un retrato de cómo has cambiado.</span></li></ul><p class="plan-closing">Para quien no solo quiere saber qué sucede en el cielo, sino entender qué está abriendo en su propia vida.</p></article>
         </div>
         <div class="examples">
           <article class="example">
             <p class="example-label">Ejemplo de carta gratuita</p>
             <h4><span class="phase phase-new" aria-hidden="true"></span>Luna nueva en Escorpio, en tu casa 3</h4>
             <p class="when">9 de noviembre de 2026, 08:02</p>
-            <p>Esta parte de tu carta habla de palabras, aprendizaje y vínculos cotidianos.</p>
-            <ol class="prompts"><li>¿Qué te gustaría aprender o leer este mes?</li><li>¿Con quién te gustaría hablar más a menudo?</li><li>Escribe una intención para este mes lunar, en presente.</li></ol>
-            <p class="affirmation"><strong>Afirmación</strong>Mis palabras pueden ser claras y amables.</p>
+            <p>Esta parte de tu carta contiene las palabras que repites, las preguntas que sigues y las conversaciones cotidianas que moldean en silencio tus decisiones.</p>
+            <ol class="prompts"><li>¿Qué conversación sigues ensayando en tu cabeza? Escribe su primera frase honesta.</li><li>¿Qué tema sigue apareciendo en tus pestañas, notas o publicaciones guardadas? ¿Qué podría abrir una hora de atención completa?</li><li>Completa la frase: En este mes lunar elijo...</li></ol>
+            <p class="affirmation"><strong>Afirmación</strong>Confío en mí para decir lo claro con amabilidad.</p>
           </article>
           <article class="example paid">
             <p class="example-label">Ejemplo de mes personal</p>
             <p class="hint">Ejemplo para una persona ficticia nacida el 17 de mayo de 1990. Tu propio mes se calcula con tus datos de nacimiento.</p>
             <h4>Tu cielo en noviembre</h4>
             <ul class="calendar">
-              <li><span class="when">3–8 de noviembre</span> <strong>Venus pasa sobre tu Sol</strong>
-                <p>Una semana para notar lo que valoras de ti y de tu vida.</p><p class="question">¿Qué te gustó de ti esta semana?</p></li>
-              <li><span class="when">14–19 de noviembre</span> <strong>Marte recorre tu casa 4</strong>
-                <p>Energía para el hogar: ordenar, mover muebles, invitar a gente.</p><p class="question">¿Qué quieres cambiar en tu espacio?</p></li>
-              <li><span class="when">24 de noviembre</span> <strong>Luna llena en tu casa 10</strong>
-                <p>Un momento para mirar tu trabajo y lo que has construido.</p><p class="question">¿Qué logro de este mes quieres recordar?</p></li>
+              <li><span class="when">3–8 de noviembre</span> <strong>Venus se encuentra con tu Sol — visibilidad y autoestima</strong>
+                <p>Esta semana los elogios pueden llegarte más hondo — o puedes notar mejor cuándo te quitas importancia. Fíjate en la ropa, las personas y las decisiones que te hacen sentir más tú, no solo más aceptable.</p><p class="question">¿Dónde estás listo para dejar de pedir permiso para disfrutar de ser quien eres?</p></li>
+              <li><span class="when">14–19 de noviembre</span> <strong>Marte activa tu casa 4 — hogar y pertenencia</strong>
+                <p>Puedes sentir el impulso de despejar un rincón, hablar de una tensión en casa o pedir más espacio propio. En vez de cambiarlo todo, observa el lugar — o la relación — que ya no te deja respirar con libertad.</p><p class="question">Si tu hogar pudiera sostener a la persona en la que te estás convirtiendo, ¿qué cambiarías primero y por qué?</p></li>
+              <li><span class="when">24 de noviembre</span> <strong>Luna llena en tu casa 10 — trabajo y reconocimiento</strong>
+                <p>Un resultado, una fecha límite o una conversación puede hacer visible tu progreso. Antes de correr hacia la siguiente meta, mira lo que has construido — y si la idea de éxito que persigues todavía se siente tuya.</p><p class="question">¿Qué reconoces con orgullo como propio y la aprobación de quién estás listo para dejar de usar como medida?</p></li>
             </ul>
             <h4>Tu mes en tus palabras</h4>
-            <p>En noviembre tu diario tiene 7 notas. Las palabras que más se repiten son «descanso», «hermana» y «proyecto».</p>
-            <p>Alrededor de la luna llena en tu casa 10 vuelve el deseo de que tu trabajo se note. El mismo tema apareció en agosto, cuando Júpiter pasaba por lo más alto de tu carta.</p>
-            <p>Pregunta para diciembre: ¿qué te ayudaría a sentir que tu trabajo se ve?</p>
+            <p>En tus siete notas de noviembre vuelven tres palabras: «descanso», «hermana» y «proyecto». Tu vida privada y tu trabajo visible parecen pedir atención al mismo tiempo.</p>
+            <p>Cerca de la luna llena en tu casa 10 escribes: «Quiero que mi trabajo se vea, pero no a costa de llegar a casa sin energía». La misma tensión apareció en agosto, cuando Júpiter pasaba por lo más alto de tu carta.</p>
+            <p>Llévate a diciembre esta pregunta: ¿cómo sería un éxito visible que también dejara espacio para tu vida real?</p>
           </article>
         </div>
       </section>
-      <section id="link-card" class="card" aria-labelledby="link-title">
-        <h2 id="link-title">¿Ya recibes las cartas?</h2>
-        <p>Escribe tu correo y te enviaremos el enlace a tu diario. Funciona en cualquier dispositivo, sin contraseña.</p>
-        <form id="link-form" novalidate>
-          <div class="field">
-            <label for="link-email">Correo electrónico</label>
-            <input id="link-email" type="email" autocomplete="email" required>
+      <section id="link-card" class="card reveal-on-scroll" aria-labelledby="link-title">
+        <h2 id="link-title">Tu diario de la Luna</h2>
+        <p>Elige el camino que encaja con el punto en el que estás hoy.</p>
+        <div class="link-paths">
+          <div class="link-path link-new">
+            <h3>¿Es tu primera vez aquí?</h3>
+            <p>Empieza con tus datos de nacimiento. Verás dónde caen la próxima luna nueva y la próxima luna llena en tu carta, y después podrás elegir recibir tus cartas personales gratuitas.</p>
+            <a class="btn" href="#moon-form">Ver mis próximas lunas</a>
           </div>
-          <p id="link-error" class="error" role="alert" hidden></p>
-          <p id="link-done" class="note" role="status" hidden></p>
-          <button class="btn ghost" type="submit">Enviarme mi enlace</button>
-        </form>
+          <div class="link-path link-returning">
+            <h3>¿Ya recibes las cartas?</h3>
+            <p>Escribe tu correo y te enviaremos un enlace nuevo a tu diario privado. Funciona en cualquier dispositivo, sin contraseña.</p>
+            <form id="link-form" novalidate>
+              <div class="field">
+                <label for="link-email">Correo electrónico</label>
+                <input id="link-email" type="email" autocomplete="email" required>
+              </div>
+              <p id="link-error" class="error" role="alert" hidden></p>
+              <p id="link-done" class="note" role="status" hidden></p>
+              <button class="btn ghost" type="submit">Enviarme mi enlace</button>
+            </form>
+          </div>
+        </div>
       </section>
-      <section class="copy">
+      <section class="copy reveal-on-scroll">
         <h2>Un diario al ritmo de la Luna</h2>
         <p>Cada mes la Luna pasa de nueva a llena y vuelve. Mucha gente escribe su diario siguiendo este ritmo: en luna nueva anota una intención y en luna llena mira hacia atrás y escribe aquello por lo que siente gratitud.</p>
         <p>Calculamos el momento exacto de cada luna nueva y cada luna llena con la Swiss Ephemeris y buscamos la casa de tu carta natal donde cae. Cada casa tiene su propio tema, así que tus preguntas cambian de un mes a otro.</p>
       </section>
-      <section class="copy">
+      <section class="copy reveal-on-scroll">
         <h2>Qué es y qué no es</h2>
         <p>Son preguntas para reflexionar, no predicciones. No decimos qué va a pasar; ofrecemos un ritmo, algunas preguntas y una afirmación, y las respuestas son tuyas.</p>
         <p>Tus respuestas se guardan en tu diario para que las tengas en cualquier dispositivo. También guardamos tu correo y tus datos de nacimiento para las cartas. Puedes borrarlo todo en cualquier momento con un clic.</p>
       </section>
-      <section class="copy faq">
+      <section class="copy faq reveal-on-scroll">
         <h2>Preguntas</h2>
         <h3>¿Cuándo es la próxima luna nueva?</h3>
         <p>La tabla de esta página recoge todas las lunas nuevas y llenas hasta finales de 2027 con la hora exacta; la próxima aparece destacada.</p>
@@ -317,7 +342,7 @@
       <p class="links"><a href="/">Para astrólogos</a> · <a href="/terms.html">Condiciones y privacidad</a></p>
     </div>
   </footer>
-  <script type="application/json" id="moon-i18n">{"legend":"Tus datos de nacimiento","date":"Fecha de nacimiento","time":"Hora de nacimiento","timeUnknown":"No sé mi hora de nacimiento","place":"Lugar de nacimiento","placeHint":"Empieza a escribir una ciudad: fija la zona horaria y el ascendente.","placeSearching":"Buscando…","placeNone":"No se encontraron lugares","timezone":"Zona horaria","timezoneFromPlace":"Zona horaria según el lugar de nacimiento.","calculate":"Ver mis lunas","calculating":"Calculando…","noscript":"Esta calculadora necesita JavaScript.","required":"Introduce tu fecha de nacimiento.","resultTitle":"Tu próxima luna nueva y luna llena","promptsTitle":"Preguntas para tu diario","affirmationTitle":"Afirmación","signupTitle":"Recibe tus preguntas en cada luna nueva y luna llena","signupText":"Dos correos breves al mes, el día de cada luna nueva y cada luna llena, con preguntas para la casa de tu carta donde cae. Gratis, y puedes darte de baja con un clic.","email":"Correo electrónico","consent":"Acepto recibir estos correos y que se guarden mis datos de nacimiento con este fin. Puedo borrarlos en cualquier momento.","subscribe":"Enviadme mis cartas de la Luna","subscribing":"Enviando…","signupDone":"Casi listo: abre el correo que acabamos de enviarte y confirma tu dirección.","errorEmail":"Revisa tu dirección de correo.","errorConsent":"Marca la casilla de consentimiento.","errorSignup":"No pudimos enviar el correo de confirmación. Inténtalo más tarde.","errorUnavailable":"La suscripción no está disponible ahora mismo. Inténtalo más tarde.","errorInvalid":"Revisa la fecha, la hora y la zona horaria.","errorRateLimited":"Demasiados intentos. Espera un minuto y vuelve a intentarlo.","errorGeneric":"Algo no ha funcionado. Inténtalo de nuevo.","errorNetwork":"Sin conexión. Revisa tu internet e inténtalo de nuevo.","tableDate":"Fecha y hora","tablePhase":"Fase","tableSign":"Signo","nextBadge":"próxima","loading":"Cargando tu carta…","invalidLink":"Este enlace no es válido. Puedes suscribirte de nuevo en la página de la Luna.","confirmed":"Gracias, tu correo está confirmado. Tus cartas llegan el día de cada luna nueva y cada luna llena.","pending":"Tu correo aún no está confirmado: usa el enlace del correo de confirmación.","unsubscribedNote":"Te has dado de baja y no recibirás más cartas.","currentTitle":"Tu Luna de ahora","writePlaceholder":"Escribe aquí… Se guarda automáticamente.","saved":"Guardado","nextLine":"Próxima: {kind} el {date} {sign_in}, en tu casa {house}.","historyTitle":"Tu diario","historyEmpty":"Aquí aparecerán tus respuestas.","fakeTitle":"Mes personal","fakePrice":"Precio previsto: {price}.","price":"4 € al mes","fakeButton":"Me interesa, avisadme cuando esté listo","fakeThanks":"¡Gracias! Te escribiremos cuando esté listo. No se cobra nada.","manageTitle":"Tus cartas","unsubscribe":"Darme de baja","unsubscribed":"Te has dado de baja.","erase":"Borrar mis datos","eraseConfirm":"¿Borrar para siempre tu correo y tus datos de nacimiento?","erased":"Tus datos se han borrado.","manageError":"No ha funcionado. Inténtalo de nuevo.","backToMoon":"Volver al calendario lunar","saving":"Guardando…","saveError":"No se ha guardado. Revisa tu conexión.","linkPrivacy":"Este enlace abre tu diario. No reenvíes estos correos a otras personas.","linkTitle":"¿Ya recibes las cartas?","linkText":"Escribe tu correo y te enviaremos el enlace a tu diario. Funciona en cualquier dispositivo, sin contraseña.","linkButton":"Enviarme mi enlace","linkSending":"Enviando…","linkDone":"Si esta dirección está suscrita, el enlace ya va de camino.","fakeText":"El mes personal todavía no está disponible. Si lo quieres, pulsa el botón: te escribiremos cuando esté listo. No se cobra nada."}</script>
+  <script type="application/json" id="moon-i18n">{"legend":"Tus datos de nacimiento","date":"Fecha de nacimiento","time":"Hora de nacimiento","timeUnknown":"No sé mi hora de nacimiento","place":"Lugar de nacimiento","placeHint":"Empieza a escribir una ciudad: fija la zona horaria y el ascendente.","placeSearching":"Buscando…","placeNone":"No se encontraron lugares","timezone":"Zona horaria","timezoneFromPlace":"Zona horaria según el lugar de nacimiento.","calculate":"Ver mis lunas","calculating":"Calculando…","noscript":"Esta calculadora necesita JavaScript.","required":"Introduce tu fecha de nacimiento.","resultTitle":"Tu próxima luna nueva y luna llena","promptsTitle":"Preguntas para tu diario","affirmationTitle":"Afirmación","signupTitle":"Recibe tus preguntas en cada luna nueva y luna llena","signupText":"Dos correos breves al mes, el día de cada luna nueva y cada luna llena, con preguntas para la casa de tu carta donde cae. Gratis, y puedes darte de baja con un clic.","email":"Correo electrónico","consent":"Acepto recibir estos correos y que se guarden mis datos de nacimiento con este fin. Puedo borrarlos en cualquier momento.","subscribe":"Enviadme mis cartas de la Luna","subscribing":"Enviando…","signupDone":"Casi listo: abre el correo que acabamos de enviarte y confirma tu dirección.","errorEmail":"Revisa tu dirección de correo.","errorConsent":"Marca la casilla de consentimiento.","errorSignup":"No pudimos enviar el correo de confirmación. Inténtalo más tarde.","errorUnavailable":"La suscripción no está disponible ahora mismo. Inténtalo más tarde.","errorInvalid":"Revisa la fecha, la hora y la zona horaria.","errorRateLimited":"Demasiados intentos. Espera un minuto y vuelve a intentarlo.","errorGeneric":"Algo no ha funcionado. Inténtalo de nuevo.","errorNetwork":"Sin conexión. Revisa tu internet e inténtalo de nuevo.","tableDate":"Fecha y hora","tablePhase":"Fase","tableSign":"Signo","nextBadge":"próxima","selectedBadge":"Seleccionada","loading":"Cargando tu carta…","invalidLink":"Este enlace no es válido. Puedes suscribirte de nuevo en la página de la Luna.","confirmed":"Gracias, tu correo está confirmado. Tus cartas llegan el día de cada luna nueva y cada luna llena.","pending":"Tu correo aún no está confirmado: usa el enlace del correo de confirmación.","unsubscribedNote":"Te has dado de baja y no recibirás más cartas.","currentTitle":"Tu Luna de ahora","writePlaceholder":"Escribe aquí… Se guarda automáticamente.","saved":"Guardado","nextLine":"Próxima: {kind} el {date} {sign_in}, en tu casa {house}.","historyTitle":"Tu diario","historyEmpty":"Aquí aparecerán tus respuestas.","fakeTitle":"Mes personal","fakePrice":"Precio previsto: {price}.","price":"4 € al mes","fakeButton":"Me interesa, avisadme cuando esté listo","fakeThanks":"¡Gracias! Te escribiremos cuando esté listo. No se cobra nada.","manageTitle":"Tus cartas","unsubscribe":"Darme de baja","unsubscribed":"Te has dado de baja.","erase":"Borrar mis datos","eraseConfirm":"¿Borrar para siempre tu correo y tus datos de nacimiento?","erased":"Tus datos se han borrado.","manageError":"No ha funcionado. Inténtalo de nuevo.","backToMoon":"Volver al calendario lunar","saving":"Guardando…","saveError":"No se ha guardado. Revisa tu conexión.","linkPrivacy":"Este enlace abre tu diario. No reenvíes estos correos a otras personas.","linkTitle":"Tu diario de la Luna","linkText":"Elige el camino que encaja con el punto en el que estás hoy.","linkNewTitle":"¿Es tu primera vez aquí?","linkNewText":"Empieza con tus datos de nacimiento. Verás dónde caen la próxima luna nueva y la próxima luna llena en tu carta, y después podrás elegir recibir tus cartas personales gratuitas.","linkNewButton":"Ver mis próximas lunas","linkReturningTitle":"¿Ya recibes las cartas?","linkReturningText":"Escribe tu correo y te enviaremos un enlace nuevo a tu diario privado. Funciona en cualquier dispositivo, sin contraseña.","linkButton":"Enviarme mi enlace","linkSending":"Enviando…","linkDone":"Si esta dirección está suscrita, el enlace ya va de camino.","fakeText":"El mes personal todavía no está disponible. Si lo quieres, pulsa el botón: te escribiremos cuando esté listo. No se cobra nada."}</script>
   <script src="/js/moon-tool.js?v=1" defer></script>
 </body>
 </html>

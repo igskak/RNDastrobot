@@ -105,6 +105,7 @@
   "tablePhase": "Phase",
   "tableSign": "Signe",
   "nextBadge": "prochaine",
+  "selectedBadge": "Sélectionnée",
   "loading": "Chargement de ta lettre…",
   "invalidLink": "Ce lien n'est pas valide. Tu peux t'inscrire à nouveau sur la page de la Lune.",
   "confirmed": "Merci, ton adresse est confirmée. Tes lettres arrivent le jour de chaque nouvelle lune et de chaque pleine lune.",
@@ -132,8 +133,13 @@
   "saving": "Enregistrement…",
   "saveError": "Non enregistré. Vérifie ta connexion.",
   "linkPrivacy": "Ce lien ouvre ton journal. Ne transfère pas ces e-mails à d'autres personnes.",
-  "linkTitle": "Tu reçois déjà les lettres ?",
-  "linkText": "Indique ton e-mail et nous t'enverrons le lien vers ton journal. Il fonctionne sur tous les appareils, sans mot de passe.",
+  "linkTitle": "Ton journal de la Lune",
+  "linkText": "Choisis le chemin qui correspond à l'endroit où tu en es aujourd'hui.",
+  "linkNewTitle": "Tu arrives pour la première fois ?",
+  "linkNewText": "Commence par tes données de naissance. Tu verras où tombent la prochaine nouvelle lune et la prochaine pleine lune dans ton thème, puis tu pourras choisir de recevoir tes lettres personnelles gratuites.",
+  "linkNewButton": "Voir mes prochaines lunes",
+  "linkReturningTitle": "Tu reçois déjà les lettres ?",
+  "linkReturningText": "Indique ton e-mail et nous t'enverrons un nouveau lien vers ton journal privé. Il fonctionne sur tous les appareils, sans mot de passe.",
   "linkButton": "Envoyer mon lien",
   "linkSending": "Envoi…",
   "linkDone": "Si cette adresse est inscrite, le lien est en route.",
@@ -155,22 +161,25 @@
  ],
  "tableDateFormat": "{d} {month} {y} à {hh}:{mm}",
  "plans": {
-  "title": "Lettres gratuites et mois personnel",
-  "lead": "Les lettres de la Lune sont gratuites et le resteront. Le mois personnel est un complément payant que nous préparons. Voici un exemple de chacun.",
-  "freeTitle": "Gratuit",
+  "title": "Deux façons de rester proche de ton propre rythme",
+  "lead": "Le ciel n'est pas là pour te dire ce qui va arriver. Il peut t'offrir un moment pour remarquer ce qui demande déjà ton attention — à chaque nouvelle et pleine lune, ou comme une histoire plus profonde qui se déploie tout au long du mois.",
+  "freeTitle": "Ta lettre de la Lune",
+  "freeIntro": "Deux fois par mois, une courte lettre te rejoint à un moment naturel de bascule. Elle traduit la nouvelle ou la pleine lune à travers ton propre thème et t'offre un espace calme où tu peux mieux t'entendre.",
   "freeItems": [
-   "Une lettre le jour de chaque nouvelle lune et de chaque pleine lune",
-   "La maison de ton thème natal où elle tombe, et ce qu'elle représente",
-   "Trois questions pour ton journal et une affirmation",
-   "Tes réponses enregistrées dans ton journal, sur tous tes appareils"
+   {"title": "Ton ciel, en langage humain", "text": "Découvre quelle partie de ta vie cette lune touche et pourquoi elle peut sembler plus vivante maintenant — sans jargon ni prédictions figées."},
+   {"title": "Des questions qui ouvrent quelque chose", "text": "Trois invitations soigneusement choisies t'aident à nommer ce que tu veux, ce qui a changé et ce que tu es prêt·e à emporter avec toi."},
+   {"title": "Un journal qui se souvient", "text": "Tes réponses restent réunies dans un journal privé, pour qu'une sensation passagère puisse devenir, avec le temps, un motif que tu reconnais."}
   ],
-  "paidTitle": "Mois personnel",
+  "freeClosing": "Gratuit, deux fois par mois. Quelques minutes d'attention qui n'appartiennent qu'à toi.",
+  "paidTitle": "Ton Mois personnel",
+  "paidIntro": "Le Mois personnel t'offre une vue d'ensemble. Au lieu de traverser le mois comme un flou de dates, tu en vois le rythme émotionnel : les périodes susceptibles de remuer quelque chose, les questions qui méritent que l'on s'y attarde et le fil qui relie le tout.",
   "paidItems": [
-   "Tout ce qui est gratuit",
-   "Un calendrier de tes propres transits du mois, avec les dates et une question pour chacun",
-   "Un retour mensuel sur ce que tu as écrit, à côté du ciel de ces jours-là",
-   "Un livre de l'année avec tes notes, pour ton anniversaire"
+   {"title": "Les dates qui comptent pour toi", "text": "Un calendrier personnel des transits les plus forts du mois, traduits en situations que tu peux reconnaître dans le travail, les relations, le foyer et ta vie intérieure."},
+   {"title": "Une orientation vraiment utilisable", "text": "Chaque période s'accompagne d'une réflexion précise — pas d'une consigne — pour t'aider à faire ton propre choix avec plus de conscience."},
+   {"title": "Des motifs que seul le temps révèle", "text": "À la fin du mois, tes notes te sont renvoyées à côté du ciel de ces jours-là et révèlent des besoins, tensions et désirs qui reviennent."},
+   {"title": "Ton année comme une histoire", "text": "À ton anniversaire, ces mois deviennent un livre annuel privé : non pas une liste de prédictions, mais le portrait de ta transformation."}
   ],
+  "paidClosing": "Pour la personne qui ne veut pas seulement savoir ce qui se passe dans le ciel, mais comprendre ce que cela ouvre dans sa propre vie.",
   "exampleFreeTitle": "Exemple de lettre gratuite",
   "examplePaidTitle": "Exemple de mois personnel",
   "exampleNote": "Exemple pour une personne fictive née le 17 mai 1990. Ton propre mois est calculé à partir de tes données de naissance.",
@@ -178,28 +187,28 @@
   "calendar": [
    {
     "when": "3–8 novembre",
-    "what": "Vénus passe sur ton Soleil",
-    "text": "Une semaine pour remarquer ce que tu apprécies en toi et dans ta vie.",
-    "question": "Qu'as-tu apprécié chez toi cette semaine ?"
+    "what": "Vénus rencontre ton Soleil — visibilité et estime de soi",
+    "text": "Les compliments peuvent te toucher davantage cette semaine — ou tu peux mieux remarquer les moments où tu te diminues. Observe les vêtements, les personnes et les choix qui te font te sentir davantage toi-même, pas seulement plus acceptable.",
+    "question": "Où es-tu prêt·e à ne plus demander la permission d'aimer être toi-même ?"
    },
    {
     "when": "14–19 novembre",
-    "what": "Mars traverse ta maison 4",
-    "text": "De l'énergie pour la maison : ranger, réaménager, inviter des proches.",
-    "question": "Que veux-tu changer dans ton espace ?"
+    "what": "Mars active ta maison 4 — foyer et appartenance",
+    "text": "Tu peux ressentir l'envie de libérer un coin, de nommer une tension à la maison ou de réclamer davantage d'espace à toi. Plutôt que de tout changer, remarque le lieu — ou la relation — qui ne te laisse plus respirer librement.",
+    "question": "Si ton foyer pouvait soutenir la personne que tu deviens, que changerais-tu en premier — et pourquoi ?"
    },
    {
     "when": "24 novembre",
-    "what": "Pleine Lune dans ta maison 10",
-    "text": "Un moment pour regarder ton travail et ce que tu as construit.",
-    "question": "De quelle réussite de ce mois veux-tu te souvenir ?"
+    "what": "Pleine Lune dans ta maison 10 — travail et reconnaissance",
+    "text": "Un résultat, une échéance ou une conversation peut rendre tes progrès visibles. Avant de courir vers le prochain objectif, regarde ce que tu as construit — et demande-toi si la réussite que tu poursuis te ressemble encore.",
+    "question": "Qu'es-tu fier·e de reconnaître comme ton œuvre — et dont l'approbation ne veux-tu plus faire ta mesure ?"
    }
   ],
   "reviewTitle": "Ton mois avec tes mots",
   "review": [
-   "En novembre, ton journal compte 7 notes. Les mots qui reviennent le plus sont « repos », « sœur » et « projet ».",
-   "Autour de la pleine lune dans ta maison 10 revient le désir que ton travail soit remarqué. Le même thème apparaissait en août, quand Jupiter passait au sommet de ton thème.",
-   "Question pour décembre : qu'est-ce qui t'aiderait à sentir que ton travail est vu ?"
+   "Dans tes sept notes de novembre, trois mots reviennent : « repos », « sœur » et « projet ». Ta vie privée et ton travail visible semblent demander ton attention en même temps.",
+   "Près de la pleine lune en maison 10, tu écris : « Je veux que mon travail soit vu, mais pas au prix de rentrer chez moi épuisé·e. » La même tension apparaissait en août, quand Jupiter passait au sommet de ton thème.",
+   "À emporter en décembre : à quoi ressemblerait une réussite visible qui laisserait aussi de la place à ta vraie vie ?"
   ]
  }
 }

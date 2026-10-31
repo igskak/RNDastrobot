@@ -38,8 +38,8 @@
   "sun": "Ohne Geburtszeit zählen wir die Häuser ab deinem Sonnenzeichen (Sonnenhäuser). Mit Geburtszeit und Geburtsort wird das Ergebnis persönlicher."
  },
  "universal": {
-  "new": "Schreibe eine Absicht für diesen Mondmonat auf, in der Gegenwartsform.",
-  "full": "Nenne drei Dinge, für die du seit dem letzten Neumond dankbar bist."
+  "new": "Vervollständige den Satz: In diesem Mondmonat entscheide ich mich dafür,...",
+  "full": "Nenne drei Momente seit dem letzten Neumond, die du noch einmal erleben möchtest. Was hatten sie gemeinsam?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "Ich schätze, was ich habe und was ich noch wachsen lassen kann."
   },
   {
-   "theme": "In diesem Teil deines Horoskops geht es um Worte, Lernen und alltägliche Begegnungen.",
+   "theme": "Dieser Teil deines Horoskops umfasst die Worte, die du wiederholst, die Fragen, denen du folgst, und die alltäglichen Gespräche, die deine Entscheidungen leise prägen.",
    "new": [
-    "Was möchtest du in diesem Monat lernen oder lesen?",
-    "Mit wem möchtest du öfter sprechen?"
+    "Welches Gespräch spielst du in Gedanken immer wieder durch? Schreibe den ersten ehrlichen Satz auf.",
+    "Welches Thema taucht immer wieder in deinen Tabs, Notizen oder gespeicherten Beiträgen auf? Was könnte eine konzentrierte Stunde damit eröffnen?"
    ],
    "full": [
-    "Welches Gespräch dieses Monats klingt in dir nach?",
-    "Welche neue Idee hat deine Neugier geweckt?"
+    "Welches Gespräch hat deine Meinung verändert — oder dir gezeigt, was du längst wusstest?",
+    "Zu welcher Idee bist du mehr als einmal zurückgekehrt? Nenne einen kleinen Weg, sie im echten Leben zu erproben."
    ],
-   "affirmation": "Meine Worte dürfen klar und freundlich sein."
+   "affirmation": "Ich vertraue mir, das Klare freundlich auszusprechen."
   },
   {
    "theme": "In diesem Teil deines Horoskops geht es um Zuhause, Wurzeln und innere Ruhe.",
@@ -189,8 +189,13 @@
  ],
  "disclaimer": "Das sind Fragen zum Nachdenken, keine Vorhersagen. Der Himmel gibt einen Rhythmus vor; was du schreibst, gehört dir.",
  "email": {
-  "confirm_subject": "Bitte bestätige deine Mondbriefe",
-  "confirm_body": "Hallo,\n\nbitte bestätige, dass du deine persönlichen Fragen zu jedem Neumond und Vollmond per E-Mail erhalten möchtest:\n{link}\n\nWenn du das nicht angefordert hast, ignoriere diese Nachricht einfach. Dann senden wir nichts weiter.",
+  "confirm_subject": "Deine Mondbriefe warten — bestätige deine E-Mail",
+  "confirm_heading": "Deine Mondbriefe warten",
+  "confirm_intro": "Zweimal im Monat, zu Neumond und Vollmond, schickt dir Steliara eine kurze persönliche Reflexion, inspiriert von deinem Geburtshoroskop — einen ruhigen Moment, um wahrzunehmen, was sich bewegt, und den nächsten Schritt zu wählen.",
+  "confirm_button": "E-Mail bestätigen",
+  "confirm_note": "Bestätige deine Adresse, um zu beginnen. Du kannst dich jederzeit abmelden oder deine Daten löschen.",
+  "confirm_fallback": "Wenn der Button nicht funktioniert, kopiere diesen Link und füge ihn in deinen Browser ein:",
+  "confirm_body": "Hallo,\n\nDeine Mondbriefe warten. Zweimal im Monat, zu Neumond und Vollmond, schickt dir Steliara eine kurze persönliche Reflexion, inspiriert von deinem Geburtshoroskop — einen ruhigen Moment, um wahrzunehmen, was sich bewegt, und den nächsten Schritt zu wählen.\n\nBestätige deine E-Mail hier:\n<{link}>\n\nWenn du das nicht angefordert hast, ignoriere diese Nachricht einfach. Dann senden wir nichts weiter.",
   "subject": "{kind} {sign_in}: dein {house}. Haus",
   "when": "Genauer Zeitpunkt: {date} ({timezone}).",
   "prompts_title": "Fragen für diese Mondphase:",

@@ -454,7 +454,10 @@ items:
   # ---------------------------------------------------------------------------------------
 
   - id: ctr-title-meta-pass
-    status: todo
+    status: shipped
+    pr: "claude/seo-optimization-b38a2f (2026-10-28, PR not yet opened)"
+    # Measure from 2026-11-11: clicks per impression on these three pages against the 0 of 54
+    # before. The sample is tiny; read nothing from fewer than ~100 impressions.
     type: technical
     slug: >-
       /record-astrology-consultations, /astrology-practice-management, /astrologer-workspace
@@ -486,7 +489,11 @@ items:
       guard_test: a test pinning the new titles and the length windows
 
   - id: internal-links-to-new-pages
-    status: todo
+    status: shipped
+    pr: "claude/seo-optimization-b38a2f (2026-10-28, PR not yet opened)"
+    # Audit found every listed page already had 2+ inbound links. The one gap was
+    # /answers/how-astrologers-keep-client-notes (no link from a page with clicks), now
+    # linked from /astrology-practice-management. A test holds the 2-link floor.
     type: technical
     slug: >-
       /cloud-astrology-software, /astrology-practice-management, /record-astrology-consultations,
@@ -514,7 +521,13 @@ items:
       guard_test: a test that each listed page has at least two inbound internal links
 
   - id: astrology-software-for-mac
-    status: todo
+    status: shipped
+    pr: "claude/seo-mac-answer (2026-10-28)"
+    # Built on 2026-10-28 against the vendors' live pages. NOTE: Solar Fire X is a native Mac
+    # app (macOS 14+, Intel or Apple silicon, US$360) and Solar Fire 9 is no longer sold, so the
+    # premise below ("Solar Fire has no native Mac version") is out of date. Corrected across
+    # /solar-fire-alternative, /cloud-astrology-software, the answer pages and
+    # product-marketing.md in the solar-fire-x-corrections change, same day.
     # Measured 2026-10-26, Semrush US: cluster sum 200 a month (UK about 80), best query
     # "astrology software for mac" 90 with KD 27, passes the rule. Honest caveats: 90 of the 200
     # is one query, the trend is slightly down, and Search Console has us at position 30.5 for

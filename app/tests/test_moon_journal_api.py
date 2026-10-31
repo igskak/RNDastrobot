@@ -61,7 +61,7 @@ def sent(monkeypatch):
     outbox = []
     monkeypatch.setattr(
         "app.auth.mailer.send_transactional_email",
-        lambda *, recipient, subject, body_text: outbox.append((recipient, subject, body_text)) or True,
+        lambda *, recipient, subject, body_text, **_: outbox.append((recipient, subject, body_text)) or True,
     )
     return outbox
 

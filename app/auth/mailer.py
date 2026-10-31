@@ -23,7 +23,7 @@ def _resolve_locale(raw_locale: str | None) -> str:
     return normalize_locale(raw_locale) or "en"
 
 
-def _send_via_resend(*, recipient: str, subject: str, body_text: str) -> bool:
+def _send_via_resend(*, recipient: str, subject: str, body_text: str, html_body: str | None = None) -> bool:
     api_key = os.getenv("RESEND_API_KEY", "").strip()
     if not api_key:
         logger.warning("Resend delivery skipped because RESEND_API_KEY is not configured")
@@ -36,6 +36,8 @@ def _send_via_resend(*, recipient: str, subject: str, body_text: str) -> bool:
         "subject": subject,
         "text": body_text,
     }
+    if html_body:
+        payload["html"] = html_body
     req = urllib_request.Request(
         endpoint,
         data=json.dumps(payload).encode("utf-8"),
@@ -57,7 +59,7 @@ def _send_via_resend(*, recipient: str, subject: str, body_text: str) -> bool:
         return False
 
 
-def _send_via_sendgrid(*, recipient: str, subject: str, body_text: str) -> bool:
+def _send_via_sendgrid(*, recipient: str, subject: str, body_text: str, html_body: str | None = None) -> bool:
     api_key = os.getenv("SENDGRID_API_KEY", "").strip()
     if not api_key:
         logger.warning("SendGrid delivery skipped because SENDGRID_API_KEY is not configured")
@@ -70,6 +72,8 @@ def _send_via_sendgrid(*, recipient: str, subject: str, body_text: str) -> bool:
         "subject": subject,
         "content": [{"type": "text/plain", "value": body_text}],
     }
+    if html_body:
+        payload["content"].append({"type": "text/html", "value": html_body})
     req = urllib_request.Request(
         endpoint,
         data=json.dumps(payload).encode("utf-8"),
@@ -91,7 +95,7 @@ def _send_via_sendgrid(*, recipient: str, subject: str, body_text: str) -> bool:
         return False
 
 
-def _send_via_smtp(*, recipient: str, subject: str, body_text: str) -> bool:
+def _send_via_smtp(*, recipient: str, subject: str, body_text: str, html_body: str | None = None) -> bool:
     sender = auth_email_sender()
 
     message = EmailMessage()
@@ -99,6 +103,8 @@ def _send_via_smtp(*, recipient: str, subject: str, body_text: str) -> bool:
     message["From"] = sender
     message["To"] = recipient
     message.set_content(body_text)
+    if html_body:
+        message.add_alternative(html_body, subtype="html")
 
     host = os.getenv("SMTP_HOST", "").strip()
     if not host:
@@ -126,22 +132,26 @@ def _send_via_smtp(*, recipient: str, subject: str, body_text: str) -> bool:
     return True
 
 
-def send_transactional_email(*, recipient: str, subject: str, body_text: str) -> bool:
-    """Plain-text email through the configured provider (used by the kundli forecasts)."""
-    return _send_auth_email(recipient=recipient, subject=subject, body_text=body_text)
+def send_transactional_email(
+    *, recipient: str, subject: str, body_text: str, html_body: str | None = None
+) -> bool:
+    """Send a transactional email with a plain-text fallback and optional HTML version."""
+    return _send_auth_email(recipient=recipient, subject=subject, body_text=body_text, html_body=html_body)
 
 
-def _send_auth_email(*, recipient: str, subject: str, body_text: str) -> bool:
+def _send_auth_email(
+    *, recipient: str, subject: str, body_text: str, html_body: str | None = None
+) -> bool:
     provider = os.getenv("EMAIL_PROVIDER", "").strip().lower()
 
     if provider == "sendgrid":
-        return _send_via_sendgrid(recipient=recipient, subject=subject, body_text=body_text)
+        return _send_via_sendgrid(recipient=recipient, subject=subject, body_text=body_text, html_body=html_body)
 
     if provider == "resend":
-        return _send_via_resend(recipient=recipient, subject=subject, body_text=body_text)
+        return _send_via_resend(recipient=recipient, subject=subject, body_text=body_text, html_body=html_body)
 
     if provider == "smtp":
-        return _send_via_smtp(recipient=recipient, subject=subject, body_text=body_text)
+        return _send_via_smtp(recipient=recipient, subject=subject, body_text=body_text, html_body=html_body)
 
     if provider:
         logger.warning("Unsupported EMAIL_PROVIDER value: %s", provider)

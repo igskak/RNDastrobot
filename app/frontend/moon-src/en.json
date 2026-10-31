@@ -105,6 +105,7 @@
   "tablePhase": "Phase",
   "tableSign": "Sign",
   "nextBadge": "next",
+  "selectedBadge": "Selected",
   "loading": "Loading your letter…",
   "invalidLink": "This link is not valid. You can sign up again on the moon page.",
   "confirmed": "Thank you, your email is confirmed. Your letters arrive on the day of each new and full moon.",
@@ -132,8 +133,13 @@
   "saving": "Saving…",
   "saveError": "Not saved. Please check your connection.",
   "linkPrivacy": "This link opens your journal. Please do not forward these emails to other people.",
-  "linkTitle": "Already getting the letters?",
-  "linkText": "Enter your email and we will send you the link to your journal. It works on any device, without a password.",
+  "linkTitle": "Your Moon journal",
+  "linkText": "Choose the path that fits where you are today.",
+  "linkNewTitle": "New here?",
+  "linkNewText": "Start with your birth data. You will see where the next new and full moon fall in your chart, then you can choose to receive your free personal letters.",
+  "linkNewButton": "See my next moons",
+  "linkReturningTitle": "Already receiving the letters?",
+  "linkReturningText": "Enter your email and we will send you a fresh link to your private journal. It works on any device, without a password.",
   "linkButton": "Send my link",
   "linkSending": "Sending…",
   "linkDone": "If this address is subscribed, the link is on its way.",
@@ -155,22 +161,46 @@
  ],
  "tableDateFormat": "{month} {d}, {y} · {h12}:{mm} {ampm}",
  "plans": {
-  "title": "Free letters and the personal month",
-  "lead": "The moon letters are free and stay free. The personal month is a paid addition we are preparing. Here is an example of both.",
-  "freeTitle": "Free",
+  "title": "Two ways to stay close to your own rhythm",
+  "lead": "The sky is not here to tell you what will happen. It can give you a moment to notice what is already asking for your attention — once at each new and full moon, or as a deeper story unfolding across the whole month.",
+  "freeTitle": "Your Moon Letter",
+  "freeIntro": "Twice a month, a short letter meets you at a natural turning point. It translates the new or full moon through your own birth chart and gives you a quiet place to hear yourself more clearly.",
   "freeItems": [
-   "A letter on the day of every new and full moon",
-   "The house of your chart where it falls, and what that house is about",
-   "Three questions for your journal and an affirmation",
-   "Your answers saved in your journal, on any device"
+   {
+    "title": "Your sky, in human language",
+    "text": "See which area of life this moon touches and why it may feel more alive now — without jargon or fixed predictions."
+   },
+   {
+    "title": "Questions that open something",
+    "text": "Three carefully chosen prompts help you name what you want, what has shifted and what you are ready to carry forward."
+   },
+   {
+    "title": "A journal that remembers",
+    "text": "Your answers stay together in a private journal, so a passing feeling can become a pattern you recognise over time."
+   }
   ],
-  "paidTitle": "Personal month",
+  "freeClosing": "Free, twice a month. A few thoughtful minutes that belong only to you.",
+  "paidTitle": "Your Personal Month",
+  "paidIntro": "Personal Month gives you the wider view. Instead of meeting the month as a blur of dates, you see its emotional rhythm: the periods that may stir something, the questions worth staying with and the thread connecting it all.",
   "paidItems": [
-   "Everything that is free",
-   "A calendar of your own transits for the month, with dates and a question for each",
-   "A monthly look back at what you wrote, next to the sky of those days",
-   "A year book of your entries for your birthday"
+   {
+    "title": "Your meaningful dates",
+    "text": "A personal calendar of the month's strongest transits, translated into situations you may recognise in work, relationships, home and your inner life."
+   },
+   {
+    "title": "Guidance you can actually use",
+    "text": "Each period comes with a focused reflection — not an instruction — so you can make your own choice with more awareness."
+   },
+   {
+    "title": "Patterns only time can reveal",
+    "text": "At the end of the month, your entries are reflected back beside the sky of those days, revealing recurring needs, tensions and desires."
+   },
+   {
+    "title": "Your year as a story",
+    "text": "On your birthday, those months become a private yearbook: not a list of predictions, but a portrait of how you changed."
+   }
   ],
+  "paidClosing": "For anyone who wants not only to know what is happening in the sky, but to understand what it is opening in their life.",
   "exampleFreeTitle": "Example of a free letter",
   "examplePaidTitle": "Example of a personal month",
   "exampleNote": "Example for a fictional person born on 17 May 1990. Your own month is calculated from your birth data.",
@@ -178,28 +208,28 @@
   "calendar": [
    {
     "when": "3–8 Nov",
-    "what": "Venus passes over your Sun",
-    "text": "A week to notice what you appreciate in yourself and in your life.",
-    "question": "What did you like about yourself this week?"
+    "what": "Venus meets your Sun — visibility and self-worth",
+    "text": "Compliments may land more deeply this week, or you may notice the moments when you play yourself down. Pay attention to the clothes, people and choices that make you feel more like yourself — not simply more acceptable.",
+    "question": "Where are you ready to stop asking for permission to enjoy being yourself?"
    },
    {
     "when": "14–19 Nov",
-    "what": "Mars moves through your house 4",
-    "text": "Energy for home: tidying, moving furniture, inviting people over.",
-    "question": "What would you like to change in your space?"
+    "what": "Mars activates your 4th house — home and belonging",
+    "text": "You may feel an urge to clear a corner, address a tension at home or ask for more room of your own. Rather than changing everything, notice the one place — or relationship — that no longer lets you exhale.",
+    "question": "If your home could support the person you are becoming, what would you change first, and why?"
    },
    {
     "when": "24 Nov",
-    "what": "Full Moon in your house 10",
-    "text": "A moment to look at your work and at what you have built.",
-    "question": "Which achievement of this month would you like to remember?"
+    "what": "Full Moon in your 10th house — work and recognition",
+    "text": "A result, deadline or conversation may make your progress visible. Before rushing to the next goal, notice what you have built — and whether the version of success you are chasing still feels like yours.",
+    "question": "What are you proud to claim as your own, and whose approval are you ready to stop measuring it by?"
    }
   ],
   "reviewTitle": "Your month in your own words",
   "review": [
-   "In November your journal has 7 entries. The words that come up most are “rest”, “sister” and “project”.",
-   "Around the full moon in your house 10 the wish for your work to be noticed comes back. The same theme appeared in August, when Jupiter passed over the top of your chart.",
-   "Question for December: what would help you feel that your work is seen?"
+   "Across seven November entries, three words keep returning: “rest”, “sister” and “project”. Your private life and visible work seem to be asking for attention at the same time.",
+   "Near the full moon in your 10th house you wrote: “I want my work to be seen, but not at the cost of coming home depleted.” The same tension appeared in August, when Jupiter crossed the top of your chart.",
+   "Carry into December: what would visible success look like if it also left room for your real life?"
   ]
  }
 }

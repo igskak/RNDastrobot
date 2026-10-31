@@ -38,8 +38,8 @@
   "sun": "Without a birth time we count houses from your Sun sign (solar houses). Add your birth time and place for a more personal result."
  },
  "universal": {
-  "new": "Write one intention for this lunar month, in the present tense.",
-  "full": "Name three things you have felt grateful for since the last new moon."
+  "new": "Finish this sentence: This lunar month, I am choosing to...",
+  "full": "Name three moments since the last new moon that you would want to live again. What did they have in common?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "I value what I have and what I can still grow."
   },
   {
-   "theme": "This part of your chart is about words, learning and everyday connections.",
+   "theme": "This part of your chart holds the words you repeat, the questions you follow and the everyday conversations that quietly shape your choices.",
    "new": [
-    "What would you like to learn or read about this month?",
-    "Who would you like to talk with more often?"
+    "Which conversation have you been rehearsing in your head? Write the first honest sentence.",
+    "What subject keeps appearing in your tabs, notes or saved posts? What might one focused hour with it open up?"
    ],
    "full": [
-    "Which conversation from this month is still with you?",
-    "Which new idea made you curious?"
+    "Which conversation changed your mind — or revealed what you already knew?",
+    "Which idea have you returned to more than once? Name one small way to test it in real life."
    ],
-   "affirmation": "My words can be clear and kind."
+   "affirmation": "I trust myself to say the clear, kind thing."
   },
   {
    "theme": "This part of your chart is about home, roots and inner calm.",
@@ -189,8 +189,13 @@
  ],
  "disclaimer": "These are questions for reflection, not predictions. The sky offers a rhythm; what you write is yours.",
  "email": {
-  "confirm_subject": "Confirm your moon letters",
-  "confirm_body": "Hello,\n\nplease confirm that you would like to receive your personal questions for every new moon and full moon by email:\n{link}\n\nIf you did not ask for this, simply ignore this message and nothing more will be sent.",
+  "confirm_subject": "Your Moon letters are waiting — confirm your email",
+  "confirm_heading": "Your Moon letters are waiting",
+  "confirm_intro": "Twice a month, on the new moon and full moon, Steliara sends a short personal reflection shaped by your birth chart — a quiet moment to notice what is moving in your life and choose what comes next.",
+  "confirm_button": "Confirm my email",
+  "confirm_note": "Confirm your address to begin. You can unsubscribe or delete your data at any time.",
+  "confirm_fallback": "If the button does not work, copy and paste this link into your browser:",
+  "confirm_body": "Hello,\n\nYour Moon letters are waiting. Twice a month, on the new moon and full moon, Steliara sends a short personal reflection shaped by your birth chart — a quiet moment to notice what is moving in your life and choose what comes next.\n\nConfirm your email here:\n<{link}>\n\nIf you did not ask for these letters, you can ignore this email. Nothing else will be sent.",
   "subject": "{kind} {sign_in}: your house {house}",
   "when": "Exact moment: {date} ({timezone}).",
   "prompts_title": "Questions for this moon:",

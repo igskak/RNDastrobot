@@ -105,6 +105,7 @@
   "tablePhase": "Fase",
   "tableSign": "Signo",
   "nextBadge": "próxima",
+  "selectedBadge": "Selecionada",
   "loading": "Carregando sua carta…",
   "invalidLink": "Este link não é válido. Você pode se inscrever de novo na página da Lua.",
   "confirmed": "Obrigado, seu e-mail está confirmado. Suas cartas chegam no dia de cada lua nova e de cada lua cheia.",
@@ -132,8 +133,13 @@
   "saving": "Salvando…",
   "saveError": "Não foi salvo. Verifique sua conexão.",
   "linkPrivacy": "Este link abre o seu diário. Não encaminhe estes e-mails para outras pessoas.",
-  "linkTitle": "Já recebe as cartas?",
-  "linkText": "Informe seu e-mail e enviaremos o link para o seu diário. Funciona em qualquer dispositivo, sem senha.",
+  "linkTitle": "Seu diário da Lua",
+  "linkText": "Escolha o caminho que combina com o momento em que você está hoje.",
+  "linkNewTitle": "É a sua primeira vez aqui?",
+  "linkNewText": "Comece pelos seus dados de nascimento. Você verá onde a próxima lua nova e cheia caem no seu mapa e, depois, poderá escolher receber suas cartas pessoais gratuitas.",
+  "linkNewButton": "Ver minhas próximas luas",
+  "linkReturningTitle": "Já recebe as cartas?",
+  "linkReturningText": "Informe seu e-mail e enviaremos um novo link para o seu diário privado. Funciona em qualquer dispositivo, sem senha.",
   "linkButton": "Enviar meu link",
   "linkSending": "Enviando…",
   "linkDone": "Se este endereço estiver inscrito, o link já está a caminho.",
@@ -155,22 +161,25 @@
  ],
  "tableDateFormat": "{d} de {month} de {y}, {hh}:{mm}",
  "plans": {
-  "title": "Cartas gratuitas e mês pessoal",
-  "lead": "As cartas da Lua são gratuitas e vão continuar assim. O mês pessoal é um complemento pago que estamos preparando. Veja um exemplo de cada um.",
-  "freeTitle": "Grátis",
+  "title": "Duas formas de ficar mais perto do seu próprio ritmo",
+  "lead": "O céu não está aqui para dizer o que vai acontecer. Ele pode oferecer um momento para você perceber o que já pede a sua atenção — em cada lua nova e cheia, ou como uma história mais profunda que se revela ao longo de todo o mês.",
+  "freeTitle": "Sua carta da Lua",
+  "freeIntro": "Duas vezes por mês, uma carta breve encontra você em um momento natural de mudança. Ela traduz a lua nova ou cheia pelo seu próprio mapa e oferece um espaço tranquilo onde você pode se escutar com mais clareza.",
   "freeItems": [
-   "Uma carta no dia de cada lua nova e de cada lua cheia",
-   "A casa do seu mapa onde ela cai, com o seu significado",
-   "Três perguntas para o seu diário e uma afirmação",
-   "Suas respostas salvas no seu diário, em qualquer dispositivo"
+   {"title": "Seu céu, em linguagem humana", "text": "Veja qual área da sua vida esta lua toca e por que ela pode parecer mais viva agora — sem jargão nem previsões fechadas."},
+   {"title": "Perguntas que abrem alguma coisa", "text": "Três convites escolhidos com cuidado ajudam você a nomear o que deseja, o que mudou e o que está pronto para levar adiante."},
+   {"title": "Um diário que se lembra", "text": "Suas respostas ficam reunidas em um diário privado, para que uma sensação passageira possa se tornar, com o tempo, um padrão que você reconhece."}
   ],
-  "paidTitle": "Mês pessoal",
+  "freeClosing": "Grátis, duas vezes por mês. Alguns minutos de atenção que pertencem somente a você.",
+  "paidTitle": "Seu Mês pessoal",
+  "paidIntro": "O Mês pessoal oferece a visão mais ampla. Em vez de viver o mês como uma sequência borrada de datas, você enxerga o ritmo emocional dele: os períodos que podem mexer com algo, as perguntas que merecem companhia e o fio que conecta tudo.",
   "paidItems": [
-   "Tudo o que é gratuito",
-   "Um calendário dos seus próprios trânsitos do mês, com datas e uma pergunta para cada um",
-   "Um olhar mensal sobre o que você escreveu, ao lado do céu daqueles dias",
-   "Um livro do ano com suas anotações, para o seu aniversário"
+   {"title": "Suas datas significativas", "text": "Um calendário pessoal dos trânsitos mais fortes do mês, traduzidos em situações que você pode reconhecer no trabalho, nos relacionamentos, em casa e na sua vida interior."},
+   {"title": "Uma orientação que você realmente pode usar", "text": "Cada período vem com uma reflexão focada — não uma ordem — para que você faça a própria escolha com mais consciência."},
+   {"title": "Padrões que só o tempo revela", "text": "No fim do mês, suas anotações voltam ao lado do céu daqueles dias e mostram necessidades, tensões e desejos recorrentes."},
+   {"title": "Seu ano como uma história", "text": "No seu aniversário, esses meses se tornam um anuário privado: não uma lista de previsões, mas um retrato de como você mudou."}
   ],
+  "paidClosing": "Para quem não quer apenas saber o que acontece no céu, mas entender o que isso está abrindo na própria vida.",
   "exampleFreeTitle": "Exemplo de carta gratuita",
   "examplePaidTitle": "Exemplo de mês pessoal",
   "exampleNote": "Exemplo para uma pessoa fictícia nascida em 17 de maio de 1990. O seu mês é calculado com os seus dados de nascimento.",
@@ -178,28 +187,28 @@
   "calendar": [
    {
     "when": "3–8 de novembro",
-    "what": "Vênus passa sobre o seu Sol",
-    "text": "Uma semana para notar o que você valoriza em si e na sua vida.",
-    "question": "O que em você te agradou nesta semana?"
+    "what": "Vênus encontra o seu Sol — visibilidade e autoestima",
+    "text": "Nesta semana, elogios podem tocar você mais profundamente — ou você pode perceber melhor quando diminui a própria importância. Observe as roupas, as pessoas e as escolhas que fazem você se sentir mais você, não apenas mais aceitável.",
+    "question": "Onde você está pronto para parar de pedir permissão para gostar de ser quem é?"
    },
    {
     "when": "14–19 de novembro",
-    "what": "Marte percorre a sua casa 4",
-    "text": "Energia para o lar: arrumar, mudar os móveis de lugar, receber pessoas.",
-    "question": "O que você quer mudar no seu espaço?"
+    "what": "Marte ativa a sua casa 4 — lar e pertencimento",
+    "text": "Você pode sentir vontade de liberar um canto, conversar sobre uma tensão em casa ou pedir mais espaço só seu. Em vez de mudar tudo, perceba o lugar — ou a relação — que já não deixa você respirar com liberdade.",
+    "question": "Se a sua casa pudesse apoiar a pessoa que você está se tornando, o que você mudaria primeiro — e por quê?"
    },
    {
     "when": "24 de novembro",
-    "what": "Lua Cheia na sua casa 10",
-    "text": "Um momento para olhar para o seu trabalho e para o que você construiu.",
-    "question": "De qual conquista deste mês você quer se lembrar?"
+    "what": "Lua Cheia na sua casa 10 — trabalho e reconhecimento",
+    "text": "Um resultado, um prazo ou uma conversa pode tornar o seu progresso visível. Antes de correr para a próxima meta, observe o que você construiu — e se a ideia de sucesso que persegue ainda parece realmente sua.",
+    "question": "O que você reconhece com orgulho como seu — e a aprovação de quem está pronto para deixar de usar como medida?"
    }
   ],
   "reviewTitle": "Seu mês nas suas palavras",
   "review": [
-   "Em novembro, seu diário tem 7 anotações. As palavras que mais aparecem são “descanso”, “irmã” e “projeto”.",
-   "Perto da lua cheia na sua casa 10 volta o desejo de que seu trabalho seja notado. O mesmo tema apareceu em agosto, quando Júpiter passava pelo ponto mais alto do seu mapa.",
-   "Pergunta para dezembro: o que ajudaria você a sentir que seu trabalho é visto?"
+   "Nas suas sete anotações de novembro, três palavras continuam voltando: “descanso”, “irmã” e “projeto”. Sua vida privada e seu trabalho visível parecem pedir atenção ao mesmo tempo.",
+   "Perto da lua cheia na sua casa 10, você escreve: “Quero que meu trabalho seja visto, mas não ao custo de chegar em casa sem energia”. A mesma tensão apareceu em agosto, quando Júpiter passava pelo ponto mais alto do seu mapa.",
+   "Leve esta pergunta para dezembro: como seria um sucesso visível que também deixasse espaço para a sua vida real?"
   ]
  }
 }

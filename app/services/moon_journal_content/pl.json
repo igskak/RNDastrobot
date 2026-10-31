@@ -38,8 +38,8 @@
   "sun": "Bez godziny urodzenia liczymy domy od znaku Słońca (domy słoneczne). Podaj godzinę i miejsce urodzenia, aby wynik był bardziej osobisty."
  },
  "universal": {
-  "new": "Zapisz jedną intencję na ten księżycowy miesiąc, w czasie teraźniejszym.",
-  "full": "Wymień trzy rzeczy, za które czujesz wdzięczność od ostatniego nowiu."
+  "new": "Dokończ zdanie: W tym miesiącu księżycowym wybieram...",
+  "full": "Wymień trzy chwile od ostatniego nowiu, które chcesz przeżyć jeszcze raz. Co miały ze sobą wspólnego?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "Doceniam to, co mam, i to, co mogę jeszcze rozwinąć."
   },
   {
-   "theme": "Ta część Twojego horoskopu dotyczy słów, nauki i codziennych kontaktów.",
+   "theme": "Ta część Twojego horoskopu obejmuje słowa, które powtarzasz, pytania, za którymi podążasz, i codzienne rozmowy, które po cichu kształtują Twoje wybory.",
    "new": [
-    "Czego chcesz się w tym miesiącu nauczyć albo o czym poczytać?",
-    "Z kim chcesz rozmawiać częściej?"
+    "Którą rozmowę wciąż ćwiczysz w myślach? Zapisz jej pierwsze szczere zdanie.",
+    "Jaki temat stale wraca w Twoich kartach, notatkach lub zapisanych postach? Co mogłaby otworzyć jedna godzina pełnego skupienia na nim?"
    ],
    "full": [
-    "Która rozmowa z tego miesiąca wciąż jest z Tobą?",
-    "Jaki nowy pomysł budzi Twoją ciekawość?"
+    "Która rozmowa zmieniła Twoje zdanie — albo odsłoniła to, co już wiesz?",
+    "Do którego pomysłu wracasz kolejny raz? Nazwij jeden mały sposób, by sprawdzić go w prawdziwym życiu."
    ],
-   "affirmation": "Moje słowa mogą być jasne i życzliwe."
+   "affirmation": "Ufam sobie, że potrafię powiedzieć to jasno i życzliwie."
   },
   {
    "theme": "Ta część Twojego horoskopu dotyczy domu, korzeni i wewnętrznego spokoju.",
@@ -189,8 +189,13 @@
  ],
  "disclaimer": "To pytania do refleksji, a nie przepowiednie. Niebo podsuwa rytm, a to, co zapiszesz, należy do Ciebie.",
  "email": {
-  "confirm_subject": "Potwierdź swoje listy księżycowe",
-  "confirm_body": "Dzień dobry,\n\nkliknij, aby potwierdzić, że chcesz otrzymywać e-mailem swoje osobiste pytania na każdy nów i każdą pełnię:\n{link}\n\nJeśli to pomyłka, po prostu zignoruj tę wiadomość. Nic więcej nie wyślemy.",
+  "confirm_subject": "Twoje listy księżycowe czekają — potwierdź adres",
+  "confirm_heading": "Twoje listy księżycowe czekają",
+  "confirm_intro": "Dwa razy w miesiącu, podczas nowiu i pełni, Steliara wyśle Ci krótką, osobistą refleksję inspirowaną Twoim horoskopem urodzeniowym — chwilę, by zauważyć, co się zmienia, i wybrać kolejny krok.",
+  "confirm_button": "Potwierdź mój adres",
+  "confirm_note": "Potwierdź adres, aby zacząć. W każdej chwili możesz się wypisać lub usunąć swoje dane.",
+  "confirm_fallback": "Jeśli przycisk nie działa, skopiuj i wklej ten link do przeglądarki:",
+  "confirm_body": "Dzień dobry,\n\nTwoje listy księżycowe czekają. Dwa razy w miesiącu, podczas nowiu i pełni, Steliara wyśle Ci krótką, osobistą refleksję inspirowaną Twoim horoskopem urodzeniowym — chwilę, by zauważyć, co się zmienia, i wybrać kolejny krok.\n\nPotwierdź swój adres tutaj:\n<{link}>\n\nJeśli to pomyłka, po prostu zignoruj tę wiadomość. Nic więcej nie wyślemy.",
   "subject": "{kind} {sign_in}: Twój {house}. dom",
   "when": "Dokładny moment: {date} ({timezone}).",
   "prompts_title": "Pytania na ten czas:",

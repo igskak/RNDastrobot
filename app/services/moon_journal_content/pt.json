@@ -38,8 +38,8 @@
   "sun": "Sem a hora de nascimento, contamos as casas a partir do seu signo solar (casas solares). Informe a hora e o local de nascimento para um resultado mais pessoal."
  },
  "universal": {
-  "new": "Escreva uma intenção para este mês lunar, no presente.",
-  "full": "Anote três coisas pelas quais você sentiu gratidão desde a última lua nova."
+  "new": "Complete a frase: Neste mês lunar, eu escolho...",
+  "full": "Nomeie três momentos desde a última lua nova que você gostaria de viver outra vez. O que eles tinham em comum?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "Valorizo o que tenho e o que ainda posso fazer crescer."
   },
   {
-   "theme": "Esta parte do seu mapa fala de palavras, aprendizado e conexões do dia a dia.",
+   "theme": "Esta parte do seu mapa contém as palavras que você repete, as perguntas que acompanha e as conversas cotidianas que moldam silenciosamente as suas escolhas.",
    "new": [
-    "O que você gostaria de aprender ou ler este mês?",
-    "Com quem você gostaria de conversar mais vezes?"
+    "Qual conversa você continua ensaiando na cabeça? Escreva a primeira frase sincera.",
+    "Qual assunto continua aparecendo nas suas abas, notas ou publicações salvas? O que uma hora de atenção completa poderia abrir?"
    ],
    "full": [
-    "Qual conversa deste mês ainda está com você?",
-    "Que ideia nova despertou sua curiosidade?"
+    "Qual conversa mudou a sua opinião — ou revelou o que você já sabia?",
+    "A qual ideia você voltou mais de uma vez? Nomeie uma pequena forma de testá-la na vida real."
    ],
-   "affirmation": "Minhas palavras podem ser claras e gentis."
+   "affirmation": "Confio em mim para dizer o que é claro com gentileza."
   },
   {
    "theme": "Esta parte do seu mapa fala do lar, das raízes e da calma interior.",
@@ -189,8 +189,13 @@
  ],
  "disclaimer": "São perguntas para reflexão, não previsões. O céu oferece um ritmo; o que você escreve é seu.",
  "email": {
-  "confirm_subject": "Confirme suas cartas da Lua",
-  "confirm_body": "Olá,\n\nconfirme que você quer receber por e-mail suas perguntas pessoais a cada lua nova e a cada lua cheia:\n{link}\n\nSe não foi você, basta ignorar esta mensagem e não enviaremos mais nada.",
+  "confirm_subject": "Suas cartas da Lua estão esperando — confirme seu e-mail",
+  "confirm_heading": "Suas cartas da Lua estão esperando",
+  "confirm_intro": "Duas vezes por mês, na lua nova e na lua cheia, a Steliara envia uma breve reflexão pessoal inspirada no seu mapa natal: um momento para perceber o que está mudando na sua vida e escolher o próximo passo.",
+  "confirm_button": "Confirmar meu e-mail",
+  "confirm_note": "Confirme seu endereço para começar. Você pode cancelar ou apagar seus dados quando quiser.",
+  "confirm_fallback": "Se o botão não funcionar, copie e cole este link no navegador:",
+  "confirm_body": "Olá,\n\nSuas cartas da Lua estão esperando. Duas vezes por mês, na lua nova e na lua cheia, a Steliara envia uma breve reflexão pessoal inspirada no seu mapa natal: um momento para perceber o que está mudando na sua vida e escolher o próximo passo.\n\nConfirme seu e-mail aqui:\n<{link}>\n\nSe não foi você quem pediu, basta ignorar esta mensagem. Não enviaremos mais nada.",
   "subject": "{kind} {sign_in}: sua casa {house}",
   "when": "Momento exato: {date} ({timezone}).",
   "prompts_title": "Perguntas para esta lunação:",

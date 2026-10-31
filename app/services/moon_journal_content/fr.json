@@ -38,8 +38,8 @@
   "sun": "Sans heure de naissance, nous comptons les maisons à partir de ton signe solaire (maisons solaires). Ajoute ton heure et ton lieu de naissance pour un résultat plus personnel."
  },
  "universal": {
-  "new": "Écris une intention pour ce mois lunaire, au présent.",
-  "full": "Note trois choses qui t'ont rempli de gratitude depuis la dernière nouvelle lune."
+  "new": "Termine cette phrase : Pendant ce mois lunaire, je choisis de...",
+  "full": "Nomme trois moments depuis la dernière nouvelle lune que tu aimerais revivre. Qu'avaient-ils en commun ?"
  },
  "houses": [
   {
@@ -67,16 +67,16 @@
    "affirmation": "J'apprécie ce que j'ai et ce que je peux encore faire grandir."
   },
   {
-   "theme": "Cette partie de ton thème parle des mots, de l'apprentissage et des liens du quotidien.",
+   "theme": "Cette partie de ton thème contient les mots que tu répètes, les questions que tu poursuis et les conversations ordinaires qui façonnent discrètement tes choix.",
    "new": [
-    "Qu'aimerais-tu apprendre ou lire ce mois-ci ?",
-    "Avec qui aimerais-tu parler plus souvent ?"
+    "Quelle conversation répètes-tu dans ta tête ? Écris-en la première phrase sincère.",
+    "Quel sujet revient sans cesse dans tes onglets, tes notes ou tes publications enregistrées ? Qu'est-ce qu'une heure d'attention entière pourrait ouvrir ?"
    ],
    "full": [
-    "Quelle conversation de ce mois t'accompagne encore ?",
-    "Quelle idée nouvelle a éveillé ta curiosité ?"
+    "Quelle conversation a changé ton avis — ou révélé ce que tu savais déjà ?",
+    "À quelle idée es-tu revenu·e plus d'une fois ? Nomme une petite façon de la mettre à l'épreuve dans la vie réelle."
    ],
-   "affirmation": "Mes mots peuvent être clairs et bienveillants."
+   "affirmation": "Je me fais confiance pour dire les choses clairement et avec bienveillance."
   },
   {
    "theme": "Cette partie de ton thème parle du foyer, des racines et du calme intérieur.",
@@ -189,8 +189,13 @@
  ],
  "disclaimer": "Ce sont des questions pour réfléchir, pas des prédictions. Le ciel offre un rythme ; ce que tu écris t'appartient.",
  "email": {
-  "confirm_subject": "Confirme tes lettres de la Lune",
-  "confirm_body": "Bonjour,\n\nconfirme que tu souhaites recevoir par e-mail tes questions personnelles à chaque nouvelle lune et à chaque pleine lune :\n{link}\n\nSi tu n'as rien demandé, ignore simplement ce message : nous n'enverrons rien d'autre.",
+  "confirm_subject": "Tes lettres de la Lune t'attendent — confirme ton adresse",
+  "confirm_heading": "Tes lettres de la Lune t'attendent",
+  "confirm_intro": "Deux fois par mois, à la nouvelle lune et à la pleine lune, Steliara t'envoie une courte réflexion personnelle inspirée de ton thème natal : un moment pour remarquer ce qui bouge dans ta vie et choisir la suite.",
+  "confirm_button": "Confirmer mon adresse",
+  "confirm_note": "Confirme ton adresse pour commencer. Tu peux te désinscrire ou supprimer tes données à tout moment.",
+  "confirm_fallback": "Si le bouton ne fonctionne pas, copie-colle ce lien dans ton navigateur :",
+  "confirm_body": "Bonjour,\n\nTes lettres de la Lune t'attendent. Deux fois par mois, à la nouvelle lune et à la pleine lune, Steliara t'envoie une courte réflexion personnelle inspirée de ton thème natal : un moment pour remarquer ce qui bouge dans ta vie et choisir la suite.\n\nConfirme ton adresse ici :\n<{link}>\n\nSi tu n'as rien demandé, ignore ce message : nous n'enverrons rien d'autre.",
   "subject": "{kind} {sign_in} : ta maison {house}",
   "when": "Moment exact : {date} ({timezone}).",
   "prompts_title": "Questions pour cette lunaison :",
