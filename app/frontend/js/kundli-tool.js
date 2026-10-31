@@ -183,7 +183,8 @@
     }
 
     function details(summary, children) {
-        var node = el('details', { class: 'result-details' });
+        // Open: the dates are what people came for, so they are not hidden behind a click.
+        var node = el('details', { class: 'result-details', open: '' });
         node.appendChild(el('summary', { text: summary }));
         children.forEach(function (child) { node.appendChild(child); });
         return node;

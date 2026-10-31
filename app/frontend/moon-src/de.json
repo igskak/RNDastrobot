@@ -18,8 +18,9 @@
    "description": "Alle Neumonde und Vollmonde 2026–2027 mit genauer Uhrzeit, das Haus deines Horoskops für jede Lunation und kostenlose Fragen für dein Dankbarkeitstagebuch.",
    "h1": "Neumond und Vollmond 2026–2027: Termine und deine persönlichen Journal-Fragen",
    "lead": "Sieh nach, in welches Haus deines Geburtshoroskops der nächste Neumond und der nächste Vollmond fallen, und erhalte ein paar sanfte Fragen für dein Journal: eine Absicht zum Neumond, Dankbarkeit zum Vollmond.",
+   "trust": "Berechnet mit der Swiss Ephemeris, der astronomischen Grundlage professioneller Astrologie-Software. Kostenlos, ohne Konto.",
    "tableTitle": "Neumonde und Vollmonde von November 2026 bis Dezember 2027",
-   "tableNote": "Zeiten in deutscher Zeit (MEZ/MESZ). Die nächste Lunation ist hervorgehoben.",
+   "tableNote": "Zeiten in deutscher Zeit (MEZ/MESZ). Der nächste Neu- oder Vollmond ist hervorgehoben.",
    "sections": [
     {
      "h2": "Ein Journal im Rhythmus des Mondes",
@@ -80,6 +81,7 @@
   "timezoneFromPlace": "Zeitzone nach dem Geburtsort eingestellt.",
   "calculate": "Meine Mondphasen zeigen",
   "calculating": "Berechne…",
+  "resultWhen": "{date} (deine Zeit, {tz})",
   "noscript": "Dieser Rechner braucht JavaScript.",
   "required": "Bitte gib dein Geburtsdatum ein.",
   "resultTitle": "Dein nächster Neumond und Vollmond",
@@ -103,6 +105,7 @@
   "tableDate": "Datum und Uhrzeit",
   "tablePhase": "Phase",
   "tableSign": "Zeichen",
+  "tableNoteLocal": "Zeiten in deiner Zeitzone ({tz}). Der nächste Neu- oder Vollmond ist hervorgehoben.",
   "nextBadge": "als Nächstes",
   "selectedBadge": "Ausgewählt",
   "loading": "Dein Brief wird geladen…",
@@ -113,7 +116,7 @@
   "currentTitle": "Dein aktueller Mond",
   "writePlaceholder": "Schreib hier… Es wird automatisch gespeichert.",
   "saved": "Gespeichert",
-  "nextLine": "Als Nächstes: {kind} am {date} {sign_in}, in deinem {house}. Haus.",
+  "nextLine": "Als Nächstes: {kind} am {date} {sign_in} · {area}.",
   "historyTitle": "Dein Journal",
   "historyEmpty": "Hier erscheinen deine Antworten.",
   "fakeTitle": "Persönlicher Monat",
@@ -160,25 +163,47 @@
  ],
  "tableDateFormat": "{d}. {month} {y}, {hh}:{mm} Uhr",
  "plans": {
-  "title": "Zwei Wege, deinem eigenen Rhythmus näher zu sein",
-  "lead": "Der Himmel soll dir nicht sagen, was geschehen wird. Er kann dir einen Moment geben, um wahrzunehmen, was bereits um deine Aufmerksamkeit bittet — bei jedem Neu- und Vollmond oder als tiefere Geschichte, die sich über den ganzen Monat entfaltet.",
+  "title": "Kostenlose Briefe – und ein persönlicher Monat, wenn du mehr möchtest",
+  "lead": "Wir sagen keine Ereignisse voraus. Wir schicken dir Fragen in den Momenten, in denen der Mond seine Phase wechselt, und bewahren deine Antworten auf, damit du zurückblicken kannst.",
   "freeTitle": "Dein Mondbrief",
-  "freeIntro": "Zweimal im Monat begegnet dir ein kurzer Brief an einem natürlichen Wendepunkt. Er übersetzt den Neu- oder Vollmond durch dein eigenes Horoskop und schenkt dir einen stillen Raum, in dem du dich selbst klarer hören kannst.",
+  "freeIntro": "Am Tag jedes Neu- und Vollmonds bekommst du eine kurze E-Mail: den Lebensbereich deines Horoskops, in den der Mond fällt, drei Fragen und eine Affirmation. Du antwortest auf einer privaten Seite; das dauert etwa fünf Minuten.",
   "freeItems": [
-   {"title": "Dein Himmel in menschlicher Sprache", "text": "Erkenne, welchen Lebensbereich dieser Mond berührt und warum er sich gerade lebendiger anfühlen kann — ohne Fachsprache oder festgelegte Vorhersagen."},
-   {"title": "Fragen, die etwas öffnen", "text": "Drei sorgfältig gewählte Impulse helfen dir zu benennen, was du willst, was sich verändert hat und was du mitnehmen möchtest."},
-   {"title": "Ein Journal, das sich erinnert", "text": "Deine Antworten bleiben in einem privaten Journal zusammen, sodass ein flüchtiges Gefühl mit der Zeit zu einem erkennbaren Muster werden kann."}
+   {
+    "title": "Welchen Lebensbereich dieser Mond berührt",
+    "text": "Liebe, Zuhause, Arbeit, Ruhe: Jedes Mal fällt der Mond in einen anderen Bereich deines Horoskops, in einfachen Worten erklärt."
+   },
+   {
+    "title": "Drei Fragen zum Beantworten",
+    "text": "Eine dazu, was du willst, eine dazu, was sich verändert hat, und eine zum Mitnehmen. Kurz genug für einen vollen Tag."
+   },
+   {
+    "title": "Deine Antworten an einem Ort",
+    "text": "Alles, was du schreibst, bleibt in einem privaten Journal. So kannst du frühere Monate nachlesen und erkennen, was immer wiederkehrt."
+   }
   ],
-  "freeClosing": "Kostenlos, zweimal im Monat. Ein paar aufmerksame Minuten, die nur dir gehören.",
+  "freeClosing": "Kostenlos, zwei E-Mails im Monat. Abmelden mit einem Klick.",
   "paidTitle": "Dein persönlicher Monat",
-  "paidIntro": "Der persönliche Monat zeigt dir das größere Bild. Statt den Monat als verschwommene Folge von Daten zu erleben, erkennst du seinen emotionalen Rhythmus: Zeiten, die etwas bewegen können, Fragen, bei denen es sich lohnt zu verweilen, und den Faden, der alles verbindet.",
+  "paidIntro": "Ein Kalender deines Monats, berechnet aus deinem Geburtshoroskop: welche Tage welche Themen bringen, mit einer Frage zu jedem, und am Monatsende ein Rückblick auf das, was du geschrieben hast.",
   "paidItems": [
-   {"title": "Deine bedeutungsvollen Daten", "text": "Ein persönlicher Kalender der stärksten Transite des Monats, übersetzt in Situationen, die du in Arbeit, Beziehungen, Zuhause und Innenleben wiedererkennen kannst."},
-   {"title": "Orientierung, die du wirklich nutzen kannst", "text": "Jeder Zeitraum bringt eine fokussierte Reflexion — keine Anweisung — damit du deine eigene Entscheidung bewusster treffen kannst."},
-   {"title": "Muster, die erst die Zeit sichtbar macht", "text": "Am Monatsende begegnen dir deine Einträge neben dem Himmel jener Tage wieder und zeigen wiederkehrende Bedürfnisse, Spannungen und Wünsche."},
-   {"title": "Dein Jahr als Geschichte", "text": "An deinem Geburtstag werden diese Monate zu einem privaten Jahrbuch: keine Liste von Vorhersagen, sondern ein Porträt deiner Veränderung."}
+   {
+    "title": "Deine Daten im Monat",
+    "text": "Die Tage, an denen die Planeten dein Horoskop am stärksten berühren, und welchen Lebensbereich jeder betrifft: Arbeit, Beziehungen, Zuhause oder dein Innenleben."
+   },
+   {
+    "title": "Eine Frage für jede Phase",
+    "text": "Keine Anweisungen: eine Frage pro Phase, damit du selbst entscheiden kannst."
+   },
+   {
+    "title": "Ein Rückblick auf deine Einträge",
+    "text": "Am Monatsende stellen wir deine Einträge neben den Himmel dieser Tage, damit wiederkehrende Bedürfnisse und Themen sichtbar werden."
+   },
+   {
+    "title": "Dein Jahr als Geschichte",
+    "text": "An deinem Geburtstag werden diese Monate zu einem privaten Jahrbuch: keine Liste von Vorhersagen, sondern ein Porträt deiner Veränderung."
+   }
   ],
-  "paidClosing": "Für Menschen, die nicht nur wissen möchten, was am Himmel geschieht, sondern verstehen wollen, was sich dadurch im eigenen Leben öffnet.",
+  "paidClosing": "Für alle, die den ganzen Monat sehen möchten, nicht nur zwei Momente darin.",
+  "exampleHeading": "So sieht ein Brief aus",
   "exampleFreeTitle": "Beispiel eines kostenlosen Briefs",
   "examplePaidTitle": "Beispiel eines persönlichen Monats",
   "exampleNote": "Beispiel für eine erfundene Person, geboren am 17. Mai 1990. Dein eigener Monat wird aus deinen Geburtsdaten berechnet.",
@@ -235,14 +260,149 @@
   "factUtc": "Weltzeit (UTC)",
   "factSign": "Zeichen und Grad",
   "housesTitle": "In welchem Haus deines Horoskops er liegt",
-  "housesLead": "Dieselbe Lunation fällt für jedes Aszendentenzeichen in ein anderes Haus. Finde deines in der Tabelle; wenn du deinen Aszendenten nicht kennst, nimm dein Sonnenzeichen, das ein einfacheres Sonnenhaus ergibt.",
+  "housesLead": "Derselbe Mond berührt je nach Aszendent einen anderen Lebensbereich. Der Aszendent ist das Zeichen, das bei deiner Geburt aufging. Finde deines in der Tabelle; wenn du ihn nicht kennst, nimm dein Sonnenzeichen.",
   "housesHeaders": [
    "Aszendent",
    "Haus",
-   "Worum es in diesem Lebensbereich geht"
+   "Lebensbereich"
+  ],
+  "aboutTitle": "Das Thema: {sign}",
+  "signs": [
+   {
+    "about": "Das Zeichen der Anfänge, des Mutes und des ehrlichen Impulses.",
+    "new": [
+     "Was würdest du diesen Monat beginnen, wenn du nicht auf den perfekten Moment wartest?",
+     "Wo wünschst du dir etwas mehr Mut, und was ist der erste kleine Schritt?"
+    ],
+    "full": [
+     "Was hast du kürzlich gewagt zu beginnen, und was gibt es dir?",
+     "Wo bist du einem ehrlichen Impuls gefolgt, und was hat er dir gezeigt?"
+    ]
+   },
+   {
+    "about": "Das Zeichen des Körpers, der Sinne, der Beständigkeit und dessen, was dir wirklich wichtig ist.",
+    "new": [
+     "Welchem einfachen Genuss möchtest du diesen Monat Raum geben?",
+     "Was würde deine Tage ruhiger und weniger gehetzt machen?"
+    ],
+    "full": [
+     "Was hast du langsam aufgebaut, das du jetzt wertschätzen kannst?",
+     "Welche alltägliche Annehmlichkeit war dir in den letzten zwei Wochen wichtig?"
+    ]
+   },
+   {
+    "about": "Das Zeichen der Neugier, der Gespräche, des Lernens und der vielen kleinen Begegnungen eines Tages.",
+    "new": [
+     "Was möchtest du aus reiner Neugier lernen oder entdecken?",
+     "Welches Gespräch möchtest du beginnen, und mit wem?"
+    ],
+    "full": [
+     "Welcher Gedanke oder welches Gespräch ist dir zuletzt geblieben, und warum?",
+     "Was hast du durch die Worte eines anderen über dich selbst verstanden?"
+    ]
+   },
+   {
+    "about": "Das Zeichen von Zuhause, Zugehörigkeit und Fürsorge, für andere und für dich selbst.",
+    "new": [
+     "Was würde dein Zuhause, auch dein inneres, wärmer und sicherer machen?",
+     "Wie möchtest du diesen Monat für dich sorgen?"
+    ],
+    "full": [
+     "Bei wem hast du dich zuletzt zu Hause gefühlt, und wodurch?",
+     "Welches Gefühl bittet gerade um deine Fürsorge?"
+    ]
+   },
+   {
+    "about": "Das Zeichen der Freude, der Kreativität, der Großzügigkeit und des Wunsches, dich ganz zu zeigen.",
+    "new": [
+     "Was würdest du diesen Monat erschaffen, wenn niemand es bewertet?",
+     "Wo möchtest du dich mehr so zeigen, wie du bist?"
+    ],
+    "full": [
+     "Was hat dich zuletzt stolz oder richtig lebendig gemacht?",
+     "Wo hat deine Wärme oder Großzügigkeit etwas bewirkt?"
+    ]
+   },
+   {
+    "about": "Das Zeichen des Alltagsrhythmus, der sorgfältigen Arbeit und der kleinen Gewohnheiten, die das Leben ordnen.",
+    "new": [
+     "Welche kleine tägliche Gewohnheit würde den größten sanften Unterschied machen?",
+     "Was könntest du diesen Monat vereinfachen oder ordnen?"
+    ],
+    "full": [
+     "Welche Routine war dir in den letzten Wochen eine gute Stütze?",
+     "Was hast du mit Sorgfalt getan, das deine eigene Anerkennung verdient?"
+    ]
+   },
+   {
+    "about": "Das Zeichen der Beziehungen, des Gleichgewichts, der Fairness und der Schönheit.",
+    "new": [
+     "Welches Gleichgewicht zwischen Geben und Nehmen wünschst du dir?",
+     "Welcher Beziehung möchtest du mehr Aufmerksamkeit schenken?"
+    ],
+    "full": [
+     "Wo hast du zuletzt ein gutes Gleichgewicht gefunden, und was hat geholfen?",
+     "Für welche Verbindung bist du gerade dankbar?"
+    ]
+   },
+   {
+    "about": "Das Zeichen der Tiefe, des Vertrauens, der Ehrlichkeit mit dir selbst und der inneren Wandlung.",
+    "new": [
+     "Was bist du bereit loszulassen, um Platz für Neues zu schaffen?",
+     "Wo möchtest du etwas mehr vertrauen, auch dir selbst?"
+    ],
+    "full": [
+     "Welche Wahrheit über dich ist zuletzt klarer geworden?",
+     "Was hat sich seit dem letzten Neumond leise in dir verändert?"
+    ]
+   },
+   {
+    "about": "Das Zeichen der Horizonte, des Sinns, des Reisens, des Lernens und der Zuversicht.",
+    "new": [
+     "Was möchtest du erkunden, lernen oder mit neuen Augen sehen?",
+     "Welche Überzeugung oder Hoffnung soll diesen Monat deine Entscheidungen leiten?"
+    ],
+    "full": [
+     "Was hat zuletzt deinen Blick auf das Leben geweitet?",
+     "Worauf hoffst du heute mehr als vor einem Monat?"
+    ]
+   },
+   {
+    "about": "Das Zeichen der Ziele, der Geduld, der Verantwortung und des Aufbaus von etwas Beständigem.",
+    "new": [
+     "Welches langfristige Ziel verdient diesen Monat einen konkreten Schritt?",
+     "Welche Struktur oder Grenze würde unterstützen, was du aufbaust?"
+    ],
+    "full": [
+     "Welchen Fortschritt, auch einen langsamen, kannst du heute anerkennen?",
+     "Welche Verantwortung hast du gut getragen, und wie?"
+    ]
+   },
+   {
+    "about": "Das Zeichen der Freundschaft, der Gemeinschaft, der Freiheit und frischer Ideen.",
+    "new": [
+     "Welche Idee fühlt sich für dich gerade neu und spannend an?",
+     "Welche Gemeinschaft oder Freundschaft möchtest du pflegen?"
+    ],
+    "full": [
+     "Wer aus deinem Umfeld hat dich zuletzt inspiriert?",
+     "Wo hattest du Raum, du selbst zu sein, ohne dich anzupassen?"
+    ]
+   },
+   {
+    "about": "Das Zeichen der Fantasie, des Mitgefühls, der Ruhe und der inneren Welt.",
+    "new": [
+     "Was braucht deine innere Welt diesen Monat mehr: Ruhe, Stille oder Fantasie?",
+     "Welchem Traum möchtest du ein wenig Raum geben?"
+    ],
+    "full": [
+     "Wann hast du dich zuletzt mit etwas Größerem als dir selbst verbunden gefühlt?",
+     "Was haben dir Ruhe oder Stille in den letzten Wochen geschenkt?"
+    ]
+   }
   ],
   "writeTitle": "Was du aufschreiben kannst",
-  "writeLabel": "Eine Frage für den Tag",
+  "writeLabel": "Fragen zu diesem Mond",
   "ctaTitle": "Sieh es in deinem eigenen Horoskop",
   "ctaText": "Gib dein Geburtsdatum ein und erhalte dein Haus, deine eigenen Fragen und eine Affirmation. Kostenlose Briefe kommen zu jedem Neumond und Vollmond.",
   "moreTitle": "Alle Neu- und Vollmonde von {from} bis {to}",

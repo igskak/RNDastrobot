@@ -32,10 +32,10 @@
   "w Rybach"
  ],
  "date_format": "%d.%m.%Y, %H:%M",
- "headline": "{kind} {sign_in}, w Twoim {house}. domu",
+ "headline": "{kind} {sign_in} · {area} ({house}. dom)",
  "frame": {
-  "rising": "Domy liczymy od Twojego ascendentu (system domów całych znaków).",
-  "sun": "Bez godziny urodzenia liczymy domy od znaku Słońca (domy słoneczne). Podaj godzinę i miejsce urodzenia, aby wynik był bardziej osobisty."
+  "rising": "Obszary życia liczymy od Twojego ascendentu, czyli znaku, który wschodził w chwili Twoich narodzin.",
+  "sun": "Bez godziny urodzenia liczymy obszary życia od Twojego znaku Słońca. Podaj godzinę i miejsce urodzenia, aby wynik był bardziej osobisty."
  },
  "universal": {
   "new": "Dokończ zdanie: W tym miesiącu księżycowym wybieram...",
@@ -43,6 +43,7 @@
  },
  "houses": [
   {
+   "area": "Ty i to, jak się pokazujesz",
    "theme": "Ta część Twojego horoskopu dotyczy Ciebie i tego, jak pokazujesz się światu.",
    "new": [
     "Co chcesz w tym miesiącu zacząć robić tylko dla siebie?",
@@ -55,6 +56,7 @@
    "affirmation": "Daję sobie przestrzeń, by zacząć od nowa."
   },
   {
+   "area": "Wartości i stabilność",
    "theme": "Ta część Twojego horoskopu dotyczy tego, co cenisz, i tego, co daje Ci poczucie stabilności.",
    "new": [
     "Co dziś oznacza dla Ciebie poczucie bezpieczeństwa?",
@@ -67,6 +69,7 @@
    "affirmation": "Doceniam to, co mam, i to, co mogę jeszcze rozwinąć."
   },
   {
+   "area": "Codzienne słowa i rozmowy",
    "theme": "Ta część Twojego horoskopu obejmuje słowa, które powtarzasz, pytania, za którymi podążasz, i codzienne rozmowy, które po cichu kształtują Twoje wybory.",
    "new": [
     "Którą rozmowę wciąż ćwiczysz w myślach? Zapisz jej pierwsze szczere zdanie.",
@@ -79,6 +82,7 @@
    "affirmation": "Ufam sobie, że potrafię powiedzieć to jasno i życzliwie."
   },
   {
+   "area": "Dom i korzenie",
    "theme": "Ta część Twojego horoskopu dotyczy domu, korzeni i wewnętrznego spokoju.",
    "new": [
     "Co sprawi, że Twój dom będzie jeszcze bardziej Twój?",
@@ -91,6 +95,7 @@
    "affirmation": "Tworzę miejsce spokoju w sobie i wokół siebie."
   },
   {
+   "area": "Radość, twórczość i zabawa",
    "theme": "Ta część Twojego horoskopu dotyczy radości, twórczości i zabawy.",
    "new": [
     "Co chcesz stworzyć wyłącznie dla radości?",
@@ -103,6 +108,7 @@
    "affirmation": "Pozwalam sobie cieszyć się tym, co kocham."
   },
   {
+   "area": "Codzienny rytm, praca i troska o siebie",
    "theme": "Ta część Twojego horoskopu dotyczy codziennego rytmu, pracy i troski o siebie.",
    "new": [
     "Jaką małą codzienną rutynę chcesz wprowadzić?",
@@ -115,6 +121,7 @@
    "affirmation": "Małe kroki każdego dnia wystarczą."
   },
   {
+   "area": "Bliskie relacje",
    "theme": "Ta część Twojego horoskopu dotyczy bliskich relacji i partnerstwa.",
    "new": [
     "Co chcesz wnosić do swoich najbliższych relacji?",
@@ -127,6 +134,7 @@
    "affirmation": "Spotykam innych z otwartością i z szacunkiem do siebie."
   },
   {
+   "area": "Zaufanie, bliskość i przemiana",
    "theme": "Ta część Twojego horoskopu dotyczy zaufania, dzielenia się i wewnętrznej przemiany.",
    "new": [
     "Co możesz odpuścić, by zrobić miejsce na nowe?",
@@ -139,6 +147,7 @@
    "affirmation": "Łagodnie odpuszczam i zatrzymuję to, co ważne."
   },
   {
+   "area": "Podróże, nauka i sens",
    "theme": "Ta część Twojego horoskopu dotyczy horyzontów: podróży, nauki i sensu.",
    "new": [
     "Jakie miejsce, książka lub idea Cię wołają?",
@@ -151,6 +160,7 @@
    "affirmation": "Otwieram się na nowe horyzonty."
   },
   {
+   "area": "Cele i powołanie",
    "theme": "Ta część Twojego horoskopu dotyczy celów, powołania i Twojej drogi.",
    "new": [
     "Ku któremu celowi chcesz zrobić jeden wyraźny krok?",
@@ -163,6 +173,7 @@
    "affirmation": "Idę ku swoim celom we własnym tempie."
   },
   {
+   "area": "Przyjaciele i wspólnota",
    "theme": "Ta część Twojego horoskopu dotyczy przyjaźni, wspólnoty i nadziei.",
    "new": [
     "Jaką nadzieję na przyszłość chcesz pielęgnować?",
@@ -175,6 +186,7 @@
    "affirmation": "Jestem częścią kręgu ludzi, którzy są dla mnie ważni."
   },
   {
+   "area": "Odpoczynek i świat wewnętrzny",
    "theme": "Ta część Twojego horoskopu dotyczy odpoczynku, ciszy i Twojego wewnętrznego świata.",
    "new": [
     "Jak możesz dać sobie w tym miesiącu więcej spokojnego czasu?",
@@ -196,7 +208,7 @@
   "confirm_note": "Potwierdź adres, aby zacząć. W każdej chwili możesz się wypisać lub usunąć swoje dane.",
   "confirm_fallback": "Jeśli przycisk nie działa, skopiuj i wklej ten link do przeglądarki:",
   "confirm_body": "Dzień dobry,\n\nTwoje listy księżycowe czekają. Dwa razy w miesiącu, podczas nowiu i pełni, Steliara wyśle Ci krótką, osobistą refleksję inspirowaną Twoim horoskopem urodzeniowym — chwilę, by zauważyć, co się zmienia, i wybrać kolejny krok.\n\nPotwierdź swój adres tutaj:\n<{link}>\n\nJeśli to pomyłka, po prostu zignoruj tę wiadomość. Nic więcej nie wyślemy.",
-  "subject": "{kind} {sign_in}: Twój {house}. dom",
+  "subject": "{kind} {sign_in} · {area}",
   "when": "Dokładny moment: {date} ({timezone}).",
   "prompts_title": "Pytania na ten czas:",
   "affirmation_title": "Afirmacja:",

@@ -18,8 +18,9 @@
    "description": "Todas as luas novas e cheias de 2026–2027 com horário exato, a casa do seu mapa astral para cada lunação e perguntas gratuitas para o seu diário da gratidão.",
    "h1": "Lua nova e lua cheia 2026–2027: datas e suas perguntas pessoais para o diário",
    "lead": "Veja em qual casa do seu mapa astral caem a próxima lua nova e a próxima lua cheia e receba algumas perguntas gentis para o seu diário: uma intenção na lua nova, gratidão na lua cheia.",
+   "trust": "Calculado com a Swiss Ephemeris, o motor astronômico dos programas profissionais de astrologia. Grátis, sem criar conta.",
    "tableTitle": "Luas novas e luas cheias de novembro de 2026 a dezembro de 2027",
-   "tableNote": "Horário de Brasília. A próxima lunação aparece em destaque.",
+   "tableNote": "Horário de Brasília. A próxima lua aparece em destaque.",
    "sections": [
     {
      "h2": "Um diário no ritmo da Lua",
@@ -80,6 +81,7 @@
   "timezoneFromPlace": "Fuso horário definido pelo local de nascimento.",
   "calculate": "Ver minhas luas",
   "calculating": "Calculando…",
+  "resultWhen": "{date} (seu horário, {tz})",
   "noscript": "Esta calculadora precisa de JavaScript.",
   "required": "Informe sua data de nascimento.",
   "resultTitle": "Sua próxima lua nova e lua cheia",
@@ -103,6 +105,7 @@
   "tableDate": "Data e hora",
   "tablePhase": "Fase",
   "tableSign": "Signo",
+  "tableNoteLocal": "Horários no seu fuso horário ({tz}). A próxima lua aparece em destaque.",
   "nextBadge": "próxima",
   "selectedBadge": "Selecionada",
   "loading": "Carregando sua carta…",
@@ -113,7 +116,7 @@
   "currentTitle": "Sua Lua de agora",
   "writePlaceholder": "Escreva aqui… Fica salvo automaticamente.",
   "saved": "Salvo",
-  "nextLine": "Próxima: {kind} em {date} {sign_in}, na sua casa {house}.",
+  "nextLine": "Próxima: {kind} em {date} {sign_in} · {area}.",
   "historyTitle": "Seu diário",
   "historyEmpty": "Suas respostas vão aparecer aqui.",
   "fakeTitle": "Mês pessoal",
@@ -160,25 +163,47 @@
  ],
  "tableDateFormat": "{d} de {month} de {y}, {hh}:{mm}",
  "plans": {
-  "title": "Duas formas de ficar mais perto do seu próprio ritmo",
-  "lead": "O céu não está aqui para dizer o que vai acontecer. Ele pode oferecer um momento para você perceber o que já pede a sua atenção — em cada lua nova e cheia, ou como uma história mais profunda que se revela ao longo de todo o mês.",
+  "title": "Cartas gratuitas, e um mês pessoal se você quiser mais",
+  "lead": "Não prevemos acontecimentos. Enviamos perguntas nos momentos em que a Lua muda de fase e guardamos as suas respostas para que você possa voltar a elas.",
   "freeTitle": "Sua carta da Lua",
-  "freeIntro": "Duas vezes por mês, uma carta breve encontra você em um momento natural de mudança. Ela traduz a lua nova ou cheia pelo seu próprio mapa e oferece um espaço tranquilo onde você pode se escutar com mais clareza.",
+  "freeIntro": "No dia de cada lua nova e cheia você recebe um e-mail curto: a área do seu mapa onde a Lua cai, três perguntas e uma afirmação. Você responde numa página privada; leva cerca de cinco minutos.",
   "freeItems": [
-   {"title": "Seu céu, em linguagem humana", "text": "Veja qual área da sua vida esta lua toca e por que ela pode parecer mais viva agora — sem jargão nem previsões fechadas."},
-   {"title": "Perguntas que abrem alguma coisa", "text": "Três convites escolhidos com cuidado ajudam você a nomear o que deseja, o que mudou e o que está pronto para levar adiante."},
-   {"title": "Um diário que se lembra", "text": "Suas respostas ficam reunidas em um diário privado, para que uma sensação passageira possa se tornar, com o tempo, um padrão que você reconhece."}
+   {
+    "title": "A área da vida que esta lua toca",
+    "text": "Amor, casa, trabalho, descanso: a cada vez a Lua cai numa área diferente do seu mapa, explicada em palavras simples."
+   },
+   {
+    "title": "Três perguntas para responder",
+    "text": "Uma sobre o que você quer, uma sobre o que mudou e uma para levar adiante. Curtas o bastante para um dia corrido."
+   },
+   {
+    "title": "Suas respostas, reunidas",
+    "text": "Tudo o que você escreve fica num diário privado, para reler meses anteriores e notar o que se repete."
+   }
   ],
-  "freeClosing": "Grátis, duas vezes por mês. Alguns minutos de atenção que pertencem somente a você.",
+  "freeClosing": "Grátis, dois e-mails por mês. Cancelamento com um clique.",
   "paidTitle": "Seu Mês pessoal",
-  "paidIntro": "O Mês pessoal oferece a visão mais ampla. Em vez de viver o mês como uma sequência borrada de datas, você enxerga o ritmo emocional dele: os períodos que podem mexer com algo, as perguntas que merecem companhia e o fio que conecta tudo.",
+  "paidIntro": "Um calendário do seu mês, calculado a partir do seu mapa natal: que dias trazem que temas, com uma pergunta para cada um, e no fim do mês um olhar sobre o que você escreveu.",
   "paidItems": [
-   {"title": "Suas datas significativas", "text": "Um calendário pessoal dos trânsitos mais fortes do mês, traduzidos em situações que você pode reconhecer no trabalho, nos relacionamentos, em casa e na sua vida interior."},
-   {"title": "Uma orientação que você realmente pode usar", "text": "Cada período vem com uma reflexão focada — não uma ordem — para que você faça a própria escolha com mais consciência."},
-   {"title": "Padrões que só o tempo revela", "text": "No fim do mês, suas anotações voltam ao lado do céu daqueles dias e mostram necessidades, tensões e desejos recorrentes."},
-   {"title": "Seu ano como uma história", "text": "No seu aniversário, esses meses se tornam um anuário privado: não uma lista de previsões, mas um retrato de como você mudou."}
+   {
+    "title": "Suas datas do mês",
+    "text": "Os dias em que os planetas tocam o seu mapa com mais força e a área da vida de cada um: trabalho, relações, casa ou mundo interior."
+   },
+   {
+    "title": "Uma pergunta para cada período",
+    "text": "Sem instruções: uma pergunta por período para você decidir por si."
+   },
+   {
+    "title": "Uma revisão das suas anotações",
+    "text": "No fim do mês colocamos as suas anotações ao lado do céu daqueles dias, para que necessidades e temas recorrentes fiquem visíveis."
+   },
+   {
+    "title": "Seu ano como uma história",
+    "text": "No seu aniversário, esses meses se tornam um anuário privado: não uma lista de previsões, mas um retrato de como você mudou."
+   }
   ],
-  "paidClosing": "Para quem não quer apenas saber o que acontece no céu, mas entender o que isso está abrindo na própria vida.",
+  "paidClosing": "Para quem quer ver o mês inteiro, não só dois momentos.",
+  "exampleHeading": "Veja como é uma carta",
   "exampleFreeTitle": "Exemplo de carta gratuita",
   "examplePaidTitle": "Exemplo de mês pessoal",
   "exampleNote": "Exemplo para uma pessoa fictícia nascida em 17 de maio de 1990. O seu mês é calculado com os seus dados de nascimento.",
@@ -235,14 +260,149 @@
   "factUtc": "Tempo universal (UTC)",
   "factSign": "Signo e grau",
   "housesTitle": "Em que casa do seu mapa ela cai",
-  "housesLead": "A mesma lunação cai em uma casa diferente para cada ascendente. Encontre o seu na tabela; se não souber o ascendente, use o signo solar, que dá uma casa solar mais simples.",
+  "housesLead": "A mesma lua toca uma área da vida diferente conforme o seu ascendente, o signo que nascia quando você nasceu. Encontre o seu na tabela; se não souber, use o seu signo solar.",
   "housesHeaders": [
    "Ascendente",
    "Casa",
-   "Do que trata essa área da vida"
+   "Área da vida"
+  ],
+  "aboutTitle": "O tema: {sign}",
+  "signs": [
+   {
+    "about": "O signo dos começos, da coragem e do impulso sincero.",
+    "new": [
+     "O que você começaria este mês sem esperar o momento perfeito?",
+     "Onde você gostaria de ter um pouco mais de coragem, e qual é o primeiro passo pequeno?"
+    ],
+    "full": [
+     "O que você ousou começar recentemente e o que isso está trazendo?",
+     "Onde você seguiu um impulso sincero e o que ele mostrou?"
+    ]
+   },
+   {
+    "about": "O signo do corpo, dos sentidos, da estabilidade e do que você realmente valoriza.",
+    "new": [
+     "Para qual prazer simples você quer abrir espaço este mês?",
+     "O que deixaria seus dias mais estáveis e menos apressados?"
+    ],
+    "full": [
+     "O que você construiu devagar e pode apreciar agora?",
+     "Que conforto do dia a dia foi importante para você nas últimas duas semanas?"
+    ]
+   },
+   {
+    "about": "O signo da curiosidade, das conversas, do aprendizado e das pequenas trocas do dia.",
+    "new": [
+     "O que você gostaria de aprender ou explorar por pura curiosidade?",
+     "Que conversa você gostaria de começar, e com quem?"
+    ],
+    "full": [
+     "Que ideia ou conversa ficou com você recentemente, e por quê?",
+     "O que você entendeu sobre si graças às palavras de alguém?"
+    ]
+   },
+   {
+    "about": "O signo do lar, do pertencimento e do cuidado, com os outros e com você.",
+    "new": [
+     "O que deixaria o seu lar, também o interior, mais acolhedor e seguro?",
+     "Como você quer cuidar de si este mês?"
+    ],
+    "full": [
+     "Quem fez você se sentir em casa recentemente, e como?",
+     "Que sentimento está pedindo o seu cuidado agora?"
+    ]
+   },
+   {
+    "about": "O signo da alegria, da criatividade, da generosidade e do desejo de se mostrar por inteiro.",
+    "new": [
+     "O que você criaria este mês se ninguém fosse avaliar?",
+     "Onde você gostaria de se mostrar mais como é?"
+    ],
+    "full": [
+     "O que trouxe orgulho ou uma verdadeira sensação de vida recentemente?",
+     "Onde o seu calor ou a sua generosidade fizeram diferença?"
+    ]
+   },
+   {
+    "about": "O signo do ritmo diário, do trabalho cuidadoso e dos pequenos hábitos que organizam a vida.",
+    "new": [
+     "Que pequeno hábito diário faria a maior diferença, com leveza?",
+     "O que você poderia simplificar ou organizar este mês?"
+    ],
+    "full": [
+     "Que rotina foi um bom apoio nas últimas semanas?",
+     "O que você fez com cuidado e merece o seu próprio reconhecimento?"
+    ]
+   },
+   {
+    "about": "O signo das relações, do equilíbrio, da justiça e da beleza.",
+    "new": [
+     "Que equilíbrio você quer entre dar e receber?",
+     "A qual relação você quer dedicar mais atenção?"
+    ],
+    "full": [
+     "Onde você encontrou um bom equilíbrio recentemente, e o que ajudou?",
+     "Por qual vínculo você sente gratidão agora?"
+    ]
+   },
+   {
+    "about": "O signo da profundidade, da confiança, da honestidade consigo e da transformação interior.",
+    "new": [
+     "O que você pode soltar para abrir espaço para algo novo?",
+     "Onde você gostaria de confiar um pouco mais, inclusive em si?"
+    ],
+    "full": [
+     "Que verdade sobre você ficou mais clara recentemente?",
+     "O que mudou em silêncio dentro de você desde a última lua nova?"
+    ]
+   },
+   {
+    "about": "O signo dos horizontes, do sentido, das viagens, dos estudos e da esperança.",
+    "new": [
+     "O que você gostaria de explorar, aprender ou ver com novos olhos?",
+     "Que convicção ou esperança você quer que guie suas escolhas este mês?"
+    ],
+    "full": [
+     "O que ampliou o seu olhar sobre a vida recentemente?",
+     "Sobre o que você tem mais esperança hoje do que há um mês?"
+    ]
+   },
+   {
+    "about": "O signo das metas, da paciência, da responsabilidade e do que se constrói com o tempo.",
+    "new": [
+     "Que meta de longo prazo merece um passo concreto este mês?",
+     "Que estrutura ou limite apoiaria o que você está construindo?"
+    ],
+    "full": [
+     "Que avanço, mesmo lento, você pode reconhecer hoje?",
+     "Que responsabilidade você carregou bem, e como?"
+    ]
+   },
+   {
+    "about": "O signo da amizade, da comunidade, da liberdade e das ideias novas.",
+    "new": [
+     "Que ideia parece nova e empolgante para você agora?",
+     "Que comunidade ou amizade você quer cultivar?"
+    ],
+    "full": [
+     "Quem do seu círculo inspirou você recentemente?",
+     "Onde você encontrou espaço para ser você, sem se adaptar?"
+    ]
+   },
+   {
+    "about": "O signo da imaginação, da compaixão, do descanso e do mundo interior.",
+    "new": [
+     "Do que o seu mundo interior mais precisa este mês: descanso, silêncio ou imaginação?",
+     "A qual sonho você quer dar um pouco de espaço?"
+    ],
+    "full": [
+     "Quando você sentiu recentemente uma ligação com algo maior do que você?",
+     "O que o descanso ou o silêncio trouxeram nas últimas semanas?"
+    ]
+   }
   ],
   "writeTitle": "O que escrever",
-  "writeLabel": "Uma pergunta para este dia",
+  "writeLabel": "Perguntas para esta lua",
   "ctaTitle": "Veja no seu próprio mapa",
   "ctaText": "Informe sua data de nascimento para receber sua casa, suas próprias perguntas e uma afirmação. As cartas gratuitas chegam em cada lua nova e cheia.",
   "moreTitle": "Todas as luas novas e cheias de {from} a {to}",

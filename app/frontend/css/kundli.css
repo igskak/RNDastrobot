@@ -5,7 +5,7 @@
   --surface: #fffdf9;
   --surface-2: #eee9df;
   --text: #18263b;
-  --text-2: #647184;
+  --text-2: #5a6678;
   --accent: #173a63;
   --accent-hover: #0f2b4c;
   --accent-soft: #e8eef5;
@@ -101,6 +101,13 @@ input:disabled { opacity: 0.55; }
 .result h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.8rem; }
 .headline { color: var(--accent); font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.3rem, 3vw, 1.8rem); line-height: 1.25; max-width: 34ch; }
 .score { font-size: 2.4rem; font-weight: 700; color: var(--accent); }
+.upsell .example { margin: 16px 0; padding: 16px; background: var(--surface-2); border-radius: 10px; }
+.upsell .example h3 { margin: 14px 0 4px; font-size: 1rem; }
+.upsell .example .hint { margin-bottom: 10px; }
+.example-label { margin: 0; color: var(--text); font-size: .8rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.example-days { list-style: none; padding: 0; margin: 10px 0; }
+.example-days li { padding: 6px 0; border-bottom: 1px solid var(--border); }
+.example-days .when { display: block; color: var(--text); font-weight: 600; font-size: .9rem; }
 .result-details { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 16px; }
 .result-details summary { cursor: pointer; color: var(--accent); font-weight: 700; }
 .result-details[open] > *:not(summary) { animation: details-enter .32s ease both; }

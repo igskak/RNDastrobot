@@ -18,8 +18,9 @@
    "description": "Wszystkie nowie i pełnie 2026–2027 z dokładną godziną, dom Twojego horoskopu dla każdej lunacji oraz bezpłatne pytania do dziennika wdzięczności i afirmacje.",
    "h1": "Nów i pełnia Księżyca 2026–2027: daty i Twoje osobiste pytania do dziennika",
    "lead": "Sprawdź, w którym domu Twojego horoskopu wypada najbliższy nów i najbliższa pełnia, i otrzymaj kilka spokojnych pytań do dziennika: intencję na nów, wdzięczność na pełnię.",
+   "trust": "Liczymy na Swiss Ephemeris, silniku astronomicznym, z którego korzystają programy dla zawodowych astrologów. Bezpłatnie, bez zakładania konta.",
    "tableTitle": "Nowie i pełnie od listopada 2026 do grudnia 2027",
-   "tableNote": "Godziny podajemy według czasu polskiego. Najbliższa lunacja jest wyróżniona.",
+   "tableNote": "Godziny podajemy według czasu polskiego. Najbliższy nów lub pełnia są wyróżnione.",
    "sections": [
     {
      "h2": "Dziennik w rytmie Księżyca",
@@ -78,8 +79,9 @@
   "placeNone": "Nie znaleziono miejsc",
   "timezone": "Strefa czasowa",
   "timezoneFromPlace": "Strefa czasowa ustawiona według miejsca urodzenia.",
-  "calculate": "Pokaż moje lunacje",
+  "calculate": "Pokaż moje nowie i pełnie",
   "calculating": "Obliczam…",
+  "resultWhen": "{date} (Twój czas, {tz})",
   "noscript": "Ten kalkulator wymaga JavaScriptu.",
   "required": "Podaj datę urodzenia.",
   "resultTitle": "Twój najbliższy nów i najbliższa pełnia",
@@ -103,6 +105,7 @@
   "tableDate": "Data i godzina",
   "tablePhase": "Faza",
   "tableSign": "Znak",
+  "tableNoteLocal": "Godziny w Twojej strefie czasowej ({tz}). Najbliższy nów lub pełnia są wyróżnione.",
   "nextBadge": "najbliższa",
   "selectedBadge": "Wybrana",
   "loading": "Wczytuję Twój list…",
@@ -113,7 +116,7 @@
   "currentTitle": "Twój obecny Księżyc",
   "writePlaceholder": "Pisz tutaj… Zapisuje się automatycznie.",
   "saved": "Zapisano",
-  "nextLine": "Następna lunacja: {kind}, {date}, {sign_in}, w Twoim {house}. domu.",
+  "nextLine": "Następnie: {kind}, {date}, {sign_in} · {area}.",
   "historyTitle": "Twój dziennik",
   "historyEmpty": "Tutaj pojawią się Twoje odpowiedzi.",
   "fakeTitle": "Osobisty miesiąc",
@@ -160,25 +163,47 @@
  ],
  "tableDateFormat": "{d} {month} {y}, {hh}:{mm}",
  "plans": {
-  "title": "Dwa sposoby, by być bliżej własnego rytmu",
-  "lead": "Niebo nie ma mówić Ci, co się wydarzy. Może dać chwilę, by zauważyć to, co już prosi o Twoją uwagę — przy każdym nowiu i pełni albo jako głębszą opowieść rozwijającą się przez cały miesiąc.",
+  "title": "Bezpłatne listy, a jeśli chcesz więcej — osobisty miesiąc",
+  "lead": "Nie przepowiadamy wydarzeń. Wysyłamy Ci pytania w chwilach, gdy Księżyc zmienia fazę, i przechowujemy Twoje odpowiedzi, żeby można było do nich wrócić.",
   "freeTitle": "Twój list księżycowy",
-  "freeIntro": "Dwa razy w miesiącu krótki list spotyka Cię w naturalnym momencie zmiany. Tłumaczy nów lub pełnię przez Twój własny horoskop i daje spokojną przestrzeń, w której łatwiej usłyszeć siebie.",
+  "freeIntro": "W dniu każdego nowiu i pełni dostajesz krótki e-mail: obszar Twojego horoskopu, w którym wypada Księżyc, trzy pytania i afirmację. Odpowiadasz na prywatnej stronie; zajmuje to około pięciu minut.",
   "freeItems": [
-   {"title": "Twoje niebo, ludzkim językiem", "text": "Zobacz, której części życia dotyka ta lunacja i dlaczego może być teraz bardziej wyczuwalna — bez żargonu i nieodwołalnych przepowiedni."},
-   {"title": "Pytania, które coś otwierają", "text": "Trzy starannie dobrane pytania pomagają nazwać to, czego pragniesz, co się zmieniło i co chcesz zabrać ze sobą dalej."},
-   {"title": "Dziennik, który pamięta", "text": "Twoje odpowiedzi zostają razem w prywatnym dzienniku, dzięki czemu przelotne odczucie z czasem może odsłonić ważny wzorzec."}
+   {
+    "title": "Którego obszaru życia dotyczy ten Księżyc",
+    "text": "Miłość, dom, praca, odpoczynek: za każdym razem Księżyc wypada w innej części Twojego horoskopu, opisanej prostymi słowami."
+   },
+   {
+    "title": "Trzy pytania do odpowiedzi",
+    "text": "Jedno o tym, czego chcesz, jedno o tym, co się zmieniło, i jedno na dalszą drogę. Wystarczająco krótkie na zabiegany dzień."
+   },
+   {
+    "title": "Twoje odpowiedzi w jednym miejscu",
+    "text": "Wszystko, co napiszesz, zostaje w jednym prywatnym dzienniku, więc możesz wracać do poprzednich miesięcy i zauważać, co powraca."
+   }
   ],
-  "freeClosing": "Bezpłatnie, dwa razy w miesiącu. Kilka uważnych minut, które należą tylko do Ciebie.",
+  "freeClosing": "Bezpłatnie, dwa e-maile w miesiącu. Wypisanie jednym kliknięciem.",
   "paidTitle": "Twój Osobisty Miesiąc",
-  "paidIntro": "Osobisty Miesiąc pokazuje szerszy obraz. Zamiast przechodzić przez miesiąc jak przez rozmyty ciąg dat, widzisz jego emocjonalny rytm: okresy, które mogą coś poruszyć, pytania warte zatrzymania i nić łączącą wszystko w całość.",
+  "paidIntro": "Kalendarz Twojego miesiąca na podstawie horoskopu urodzeniowego: które dni niosą jakie tematy, z pytaniem do każdego, a na koniec miesiąca spojrzenie wstecz na Twoje zapiski.",
   "paidItems": [
-   {"title": "Daty, które mają znaczenie dla Ciebie", "text": "Osobisty kalendarz najsilniejszych tranzytów miesiąca, przełożonych na sytuacje, które możesz rozpoznać w pracy, relacjach, domu i swoim wewnętrznym świecie."},
-   {"title": "Wskazówki, z których da się skorzystać", "text": "Każdy okres przynosi skupioną refleksję — nie polecenie — aby pomóc Ci dokonać własnego wyboru z większą świadomością."},
-   {"title": "Wzorce, które odsłania dopiero czas", "text": "Pod koniec miesiąca Twoje wpisy wracają obok nieba z tych dni, pokazując powracające potrzeby, napięcia i pragnienia."},
-   {"title": "Twój rok jako opowieść", "text": "W dniu urodzin te miesiące stają się prywatną księgą roku: nie listą przepowiedni, lecz portretem Twojej zmiany."}
+   {
+    "title": "Twoje daty w tym miesiącu",
+    "text": "Dni, w których planety najmocniej dotykają Twojego horoskopu, i której części życia dotyczy każdy z nich: pracy, relacji, domu czy świata wewnętrznego."
+   },
+   {
+    "title": "Pytanie na każdy okres",
+    "text": "Bez poleceń: jedno pytanie na każdy okres, które pomaga Ci zdecydować samodzielnie."
+   },
+   {
+    "title": "Przegląd Twoich wpisów",
+    "text": "Pod koniec miesiąca zestawiamy Twoje wpisy z niebem tamtych dni, żeby powracające potrzeby i tematy stały się widoczne."
+   },
+   {
+    "title": "Twój rok jako opowieść",
+    "text": "W dniu urodzin te miesiące stają się prywatną księgą roku: nie listą przepowiedni, lecz portretem Twojej zmiany."
+   }
   ],
-  "paidClosing": "Dla osoby, która chce nie tylko wiedzieć, co dzieje się na niebie, ale rozumieć, co otwiera się przez to w jej własnym życiu.",
+  "paidClosing": "Dla osób, które chcą widzieć cały miesiąc, a nie tylko dwa momenty.",
+  "exampleHeading": "Tak wygląda list",
   "exampleFreeTitle": "Przykład bezpłatnego listu",
   "examplePaidTitle": "Przykład osobistego miesiąca",
   "exampleNote": "Przykład dla fikcyjnej osoby urodzonej 17 maja 1990 r. Twój miesiąc obliczamy z Twoich danych urodzenia.",
@@ -235,14 +260,149 @@
   "factUtc": "Czas uniwersalny (UTC)",
   "factSign": "Znak i stopień",
   "housesTitle": "W którym domu Twojego horoskopu wypada",
-  "housesLead": "Ta sama lunacja wypada w innym domu dla każdego ascendentu. Znajdź swój w tabeli; jeśli nie znasz ascendentu, użyj znaku Słońca, co daje prostszy dom słoneczny.",
+  "housesLead": "Ten sam Księżyc dotyka innego obszaru życia w zależności od ascendentu, czyli znaku, który wschodził w chwili Twoich narodzin. Znajdź swój w tabeli. Jeśli go nie znasz, użyj znaku Słońca.",
   "housesHeaders": [
    "Ascendent",
    "Dom",
-   "O czym jest ta część życia"
+   "Obszar życia"
+  ],
+  "aboutTitle": "Temat: {sign}",
+  "signs": [
+   {
+    "about": "Znak początków, odwagi i działania pod wpływem szczerego impulsu.",
+    "new": [
+     "Co warto zacząć w tym miesiącu, nie czekając na idealny moment?",
+     "Gdzie przydałoby Ci się trochę więcej odwagi i jaki jest pierwszy mały krok?"
+    ],
+    "full": [
+     "Co niedawno rozpoczęte daje Ci teraz najwięcej?",
+     "Który szczery impuls ostatnio coś Ci pokazał?"
+    ]
+   },
+   {
+    "about": "Znak ciała, zmysłów, stabilności i tego, co naprawdę cenisz.",
+    "new": [
+     "Na jaką prostą przyjemność chcesz zrobić miejsce w tym miesiącu?",
+     "Co sprawiłoby, że Twoje dni będą spokojniejsze i mniej pospieszne?"
+    ],
+    "full": [
+     "Co budowane powoli możesz teraz docenić?",
+     "Która zwykła wygoda była dla Ciebie ważna w ostatnich dwóch tygodniach?"
+    ]
+   },
+   {
+    "about": "Znak ciekawości, rozmowy, nauki i drobnych wymian każdego dnia.",
+    "new": [
+     "Czego chcesz się nauczyć albo co odkryć z czystej ciekawości?",
+     "Jaką rozmowę chcesz zacząć i z kim?"
+    ],
+    "full": [
+     "Która myśl lub rozmowa została z Tobą ostatnio i dlaczego?",
+     "Które czyjeś słowa pomogły Ci ostatnio lepiej zrozumieć siebie?"
+    ]
+   },
+   {
+    "about": "Znak domu, przynależności i troski — o innych i o siebie.",
+    "new": [
+     "Co sprawiłoby, że Twój dom, także ten wewnętrzny, będzie cieplejszy i bezpieczniejszy?",
+     "Jak chcesz zatroszczyć się o siebie w tym miesiącu?"
+    ],
+    "full": [
+     "Kto ostatnio dał Ci poczucie, że jesteś u siebie, i jak?",
+     "Które uczucie prosi ostatnio o Twoją troskę?"
+    ]
+   },
+   {
+    "about": "Znak radości, twórczości, hojności i pragnienia, by w pełni pokazać się światu.",
+    "new": [
+     "Co stworzysz w tym miesiącu, jeśli nikt nie będzie tego oceniał?",
+     "Gdzie chcesz pokazać się bardziej sobą?"
+    ],
+    "full": [
+     "Co ostatnio dało Ci dumę albo poczucie, że naprawdę żyjesz?",
+     "Gdzie Twoje ciepło lub hojność coś zmieniły?"
+    ]
+   },
+   {
+    "about": "Znak codziennego rytmu, starannej pracy i małych nawyków, które porządkują życie.",
+    "new": [
+     "Który mały codzienny nawyk zrobiłby największą łagodną różnicę?",
+     "Co możesz w tym miesiącu uprościć albo uporządkować?"
+    ],
+    "full": [
+     "Która rutyna była dobrym wsparciem w ostatnich tygodniach?",
+     "Co zrobione z troską zasługuje na Twoje własne uznanie?"
+    ]
+   },
+   {
+    "about": "Znak relacji, równowagi, sprawiedliwości i piękna.",
+    "new": [
+     "Jakiej równowagi między dawaniem a braniem chcesz?",
+     "O którą relację chcesz zadbać uważniej?"
+    ],
+    "full": [
+     "Gdzie ostatnio udało się znaleźć dobrą równowagę i co pomogło?",
+     "Która więź jest dla Ciebie teraz powodem do wdzięczności?"
+    ]
+   },
+   {
+    "about": "Znak głębi, zaufania, szczerości wobec siebie i wewnętrznej przemiany.",
+    "new": [
+     "Co możesz puścić, żeby zrobić miejsce na coś nowego?",
+     "Gdzie chcesz zaufać trochę bardziej, także sobie?"
+    ],
+    "full": [
+     "Jaka prawda o Tobie stała się ostatnio wyraźniejsza?",
+     "Co po cichu zmieniło się w Tobie od ostatniego nowiu?"
+    ]
+   },
+   {
+    "about": "Znak horyzontów, sensu, podróży, nauki i nadziei.",
+    "new": [
+     "Co chcesz odkryć, poznać albo zobaczyć świeżym okiem?",
+     "Które przekonanie lub nadzieja ma prowadzić Twoje wybory w tym miesiącu?"
+    ],
+    "full": [
+     "Co ostatnio poszerzyło Twoje spojrzenie na życie?",
+     "Z czym wiążesz dziś więcej nadziei niż miesiąc temu?"
+    ]
+   },
+   {
+    "about": "Znak celów, cierpliwości, odpowiedzialności i budowania czegoś trwałego.",
+    "new": [
+     "Który długoterminowy cel zasługuje w tym miesiącu na jeden konkretny krok?",
+     "Jaka struktura albo granica wesprze to, co budujesz?"
+    ],
+    "full": [
+     "Jaki postęp, nawet powolny, możesz dziś docenić?",
+     "Którą odpowiedzialność udało się dobrze unieść i jak?"
+    ]
+   },
+   {
+    "about": "Znak przyjaźni, wspólnoty, wolności i świeżych pomysłów.",
+    "new": [
+     "Który pomysł wydaje Ci się teraz nowy i ekscytujący?",
+     "Którą wspólnotę albo przyjaźń chcesz pielęgnować?"
+    ],
+    "full": [
+     "Kto z Twojego otoczenia ostatnio Cię zainspirował?",
+     "Gdzie ostatnio była przestrzeń, żeby być sobą bez dopasowywania się?"
+    ]
+   },
+   {
+    "about": "Znak wyobraźni, współczucia, odpoczynku i świata wewnętrznego.",
+    "new": [
+     "Czego Twój wewnętrzny świat potrzebuje w tym miesiącu bardziej: odpoczynku, ciszy czy wyobraźni?",
+     "Któremu marzeniu chcesz dać trochę miejsca?"
+    ],
+    "full": [
+     "Kiedy ostatnio pojawiło się poczucie więzi z czymś większym niż Ty?",
+     "Co dały Ci odpoczynek albo cisza w ostatnich tygodniach?"
+    ]
+   }
   ],
   "writeTitle": "Co zapisać",
-  "writeLabel": "Pytanie na ten dzień",
+  "writeLabel": "Pytania na ten czas",
   "ctaTitle": "Zobacz to w swoim horoskopie",
   "ctaText": "Podaj datę urodzenia, a zobaczysz swój dom, własne pytania i afirmację. Bezpłatne listy przychodzą na każdy nów i każdą pełnię.",
   "moreTitle": "Wszystkie nowie i pełnie od {from} do {to}",

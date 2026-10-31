@@ -132,7 +132,7 @@ def test_english_letters_obey_the_safety_law():
     c = moon.content("en")
     texts = [c["disclaimer"], *c["frame"].values(), *c["universal"].values()]
     for block in c["houses"]:
-        texts += [block["theme"], block["affirmation"], *block["new"], *block["full"]]
+        texts += [block["area"], block["theme"], block["affirmation"], *block["new"], *block["full"]]
     for text in texts:
         assert safety.is_safe(text, "en"), (text, safety.find_violations(text, "en"))
 
@@ -337,7 +337,7 @@ def test_letters_go_once_per_lunation_to_confirmed_subscribers(env, sent, db_fac
     assert result["sent"] == 2 and result["failed"] == 0
     assert sorted(r for r, _, _ in sent) == ["a@example.com", "b@example.com"]
     subject, body = next((s, b) for r, s, b in sent if r == "a@example.com")
-    assert subject == "New Moon in Scorpio: your house 3"
+    assert subject == "New Moon in Scorpio · Everyday words and conversations"
     assert "1. " in body and "/moon/letter?t=" in body and "#manage" in body
     french = next(s for r, s, _ in sent if r == "b@example.com")
     assert french.startswith("Nouvelle Lune en Scorpion")

@@ -139,7 +139,7 @@
             el('ol', { class: 'prompts' }, lun.prompts.map(function (prompt, i) { return answerField(lun, prompt, i, writable); })),
             el('p', { class: 'affirmation' }, [el('strong', { text: t('affirmationTitle') }), lun.affirmation]),
             el('p', { class: 'note', text: lun.frame_note }),
-            el('p', { text: t('nextLine', { kind: next.kind_label, date: next.date_label, sign_in: next.sign_in, house: next.house }) }),
+            el('p', { text: t('nextLine', { kind: next.kind_label, date: next.date_label, sign_in: next.sign_in, area: next.area, house: next.house }) }),
         ]));
         history.hidden = false;
         renderHistory();

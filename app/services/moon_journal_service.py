@@ -206,12 +206,15 @@ def letter(lun: Lunation, frame: Frame, locale: str, timezone_name: str) -> Dict
         "sign_in": c["signs_in"][lun.sign],
         "degree": lun.degree,
         "house": house,
+        "area": block["area"],
         "theme": block["theme"],
         "prompts": [*block[short], c["universal"][short]],
         "affirmation": block["affirmation"],
         "frame": frame.mode,
         "frame_note": c["frame"][frame.mode],
-        "headline": c["headline"].format(kind=c["kinds"][lun.kind], sign_in=c["signs_in"][lun.sign], house=house),
+        "headline": c["headline"].format(
+            kind=c["kinds"][lun.kind], sign_in=c["signs_in"][lun.sign], area=block["area"], house=house,
+        ),
     }
     if locale == "en":
         # The filter's patterns are English; the other languages are held by their review.
@@ -528,7 +531,9 @@ def render_letter(sub: MoonSubscriber, data: Dict[str, Any]) -> Tuple[str, str]:
         c["disclaimer"],
         email["footer"].format(manage_link=_letter_link(sub, "#manage")),
     ])
-    subject = email["subject"].format(kind=data["kind_label"], sign_in=data["sign_in"], house=data["house"])
+    subject = email["subject"].format(
+        kind=data["kind_label"], sign_in=data["sign_in"], area=data["area"], house=data["house"],
+    )
     return subject, body
 
 

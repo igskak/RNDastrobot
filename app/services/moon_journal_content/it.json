@@ -32,10 +32,10 @@
   "in Pesci"
  ],
  "date_format": "%d/%m/%Y, ore %H:%M",
- "headline": "{kind} {sign_in}, nella tua casa {house}",
+ "headline": "{kind} {sign_in} · {area} (casa {house})",
  "frame": {
-  "rising": "Contiamo le case dal tuo ascendente (case a segno intero).",
-  "sun": "Senza l'ora di nascita contiamo le case dal tuo segno solare (case solari). Aggiungi ora e luogo di nascita per un risultato più personale."
+  "rising": "Contiamo le aree della vita dal tuo ascendente, il segno che sorgeva nel momento della tua nascita.",
+  "sun": "Senza l'ora di nascita contiamo le aree della vita dal tuo segno solare. Aggiungi ora e luogo di nascita per un risultato più personale."
  },
  "universal": {
   "new": "Completa la frase: In questo mese lunare scelgo di...",
@@ -43,6 +43,7 @@
  },
  "houses": [
   {
+   "area": "Tu e il modo in cui ti mostri",
    "theme": "Questa parte del tuo tema parla di te e del modo in cui ti mostri al mondo.",
    "new": [
     "Che cosa vuoi iniziare questo mese solo per te?",
@@ -55,6 +56,7 @@
    "affirmation": "Mi concedo lo spazio per ricominciare."
   },
   {
+   "area": "Valori e stabilità",
    "theme": "Questa parte del tuo tema parla di ciò che conta per te e di ciò che ti dà stabilità.",
    "new": [
     "Che cosa significa per te sentirti al sicuro in questo momento?",
@@ -67,6 +69,7 @@
    "affirmation": "Apprezzo ciò che ho e ciò che posso ancora far crescere."
   },
   {
+   "area": "Parole e conversazioni quotidiane",
    "theme": "Questa parte del tuo tema contiene le parole che ripeti, le domande che segui e le conversazioni quotidiane che plasmano in silenzio le tue scelte.",
    "new": [
     "Quale conversazione continui a provare nella tua testa? Scrivine la prima frase sincera.",
@@ -79,6 +82,7 @@
    "affirmation": "Mi fido di me nel dire la cosa più chiara con gentilezza."
   },
   {
+   "area": "Casa e radici",
    "theme": "Questa parte del tuo tema parla di casa, radici e calma interiore.",
    "new": [
     "Che cosa renderebbe la tua casa ancora più tua?",
@@ -91,6 +95,7 @@
    "affirmation": "Creo un luogo di calma dentro e intorno a me."
   },
   {
+   "area": "Gioia, creatività e gioco",
    "theme": "Questa parte del tuo tema parla di gioia, creatività e gioco.",
    "new": [
     "Che cosa vorresti creare solo per il piacere di farlo?",
@@ -103,6 +108,7 @@
    "affirmation": "Mi permetto di godere di ciò che amo."
   },
   {
+   "area": "Quotidianità, lavoro e cura di sé",
    "theme": "Questa parte del tuo tema parla della tua quotidianità, del lavoro e della cura di te.",
    "new": [
     "Quale piccola abitudine quotidiana vorresti iniziare?",
@@ -115,6 +121,7 @@
    "affirmation": "Piccoli passi ogni giorno bastano."
   },
   {
+   "area": "Relazioni strette",
    "theme": "Questa parte del tuo tema parla delle relazioni strette e della collaborazione.",
    "new": [
     "Che cosa vuoi portare nelle tue relazioni più vicine?",
@@ -127,6 +134,7 @@
    "affirmation": "Incontro gli altri con apertura e con rispetto per me."
   },
   {
+   "area": "Fiducia, intimità e trasformazione",
    "theme": "Questa parte del tuo tema parla di fiducia, condivisione e trasformazione interiore.",
    "new": [
     "Che cosa puoi lasciar andare per fare spazio al nuovo?",
@@ -139,6 +147,7 @@
    "affirmation": "Lascio andare con dolcezza e tengo ciò che conta."
   },
   {
+   "area": "Viaggi, studio e significato",
    "theme": "Questa parte del tuo tema parla di orizzonti: viaggi, studio e significato.",
    "new": [
     "Quale luogo, libro o idea ti sta chiamando?",
@@ -151,6 +160,7 @@
    "affirmation": "Mi apro a nuovi orizzonti."
   },
   {
+   "area": "Obiettivi e vocazione",
    "theme": "Questa parte del tuo tema parla di obiettivi, vocazione e del tuo cammino.",
    "new": [
     "Verso quale obiettivo vuoi fare un passo chiaro?",
@@ -163,6 +173,7 @@
    "affirmation": "Vado verso i miei obiettivi al mio ritmo."
   },
   {
+   "area": "Amicizie e comunità",
    "theme": "Questa parte del tuo tema parla di amicizie, comunità e speranze.",
    "new": [
     "Quale speranza per il futuro vuoi coltivare?",
@@ -175,6 +186,7 @@
    "affirmation": "Faccio parte di una cerchia di persone che contano per me."
   },
   {
+   "area": "Riposo e mondo interiore",
    "theme": "Questa parte del tuo tema parla di riposo, silenzio e del tuo mondo interiore.",
    "new": [
     "Come puoi regalarti più tempo di quiete questo mese?",
@@ -196,7 +208,7 @@
   "confirm_note": "Conferma il tuo indirizzo per iniziare. Puoi annullare l'iscrizione o eliminare i tuoi dati in qualsiasi momento.",
   "confirm_fallback": "Se il pulsante non funziona, copia e incolla questo link nel browser:",
   "confirm_body": "Ciao,\n\nLe tue lettere della Luna ti aspettano. Due volte al mese, con la luna nuova e la luna piena, Steliara ti invia una breve riflessione personale ispirata al tuo tema natale: un momento per notare cosa sta cambiando nella tua vita e scegliere il prossimo passo.\n\nConferma la tua e-mail qui:\n<{link}>\n\nSe non l'hai richiesto tu, ignora questo messaggio: non invieremo altro.",
-  "subject": "{kind} {sign_in}: la tua casa {house}",
+  "subject": "{kind} {sign_in} · {area}",
   "when": "Momento esatto: {date} ({timezone}).",
   "prompts_title": "Domande per questa lunazione:",
   "affirmation_title": "Affermazione:",

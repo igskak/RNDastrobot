@@ -13,6 +13,47 @@
         return Object.prototype.hasOwnProperty.call(ui, key) ? ui[key] : key;
     }
 
+    function fill(template, values) {
+        return String(template).replace(/\{(\w+)\}/g, function (_, key) { return values[key]; });
+    }
+
+    /* ---- times in the visitor's own time zone, worded like the static table ---- */
+    var viewerZone = null;
+    try { viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch (e) { /* keep the page's zone */ }
+
+    function zoneName(zone) {
+        var styles = ['longGeneric', 'long'];
+        for (var i = 0; i < styles.length; i++) {
+            try {
+                var parts = new Intl.DateTimeFormat(ui.intl, { timeZone: zone, timeZoneName: styles[i] }).formatToParts(new Date());
+                var name = parts.filter(function (part) { return part.type === 'timeZoneName'; })[0];
+                if (name && name.value) return name.value;
+            } catch (e) { /* try the next style */ }
+        }
+        return zone.replace(/_/g, ' ');
+    }
+
+    function formatMoment(utc, zone) {
+        var parts = {};
+        new Intl.DateTimeFormat('en-US', {
+            timeZone: zone, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hourCycle: 'h23',
+        }).formatToParts(new Date(utc)).forEach(function (part) { parts[part.type] = part.value; });
+        var hour = Number(parts.hour) % 24;
+        var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+        return fill(ui.tableDateFormat, {
+            d: Number(parts.day), y: Number(parts.year), month: ui.months[Number(parts.month) - 1],
+            hh: pad(hour), mm: pad(Number(parts.minute)), h12: hour % 12 || 12, ampm: hour < 12 ? 'AM' : 'PM',
+        });
+    }
+
+    function momentLabel(lun, zone) {
+        try {
+            return fill(t('resultWhen'), { date: formatMoment(lun.utc, zone), tz: zoneName(zone) });
+        } catch (e) {
+            return lun.date_label;
+        }
+    }
+
     function el(tag, props, children) {
         var node = document.createElement(tag);
         Object.keys(props || {}).forEach(function (key) {
@@ -96,6 +137,20 @@
                 updateHighlight(row, true);
             });
         });
+    })();
+
+    // The static table is in the page language's home zone (for search engines and no-script);
+    // a visitor elsewhere sees their own clock instead, and the note says which zone it is.
+    (function localizeTable() {
+        if (!viewerZone || viewerZone === ui.tableTimezone || !ui.months) return;
+        try {
+            [].forEach.call(document.querySelectorAll('tr[data-utc]'), function (row) {
+                var button = row.querySelector('.lunation-pick');
+                if (button) button.textContent = formatMoment(row.getAttribute('data-utc'), viewerZone);
+            });
+            var note = document.getElementById('lunations-note');
+            if (note) note.textContent = fill(t('tableNoteLocal'), { tz: zoneName(viewerZone) });
+        } catch (e) { /* the page's own zone stays */ }
     })();
 
     (function markNext() {
@@ -297,7 +352,7 @@
     function lunationNode(lun) {
         return el('article', { class: 'lunation' }, [
             el('h3', {}, [el('span', { class: 'phase phase-' + (lun.kind === 'new_moon' ? 'new' : 'full'), 'aria-hidden': 'true' }), lun.headline]),
-            el('p', { class: 'when', text: lun.date_label }),
+            el('p', { class: 'when', text: momentLabel(lun, viewerZone || tzSelect.value) }),
             el('p', { text: lun.theme }),
             el('h4', { text: t('promptsTitle') }),
             el('ol', { class: 'prompts' }, lun.prompts.map(function (prompt) { return el('li', { text: prompt }); })),

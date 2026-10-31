@@ -23,8 +23,8 @@
     <meta property="og:locale" content="de_DE">
     <meta property="og:image" content="https://www.steliara.com/assets/brand/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="/css/kundli.css?v=2">
-    <link rel="stylesheet" href="/css/moon.css?v=2">
+    <link rel="stylesheet" href="/css/kundli.css?v=3">
+    <link rel="stylesheet" href="/css/moon.css?v=3">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Mondkalender","item":"https://www.steliara.com/moon/de"},{"@type":"ListItem","position":2,"name":"Vollmond 21. Februar 2027","item":"https://www.steliara.com/moon/de/vollmond-21-februar-2027"}]}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Um wie viel Uhr ist Vollmond am 21. Februar 2027?","acceptedAnswer":{"@type":"Answer","text":"Um 00:23 Uhr (Berliner Zeit). In Weltzeit (UTC): 20. Februar 2027, 23:23 Uhr."}},{"@type":"Question","name":"In welchem Zeichen steht der Mond beim Vollmond am 21. Februar 2027?","acceptedAnswer":{"@type":"Answer","text":"Vollmond in der Jungfrau, bei 2°."}},{"@type":"Question","name":"In welchem Haus meines Horoskops fällt er?","acceptedAnswer":{"@type":"Answer","text":"Das hängt von deinem Aszendenten ab. Die Tabelle auf dieser Seite nennt alle zwölf, und der Rechner findet deinen aus deinem Geburtsdatum."}}]}</script>
 </head>
@@ -49,25 +49,29 @@
           <div><dt>Zeichen und Grad</dt><dd>Jungfrau 2°</dd></div>
         </dl>
       </section>
+      <section class="card theme" aria-labelledby="theme-title">
+        <h2 id="theme-title">Das Thema: Jungfrau</h2>
+        <p>Das Zeichen des Alltagsrhythmus, der sorgfältigen Arbeit und der kleinen Gewohnheiten, die das Leben ordnen.</p>
+      </section>
       <section class="card houses" aria-labelledby="houses-title">
         <h2 id="houses-title">In welchem Haus deines Horoskops er liegt</h2>
-        <p>Dieselbe Lunation fällt für jedes Aszendentenzeichen in ein anderes Haus. Finde deines in der Tabelle; wenn du deinen Aszendenten nicht kennst, nimm dein Sonnenzeichen, das ein einfacheres Sonnenhaus ergibt.</p>
+        <p>Derselbe Mond berührt je nach Aszendent einen anderen Lebensbereich. Der Aszendent ist das Zeichen, das bei deiner Geburt aufging. Finde deines in der Tabelle; wenn du ihn nicht kennst, nimm dein Sonnenzeichen.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th scope="col">Aszendent</th><th scope="col">Haus</th><th scope="col">Worum es in diesem Lebensbereich geht</th></tr></thead>
+            <thead><tr><th scope="col">Aszendent</th><th scope="col">Haus</th><th scope="col">Lebensbereich</th></tr></thead>
             <tbody>
-              <tr><th scope="row">Widder</th><td>6</td><td>In diesem Teil deines Horoskops geht es um deinen Alltag, deine Arbeit und die Fürsorge für dich selbst.</td></tr>
-              <tr><th scope="row">Stier</th><td>5</td><td>In diesem Teil deines Horoskops geht es um Freude, Kreativität und Spiel.</td></tr>
-              <tr><th scope="row">Zwillinge</th><td>4</td><td>In diesem Teil deines Horoskops geht es um Zuhause, Wurzeln und innere Ruhe.</td></tr>
-              <tr><th scope="row">Krebs</th><td>3</td><td>Dieser Teil deines Horoskops umfasst die Worte, die du wiederholst, die Fragen, denen du folgst, und die alltäglichen Gespräche, die deine Entscheidungen leise prägen.</td></tr>
-              <tr><th scope="row">Löwe</th><td>2</td><td>In diesem Teil deines Horoskops geht es darum, was dir wichtig ist und was dir Halt gibt.</td></tr>
-              <tr><th scope="row">Jungfrau</th><td>1</td><td>In diesem Teil deines Horoskops geht es um dich und darum, wie du dich der Welt zeigst.</td></tr>
-              <tr><th scope="row">Waage</th><td>12</td><td>In diesem Teil deines Horoskops geht es um Ruhe, Stille und deine innere Welt.</td></tr>
-              <tr><th scope="row">Skorpion</th><td>11</td><td>In diesem Teil deines Horoskops geht es um Freundschaften, Gemeinschaft und Hoffnungen.</td></tr>
-              <tr><th scope="row">Schütze</th><td>10</td><td>In diesem Teil deines Horoskops geht es um Ziele, Berufung und deinen Weg.</td></tr>
-              <tr><th scope="row">Steinbock</th><td>9</td><td>In diesem Teil deines Horoskops geht es um Horizonte: Reisen, Lernen und Sinn.</td></tr>
-              <tr><th scope="row">Wassermann</th><td>8</td><td>In diesem Teil deines Horoskops geht es um Vertrauen, Teilen und innere Wandlung.</td></tr>
-              <tr><th scope="row">Fische</th><td>7</td><td>In diesem Teil deines Horoskops geht es um enge Beziehungen und Partnerschaft.</td></tr>
+              <tr><th scope="row">Widder</th><td data-label="Haus">6</td><td>Alltag, Arbeit und Selbstfürsorge</td></tr>
+              <tr><th scope="row">Stier</th><td data-label="Haus">5</td><td>Freude, Kreativität und Spiel</td></tr>
+              <tr><th scope="row">Zwillinge</th><td data-label="Haus">4</td><td>Zuhause und Wurzeln</td></tr>
+              <tr><th scope="row">Krebs</th><td data-label="Haus">3</td><td>Alltägliche Worte und Gespräche</td></tr>
+              <tr><th scope="row">Löwe</th><td data-label="Haus">2</td><td>Werte und Halt</td></tr>
+              <tr><th scope="row">Jungfrau</th><td data-label="Haus">1</td><td>Du und wie du dich zeigst</td></tr>
+              <tr><th scope="row">Waage</th><td data-label="Haus">12</td><td>Ruhe und innere Welt</td></tr>
+              <tr><th scope="row">Skorpion</th><td data-label="Haus">11</td><td>Freunde und Gemeinschaft</td></tr>
+              <tr><th scope="row">Schütze</th><td data-label="Haus">10</td><td>Ziele und Berufung</td></tr>
+              <tr><th scope="row">Steinbock</th><td data-label="Haus">9</td><td>Reisen, Lernen und Sinn</td></tr>
+              <tr><th scope="row">Wassermann</th><td data-label="Haus">8</td><td>Vertrauen, Nähe und Wandel</td></tr>
+              <tr><th scope="row">Fische</th><td data-label="Haus">7</td><td>Enge Beziehungen</td></tr>
             </tbody>
           </table>
         </div>
@@ -75,8 +79,8 @@
       <section class="card write" aria-labelledby="write-title">
         <h2 id="write-title">Was du aufschreiben kannst</h2>
         <p>Blicke auf die letzten zwei Wochen zurück und nenne drei Dinge, für die du dankbar bist. Dein Brief ergänzt zwei Fragen für das Haus des Vollmonds.</p>
-        <p class="hint">Eine Frage für den Tag</p>
-        <ol class="prompts"><li>Nenne drei Momente seit dem letzten Neumond, die du noch einmal erleben möchtest. Was hatten sie gemeinsam?</li></ol>
+        <p class="hint">Fragen zu diesem Mond</p>
+        <ol class="prompts"><li>Welche Routine war dir in den letzten Wochen eine gute Stütze?</li><li>Was hast du mit Sorgfalt getan, das deine eigene Anerkennung verdient?</li><li>Nenne drei Momente seit dem letzten Neumond, die du noch einmal erleben möchtest. Was hatten sie gemeinsam?</li></ol>
       </section>
       <section class="card cta" aria-labelledby="cta-title">
         <h2 id="cta-title">Sieh es in deinem eigenen Horoskop</h2>

@@ -147,7 +147,12 @@ test('index page shows both examples and sends the journal link', async () => {
         return json(200, { status: 'check_inbox' });
     });
     const doc = dom.window.document;
-    assert.equal(doc.querySelectorAll('.plans .example').length, 2);
+    // The free letter is shown on its own before the plans; the paid example sits with the plans.
+    const sections = [...doc.querySelectorAll('main > section')];
+    const at = (name) => sections.findIndex((node) => node.classList.contains(name));
+    assert.ok(at('letter-example') >= 0 && at('letter-example') < at('plans'));
+    assert.equal(doc.querySelectorAll('.letter-example .example').length, 1);
+    assert.equal(doc.querySelectorAll('.plans .example.paid').length, 1);
     assert.equal(doc.querySelectorAll('.plans .plan').length, 2);
     doc.getElementById('link-email').value = 'ola@example.com';
     submit(dom, 'link-form');

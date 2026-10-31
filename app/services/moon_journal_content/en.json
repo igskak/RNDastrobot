@@ -32,10 +32,10 @@
   "in Pisces"
  ],
  "date_format": "%d %b %Y, %H:%M",
- "headline": "{kind} {sign_in}, in your house {house}",
+ "headline": "{kind} {sign_in} · {area} (house {house})",
  "frame": {
-  "rising": "Houses are counted from your rising sign (whole-sign houses).",
-  "sun": "Without a birth time we count houses from your Sun sign (solar houses). Add your birth time and place for a more personal result."
+  "rising": "Areas of life are counted from your rising sign, the sign that was rising at the moment you were born.",
+  "sun": "Without a birth time we count the areas of life from your Sun sign. Add your birth time and place for a more personal result."
  },
  "universal": {
   "new": "Finish this sentence: This lunar month, I am choosing to...",
@@ -43,6 +43,7 @@
  },
  "houses": [
   {
+   "area": "You and how you show up",
    "theme": "This part of your chart is about you and the way you show up in the world.",
    "new": [
     "What would you like to start doing this month simply for yourself?",
@@ -55,6 +56,7 @@
    "affirmation": "I give myself room to begin again."
   },
   {
+   "area": "Values and steadiness",
    "theme": "This part of your chart is about what you value and what makes you feel steady.",
    "new": [
     "What does feeling secure mean to you right now?",
@@ -67,6 +69,7 @@
    "affirmation": "I value what I have and what I can still grow."
   },
   {
+   "area": "Everyday words and conversations",
    "theme": "This part of your chart holds the words you repeat, the questions you follow and the everyday conversations that quietly shape your choices.",
    "new": [
     "Which conversation have you been rehearsing in your head? Write the first honest sentence.",
@@ -79,6 +82,7 @@
    "affirmation": "I trust myself to say the clear, kind thing."
   },
   {
+   "area": "Home and roots",
    "theme": "This part of your chart is about home, roots and inner calm.",
    "new": [
     "What would make your home feel even more like yours?",
@@ -91,6 +95,7 @@
    "affirmation": "I create a place of calm within me and around me."
   },
   {
+   "area": "Joy, creativity and play",
    "theme": "This part of your chart is about joy, creativity and play.",
    "new": [
     "What would you like to create just for the joy of it?",
@@ -103,6 +108,7 @@
    "affirmation": "I allow myself to enjoy what I love."
   },
   {
+   "area": "Daily rhythm, work and self-care",
    "theme": "This part of your chart is about your daily rhythm, your work and caring for yourself.",
    "new": [
     "Which small daily routine would you like to begin?",
@@ -115,6 +121,7 @@
    "affirmation": "Small steps every day are enough."
   },
   {
+   "area": "Close relationships",
    "theme": "This part of your chart is about close relationships and partnership.",
    "new": [
     "What would you like to bring to your closest relationships?",
@@ -127,6 +134,7 @@
    "affirmation": "I meet others with openness and with respect for myself."
   },
   {
+   "area": "Trust, closeness and change",
    "theme": "This part of your chart is about trust, sharing and inner change.",
    "new": [
     "What are you ready to let go of to make room for something new?",
@@ -139,6 +147,7 @@
    "affirmation": "I let go gently and keep what matters."
   },
   {
+   "area": "Travel, study and meaning",
    "theme": "This part of your chart is about horizons: travel, study and meaning.",
    "new": [
     "Which place, book or idea is calling you?",
@@ -151,6 +160,7 @@
    "affirmation": "I open myself to new horizons."
   },
   {
+   "area": "Goals and vocation",
    "theme": "This part of your chart is about goals, vocation and your path.",
    "new": [
     "Which goal would you like to take one clear step toward?",
@@ -163,6 +173,7 @@
    "affirmation": "I move toward my goals at my own pace."
   },
   {
+   "area": "Friends and community",
    "theme": "This part of your chart is about friends, community and hopes.",
    "new": [
     "Which hope for the future would you like to nurture?",
@@ -175,6 +186,7 @@
    "affirmation": "I am part of a circle of people who matter to me."
   },
   {
+   "area": "Rest and your inner world",
    "theme": "This part of your chart is about rest, quiet and your inner world.",
    "new": [
     "How can you give yourself more quiet time this month?",
@@ -196,7 +208,7 @@
   "confirm_note": "Confirm your address to begin. You can unsubscribe or delete your data at any time.",
   "confirm_fallback": "If the button does not work, copy and paste this link into your browser:",
   "confirm_body": "Hello,\n\nYour Moon letters are waiting. Twice a month, on the new moon and full moon, Steliara sends a short personal reflection shaped by your birth chart — a quiet moment to notice what is moving in your life and choose what comes next.\n\nConfirm your email here:\n<{link}>\n\nIf you did not ask for these letters, you can ignore this email. Nothing else will be sent.",
-  "subject": "{kind} {sign_in}: your house {house}",
+  "subject": "{kind} {sign_in} · {area}",
   "when": "Exact moment: {date} ({timezone}).",
   "prompts_title": "Questions for this moon:",
   "affirmation_title": "Affirmation:",

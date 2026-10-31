@@ -32,10 +32,10 @@
   "in den Fischen"
  ],
  "date_format": "%d.%m.%Y, %H:%M Uhr",
- "headline": "{kind} {sign_in}, in deinem {house}. Haus",
+ "headline": "{kind} {sign_in} · {area} ({house}. Haus)",
  "frame": {
-  "rising": "Die Häuser zählen wir ab deinem Aszendenten (ganze Zeichen als Häuser).",
-  "sun": "Ohne Geburtszeit zählen wir die Häuser ab deinem Sonnenzeichen (Sonnenhäuser). Mit Geburtszeit und Geburtsort wird das Ergebnis persönlicher."
+  "rising": "Die Lebensbereiche zählen wir ab deinem Aszendenten, dem Zeichen, das im Moment deiner Geburt aufging.",
+  "sun": "Ohne Geburtszeit zählen wir die Lebensbereiche ab deinem Sonnenzeichen. Mit Geburtszeit und Geburtsort wird das Ergebnis persönlicher."
  },
  "universal": {
   "new": "Vervollständige den Satz: In diesem Mondmonat entscheide ich mich dafür,...",
@@ -43,6 +43,7 @@
  },
  "houses": [
   {
+   "area": "Du und wie du dich zeigst",
    "theme": "In diesem Teil deines Horoskops geht es um dich und darum, wie du dich der Welt zeigst.",
    "new": [
     "Was möchtest du in diesem Monat ganz für dich selbst beginnen?",
@@ -55,6 +56,7 @@
    "affirmation": "Ich gebe mir Raum, neu zu beginnen."
   },
   {
+   "area": "Werte und Halt",
    "theme": "In diesem Teil deines Horoskops geht es darum, was dir wichtig ist und was dir Halt gibt.",
    "new": [
     "Was bedeutet Sicherheit für dich gerade?",
@@ -67,6 +69,7 @@
    "affirmation": "Ich schätze, was ich habe und was ich noch wachsen lassen kann."
   },
   {
+   "area": "Alltägliche Worte und Gespräche",
    "theme": "Dieser Teil deines Horoskops umfasst die Worte, die du wiederholst, die Fragen, denen du folgst, und die alltäglichen Gespräche, die deine Entscheidungen leise prägen.",
    "new": [
     "Welches Gespräch spielst du in Gedanken immer wieder durch? Schreibe den ersten ehrlichen Satz auf.",
@@ -79,6 +82,7 @@
    "affirmation": "Ich vertraue mir, das Klare freundlich auszusprechen."
   },
   {
+   "area": "Zuhause und Wurzeln",
    "theme": "In diesem Teil deines Horoskops geht es um Zuhause, Wurzeln und innere Ruhe.",
    "new": [
     "Was würde dein Zuhause noch mehr zu deinem machen?",
@@ -91,6 +95,7 @@
    "affirmation": "Ich schaffe Ruhe in mir und um mich herum."
   },
   {
+   "area": "Freude, Kreativität und Spiel",
    "theme": "In diesem Teil deines Horoskops geht es um Freude, Kreativität und Spiel.",
    "new": [
     "Was möchtest du einfach aus Freude erschaffen?",
@@ -103,6 +108,7 @@
    "affirmation": "Ich erlaube mir, zu genießen, was ich liebe."
   },
   {
+   "area": "Alltag, Arbeit und Selbstfürsorge",
    "theme": "In diesem Teil deines Horoskops geht es um deinen Alltag, deine Arbeit und die Fürsorge für dich selbst.",
    "new": [
     "Welche kleine tägliche Routine möchtest du beginnen?",
@@ -115,6 +121,7 @@
    "affirmation": "Kleine Schritte jeden Tag sind genug."
   },
   {
+   "area": "Enge Beziehungen",
    "theme": "In diesem Teil deines Horoskops geht es um enge Beziehungen und Partnerschaft.",
    "new": [
     "Was möchtest du in deine engsten Beziehungen einbringen?",
@@ -127,6 +134,7 @@
    "affirmation": "Ich begegne anderen offen und mit Respekt für mich selbst."
   },
   {
+   "area": "Vertrauen, Nähe und Wandel",
    "theme": "In diesem Teil deines Horoskops geht es um Vertrauen, Teilen und innere Wandlung.",
    "new": [
     "Was bist du bereit loszulassen, um Platz für Neues zu schaffen?",
@@ -139,6 +147,7 @@
    "affirmation": "Ich lasse sanft los und behalte, was zählt."
   },
   {
+   "area": "Reisen, Lernen und Sinn",
    "theme": "In diesem Teil deines Horoskops geht es um Horizonte: Reisen, Lernen und Sinn.",
    "new": [
     "Welcher Ort, welches Buch oder welche Idee ruft dich?",
@@ -151,6 +160,7 @@
    "affirmation": "Ich öffne mich für neue Horizonte."
   },
   {
+   "area": "Ziele und Berufung",
    "theme": "In diesem Teil deines Horoskops geht es um Ziele, Berufung und deinen Weg.",
    "new": [
     "Auf welches Ziel möchtest du einen klaren Schritt zugehen?",
@@ -163,6 +173,7 @@
    "affirmation": "Ich gehe in meinem eigenen Tempo auf meine Ziele zu."
   },
   {
+   "area": "Freunde und Gemeinschaft",
    "theme": "In diesem Teil deines Horoskops geht es um Freundschaften, Gemeinschaft und Hoffnungen.",
    "new": [
     "Welche Hoffnung für die Zukunft möchtest du nähren?",
@@ -175,6 +186,7 @@
    "affirmation": "Ich bin Teil eines Kreises von Menschen, die mir wichtig sind."
   },
   {
+   "area": "Ruhe und innere Welt",
    "theme": "In diesem Teil deines Horoskops geht es um Ruhe, Stille und deine innere Welt.",
    "new": [
     "Wie kannst du dir in diesem Monat mehr stille Zeit schenken?",
@@ -196,7 +208,7 @@
   "confirm_note": "Bestätige deine Adresse, um zu beginnen. Du kannst dich jederzeit abmelden oder deine Daten löschen.",
   "confirm_fallback": "Wenn der Button nicht funktioniert, kopiere diesen Link und füge ihn in deinen Browser ein:",
   "confirm_body": "Hallo,\n\nDeine Mondbriefe warten. Zweimal im Monat, zu Neumond und Vollmond, schickt dir Steliara eine kurze persönliche Reflexion, inspiriert von deinem Geburtshoroskop — einen ruhigen Moment, um wahrzunehmen, was sich bewegt, und den nächsten Schritt zu wählen.\n\nBestätige deine E-Mail hier:\n<{link}>\n\nWenn du das nicht angefordert hast, ignoriere diese Nachricht einfach. Dann senden wir nichts weiter.",
-  "subject": "{kind} {sign_in}: dein {house}. Haus",
+  "subject": "{kind} {sign_in} · {area}",
   "when": "Genauer Zeitpunkt: {date} ({timezone}).",
   "prompts_title": "Fragen für diese Mondphase:",
   "affirmation_title": "Affirmation:",

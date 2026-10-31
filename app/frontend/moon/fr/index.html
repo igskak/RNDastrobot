@@ -23,8 +23,8 @@
     <meta property="og:locale" content="fr_FR">
     <meta property="og:image" content="https://www.steliara.com/assets/brand/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="/css/kundli.css?v=2">
-    <link rel="stylesheet" href="/css/moon.css?v=2">
+    <link rel="stylesheet" href="/css/kundli.css?v=3">
+    <link rel="stylesheet" href="/css/moon.css?v=3">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Nouvelle lune et pleine lune 2026–2027 : dates et questions personnelles pour ton journal","url":"https://www.steliara.com/moon/fr","description":"Toutes les nouvelles et pleines lunes 2026–2027 à l'heure exacte, la maison de ton thème pour chacune et des questions gratuites pour ton journal de gratitude.","applicationCategory":"LifestyleApplication","operatingSystem":"Web","inLanguage":"fr","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Quand est la prochaine nouvelle lune ?","acceptedAnswer":{"@type":"Answer","text":"Le tableau de cette page donne toutes les nouvelles lunes et pleines lunes jusqu'à fin 2027 avec l'heure exacte ; la prochaine est mise en évidence."}},{"@type":"Question","name":"Ai-je besoin de mon heure de naissance ?","acceptedAnswer":{"@type":"Answer","text":"Non. Sans heure de naissance, nous comptons les maisons à partir de ton signe solaire. Avec l'heure et le lieu de naissance, nous les comptons à partir de ton ascendant, ce qui est plus personnel."}},{"@type":"Question","name":"Que faut-il écrire à la nouvelle lune ?","acceptedAnswer":{"@type":"Answer","text":"Une intention au présent et un petit pas pour les jours qui viennent. Tes questions personnelles dépendent de la maison où tombe la nouvelle lune."}},{"@type":"Question","name":"Que faut-il écrire à la pleine lune ?","acceptedAnswer":{"@type":"Answer","text":"Regarde les deux dernières semaines et note trois choses qui te remplissent de gratitude. Ta lettre ajoute deux questions pour la maison de la pleine lune."}},{"@type":"Question","name":"Est-ce gratuit ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Le calculateur et les lettres sont gratuits, et chaque lettre contient un lien de désinscription."}}]}</script>
 </head>
@@ -42,7 +42,12 @@
   <main id="main" class="shell tool moon-page">
       <h1>Nouvelle lune et pleine lune 2026–2027 : dates et questions personnelles pour ton journal</h1>
       <p class="lead">Découvre dans quelle maison de ton thème natal tombent la prochaine nouvelle lune et la prochaine pleine lune, et reçois quelques questions douces pour ton journal : une intention à la nouvelle lune, de la gratitude à la pleine lune.</p>
+      <p class="trust">Calculé avec la Swiss Ephemeris, le moteur astronomique des logiciels d'astrologie professionnels. Gratuit, sans compte.</p>
       <div class="moon-grid">
+        <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
+          <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
+          <div class="moon-highlight-copy"></div>
+        </section>
         <div class="moon-primary">
           <form id="moon-form" class="card" novalidate>
         <fieldset class="person">
@@ -70,7 +75,7 @@
           </div>
         </fieldset>
             <p id="form-error" class="error" role="alert" hidden></p>
-            <button class="btn" type="submit" data-label="Voir mes lunaisons" data-busy="Calcul en cours…">Voir mes lunaisons</button>
+            <button class="btn" type="submit" data-label="Voir mes lunes" data-busy="Calcul en cours…">Voir mes lunes</button>
             <noscript><p class="error">Ce calculateur a besoin de JavaScript.</p></noscript>
           </form>
           <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>
@@ -85,19 +90,15 @@
               <label class="check"><input id="signup-consent" type="checkbox"> J'accepte de recevoir ces e-mails et la conservation de mes données de naissance à cette fin. Je peux les supprimer à tout moment.</label>
               <p id="signup-error" class="error" role="alert" hidden></p>
               <p id="signup-done" class="note" role="status" hidden></p>
-              <button class="btn" type="submit">Envoyez-moi mes lettres de la Lune</button>
+              <button class="btn" type="submit">Je veux recevoir mes lettres de la Lune</button>
             </form>
           </section>
         </div>
         <aside class="moon-rail">
-          <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
-            <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
-            <div class="moon-highlight-copy"></div>
-          </section>
 
       <section class="lunations reveal-on-scroll" aria-labelledby="lunations-title">
         <h2 id="lunations-title">Nouvelles lunes et pleines lunes de novembre 2026 à décembre 2027</h2>
-        <p class="hint">Heures de Paris. La prochaine lunaison est mise en évidence.</p>
+        <p class="hint" id="lunations-note">Heures de Paris. La prochaine lune est mise en évidence.</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th scope="col">Date et heure</th><th scope="col">Phase</th><th scope="col">Signe</th></tr></thead>
@@ -253,22 +254,35 @@
       </section>
         </aside>
       </div>
-      <section class="plans reveal-on-scroll" aria-labelledby="plans-title">
-        <h2 id="plans-title">Deux façons de rester proche de ton propre rythme</h2>
-        <p>Le ciel n'est pas là pour te dire ce qui va arriver. Il peut t'offrir un moment pour remarquer ce qui demande déjà ton attention — à chaque nouvelle et pleine lune, ou comme une histoire plus profonde qui se déploie tout au long du mois.</p>
-        <div class="plans-grid">
-          <article class="plan"><h3>Ta lettre de la Lune</h3><p class="plan-intro">Deux fois par mois, une courte lettre te rejoint à un moment naturel de bascule. Elle traduit la nouvelle ou la pleine lune à travers ton propre thème et t'offre un espace calme où tu peux mieux t'entendre.</p><ul><li><strong>Ton ciel, en langage humain</strong><span>Découvre quelle partie de ta vie cette lune touche et pourquoi elle peut sembler plus vivante maintenant — sans jargon ni prédictions figées.</span></li><li><strong>Des questions qui ouvrent quelque chose</strong><span>Trois invitations soigneusement choisies t'aident à nommer ce que tu veux, ce qui a changé et ce que tu es prêt·e à emporter avec toi.</span></li><li><strong>Un journal qui se souvient</strong><span>Tes réponses restent réunies dans un journal privé, pour qu'une sensation passagère puisse devenir, avec le temps, un motif que tu reconnais.</span></li></ul><p class="plan-closing">Gratuit, deux fois par mois. Quelques minutes d'attention qui n'appartiennent qu'à toi.</p></article>
-          <article class="plan paid"><h3>Ton Mois personnel</h3><p class="price">4 € par mois</p><p class="plan-intro">Le Mois personnel t'offre une vue d'ensemble. Au lieu de traverser le mois comme un flou de dates, tu en vois le rythme émotionnel : les périodes susceptibles de remuer quelque chose, les questions qui méritent que l'on s'y attarde et le fil qui relie le tout.</p><ul><li><strong>Les dates qui comptent pour toi</strong><span>Un calendrier personnel des transits les plus forts du mois, traduits en situations que tu peux reconnaître dans le travail, les relations, le foyer et ta vie intérieure.</span></li><li><strong>Une orientation vraiment utilisable</strong><span>Chaque période s'accompagne d'une réflexion précise — pas d'une consigne — pour t'aider à faire ton propre choix avec plus de conscience.</span></li><li><strong>Des motifs que seul le temps révèle</strong><span>À la fin du mois, tes notes te sont renvoyées à côté du ciel de ces jours-là et révèlent des besoins, tensions et désirs qui reviennent.</span></li><li><strong>Ton année comme une histoire</strong><span>À ton anniversaire, ces mois deviennent un livre annuel privé : non pas une liste de prédictions, mais le portrait de ta transformation.</span></li></ul><p class="plan-closing">Pour la personne qui ne veut pas seulement savoir ce qui se passe dans le ciel, mais comprendre ce que cela ouvre dans sa propre vie.</p></article>
-        </div>
-        <div class="examples">
+      <section class="copy reveal-on-scroll">
+        <h2>Un journal au rythme de la Lune</h2>
+        <p>Chaque mois, la Lune passe de nouvelle à pleine, puis revient. Beaucoup de personnes tiennent un journal à ce rythme : à la nouvelle lune, elles écrivent une intention ; à la pleine lune, elles regardent en arrière et notent ce qui les remplit de gratitude.</p>
+        <p>Nous calculons le moment exact de chaque nouvelle lune et de chaque pleine lune avec la Swiss Ephemeris et trouvons la maison de ton thème natal où elle tombe. Chaque maison a son propre thème : tes questions changent donc d'un mois à l'autre.</p>
+      </section>
+      <section class="copy reveal-on-scroll">
+        <h2>Ce que c'est, et ce que ce n'est pas</h2>
+        <p>Ce sont des questions pour réfléchir, pas des prédictions. Nous ne disons pas ce qui va arriver ; nous proposons un rythme, quelques questions et une affirmation, et les réponses t'appartiennent.</p>
+        <p>Tes réponses sont enregistrées dans ton journal pour que tu les retrouves sur tous tes appareils. Nous gardons aussi ton e-mail et tes données de naissance pour les lettres. Tu peux tout supprimer à tout moment en un clic.</p>
+      </section>
+      <section class="letter-example reveal-on-scroll" aria-labelledby="example-title">
+        <h2 id="example-title">À quoi ressemble une lettre</h2>
           <article class="example">
             <p class="example-label">Exemple de lettre gratuite</p>
-            <h4><span class="phase phase-new" aria-hidden="true"></span>Nouvelle Lune en Scorpion, dans ta maison 3</h4>
+            <h4><span class="phase phase-new" aria-hidden="true"></span>Nouvelle Lune en Scorpion · Mots et conversations du quotidien (maison 3)</h4>
             <p class="when">9 novembre 2026 à 08:02</p>
             <p>Cette partie de ton thème contient les mots que tu répètes, les questions que tu poursuis et les conversations ordinaires qui façonnent discrètement tes choix.</p>
             <ol class="prompts"><li>Quelle conversation répètes-tu dans ta tête ? Écris-en la première phrase sincère.</li><li>Quel sujet revient sans cesse dans tes onglets, tes notes ou tes publications enregistrées ? Qu'est-ce qu'une heure d'attention entière pourrait ouvrir ?</li><li>Termine cette phrase : Pendant ce mois lunaire, je choisis de...</li></ol>
             <p class="affirmation"><strong>Affirmation</strong>Je me fais confiance pour dire les choses clairement et avec bienveillance.</p>
           </article>
+      </section>
+      <section class="plans reveal-on-scroll" aria-labelledby="plans-title">
+        <h2 id="plans-title">Des lettres gratuites, et un mois personnel si tu veux aller plus loin</h2>
+        <p>Nous ne prédisons pas d'événements. Nous t'envoyons des questions aux moments où la Lune change de phase, et nous gardons tes réponses pour que tu puisses y revenir.</p>
+        <div class="plans-grid">
+          <article class="plan"><h3>Ta lettre de la Lune</h3><p class="plan-intro">Le jour de chaque nouvelle et pleine lune, tu reçois un court e-mail : le domaine de ton thème où tombe la Lune, trois questions et une affirmation. Tu réponds sur une page privée ; cela prend environ cinq minutes.</p><ul><li><strong>Le domaine de vie touché par cette lune</strong><span>Amour, foyer, travail, repos : la Lune tombe chaque fois dans un domaine différent de ton thème, expliqué avec des mots simples.</span></li><li><strong>Trois questions auxquelles répondre</strong><span>Une sur ce que tu veux, une sur ce qui a changé, une à emporter avec toi. Assez courtes pour une journée chargée.</span></li><li><strong>Tes réponses, au même endroit</strong><span>Tout ce que tu écris est gardé dans un journal privé, pour relire les mois passés et remarquer ce qui revient.</span></li></ul><p class="plan-closing">Gratuit, deux e-mails par mois. Désinscription en un clic.</p></article>
+          <article class="plan paid"><h3>Ton Mois personnel</h3><p class="price">4 € par mois</p><p class="plan-intro">Un calendrier de ton mois, calculé à partir de ton thème natal : quels jours portent quels thèmes, avec une question pour chacun, et à la fin du mois un regard sur ce que tu as écrit.</p><ul><li><strong>Tes dates du mois</strong><span>Les jours où les planètes touchent le plus ton thème, et le domaine de vie concerné : travail, relations, foyer ou vie intérieure.</span></li><li><strong>Une question pour chaque période</strong><span>Pas d'instructions : une question par période pour t'aider à décider par toi-même.</span></li><li><strong>Un retour sur tes notes</strong><span>À la fin du mois, nous plaçons tes notes à côté du ciel de ces jours-là, pour faire apparaître les besoins et les thèmes qui reviennent.</span></li><li><strong>Ton année comme une histoire</strong><span>À ton anniversaire, ces mois deviennent un livre annuel privé : non pas une liste de prédictions, mais le portrait de ta transformation.</span></li></ul><p class="plan-closing">Pour celles et ceux qui veulent voir tout le mois, pas seulement deux moments.</p></article>
+        </div>
+        <div class="examples single">
           <article class="example paid">
             <p class="example-label">Exemple de mois personnel</p>
             <p class="hint">Exemple pour une personne fictive née le 17 mai 1990. Ton propre mois est calculé à partir de tes données de naissance.</p>
@@ -312,16 +326,6 @@
           </div>
         </div>
       </section>
-      <section class="copy reveal-on-scroll">
-        <h2>Un journal au rythme de la Lune</h2>
-        <p>Chaque mois, la Lune passe de nouvelle à pleine, puis revient. Beaucoup de personnes tiennent un journal à ce rythme : à la nouvelle lune, elles écrivent une intention ; à la pleine lune, elles regardent en arrière et notent ce qui les remplit de gratitude.</p>
-        <p>Nous calculons le moment exact de chaque nouvelle lune et de chaque pleine lune avec la Swiss Ephemeris et trouvons la maison de ton thème natal où elle tombe. Chaque maison a son propre thème : tes questions changent donc d'un mois à l'autre.</p>
-      </section>
-      <section class="copy reveal-on-scroll">
-        <h2>Ce que c'est, et ce que ce n'est pas</h2>
-        <p>Ce sont des questions pour réfléchir, pas des prédictions. Nous ne disons pas ce qui va arriver ; nous proposons un rythme, quelques questions et une affirmation, et les réponses t'appartiennent.</p>
-        <p>Tes réponses sont enregistrées dans ton journal pour que tu les retrouves sur tous tes appareils. Nous gardons aussi ton e-mail et tes données de naissance pour les lettres. Tu peux tout supprimer à tout moment en un clic.</p>
-      </section>
       <section class="copy faq reveal-on-scroll">
         <h2>Questions</h2>
         <h3>Quand est la prochaine nouvelle lune ?</h3>
@@ -342,7 +346,7 @@
       <p class="links"><a href="/terms.html">Conditions et confidentialité</a></p>
     </div>
   </footer>
-  <script type="application/json" id="moon-i18n">{"legend":"Tes données de naissance","date":"Date de naissance","time":"Heure de naissance","timeUnknown":"Je ne connais pas mon heure de naissance","place":"Lieu de naissance","placeHint":"Commence à taper une ville : elle fixe le fuseau horaire et l'ascendant.","placeSearching":"Recherche…","placeNone":"Aucun lieu trouvé","timezone":"Fuseau horaire","timezoneFromPlace":"Fuseau horaire réglé d'après le lieu de naissance.","calculate":"Voir mes lunaisons","calculating":"Calcul en cours…","noscript":"Ce calculateur a besoin de JavaScript.","required":"Indique ta date de naissance.","resultTitle":"Ta prochaine nouvelle lune et ta prochaine pleine lune","promptsTitle":"Questions pour ton journal","affirmationTitle":"Affirmation","signupTitle":"Reçois tes questions à chaque nouvelle lune et pleine lune","signupText":"Deux courts e-mails par mois, le jour de chaque nouvelle lune et de chaque pleine lune, avec des questions pour la maison de ton thème où elle tombe. Gratuit, et désinscription en un clic.","email":"E-mail","consent":"J'accepte de recevoir ces e-mails et la conservation de mes données de naissance à cette fin. Je peux les supprimer à tout moment.","subscribe":"Envoyez-moi mes lettres de la Lune","subscribing":"Envoi…","signupDone":"C'est presque fini : ouvre l'e-mail que nous venons d'envoyer et confirme ton adresse.","errorEmail":"Vérifie ton adresse e-mail.","errorConsent":"Coche la case de consentement.","errorSignup":"L'e-mail de confirmation n'a pas pu être envoyé. Réessaie plus tard.","errorUnavailable":"L'inscription n'est pas disponible pour le moment. Réessaie plus tard.","errorInvalid":"Vérifie la date, l'heure et le fuseau horaire.","errorRateLimited":"Trop de tentatives. Attends une minute et réessaie.","errorGeneric":"Une erreur s'est produite. Réessaie.","errorNetwork":"Pas de connexion. Vérifie ton accès à Internet.","tableDate":"Date et heure","tablePhase":"Phase","tableSign":"Signe","nextBadge":"prochaine","selectedBadge":"Sélectionnée","loading":"Chargement de ta lettre…","invalidLink":"Ce lien n'est pas valide. Tu peux t'inscrire à nouveau sur la page de la Lune.","confirmed":"Merci, ton adresse est confirmée. Tes lettres arrivent le jour de chaque nouvelle lune et de chaque pleine lune.","pending":"Ton adresse n'est pas encore confirmée : utilise le lien de l'e-mail de confirmation.","unsubscribedNote":"Ton inscription est annulée et aucune autre lettre ne sera envoyée.","currentTitle":"Ta Lune du moment","writePlaceholder":"Écris ici… C'est enregistré automatiquement.","saved":"Enregistré","nextLine":"Prochaine lunaison : {kind} le {date} {sign_in}, dans ta maison {house}.","historyTitle":"Ton journal","historyEmpty":"Tes réponses apparaîtront ici.","fakeTitle":"Mois personnel","fakePrice":"Prix prévu : {price}.","price":"4 € par mois","fakeButton":"Ça m'intéresse, prévenez-moi quand ce sera prêt","fakeThanks":"Merci ! Nous t'écrirons quand ce sera prêt. Rien n'est facturé.","manageTitle":"Tes lettres","unsubscribe":"Se désinscrire","unsubscribed":"Inscription annulée.","erase":"Supprimer mes données","eraseConfirm":"Supprimer définitivement ton e-mail et tes données de naissance ?","erased":"Tes données ont été supprimées.","manageError":"Cela n'a pas fonctionné. Réessaie.","backToMoon":"Retour au calendrier lunaire","saving":"Enregistrement…","saveError":"Non enregistré. Vérifie ta connexion.","linkPrivacy":"Ce lien ouvre ton journal. Ne transfère pas ces e-mails à d'autres personnes.","linkTitle":"Ton journal de la Lune","linkText":"Choisis le chemin qui correspond à l'endroit où tu en es aujourd'hui.","linkNewTitle":"Tu arrives pour la première fois ?","linkNewText":"Commence par tes données de naissance. Tu verras où tombent la prochaine nouvelle lune et la prochaine pleine lune dans ton thème, puis tu pourras choisir de recevoir tes lettres personnelles gratuites.","linkNewButton":"Voir mes prochaines lunes","linkReturningTitle":"Tu reçois déjà les lettres ?","linkReturningText":"Indique ton e-mail et nous t'enverrons un nouveau lien vers ton journal privé. Il fonctionne sur tous les appareils, sans mot de passe.","linkButton":"Envoyer mon lien","linkSending":"Envoi…","linkDone":"Si cette adresse est inscrite, le lien est en route.","fakeText":"Le mois personnel n'est pas encore disponible. Si tu le veux, appuie sur le bouton : nous t'écrirons quand il sera prêt. Rien n'est facturé."}</script>
-  <script src="/js/moon-tool.js?v=2" defer></script>
+  <script type="application/json" id="moon-i18n">{"legend":"Tes données de naissance","date":"Date de naissance","time":"Heure de naissance","timeUnknown":"Je ne connais pas mon heure de naissance","place":"Lieu de naissance","placeHint":"Commence à taper une ville : elle fixe le fuseau horaire et l'ascendant.","placeSearching":"Recherche…","placeNone":"Aucun lieu trouvé","timezone":"Fuseau horaire","timezoneFromPlace":"Fuseau horaire réglé d'après le lieu de naissance.","calculate":"Voir mes lunes","calculating":"Calcul en cours…","resultWhen":"{date} (ton heure, {tz})","noscript":"Ce calculateur a besoin de JavaScript.","required":"Indique ta date de naissance.","resultTitle":"Ta prochaine nouvelle lune et ta prochaine pleine lune","promptsTitle":"Questions pour ton journal","affirmationTitle":"Affirmation","signupTitle":"Reçois tes questions à chaque nouvelle lune et pleine lune","signupText":"Deux courts e-mails par mois, le jour de chaque nouvelle lune et de chaque pleine lune, avec des questions pour la maison de ton thème où elle tombe. Gratuit, et désinscription en un clic.","email":"E-mail","consent":"J'accepte de recevoir ces e-mails et la conservation de mes données de naissance à cette fin. Je peux les supprimer à tout moment.","subscribe":"Je veux recevoir mes lettres de la Lune","subscribing":"Envoi…","signupDone":"C'est presque fini : ouvre l'e-mail que nous venons d'envoyer et confirme ton adresse.","errorEmail":"Vérifie ton adresse e-mail.","errorConsent":"Coche la case de consentement.","errorSignup":"L'e-mail de confirmation n'a pas pu être envoyé. Réessaie plus tard.","errorUnavailable":"L'inscription n'est pas disponible pour le moment. Réessaie plus tard.","errorInvalid":"Vérifie la date, l'heure et le fuseau horaire.","errorRateLimited":"Trop de tentatives. Attends une minute et réessaie.","errorGeneric":"Une erreur s'est produite. Réessaie.","errorNetwork":"Pas de connexion. Vérifie ton accès à Internet.","tableDate":"Date et heure","tablePhase":"Phase","tableSign":"Signe","tableNoteLocal":"Heures dans ton fuseau horaire ({tz}). La prochaine lune est mise en évidence.","nextBadge":"prochaine","selectedBadge":"Sélectionnée","loading":"Chargement de ta lettre…","invalidLink":"Ce lien n'est pas valide. Tu peux t'inscrire à nouveau sur la page de la Lune.","confirmed":"Merci, ton adresse est confirmée. Tes lettres arrivent le jour de chaque nouvelle lune et de chaque pleine lune.","pending":"Ton adresse n'est pas encore confirmée : utilise le lien de l'e-mail de confirmation.","unsubscribedNote":"Ton inscription est annulée et aucune autre lettre ne sera envoyée.","currentTitle":"Ta Lune du moment","writePlaceholder":"Écris ici… C'est enregistré automatiquement.","saved":"Enregistré","nextLine":"Prochaine lune : {kind} le {date} {sign_in} · {area}.","historyTitle":"Ton journal","historyEmpty":"Tes réponses apparaîtront ici.","fakeTitle":"Mois personnel","fakePrice":"Prix prévu : {price}.","price":"4 € par mois","fakeButton":"Ça m'intéresse, prévenez-moi quand ce sera prêt","fakeThanks":"Merci ! Nous t'écrirons quand ce sera prêt. Rien n'est facturé.","manageTitle":"Tes lettres","unsubscribe":"Se désinscrire","unsubscribed":"Inscription annulée.","erase":"Supprimer mes données","eraseConfirm":"Supprimer définitivement ton e-mail et tes données de naissance ?","erased":"Tes données ont été supprimées.","manageError":"Cela n'a pas fonctionné. Réessaie.","backToMoon":"Retour au calendrier lunaire","saving":"Enregistrement…","saveError":"Non enregistré. Vérifie ta connexion.","linkPrivacy":"Ce lien ouvre ton journal. Ne transfère pas ces e-mails à d'autres personnes.","linkTitle":"Ton journal de la Lune","linkText":"Choisis le chemin qui correspond à l'endroit où tu en es aujourd'hui.","linkNewTitle":"Tu arrives pour la première fois ?","linkNewText":"Commence par tes données de naissance. Tu verras où tombent la prochaine nouvelle lune et la prochaine pleine lune dans ton thème, puis tu pourras choisir de recevoir tes lettres personnelles gratuites.","linkNewButton":"Voir mes prochaines lunes","linkReturningTitle":"Tu reçois déjà les lettres ?","linkReturningText":"Indique ton e-mail et nous t'enverrons un nouveau lien vers ton journal privé. Il fonctionne sur tous les appareils, sans mot de passe.","linkButton":"Envoyer mon lien","linkSending":"Envoi…","linkDone":"Si cette adresse est inscrite, le lien est en route.","fakeText":"Le mois personnel n'est pas encore disponible. Si tu le veux, appuie sur le bouton : nous t'écrirons quand il sera prêt. Rien n'est facturé.","months":["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],"tableDateFormat":"{d} {month} {y} à {hh}:{mm}","intl":"fr-FR","tableTimezone":"Europe/Paris"}</script>
+  <script src="/js/moon-tool.js?v=3" defer></script>
 </body>
 </html>

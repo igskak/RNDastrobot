@@ -11,7 +11,11 @@
   "langLabel": "Language",
   "footerNote": "Steliara makes software for professional astrologers. These moon pages are a free tool for everyone.",
   "footerTerms": "Terms and privacy",
-  "alsoFree": {"text": "Also free:", "label": "Kundli and Vedic astrology calculators", "href": "/kundli"}
+  "alsoFree": {
+   "text": "Also free:",
+   "label": "Kundli and Vedic astrology calculators",
+   "href": "/kundli"
+  }
  },
  "pages": {
   "index": {
@@ -19,8 +23,9 @@
    "description": "Every new and full moon of 2026–2027 with exact times, where each one falls in your birth chart, and free journal prompts for intentions and gratitude.",
    "h1": "New moon and full moon 2026–2027: dates and your personal journal prompts",
    "lead": "See where the next new moon and full moon fall in your birth chart and get a few gentle questions for your journal: an intention at the new moon, gratitude at the full moon.",
+   "trust": "Calculated with the Swiss Ephemeris, the astronomical engine behind professional astrology software. Free, no account needed.",
    "tableTitle": "New and full moons from November 2026 to December 2027",
-   "tableNote": "Times are New York time (ET). The next lunation is highlighted.",
+   "tableNote": "Times are New York time (ET). The next one is highlighted.",
    "sections": [
     {
      "h2": "A journal that follows the Moon",
@@ -81,6 +86,7 @@
   "timezoneFromPlace": "Time zone set from the place of birth.",
   "calculate": "Show my moons",
   "calculating": "Calculating…",
+  "resultWhen": "{date} (your time, {tz})",
   "noscript": "This calculator needs JavaScript.",
   "required": "Please enter your date of birth.",
   "resultTitle": "Your next new moon and full moon",
@@ -104,6 +110,7 @@
   "tableDate": "Date and time",
   "tablePhase": "Phase",
   "tableSign": "Sign",
+  "tableNoteLocal": "Times are in your time zone ({tz}). The next one is highlighted.",
   "nextBadge": "next",
   "selectedBadge": "Selected",
   "loading": "Loading your letter…",
@@ -114,7 +121,7 @@
   "currentTitle": "Your current moon",
   "writePlaceholder": "Write here… It is saved automatically.",
   "saved": "Saved",
-  "nextLine": "Next: {kind} on {date} {sign_in}, in your house {house}.",
+  "nextLine": "Next: {kind} on {date} {sign_in} · {area}.",
   "historyTitle": "Your journal",
   "historyEmpty": "Your answers will appear here.",
   "fakeTitle": "Personal month",
@@ -161,46 +168,47 @@
  ],
  "tableDateFormat": "{month} {d}, {y} · {h12}:{mm} {ampm}",
  "plans": {
-  "title": "Two ways to stay close to your own rhythm",
-  "lead": "The sky is not here to tell you what will happen. It can give you a moment to notice what is already asking for your attention — once at each new and full moon, or as a deeper story unfolding across the whole month.",
+  "title": "Free letters, and a personal month if you want more",
+  "lead": "We do not predict events. We send you questions at the moments the Moon changes phase, and keep your answers so you can look back.",
   "freeTitle": "Your Moon Letter",
-  "freeIntro": "Twice a month, a short letter meets you at a natural turning point. It translates the new or full moon through your own birth chart and gives you a quiet place to hear yourself more clearly.",
+  "freeIntro": "On the day of each new and full moon you get a short email: the area of your chart where that Moon falls, three questions and an affirmation. You answer on a private page; it takes about five minutes.",
   "freeItems": [
    {
-    "title": "Your sky, in human language",
-    "text": "See which area of life this moon touches and why it may feel more alive now — without jargon or fixed predictions."
+    "title": "Which area of life this Moon touches",
+    "text": "Love, home, work, rest: each time the Moon falls in a different area of your chart, explained in plain words."
    },
    {
-    "title": "Questions that open something",
-    "text": "Three carefully chosen prompts help you name what you want, what has shifted and what you are ready to carry forward."
+    "title": "Three questions to answer",
+    "text": "One about what you want, one about what has changed, one to carry forward. Short enough for a busy day."
    },
    {
-    "title": "A journal that remembers",
-    "text": "Your answers stay together in a private journal, so a passing feeling can become a pattern you recognise over time."
+    "title": "Your answers, kept together",
+    "text": "Everything you write is saved in one private journal, so you can reread past months and notice what keeps coming back."
    }
   ],
-  "freeClosing": "Free, twice a month. A few thoughtful minutes that belong only to you.",
+  "freeClosing": "Free, two emails a month. Unsubscribe in one click.",
   "paidTitle": "Your Personal Month",
-  "paidIntro": "Personal Month gives you the wider view. Instead of meeting the month as a blur of dates, you see its emotional rhythm: the periods that may stir something, the questions worth staying with and the thread connecting it all.",
+  "paidIntro": "A calendar of your month, built from your birth chart: which days bring which themes, with a question for each, and at the end of the month a look back at what you wrote.",
   "paidItems": [
    {
-    "title": "Your meaningful dates",
-    "text": "A personal calendar of the month's strongest transits, translated into situations you may recognise in work, relationships, home and your inner life."
+    "title": "Your dates for the month",
+    "text": "The days when the planets touch your chart most strongly, and which part of life each one concerns: work, relationships, home or your inner life."
    },
    {
-    "title": "Guidance you can actually use",
-    "text": "Each period comes with a focused reflection — not an instruction — so you can make your own choice with more awareness."
+    "title": "A question for each period",
+    "text": "Not instructions: one question per period to help you decide for yourself."
    },
    {
-    "title": "Patterns only time can reveal",
-    "text": "At the end of the month, your entries are reflected back beside the sky of those days, revealing recurring needs, tensions and desires."
+    "title": "A review of your entries",
+    "text": "At the end of the month we put your entries next to the sky of those days, so recurring needs and themes become visible."
    },
    {
     "title": "Your year as a story",
     "text": "On your birthday, those months become a private yearbook: not a list of predictions, but a portrait of how you changed."
    }
   ],
-  "paidClosing": "For anyone who wants not only to know what is happening in the sky, but to understand what it is opening in their life.",
+  "paidClosing": "For people who want to see the whole month, not only two moments in it.",
+  "exampleHeading": "What a letter looks like",
   "exampleFreeTitle": "Example of a free letter",
   "examplePaidTitle": "Example of a personal month",
   "exampleNote": "Example for a fictional person born on 17 May 1990. Your own month is calculated from your birth data.",
@@ -257,14 +265,149 @@
   "factUtc": "Universal time (UTC)",
   "factSign": "Sign and degree",
   "housesTitle": "Where it falls in your chart",
-  "housesLead": "The same lunation lands in a different house for each rising sign. Find yours in the table; if you do not know your rising sign, use your Sun sign for a simpler solar house.",
+  "housesLead": "The same Moon touches a different area of life depending on your rising sign, the sign that was rising when you were born. Find yours in the table. If you do not know it, use your Sun sign instead.",
   "housesHeaders": [
    "Rising sign",
    "House",
-   "What this part of life is about"
+   "Area of life"
+  ],
+  "aboutTitle": "The theme: {sign}",
+  "signs": [
+   {
+    "about": "The sign of beginnings, courage and acting on an honest impulse.",
+    "new": [
+     "What would you start this month if you did not wait for the perfect moment?",
+     "Where do you want a little more courage, and what is the first small move?"
+    ],
+    "full": [
+     "What did you dare to begin recently, and what is it giving you?",
+     "Where did you follow an honest impulse, and what did it show you?"
+    ]
+   },
+   {
+    "about": "The sign of the body, the senses, steadiness and what you truly value.",
+    "new": [
+     "What simple pleasure do you want to make room for this month?",
+     "What would help your days feel steadier and less rushed?"
+    ],
+    "full": [
+     "What have you built slowly that you can appreciate now?",
+     "Which ordinary comfort mattered to you over the last two weeks?"
+    ]
+   },
+   {
+    "about": "The sign of curiosity, conversation, learning and the many small exchanges of a day.",
+    "new": [
+     "What would you like to learn or explore out of pure curiosity?",
+     "Which conversation would you like to start, and with whom?"
+    ],
+    "full": [
+     "Which idea or conversation stayed with you recently, and why?",
+     "What did you understand about yourself thanks to someone's words?"
+    ]
+   },
+   {
+    "about": "The sign of home, belonging and care, for others and for yourself.",
+    "new": [
+     "What would make your home, or your inner home, feel warmer and safer?",
+     "How would you like to care for yourself this month?"
+    ],
+    "full": [
+     "Who made you feel at home recently, and how?",
+     "Which feeling has been asking for your care lately?"
+    ]
+   },
+   {
+    "about": "The sign of joy, creativity, generosity and the wish to show yourself fully.",
+    "new": [
+     "What would you create this month if no one were grading it?",
+     "Where would you like to show up more as yourself?"
+    ],
+    "full": [
+     "What gave you pride or a real sense of being alive recently?",
+     "Where did your warmth or generosity make a difference?"
+    ]
+   },
+   {
+    "about": "The sign of daily rhythm, careful work and the small habits that keep life in order.",
+    "new": [
+     "Which small daily habit would make the biggest gentle difference?",
+     "What could you simplify or put in order this month?"
+    ],
+    "full": [
+     "Which routine was a good support over the last weeks?",
+     "What did you do with care that deserves your own recognition?"
+    ]
+   },
+   {
+    "about": "The sign of relationships, balance, fairness and beauty.",
+    "new": [
+     "What balance would you like between giving and receiving?",
+     "Which relationship would you like to tend with more attention?"
+    ],
+    "full": [
+     "Where did you find a good balance recently, and what helped?",
+     "Which connection are you grateful for right now?"
+    ]
+   },
+   {
+    "about": "The sign of depth, trust, honesty with yourself and inner change.",
+    "new": [
+     "What can you let go of to make room for something new?",
+     "Where would you like to trust a little more, yourself included?"
+    ],
+    "full": [
+     "What truth about yourself became clearer recently?",
+     "What has quietly changed in you since the last new moon?"
+    ]
+   },
+   {
+    "about": "The sign of horizons, meaning, travel, study and hope.",
+    "new": [
+     "What would you like to explore, learn or see with fresh eyes?",
+     "Which belief or hope do you want to guide your choices this month?"
+    ],
+    "full": [
+     "What widened your view of life recently?",
+     "What are you more hopeful about today than a month ago?"
+    ]
+   },
+   {
+    "about": "The sign of goals, patience, responsibility and building something that lasts.",
+    "new": [
+     "Which long-term goal deserves one concrete step this month?",
+     "What structure or boundary would support what you are building?"
+    ],
+    "full": [
+     "What progress, even slow, can you acknowledge today?",
+     "Which responsibility did you carry well, and how?"
+    ]
+   },
+   {
+    "about": "The sign of friendship, community, freedom and fresh ideas.",
+    "new": [
+     "Which idea feels new and exciting to you right now?",
+     "Which community or friendship would you like to nourish?"
+    ],
+    "full": [
+     "Who in your circle inspired you recently?",
+     "Where did you find room to be yourself without fitting in?"
+    ]
+   },
+   {
+    "about": "The sign of imagination, compassion, rest and the inner world.",
+    "new": [
+     "What does your inner world need more of this month: rest, silence or imagination?",
+     "Which dream would you like to give a little room?"
+    ],
+    "full": [
+     "When did you feel connected to something larger than yourself recently?",
+     "What did rest or quiet give you over the last weeks?"
+    ]
+   }
   ],
   "writeTitle": "What to write",
-  "writeLabel": "A question for the day",
+  "writeLabel": "Questions for this Moon",
   "ctaTitle": "See it in your own chart",
   "ctaText": "Enter your birth date to get your house, your own questions and an affirmation. Free letters arrive on every New and Full Moon.",
   "moreTitle": "All New and Full Moons from {from} to {to}",

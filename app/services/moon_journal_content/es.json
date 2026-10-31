@@ -32,10 +32,10 @@
   "en Piscis"
  ],
  "date_format": "%d/%m/%Y, %H:%M",
- "headline": "{kind} {sign_in}, en tu casa {house}",
+ "headline": "{kind} {sign_in} · {area} (casa {house})",
  "frame": {
-  "rising": "Contamos las casas desde tu ascendente (casas de signo entero).",
-  "sun": "Sin hora de nacimiento contamos las casas desde tu signo solar (casas solares). Añade la hora y el lugar de nacimiento para un resultado más personal."
+  "rising": "Contamos las áreas de la vida desde tu ascendente, el signo que salía en el momento de tu nacimiento.",
+  "sun": "Sin hora de nacimiento contamos las áreas de la vida desde tu signo solar. Añade la hora y el lugar de nacimiento para un resultado más personal."
  },
  "universal": {
   "new": "Completa la frase: En este mes lunar elijo...",
@@ -43,6 +43,7 @@
  },
  "houses": [
   {
+   "area": "Tú y cómo te muestras",
    "theme": "Esta parte de tu carta habla de ti y de cómo te muestras al mundo.",
    "new": [
     "¿Qué quieres empezar este mes solo para ti?",
@@ -55,6 +56,7 @@
    "affirmation": "Me doy espacio para empezar de nuevo."
   },
   {
+   "area": "Valores y estabilidad",
    "theme": "Esta parte de tu carta habla de lo que valoras y de lo que te da estabilidad.",
    "new": [
     "¿Qué significa para ti sentirte a salvo ahora mismo?",
@@ -67,6 +69,7 @@
    "affirmation": "Valoro lo que tengo y lo que todavía puedo hacer crecer."
   },
   {
+   "area": "Palabras y conversaciones cotidianas",
    "theme": "Esta parte de tu carta contiene las palabras que repites, las preguntas que sigues y las conversaciones cotidianas que moldean en silencio tus decisiones.",
    "new": [
     "¿Qué conversación sigues ensayando en tu cabeza? Escribe su primera frase honesta.",
@@ -79,6 +82,7 @@
    "affirmation": "Confío en mí para decir lo claro con amabilidad."
   },
   {
+   "area": "Hogar y raíces",
    "theme": "Esta parte de tu carta habla del hogar, las raíces y la calma interior.",
    "new": [
     "¿Qué haría que tu casa se sintiera todavía más tuya?",
@@ -91,6 +95,7 @@
    "affirmation": "Creo un lugar de calma dentro y alrededor de mí."
   },
   {
+   "area": "Alegría, creatividad y juego",
    "theme": "Esta parte de tu carta habla de alegría, creatividad y juego.",
    "new": [
     "¿Qué te gustaría crear solo por el placer de hacerlo?",
@@ -103,6 +108,7 @@
    "affirmation": "Me permito disfrutar de lo que amo."
   },
   {
+   "area": "Día a día, trabajo y autocuidado",
    "theme": "Esta parte de tu carta habla de tu día a día, tu trabajo y el cuidado de ti.",
    "new": [
     "¿Qué pequeña rutina diaria te gustaría empezar?",
@@ -115,6 +121,7 @@
    "affirmation": "Pequeños pasos cada día son suficientes."
   },
   {
+   "area": "Relaciones cercanas",
    "theme": "Esta parte de tu carta habla de las relaciones cercanas y la colaboración.",
    "new": [
     "¿Qué quieres aportar a tus relaciones más cercanas?",
@@ -127,6 +134,7 @@
    "affirmation": "Me abro a los demás con respeto hacia mí."
   },
   {
+   "area": "Confianza, intimidad y transformación",
    "theme": "Esta parte de tu carta habla de confianza, de compartir y de transformación interior.",
    "new": [
     "¿Qué puedes soltar para hacer espacio a lo nuevo?",
@@ -139,6 +147,7 @@
    "affirmation": "Suelto con suavidad y conservo lo importante."
   },
   {
+   "area": "Viajes, estudio y sentido",
    "theme": "Esta parte de tu carta habla de horizontes: viajes, estudio y sentido.",
    "new": [
     "¿Qué lugar, libro o idea te está llamando?",
@@ -151,6 +160,7 @@
    "affirmation": "Me abro a nuevos horizontes."
   },
   {
+   "area": "Metas y vocación",
    "theme": "Esta parte de tu carta habla de metas, vocación y tu camino.",
    "new": [
     "¿Hacia qué meta quieres dar un paso claro?",
@@ -163,6 +173,7 @@
    "affirmation": "Avanzo hacia mis metas a mi propio ritmo."
   },
   {
+   "area": "Amistades y comunidad",
    "theme": "Esta parte de tu carta habla de amistades, comunidad y esperanzas.",
    "new": [
     "¿Qué esperanza para el futuro quieres cultivar?",
@@ -175,6 +186,7 @@
    "affirmation": "Formo parte de un círculo de personas que me importan."
   },
   {
+   "area": "Descanso y mundo interior",
    "theme": "Esta parte de tu carta habla del descanso, el silencio y tu mundo interior.",
    "new": [
     "¿Cómo puedes regalarte más tiempo de calma este mes?",
@@ -196,7 +208,7 @@
   "confirm_note": "Confirma tu dirección para empezar. Puedes darte de baja o borrar tus datos cuando quieras.",
   "confirm_fallback": "Si el botón no funciona, copia y pega este enlace en tu navegador:",
   "confirm_body": "Hola:\n\nTus cartas de la Luna te esperan. Dos veces al mes, en la luna nueva y en la luna llena, Steliara te envía una breve reflexión personal inspirada en tu carta natal: un momento para notar qué está cambiando en tu vida y elegir qué viene después.\n\nConfirma tu correo aquí:\n<{link}>\n\nSi no lo pediste, ignora este mensaje. No te enviaremos nada más.",
-  "subject": "{kind} {sign_in}: tu casa {house}",
+  "subject": "{kind} {sign_in} · {area}",
   "when": "Momento exacto: {date} ({timezone}).",
   "prompts_title": "Preguntas para esta lunación:",
   "affirmation_title": "Afirmación:",

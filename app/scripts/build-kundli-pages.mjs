@@ -21,7 +21,7 @@ const srcRoot = path.join(frontendRoot, 'kundli-src');
 const outRoot = path.join(frontendRoot, 'kundli');
 const ORIGIN = 'https://www.steliara.com';
 const LOCALES = ['en', 'hi'];
-const ASSET_VERSION = '2';
+const ASSET_VERSION = '3';
 
 const TOOLS = {
     'dasha-calculator': { tool: 'dasha', nav: 'navDasha' },
@@ -185,11 +185,26 @@ function faq(page) {
       </section>`;
 }
 
-function upsell(ui) {
+// A real weekly letter (made by the same code that writes the emails) for a fictional person,
+// so the offer shows what arrives instead of describing it.
+function weeklyExample(example) {
+    const days = example.days.map((day) => `<li><span class="when">${esc(day.label)}</span> ${esc(day.text)}</li>`).join('');
+    return `
+        <article class="example">
+          <p class="example-label">${esc(example.title)}</p>
+          <p class="hint">${esc(example.note)}</p>
+          <p>${esc(example.lead)}</p>
+          <ul class="example-days">${days}</ul>
+          <h3>${esc(example.practiceTitle)}</h3>
+          <p>${esc(example.practice)}</p>
+        </article>`;
+}
+
+function upsell(ui, example) {
     return `
       <section id="upsell" class="card upsell" hidden aria-labelledby="upsell-title">
         <h2 id="upsell-title">${esc(ui.upsellTitle)}</h2>
-        <p>${esc(ui.upsellText)}</p>
+        <p>${esc(ui.upsellText)}</p>${weeklyExample(example)}
         <p class="hint">${esc(ui.upsellFree)}</p>
         <form id="upsell-form" novalidate>
           <div class="field">
@@ -223,7 +238,7 @@ function toolMain(locale, slug, catalog) {
         <button class="btn" type="submit" data-label="${esc(ui.calculate)}" data-busy="${esc(ui.calculating)}">${esc(ui.calculate)}</button>
         <noscript><p class="error">${esc(ui.noscript)}</p></noscript>
       </form>
-      <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>${isMatching ? '' : upsell(ui)}${sections(page)}${faq({ ...page, faqTitle: catalog.ui.faqTitle })}
+      <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>${isMatching ? '' : upsell(ui, catalog.weeklyExample)}${sections(page)}${faq({ ...page, faqTitle: catalog.ui.faqTitle })}
     </main>`;
 }
 
