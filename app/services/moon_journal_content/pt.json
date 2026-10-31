@@ -32,10 +32,10 @@
   "em Peixes"
  ],
  "date_format": "%d/%m/%Y, %H:%M",
- "headline": "{kind} {sign_in}, na sua casa {house}",
+ "headline": "{kind} {sign_in} · {area} (casa {house})",
  "frame": {
-  "rising": "Contamos as casas a partir do seu ascendente (casas de signos inteiros).",
-  "sun": "Sem a hora de nascimento, contamos as casas a partir do seu signo solar (casas solares). Informe a hora e o local de nascimento para um resultado mais pessoal."
+  "rising": "Contamos as áreas da vida a partir do seu ascendente, o signo que nascia no momento do seu nascimento.",
+  "sun": "Sem a hora de nascimento, contamos as áreas da vida a partir do seu signo solar. Informe a hora e o local de nascimento para um resultado mais pessoal."
  },
  "universal": {
   "new": "Complete a frase: Neste mês lunar, eu escolho...",
@@ -43,6 +43,7 @@
  },
  "houses": [
   {
+   "area": "Você e como se mostra",
    "theme": "Esta parte do seu mapa fala de você e de como você se mostra ao mundo.",
    "new": [
     "O que você quer começar este mês só para você?",
@@ -55,6 +56,7 @@
    "affirmation": "Eu me dou espaço para recomeçar."
   },
   {
+   "area": "Valores e estabilidade",
    "theme": "Esta parte do seu mapa fala do que você valoriza e do que lhe dá estabilidade.",
    "new": [
     "O que significa se sentir em segurança para você agora?",
@@ -67,6 +69,7 @@
    "affirmation": "Valorizo o que tenho e o que ainda posso fazer crescer."
   },
   {
+   "area": "Palavras e conversas do dia a dia",
    "theme": "Esta parte do seu mapa contém as palavras que você repete, as perguntas que acompanha e as conversas cotidianas que moldam silenciosamente as suas escolhas.",
    "new": [
     "Qual conversa você continua ensaiando na cabeça? Escreva a primeira frase sincera.",
@@ -79,6 +82,7 @@
    "affirmation": "Confio em mim para dizer o que é claro com gentileza."
   },
   {
+   "area": "Lar e raízes",
    "theme": "Esta parte do seu mapa fala do lar, das raízes e da calma interior.",
    "new": [
     "O que faria sua casa ser ainda mais sua?",
@@ -91,6 +95,7 @@
    "affirmation": "Crio um lugar de calma dentro e ao redor de mim."
   },
   {
+   "area": "Alegria, criatividade e diversão",
    "theme": "Esta parte do seu mapa fala de alegria, criatividade e diversão.",
    "new": [
     "O que você gostaria de criar só pelo prazer de criar?",
@@ -103,6 +108,7 @@
    "affirmation": "Eu me permito aproveitar o que amo."
   },
   {
+   "area": "Rotina, trabalho e autocuidado",
    "theme": "Esta parte do seu mapa fala da sua rotina, do seu trabalho e do cuidado com você.",
    "new": [
     "Que pequena rotina diária você gostaria de começar?",
@@ -115,6 +121,7 @@
    "affirmation": "Pequenos passos todos os dias são suficientes."
   },
   {
+   "area": "Relações próximas",
    "theme": "Esta parte do seu mapa fala das relações próximas e das parcerias.",
    "new": [
     "O que você quer trazer para as suas relações mais próximas?",
@@ -127,6 +134,7 @@
    "affirmation": "Encontro os outros com abertura e com respeito por mim."
   },
   {
+   "area": "Confiança, intimidade e transformação",
    "theme": "Esta parte do seu mapa fala de confiança, partilha e transformação interior.",
    "new": [
     "O que você pode soltar para abrir espaço para o novo?",
@@ -139,6 +147,7 @@
    "affirmation": "Solto com leveza e guardo o que importa."
   },
   {
+   "area": "Viagens, estudos e sentido",
    "theme": "Esta parte do seu mapa fala de horizontes: viagens, estudos e sentido.",
    "new": [
     "Que lugar, livro ou ideia está chamando você?",
@@ -151,6 +160,7 @@
    "affirmation": "Eu me abro a novos horizontes."
   },
   {
+   "area": "Metas e vocação",
    "theme": "Esta parte do seu mapa fala de metas, vocação e do seu caminho.",
    "new": [
     "Em direção a qual meta você quer dar um passo claro?",
@@ -163,6 +173,7 @@
    "affirmation": "Sigo rumo às minhas metas no meu próprio ritmo."
   },
   {
+   "area": "Amizades e comunidade",
    "theme": "Esta parte do seu mapa fala de amizades, comunidade e esperanças.",
    "new": [
     "Que esperança para o futuro você quer cultivar?",
@@ -175,6 +186,7 @@
    "affirmation": "Faço parte de um círculo de pessoas que importam para mim."
   },
   {
+   "area": "Descanso e mundo interior",
    "theme": "Esta parte do seu mapa fala de descanso, silêncio e do seu mundo interior.",
    "new": [
     "Como você pode se dar mais tempo de quietude este mês?",
@@ -196,7 +208,7 @@
   "confirm_note": "Confirme seu endereço para começar. Você pode cancelar ou apagar seus dados quando quiser.",
   "confirm_fallback": "Se o botão não funcionar, copie e cole este link no navegador:",
   "confirm_body": "Olá,\n\nSuas cartas da Lua estão esperando. Duas vezes por mês, na lua nova e na lua cheia, a Steliara envia uma breve reflexão pessoal inspirada no seu mapa natal: um momento para perceber o que está mudando na sua vida e escolher o próximo passo.\n\nConfirme seu e-mail aqui:\n<{link}>\n\nSe não foi você quem pediu, basta ignorar esta mensagem. Não enviaremos mais nada.",
-  "subject": "{kind} {sign_in}: sua casa {house}",
+  "subject": "{kind} {sign_in} · {area}",
   "when": "Momento exato: {date} ({timezone}).",
   "prompts_title": "Perguntas para esta lunação:",
   "affirmation_title": "Afirmação:",

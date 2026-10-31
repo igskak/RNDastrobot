@@ -25,7 +25,7 @@ const outRoot = path.join(frontendRoot, 'moon');
 const ORIGIN = 'https://www.steliara.com';
 const LOCALES = ['en', 'pl', 'de', 'fr', 'it', 'es', 'pt'];
 const PAGES = ['index', 'letter'];
-const ASSET_VERSION = '2';
+const ASSET_VERSION = '3';
 
 const TIMEZONES = [
     'Europe/Warsaw', 'Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/Paris', 'Europe/Brussels',
@@ -214,7 +214,7 @@ function lunationTable(catalog, letters, lunations, links) {
     return `
       <section class="lunations reveal-on-scroll" aria-labelledby="lunations-title">
         <h2 id="lunations-title">${esc(catalog.pages.index.tableTitle)}</h2>
-        <p class="hint">${esc(catalog.pages.index.tableNote)}</p>
+        <p class="hint" id="lunations-note">${esc(catalog.pages.index.tableNote)}</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th scope="col">${esc(ui.tableDate)}</th><th scope="col">${esc(ui.tablePhase)}</th><th scope="col">${esc(ui.tableSign)}</th></tr></thead>
@@ -235,8 +235,9 @@ function freeExample(catalog, letters, lunations) {
     const lun = lunations.find((l) => l.kind === 'new_moon');
     const house = (lun.sign - EXAMPLE_RISING + 12) % 12 + 1;
     const block = letters.houses[house - 1];
-    const headline = letters.headline.replace('{kind}', letters.kinds.new_moon)
-        .replace('{sign_in}', letters.signs_in[lun.sign]).replace('{house}', String(house));
+    const headline = fill(letters.headline, {
+        kind: letters.kinds.new_moon, sign_in: letters.signs_in[lun.sign], area: block.area, house,
+    });
     return `
           <article class="example">
             <p class="example-label">${esc(catalog.plans.exampleFreeTitle)}</p>
@@ -277,14 +278,22 @@ function planCards(catalog) {
         </div>`;
 }
 
-function plans(catalog, letters, lunations) {
+function plans(catalog) {
     const p = catalog.plans;
     return `
       <section class="plans reveal-on-scroll" aria-labelledby="plans-title">
         <h2 id="plans-title">${esc(p.title)}</h2>
         <p>${esc(p.lead)}</p>${planCards(catalog)}
-        <div class="examples">${freeExample(catalog, letters, lunations)}${paidExample(catalog)}
+        <div class="examples single">${paidExample(catalog)}
         </div>
+      </section>`;
+}
+
+// What arrives, shown before what it costs: a real letter right after the short explanation.
+function letterExample(catalog, letters, lunations) {
+    return `
+      <section class="letter-example reveal-on-scroll" aria-labelledby="example-title">
+        <h2 id="example-title">${esc(catalog.plans.exampleHeading)}</h2>${freeExample(catalog, letters, lunations)}
       </section>`;
 }
 
@@ -317,17 +326,19 @@ function linkCard(ui) {
 }
 
 function copy(page) {
-    const sections = page.sections.map((section) => `
+    return page.sections.map((section) => `
       <section class="copy reveal-on-scroll">
         <h2>${esc(section.h2)}</h2>
         ${section.p.map((p) => `<p>${esc(p)}</p>`).join('\n        ')}
       </section>`).join('');
-    const faq = `
+}
+
+function faqSection(page) {
+    return `
       <section class="copy faq reveal-on-scroll">
         <h2>${esc(page.faqTitle)}</h2>
         ${page.faq.map((item) => `<h3>${esc(item.q)}</h3>\n        <p>${esc(item.a)}</p>`).join('\n        ')}
       </section>`;
-    return sections + faq;
 }
 
 function indexMain(catalog, letters, lunations, links) {
@@ -336,7 +347,12 @@ function indexMain(catalog, letters, lunations, links) {
     return `<main id="main" class="shell tool moon-page">
       <h1>${esc(page.h1)}</h1>
       <p class="lead">${esc(page.lead)}</p>
+      <p class="trust">${esc(page.trust)}</p>
       <div class="moon-grid">
+        <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
+          <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
+          <div class="moon-highlight-copy"></div>
+        </section>
         <div class="moon-primary">
           <form id="moon-form" class="card" novalidate>${birthFields(catalog)}
             <p id="form-error" class="error" role="alert" hidden></p>
@@ -360,13 +376,9 @@ function indexMain(catalog, letters, lunations, links) {
           </section>
         </div>
         <aside class="moon-rail">
-          <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
-            <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
-            <div class="moon-highlight-copy"></div>
-          </section>
 ${lunationTable(catalog, letters, lunations, links)}
         </aside>
-      </div>${plans(catalog, letters, lunations)}${linkCard(ui)}${copy(page)}
+      </div>${copy(page)}${letterExample(catalog, letters, lunations)}${plans(catalog)}${linkCard(ui)}${faqSection(page)}
     </main>`;
 }
 
@@ -472,7 +484,7 @@ function lunationMain(locale, catalog, letters, plan, index, catalogs) {
     const rows = letters.signs.map((sign, rising) => {
         const house = (lun.sign - rising + 12) % 12 + 1;
         return `
-              <tr><th scope="row">${esc(sign)}</th><td>${house}</td><td>${esc(letters.houses[house - 1].theme)}</td></tr>`;
+              <tr><th scope="row">${esc(sign)}</th><td data-label="${esc(lp.housesHeaders[1])}">${house}</td><td>${esc(letters.houses[house - 1].area)}</td></tr>`;
     }).join('');
 
     const prev = plan[index - 1];
@@ -491,6 +503,9 @@ function lunationMain(locale, catalog, letters, plan, index, catalogs) {
 
     const faqIndex = lun.kind === 'new_moon' ? 2 : 3;
     const writeFaq = catalog.pages.index.faq[faqIndex];
+    const short = lun.kind === 'new_moon' ? 'new' : 'full';
+    const theme = lp.signs[lun.sign];
+    const questions = [...theme[short], letters.universal[short]];
     const langs = LOCALES.map((l) => (l === locale
         ? `<li><span aria-current="page">${esc(catalogs[l].languageName)}</span></li>`
         : `<li><a href="${pagePath(l, entry.slugs[l])}" hreflang="${catalogs[l].hreflang}" lang="${l}">${esc(catalogs[l].languageName)}</a></li>`)).join('');
@@ -508,6 +523,10 @@ function lunationMain(locale, catalog, letters, plan, index, catalogs) {
           <div><dt>${esc(lp.factSign)}</dt><dd>${esc(`${v.sign} ${v.degree}°`)}</dd></div>
         </dl>
       </section>
+      <section class="card theme" aria-labelledby="theme-title">
+        <h2 id="theme-title">${esc(fill(lp.aboutTitle, { sign: v.sign }))}</h2>
+        <p>${esc(theme.about)}</p>
+      </section>
       <section class="card houses" aria-labelledby="houses-title">
         <h2 id="houses-title">${esc(lp.housesTitle)}</h2>
         <p>${esc(lp.housesLead)}</p>
@@ -523,7 +542,7 @@ function lunationMain(locale, catalog, letters, plan, index, catalogs) {
         <h2 id="write-title">${esc(lp.writeTitle)}</h2>
         <p>${esc(writeFaq.a)}</p>
         <p class="hint">${esc(lp.writeLabel)}</p>
-        <ol class="prompts"><li>${esc(letters.universal[lun.kind === 'new_moon' ? 'new' : 'full'])}</li></ol>
+        <ol class="prompts">${questions.map((q) => `<li>${esc(q)}</li>`).join('')}</ol>
       </section>
       <section class="card cta" aria-labelledby="cta-title">
         <h2 id="cta-title">${esc(lp.ctaTitle)}</h2>
@@ -569,6 +588,13 @@ function renderLunation(locale, entry, index, plan, ctx) {
 `;
 }
 
+function i18n(catalog) {
+    return {
+        ...catalog.ui, months: catalog.months, tableDateFormat: catalog.tableDateFormat,
+        intl: catalog.intl, tableTimezone: catalog.tableTimezone,
+    };
+}
+
 function render(locale, slug, catalogs, letters, lunations, links) {
     const catalog = catalogs[locale];
     const main = slug === 'index' ? indexMain(catalog, letters[locale], lunations, links) : letterMain(locale, catalog);
@@ -579,7 +605,7 @@ function render(locale, slug, catalogs, letters, lunations, links) {
   ${header(locale, slug, catalog, catalogs)}
   ${main}
   ${footer(catalog)}
-  <script type="application/json" id="moon-i18n">${JSON.stringify(catalog.ui).replace(/</g, '\\u003c')}</script>
+  <script type="application/json" id="moon-i18n">${JSON.stringify(i18n(catalog)).replace(/</g, '\\u003c')}</script>
   <script src="/js/${script}.js?v=${ASSET_VERSION}" defer></script>
 </body>
 </html>

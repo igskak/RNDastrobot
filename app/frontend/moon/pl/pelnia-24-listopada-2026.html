@@ -23,8 +23,8 @@
     <meta property="og:locale" content="pl_PL">
     <meta property="og:image" content="https://www.steliara.com/assets/brand/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="/css/kundli.css?v=2">
-    <link rel="stylesheet" href="/css/moon.css?v=2">
+    <link rel="stylesheet" href="/css/kundli.css?v=3">
+    <link rel="stylesheet" href="/css/moon.css?v=3">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Kalendarz Księżyca","item":"https://www.steliara.com/moon/pl"},{"@type":"ListItem","position":2,"name":"Pełnia Księżyca 24 listopada 2026","item":"https://www.steliara.com/moon/pl/pelnia-24-listopada-2026"}]}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"O której godzinie jest Pełnia Księżyca 24 listopada 2026?","acceptedAnswer":{"@type":"Answer","text":"O 15:53 (czas polski). W czasie uniwersalnym (UTC): 24 listopada 2026, 14:53."}},{"@type":"Question","name":"W jakim znaku jest Pełnia Księżyca 24 listopada 2026?","acceptedAnswer":{"@type":"Answer","text":"Pełnia Księżyca w Bliźniętach, na 2°."}},{"@type":"Question","name":"W którym domu mojego horoskopu wypada?","acceptedAnswer":{"@type":"Answer","text":"To zależy od Twojego ascendentu. Tabela na tej stronie podaje wszystkie dwanaście, a kalkulator znajdzie Twój na podstawie daty urodzenia."}}]}</script>
 </head>
@@ -49,25 +49,29 @@
           <div><dt>Znak i stopień</dt><dd>Bliźnięta 2°</dd></div>
         </dl>
       </section>
+      <section class="card theme" aria-labelledby="theme-title">
+        <h2 id="theme-title">Temat: Bliźnięta</h2>
+        <p>Znak ciekawości, rozmowy, nauki i drobnych wymian każdego dnia.</p>
+      </section>
       <section class="card houses" aria-labelledby="houses-title">
         <h2 id="houses-title">W którym domu Twojego horoskopu wypada</h2>
-        <p>Ta sama lunacja wypada w innym domu dla każdego ascendentu. Znajdź swój w tabeli; jeśli nie znasz ascendentu, użyj znaku Słońca, co daje prostszy dom słoneczny.</p>
+        <p>Ten sam Księżyc dotyka innego obszaru życia w zależności od ascendentu, czyli znaku, który wschodził w chwili Twoich narodzin. Znajdź swój w tabeli. Jeśli go nie znasz, użyj znaku Słońca.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th scope="col">Ascendent</th><th scope="col">Dom</th><th scope="col">O czym jest ta część życia</th></tr></thead>
+            <thead><tr><th scope="col">Ascendent</th><th scope="col">Dom</th><th scope="col">Obszar życia</th></tr></thead>
             <tbody>
-              <tr><th scope="row">Baran</th><td>3</td><td>Ta część Twojego horoskopu obejmuje słowa, które powtarzasz, pytania, za którymi podążasz, i codzienne rozmowy, które po cichu kształtują Twoje wybory.</td></tr>
-              <tr><th scope="row">Byk</th><td>2</td><td>Ta część Twojego horoskopu dotyczy tego, co cenisz, i tego, co daje Ci poczucie stabilności.</td></tr>
-              <tr><th scope="row">Bliźnięta</th><td>1</td><td>Ta część Twojego horoskopu dotyczy Ciebie i tego, jak pokazujesz się światu.</td></tr>
-              <tr><th scope="row">Rak</th><td>12</td><td>Ta część Twojego horoskopu dotyczy odpoczynku, ciszy i Twojego wewnętrznego świata.</td></tr>
-              <tr><th scope="row">Lew</th><td>11</td><td>Ta część Twojego horoskopu dotyczy przyjaźni, wspólnoty i nadziei.</td></tr>
-              <tr><th scope="row">Panna</th><td>10</td><td>Ta część Twojego horoskopu dotyczy celów, powołania i Twojej drogi.</td></tr>
-              <tr><th scope="row">Waga</th><td>9</td><td>Ta część Twojego horoskopu dotyczy horyzontów: podróży, nauki i sensu.</td></tr>
-              <tr><th scope="row">Skorpion</th><td>8</td><td>Ta część Twojego horoskopu dotyczy zaufania, dzielenia się i wewnętrznej przemiany.</td></tr>
-              <tr><th scope="row">Strzelec</th><td>7</td><td>Ta część Twojego horoskopu dotyczy bliskich relacji i partnerstwa.</td></tr>
-              <tr><th scope="row">Koziorożec</th><td>6</td><td>Ta część Twojego horoskopu dotyczy codziennego rytmu, pracy i troski o siebie.</td></tr>
-              <tr><th scope="row">Wodnik</th><td>5</td><td>Ta część Twojego horoskopu dotyczy radości, twórczości i zabawy.</td></tr>
-              <tr><th scope="row">Ryby</th><td>4</td><td>Ta część Twojego horoskopu dotyczy domu, korzeni i wewnętrznego spokoju.</td></tr>
+              <tr><th scope="row">Baran</th><td data-label="Dom">3</td><td>Codzienne słowa i rozmowy</td></tr>
+              <tr><th scope="row">Byk</th><td data-label="Dom">2</td><td>Wartości i stabilność</td></tr>
+              <tr><th scope="row">Bliźnięta</th><td data-label="Dom">1</td><td>Ty i to, jak się pokazujesz</td></tr>
+              <tr><th scope="row">Rak</th><td data-label="Dom">12</td><td>Odpoczynek i świat wewnętrzny</td></tr>
+              <tr><th scope="row">Lew</th><td data-label="Dom">11</td><td>Przyjaciele i wspólnota</td></tr>
+              <tr><th scope="row">Panna</th><td data-label="Dom">10</td><td>Cele i powołanie</td></tr>
+              <tr><th scope="row">Waga</th><td data-label="Dom">9</td><td>Podróże, nauka i sens</td></tr>
+              <tr><th scope="row">Skorpion</th><td data-label="Dom">8</td><td>Zaufanie, bliskość i przemiana</td></tr>
+              <tr><th scope="row">Strzelec</th><td data-label="Dom">7</td><td>Bliskie relacje</td></tr>
+              <tr><th scope="row">Koziorożec</th><td data-label="Dom">6</td><td>Codzienny rytm, praca i troska o siebie</td></tr>
+              <tr><th scope="row">Wodnik</th><td data-label="Dom">5</td><td>Radość, twórczość i zabawa</td></tr>
+              <tr><th scope="row">Ryby</th><td data-label="Dom">4</td><td>Dom i korzenie</td></tr>
             </tbody>
           </table>
         </div>
@@ -75,13 +79,13 @@
       <section class="card write" aria-labelledby="write-title">
         <h2 id="write-title">Co zapisać</h2>
         <p>Spójrz na ostatnie dwa tygodnie i wymień trzy rzeczy, za które czujesz wdzięczność. List dodaje dwa pytania dla domu, w którym wypada pełnia.</p>
-        <p class="hint">Pytanie na ten dzień</p>
-        <ol class="prompts"><li>Wymień trzy chwile od ostatniego nowiu, które chcesz przeżyć jeszcze raz. Co miały ze sobą wspólnego?</li></ol>
+        <p class="hint">Pytania na ten czas</p>
+        <ol class="prompts"><li>Która myśl lub rozmowa została z Tobą ostatnio i dlaczego?</li><li>Które czyjeś słowa pomogły Ci ostatnio lepiej zrozumieć siebie?</li><li>Wymień trzy chwile od ostatniego nowiu, które chcesz przeżyć jeszcze raz. Co miały ze sobą wspólnego?</li></ol>
       </section>
       <section class="card cta" aria-labelledby="cta-title">
         <h2 id="cta-title">Zobacz to w swoim horoskopie</h2>
         <p>Podaj datę urodzenia, a zobaczysz swój dom, własne pytania i afirmację. Bezpłatne listy przychodzą na każdy nów i każdą pełnię.</p>
-        <a class="btn" href="/moon/pl#moon-form">Pokaż moje lunacje</a>
+        <a class="btn" href="/moon/pl#moon-form">Pokaż moje nowie i pełnie</a>
       </section>
       <section class="copy faq" aria-labelledby="faq-title">
         <h2 id="faq-title">Pytania</h2>

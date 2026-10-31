@@ -23,8 +23,8 @@
     <meta property="og:locale" content="fr_FR">
     <meta property="og:image" content="https://www.steliara.com/assets/brand/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="/css/kundli.css?v=2">
-    <link rel="stylesheet" href="/css/moon.css?v=2">
+    <link rel="stylesheet" href="/css/kundli.css?v=3">
+    <link rel="stylesheet" href="/css/moon.css?v=3">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Calendrier lunaire","item":"https://www.steliara.com/moon/fr"},{"@type":"ListItem","position":2,"name":"Pleine Lune 24 décembre 2026","item":"https://www.steliara.com/moon/fr/pleine-lune-24-decembre-2026"}]}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"À quelle heure est la Pleine Lune du 24 décembre 2026 ?","acceptedAnswer":{"@type":"Answer","text":"À 02:28 (heure de Paris). En temps universel (UTC) : 24 décembre 2026 à 01:28."}},{"@type":"Question","name":"Dans quel signe est la Pleine Lune du 24 décembre 2026 ?","acceptedAnswer":{"@type":"Answer","text":"Pleine Lune en Cancer, à 2°."}},{"@type":"Question","name":"Dans quelle maison de mon thème tombe-t-elle ?","acceptedAnswer":{"@type":"Answer","text":"Cela dépend de ton ascendant. Le tableau de cette page donne les douze, et le calculateur trouve le tien à partir de ta date de naissance."}}]}</script>
 </head>
@@ -49,25 +49,29 @@
           <div><dt>Signe et degré</dt><dd>Cancer 2°</dd></div>
         </dl>
       </section>
+      <section class="card theme" aria-labelledby="theme-title">
+        <h2 id="theme-title">Le thème : Cancer</h2>
+        <p>Le signe du foyer, de l'appartenance et du soin, pour les autres et pour toi.</p>
+      </section>
       <section class="card houses" aria-labelledby="houses-title">
         <h2 id="houses-title">Dans quelle maison de ton thème elle tombe</h2>
-        <p>La même lunaison tombe dans une maison différente selon l'ascendant. Trouve le tien dans le tableau ; si tu ne connais pas ton ascendant, prends ton signe solaire, qui donne une maison solaire plus simple.</p>
+        <p>La même lune touche un domaine de vie différent selon ton ascendant, le signe qui se levait à ta naissance. Trouve le tien dans le tableau ; si tu ne le connais pas, prends ton signe solaire.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th scope="col">Ascendant</th><th scope="col">Maison</th><th scope="col">De quoi parle ce domaine de vie</th></tr></thead>
+            <thead><tr><th scope="col">Ascendant</th><th scope="col">Maison</th><th scope="col">Domaine de vie</th></tr></thead>
             <tbody>
-              <tr><th scope="row">Bélier</th><td>4</td><td>Cette partie de ton thème parle du foyer, des racines et du calme intérieur.</td></tr>
-              <tr><th scope="row">Taureau</th><td>3</td><td>Cette partie de ton thème contient les mots que tu répètes, les questions que tu poursuis et les conversations ordinaires qui façonnent discrètement tes choix.</td></tr>
-              <tr><th scope="row">Gémeaux</th><td>2</td><td>Cette partie de ton thème parle de ce qui compte pour toi et de ce qui te donne de la stabilité.</td></tr>
-              <tr><th scope="row">Cancer</th><td>1</td><td>Cette partie de ton thème parle de toi et de la manière dont tu te montres au monde.</td></tr>
-              <tr><th scope="row">Lion</th><td>12</td><td>Cette partie de ton thème parle du repos, du silence et de ton monde intérieur.</td></tr>
-              <tr><th scope="row">Vierge</th><td>11</td><td>Cette partie de ton thème parle des amitiés, de la communauté et des espoirs.</td></tr>
-              <tr><th scope="row">Balance</th><td>10</td><td>Cette partie de ton thème parle des objectifs, de la vocation et de ton chemin.</td></tr>
-              <tr><th scope="row">Scorpion</th><td>9</td><td>Cette partie de ton thème parle des horizons : voyages, études et sens.</td></tr>
-              <tr><th scope="row">Sagittaire</th><td>8</td><td>Cette partie de ton thème parle de la confiance, du partage et de la transformation intérieure.</td></tr>
-              <tr><th scope="row">Capricorne</th><td>7</td><td>Cette partie de ton thème parle des relations proches et du partenariat.</td></tr>
-              <tr><th scope="row">Verseau</th><td>6</td><td>Cette partie de ton thème parle de ton quotidien, de ton travail et du soin que tu t'accordes.</td></tr>
-              <tr><th scope="row">Poissons</th><td>5</td><td>Cette partie de ton thème parle de la joie, de la créativité et du jeu.</td></tr>
+              <tr><th scope="row">Bélier</th><td data-label="Maison">4</td><td>Foyer et racines</td></tr>
+              <tr><th scope="row">Taureau</th><td data-label="Maison">3</td><td>Mots et conversations du quotidien</td></tr>
+              <tr><th scope="row">Gémeaux</th><td data-label="Maison">2</td><td>Valeurs et stabilité</td></tr>
+              <tr><th scope="row">Cancer</th><td data-label="Maison">1</td><td>Toi et ta façon de te montrer</td></tr>
+              <tr><th scope="row">Lion</th><td data-label="Maison">12</td><td>Repos et monde intérieur</td></tr>
+              <tr><th scope="row">Vierge</th><td data-label="Maison">11</td><td>Amitiés et communauté</td></tr>
+              <tr><th scope="row">Balance</th><td data-label="Maison">10</td><td>Objectifs et vocation</td></tr>
+              <tr><th scope="row">Scorpion</th><td data-label="Maison">9</td><td>Voyages, études et sens</td></tr>
+              <tr><th scope="row">Sagittaire</th><td data-label="Maison">8</td><td>Confiance, intimité et transformation</td></tr>
+              <tr><th scope="row">Capricorne</th><td data-label="Maison">7</td><td>Relations proches</td></tr>
+              <tr><th scope="row">Verseau</th><td data-label="Maison">6</td><td>Quotidien, travail et soin de soi</td></tr>
+              <tr><th scope="row">Poissons</th><td data-label="Maison">5</td><td>Joie, créativité et jeu</td></tr>
             </tbody>
           </table>
         </div>
@@ -75,13 +79,13 @@
       <section class="card write" aria-labelledby="write-title">
         <h2 id="write-title">Quoi écrire</h2>
         <p>Regarde les deux dernières semaines et note trois choses qui te remplissent de gratitude. Ta lettre ajoute deux questions pour la maison de la pleine lune.</p>
-        <p class="hint">Une question pour ce jour</p>
-        <ol class="prompts"><li>Nomme trois moments depuis la dernière nouvelle lune que tu aimerais revivre. Qu'avaient-ils en commun ?</li></ol>
+        <p class="hint">Questions pour cette lune</p>
+        <ol class="prompts"><li>Qui t'a fait te sentir chez toi récemment, et comment ?</li><li>Quel sentiment demande ton attention en ce moment ?</li><li>Nomme trois moments depuis la dernière nouvelle lune que tu aimerais revivre. Qu'avaient-ils en commun ?</li></ol>
       </section>
       <section class="card cta" aria-labelledby="cta-title">
         <h2 id="cta-title">Vois-la dans ton propre thème</h2>
         <p>Indique ta date de naissance pour obtenir ta maison, tes propres questions et une affirmation. Des lettres gratuites arrivent à chaque nouvelle et pleine lune.</p>
-        <a class="btn" href="/moon/fr#moon-form">Voir mes lunaisons</a>
+        <a class="btn" href="/moon/fr#moon-form">Voir mes lunes</a>
       </section>
       <section class="copy faq" aria-labelledby="faq-title">
         <h2 id="faq-title">Questions</h2>

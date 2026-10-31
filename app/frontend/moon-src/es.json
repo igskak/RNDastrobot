@@ -18,8 +18,9 @@
    "description": "Todas las lunas nuevas y llenas de 2026–2027 con la hora exacta, la casa de tu carta natal para cada lunación y preguntas gratuitas para tu diario de gratitud.",
    "h1": "Luna nueva y luna llena 2026–2027: fechas y tus preguntas personales para el diario",
    "lead": "Descubre en qué casa de tu carta natal caen la próxima luna nueva y la próxima luna llena y recibe algunas preguntas amables para tu diario: una intención en luna nueva, gratitud en luna llena.",
+   "trust": "Calculado con la Swiss Ephemeris, el motor astronómico de los programas de astrología profesionales. Gratis y sin cuenta.",
    "tableTitle": "Lunas nuevas y lunas llenas de noviembre de 2026 a diciembre de 2027",
-   "tableNote": "Horas peninsulares de España. La próxima lunación aparece destacada.",
+   "tableNote": "Horas peninsulares de España. La próxima luna aparece destacada.",
    "sections": [
     {
      "h2": "Un diario al ritmo de la Luna",
@@ -80,6 +81,7 @@
   "timezoneFromPlace": "Zona horaria según el lugar de nacimiento.",
   "calculate": "Ver mis lunas",
   "calculating": "Calculando…",
+  "resultWhen": "{date} (tu hora, {tz})",
   "noscript": "Esta calculadora necesita JavaScript.",
   "required": "Introduce tu fecha de nacimiento.",
   "resultTitle": "Tu próxima luna nueva y luna llena",
@@ -89,7 +91,7 @@
   "signupText": "Dos correos breves al mes, el día de cada luna nueva y cada luna llena, con preguntas para la casa de tu carta donde cae. Gratis, y puedes darte de baja con un clic.",
   "email": "Correo electrónico",
   "consent": "Acepto recibir estos correos y que se guarden mis datos de nacimiento con este fin. Puedo borrarlos en cualquier momento.",
-  "subscribe": "Enviadme mis cartas de la Luna",
+  "subscribe": "Quiero recibir mis cartas de la Luna",
   "subscribing": "Enviando…",
   "signupDone": "Casi listo: abre el correo que acabamos de enviarte y confirma tu dirección.",
   "errorEmail": "Revisa tu dirección de correo.",
@@ -103,6 +105,7 @@
   "tableDate": "Fecha y hora",
   "tablePhase": "Fase",
   "tableSign": "Signo",
+  "tableNoteLocal": "Horas en tu zona horaria ({tz}). La próxima luna aparece destacada.",
   "nextBadge": "próxima",
   "selectedBadge": "Seleccionada",
   "loading": "Cargando tu carta…",
@@ -113,7 +116,7 @@
   "currentTitle": "Tu Luna de ahora",
   "writePlaceholder": "Escribe aquí… Se guarda automáticamente.",
   "saved": "Guardado",
-  "nextLine": "Próxima: {kind} el {date} {sign_in}, en tu casa {house}.",
+  "nextLine": "Próxima: {kind} el {date} {sign_in} · {area}.",
   "historyTitle": "Tu diario",
   "historyEmpty": "Aquí aparecerán tus respuestas.",
   "fakeTitle": "Mes personal",
@@ -160,25 +163,47 @@
  ],
  "tableDateFormat": "{d} de {month} de {y}, {hh}:{mm}",
  "plans": {
-  "title": "Dos formas de estar más cerca de tu propio ritmo",
-  "lead": "El cielo no está aquí para decirte lo que va a suceder. Puede darte un momento para notar lo que ya está pidiendo tu atención — en cada luna nueva y llena, o como una historia más profunda que se despliega a lo largo de todo el mes.",
+  "title": "Cartas gratuitas, y un mes personal si quieres más",
+  "lead": "No predecimos acontecimientos. Te enviamos preguntas en los momentos en que la Luna cambia de fase y guardamos tus respuestas para que puedas volver a ellas.",
   "freeTitle": "Tu carta de la Luna",
-  "freeIntro": "Dos veces al mes, una carta breve te encuentra en un momento natural de cambio. Traduce la luna nueva o llena a través de tu propia carta natal y te ofrece un espacio tranquilo donde puedes escucharte con más claridad.",
+  "freeIntro": "El día de cada luna nueva y llena recibes un correo breve: el área de tu carta donde cae la Luna, tres preguntas y una afirmación. Respondes en una página privada; lleva unos cinco minutos.",
   "freeItems": [
-   {"title": "Tu cielo, en lenguaje humano", "text": "Descubre qué área de tu vida toca esta luna y por qué puede sentirse más viva ahora — sin jerga ni predicciones cerradas."},
-   {"title": "Preguntas que abren algo", "text": "Tres invitaciones cuidadosamente elegidas te ayudan a nombrar lo que quieres, lo que ha cambiado y lo que estás listo para llevar contigo."},
-   {"title": "Un diario que recuerda", "text": "Tus respuestas permanecen juntas en un diario privado, para que una sensación pasajera pueda convertirse con el tiempo en un patrón que reconoces."}
+   {
+    "title": "El área de la vida que toca esta luna",
+    "text": "Amor, hogar, trabajo, descanso: cada vez la Luna cae en un área distinta de tu carta, explicada con palabras sencillas."
+   },
+   {
+    "title": "Tres preguntas para responder",
+    "text": "Una sobre lo que quieres, otra sobre lo que ha cambiado y otra para llevar contigo. Lo bastante breves para un día lleno."
+   },
+   {
+    "title": "Tus respuestas, juntas",
+    "text": "Todo lo que escribes se guarda en un diario privado, para releer meses anteriores y notar lo que vuelve."
+   }
   ],
-  "freeClosing": "Gratis, dos veces al mes. Unos minutos de atención que te pertenecen solo a ti.",
+  "freeClosing": "Gratis, dos correos al mes. Baja con un clic.",
   "paidTitle": "Tu Mes personal",
-  "paidIntro": "El Mes personal te ofrece la visión completa. En lugar de vivir el mes como una sucesión borrosa de fechas, ves su ritmo emocional: los periodos que pueden remover algo, las preguntas con las que merece la pena quedarse y el hilo que lo conecta todo.",
+  "paidIntro": "Un calendario de tu mes, calculado a partir de tu carta natal: qué días traen qué temas, con una pregunta para cada uno, y al final del mes una mirada a lo que escribiste.",
   "paidItems": [
-   {"title": "Tus fechas significativas", "text": "Un calendario personal de los tránsitos más fuertes del mes, traducidos en situaciones que puedes reconocer en el trabajo, las relaciones, el hogar y tu vida interior."},
-   {"title": "Orientación que realmente puedes usar", "text": "Cada periodo llega con una reflexión concreta — no una instrucción — para que puedas tomar tu propia decisión con más conciencia."},
-   {"title": "Patrones que solo revela el tiempo", "text": "Al final del mes, tus notas vuelven junto al cielo de aquellos días y muestran necesidades, tensiones y deseos que se repiten."},
-   {"title": "Tu año como una historia", "text": "En tu cumpleaños, esos meses se convierten en un anuario privado: no una lista de predicciones, sino un retrato de cómo has cambiado."}
+   {
+    "title": "Tus fechas del mes",
+    "text": "Los días en que los planetas tocan con más fuerza tu carta y el área de la vida de cada uno: trabajo, relaciones, hogar o mundo interior."
+   },
+   {
+    "title": "Una pregunta para cada periodo",
+    "text": "Sin instrucciones: una pregunta por periodo para que decidas por ti."
+   },
+   {
+    "title": "Un repaso de tus notas",
+    "text": "Al final del mes ponemos tus notas junto al cielo de esos días, para que se vean las necesidades y los temas que se repiten."
+   },
+   {
+    "title": "Tu año como una historia",
+    "text": "En tu cumpleaños, esos meses se convierten en un anuario privado: no una lista de predicciones, sino un retrato de cómo has cambiado."
+   }
   ],
-  "paidClosing": "Para quien no solo quiere saber qué sucede en el cielo, sino entender qué está abriendo en su propia vida.",
+  "paidClosing": "Para quien quiere ver el mes entero, no solo dos momentos.",
+  "exampleHeading": "Así es una carta",
   "exampleFreeTitle": "Ejemplo de carta gratuita",
   "examplePaidTitle": "Ejemplo de mes personal",
   "exampleNote": "Ejemplo para una persona ficticia nacida el 17 de mayo de 1990. Tu propio mes se calcula con tus datos de nacimiento.",
@@ -235,14 +260,149 @@
   "factUtc": "Tiempo universal (UTC)",
   "factSign": "Signo y grado",
   "housesTitle": "En qué casa de tu carta cae",
-  "housesLead": "La misma lunación cae en una casa distinta para cada ascendente. Busca el tuyo en la tabla; si no conoces tu ascendente, usa tu signo solar, que da una casa solar más sencilla.",
+  "housesLead": "La misma luna toca un área de la vida distinta según tu ascendente, el signo que salía cuando naciste. Busca el tuyo en la tabla; si no lo conoces, usa tu signo solar.",
   "housesHeaders": [
    "Ascendente",
    "Casa",
-   "De qué trata esta área de la vida"
+   "Área de la vida"
+  ],
+  "aboutTitle": "El tema: {sign}",
+  "signs": [
+   {
+    "about": "El signo de los comienzos, el valor y el impulso sincero.",
+    "new": [
+     "¿Qué empezarías este mes sin esperar el momento perfecto?",
+     "¿Dónde te gustaría tener un poco más de valor, y cuál es el primer paso pequeño?"
+    ],
+    "full": [
+     "¿Qué te atreviste a empezar hace poco y qué te está dando?",
+     "¿Dónde seguiste un impulso sincero y qué te mostró?"
+    ]
+   },
+   {
+    "about": "El signo del cuerpo, los sentidos, la estabilidad y lo que de verdad valoras.",
+    "new": [
+     "¿A qué placer sencillo quieres hacerle sitio este mes?",
+     "¿Qué haría tus días más estables y menos apresurados?"
+    ],
+    "full": [
+     "¿Qué has construido despacio que ahora puedes apreciar?",
+     "¿Qué comodidad cotidiana fue importante para ti en las últimas dos semanas?"
+    ]
+   },
+   {
+    "about": "El signo de la curiosidad, la conversación, el aprendizaje y los pequeños intercambios del día.",
+    "new": [
+     "¿Qué te gustaría aprender o explorar por pura curiosidad?",
+     "¿Qué conversación te gustaría empezar, y con quién?"
+    ],
+    "full": [
+     "¿Qué idea o conversación se te quedó dentro hace poco, y por qué?",
+     "¿Qué entendiste de ti gracias a las palabras de alguien?"
+    ]
+   },
+   {
+    "about": "El signo del hogar, la pertenencia y el cuidado, de los demás y de ti.",
+    "new": [
+     "¿Qué haría tu hogar, también el interior, más cálido y seguro?",
+     "¿Cómo quieres cuidarte este mes?"
+    ],
+    "full": [
+     "¿Quién te hizo sentir en casa hace poco, y cómo?",
+     "¿Qué sentimiento pide tu cuidado en este momento?"
+    ]
+   },
+   {
+    "about": "El signo de la alegría, la creatividad, la generosidad y el deseo de mostrarte por completo.",
+    "new": [
+     "¿Qué crearías este mes si nadie lo calificara?",
+     "¿Dónde te gustaría mostrarte más como eres?"
+    ],
+    "full": [
+     "¿Qué te dio orgullo o una verdadera sensación de vida hace poco?",
+     "¿Dónde marcó la diferencia tu calidez o tu generosidad?"
+    ]
+   },
+   {
+    "about": "El signo del ritmo diario, el trabajo cuidadoso y los pequeños hábitos que ordenan la vida.",
+    "new": [
+     "¿Qué pequeño hábito diario marcaría la mayor diferencia, con suavidad?",
+     "¿Qué podrías simplificar u ordenar este mes?"
+    ],
+    "full": [
+     "¿Qué rutina fue un buen apoyo en las últimas semanas?",
+     "¿Qué hiciste con cuidado que merece tu propio reconocimiento?"
+    ]
+   },
+   {
+    "about": "El signo de las relaciones, el equilibrio, la justicia y la belleza.",
+    "new": [
+     "¿Qué equilibrio quieres entre dar y recibir?",
+     "¿A qué relación quieres dedicar más atención?"
+    ],
+    "full": [
+     "¿Dónde encontraste un buen equilibrio hace poco, y qué ayudó?",
+     "¿Por qué vínculo sientes gratitud ahora?"
+    ]
+   },
+   {
+    "about": "El signo de la profundidad, la confianza, la honestidad contigo y la transformación interior.",
+    "new": [
+     "¿Qué puedes soltar para hacer sitio a algo nuevo?",
+     "¿Dónde te gustaría confiar un poco más, también en ti?"
+    ],
+    "full": [
+     "¿Qué verdad sobre ti se ha vuelto más clara hace poco?",
+     "¿Qué ha cambiado en silencio dentro de ti desde la última luna nueva?"
+    ]
+   },
+   {
+    "about": "El signo de los horizontes, el sentido, los viajes, el estudio y la esperanza.",
+    "new": [
+     "¿Qué te gustaría explorar, aprender o mirar con ojos nuevos?",
+     "¿Qué convicción o esperanza quieres que guíe tus decisiones este mes?"
+    ],
+    "full": [
+     "¿Qué amplió tu mirada sobre la vida hace poco?",
+     "¿Sobre qué tienes hoy más esperanza que hace un mes?"
+    ]
+   },
+   {
+    "about": "El signo de las metas, la paciencia, la responsabilidad y lo que se construye con tiempo.",
+    "new": [
+     "¿Qué meta a largo plazo merece un paso concreto este mes?",
+     "¿Qué estructura o límite apoyaría lo que estás construyendo?"
+    ],
+    "full": [
+     "¿Qué avance, aunque sea lento, puedes reconocer hoy?",
+     "¿Qué responsabilidad llevaste bien, y cómo?"
+    ]
+   },
+   {
+    "about": "El signo de la amistad, la comunidad, la libertad y las ideas nuevas.",
+    "new": [
+     "¿Qué idea te parece nueva e ilusionante ahora mismo?",
+     "¿Qué comunidad o amistad quieres cuidar?"
+    ],
+    "full": [
+     "¿Quién de tu entorno te inspiró hace poco?",
+     "¿Dónde encontraste espacio para ser tú, sin adaptarte?"
+    ]
+   },
+   {
+    "about": "El signo de la imaginación, la compasión, el descanso y el mundo interior.",
+    "new": [
+     "¿Qué necesita más tu mundo interior este mes: descanso, silencio o imaginación?",
+     "¿A qué sueño quieres darle un poco de espacio?"
+    ],
+    "full": [
+     "¿Cuándo sentiste hace poco un vínculo con algo más grande que tú?",
+     "¿Qué te dieron el descanso o el silencio en las últimas semanas?"
+    ]
+   }
   ],
   "writeTitle": "Qué escribir",
-  "writeLabel": "Una pregunta para este día",
+  "writeLabel": "Preguntas para esta luna",
   "ctaTitle": "Míralo en tu propia carta",
   "ctaText": "Introduce tu fecha de nacimiento para recibir tu casa, tus propias preguntas y una afirmación. Las cartas gratuitas llegan en cada luna nueva y llena.",
   "moreTitle": "Todas las lunas nuevas y llenas de {from} a {to}",

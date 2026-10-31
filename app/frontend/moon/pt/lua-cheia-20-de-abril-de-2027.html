@@ -23,8 +23,8 @@
     <meta property="og:locale" content="pt_BR">
     <meta property="og:image" content="https://www.steliara.com/assets/brand/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="/css/kundli.css?v=2">
-    <link rel="stylesheet" href="/css/moon.css?v=2">
+    <link rel="stylesheet" href="/css/kundli.css?v=3">
+    <link rel="stylesheet" href="/css/moon.css?v=3">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Calendário lunar","item":"https://www.steliara.com/moon/pt"},{"@type":"ListItem","position":2,"name":"Lua Cheia 20 de abril de 2027","item":"https://www.steliara.com/moon/pt/lua-cheia-20-de-abril-de-2027"}]}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"A que horas é a Lua Cheia em 20 de abril de 2027?","acceptedAnswer":{"@type":"Answer","text":"Às 19:27 (horário de Brasília). Em tempo universal (UTC): 20 de abril de 2027, 22:27."}},{"@type":"Question","name":"Em que signo está a Lua Cheia em 20 de abril de 2027?","acceptedAnswer":{"@type":"Answer","text":"Lua Cheia em Escorpião, a 0°."}},{"@type":"Question","name":"Em que casa do meu mapa ela cai?","acceptedAnswer":{"@type":"Answer","text":"Depende do seu ascendente. A tabela desta página lista os doze, e a calculadora encontra o seu a partir da data de nascimento."}}]}</script>
 </head>
@@ -49,25 +49,29 @@
           <div><dt>Signo e grau</dt><dd>Escorpião 0°</dd></div>
         </dl>
       </section>
+      <section class="card theme" aria-labelledby="theme-title">
+        <h2 id="theme-title">O tema: Escorpião</h2>
+        <p>O signo da profundidade, da confiança, da honestidade consigo e da transformação interior.</p>
+      </section>
       <section class="card houses" aria-labelledby="houses-title">
         <h2 id="houses-title">Em que casa do seu mapa ela cai</h2>
-        <p>A mesma lunação cai em uma casa diferente para cada ascendente. Encontre o seu na tabela; se não souber o ascendente, use o signo solar, que dá uma casa solar mais simples.</p>
+        <p>A mesma lua toca uma área da vida diferente conforme o seu ascendente, o signo que nascia quando você nasceu. Encontre o seu na tabela; se não souber, use o seu signo solar.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th scope="col">Ascendente</th><th scope="col">Casa</th><th scope="col">Do que trata essa área da vida</th></tr></thead>
+            <thead><tr><th scope="col">Ascendente</th><th scope="col">Casa</th><th scope="col">Área da vida</th></tr></thead>
             <tbody>
-              <tr><th scope="row">Áries</th><td>8</td><td>Esta parte do seu mapa fala de confiança, partilha e transformação interior.</td></tr>
-              <tr><th scope="row">Touro</th><td>7</td><td>Esta parte do seu mapa fala das relações próximas e das parcerias.</td></tr>
-              <tr><th scope="row">Gêmeos</th><td>6</td><td>Esta parte do seu mapa fala da sua rotina, do seu trabalho e do cuidado com você.</td></tr>
-              <tr><th scope="row">Câncer</th><td>5</td><td>Esta parte do seu mapa fala de alegria, criatividade e diversão.</td></tr>
-              <tr><th scope="row">Leão</th><td>4</td><td>Esta parte do seu mapa fala do lar, das raízes e da calma interior.</td></tr>
-              <tr><th scope="row">Virgem</th><td>3</td><td>Esta parte do seu mapa contém as palavras que você repete, as perguntas que acompanha e as conversas cotidianas que moldam silenciosamente as suas escolhas.</td></tr>
-              <tr><th scope="row">Libra</th><td>2</td><td>Esta parte do seu mapa fala do que você valoriza e do que lhe dá estabilidade.</td></tr>
-              <tr><th scope="row">Escorpião</th><td>1</td><td>Esta parte do seu mapa fala de você e de como você se mostra ao mundo.</td></tr>
-              <tr><th scope="row">Sagitário</th><td>12</td><td>Esta parte do seu mapa fala de descanso, silêncio e do seu mundo interior.</td></tr>
-              <tr><th scope="row">Capricórnio</th><td>11</td><td>Esta parte do seu mapa fala de amizades, comunidade e esperanças.</td></tr>
-              <tr><th scope="row">Aquário</th><td>10</td><td>Esta parte do seu mapa fala de metas, vocação e do seu caminho.</td></tr>
-              <tr><th scope="row">Peixes</th><td>9</td><td>Esta parte do seu mapa fala de horizontes: viagens, estudos e sentido.</td></tr>
+              <tr><th scope="row">Áries</th><td data-label="Casa">8</td><td>Confiança, intimidade e transformação</td></tr>
+              <tr><th scope="row">Touro</th><td data-label="Casa">7</td><td>Relações próximas</td></tr>
+              <tr><th scope="row">Gêmeos</th><td data-label="Casa">6</td><td>Rotina, trabalho e autocuidado</td></tr>
+              <tr><th scope="row">Câncer</th><td data-label="Casa">5</td><td>Alegria, criatividade e diversão</td></tr>
+              <tr><th scope="row">Leão</th><td data-label="Casa">4</td><td>Lar e raízes</td></tr>
+              <tr><th scope="row">Virgem</th><td data-label="Casa">3</td><td>Palavras e conversas do dia a dia</td></tr>
+              <tr><th scope="row">Libra</th><td data-label="Casa">2</td><td>Valores e estabilidade</td></tr>
+              <tr><th scope="row">Escorpião</th><td data-label="Casa">1</td><td>Você e como se mostra</td></tr>
+              <tr><th scope="row">Sagitário</th><td data-label="Casa">12</td><td>Descanso e mundo interior</td></tr>
+              <tr><th scope="row">Capricórnio</th><td data-label="Casa">11</td><td>Amizades e comunidade</td></tr>
+              <tr><th scope="row">Aquário</th><td data-label="Casa">10</td><td>Metas e vocação</td></tr>
+              <tr><th scope="row">Peixes</th><td data-label="Casa">9</td><td>Viagens, estudos e sentido</td></tr>
             </tbody>
           </table>
         </div>
@@ -75,8 +79,8 @@
       <section class="card write" aria-labelledby="write-title">
         <h2 id="write-title">O que escrever</h2>
         <p>Olhe para as duas últimas semanas e anote três coisas pelas quais você sente gratidão. Sua carta traz mais duas perguntas para a casa da lua cheia.</p>
-        <p class="hint">Uma pergunta para este dia</p>
-        <ol class="prompts"><li>Nomeie três momentos desde a última lua nova que você gostaria de viver outra vez. O que eles tinham em comum?</li></ol>
+        <p class="hint">Perguntas para esta lua</p>
+        <ol class="prompts"><li>Que verdade sobre você ficou mais clara recentemente?</li><li>O que mudou em silêncio dentro de você desde a última lua nova?</li><li>Nomeie três momentos desde a última lua nova que você gostaria de viver outra vez. O que eles tinham em comum?</li></ol>
       </section>
       <section class="card cta" aria-labelledby="cta-title">
         <h2 id="cta-title">Veja no seu próprio mapa</h2>

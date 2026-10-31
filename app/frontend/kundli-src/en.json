@@ -198,5 +198,21 @@
     "sectionSadeSati": "Your Sade Sati season",
     "noscript": "Please turn on JavaScript to use the calculator.",
     "faqTitle": "Frequently asked questions"
+  },
+  "weeklyExample": {
+    "title": "Example of a weekly letter",
+    "note": "A real letter for a fictional person born on 14 March 1992 at 7:40 in Delhi. Yours is calculated from your own birth details.",
+    "lead": "You are in the Mercury period, with the Sun sub-period running now. The larger season is about learning, communication and connection; the current chapter adds clarity, purpose and being seen.",
+    "days": [
+      {"label": "2 Nov 2026 - Cancer", "text": "A day to attend to values, resources and kind words."},
+      {"label": "3 Nov 2026 - Leo", "text": "A day for initiative, short trips and conversations."},
+      {"label": "4 Nov 2026 - Leo", "text": "A day for initiative, short trips and conversations."},
+      {"label": "5 Nov 2026 - Virgo", "text": "A day for home, comfort and inner steadiness."},
+      {"label": "6 Nov 2026 - Virgo", "text": "A day for home, comfort and inner steadiness."},
+      {"label": "7 Nov 2026 - Virgo", "text": "A day for home, comfort and inner steadiness."},
+      {"label": "8 Nov 2026 - Libra", "text": "A day for creativity, play and learning."}
+    ],
+    "practiceTitle": "A gentle practice",
+    "practice": "Spend a few quiet minutes each morning naming one thing you want to move toward."
   }
 }

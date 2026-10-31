@@ -23,8 +23,8 @@
     <meta property="og:locale" content="es_ES">
     <meta property="og:image" content="https://www.steliara.com/assets/brand/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="/css/kundli.css?v=2">
-    <link rel="stylesheet" href="/css/moon.css?v=2">
+    <link rel="stylesheet" href="/css/kundli.css?v=3">
+    <link rel="stylesheet" href="/css/moon.css?v=3">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Calendario lunar","item":"https://www.steliara.com/moon/es"},{"@type":"ListItem","position":2,"name":"Luna nueva 7 de abril de 2027","item":"https://www.steliara.com/moon/es/luna-nueva-7-de-abril-de-2027"}]}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿A qué hora es la Luna nueva del 7 de abril de 2027?","acceptedAnswer":{"@type":"Answer","text":"A las 01:51 (hora de Madrid). En tiempo universal (UTC): 6 de abril de 2027, 23:51."}},{"@type":"Question","name":"¿En qué signo cae la Luna nueva del 7 de abril de 2027?","acceptedAnswer":{"@type":"Answer","text":"Luna nueva en Aries, a 16°."}},{"@type":"Question","name":"¿En qué casa de mi carta cae?","acceptedAnswer":{"@type":"Answer","text":"Depende de tu ascendente. La tabla de esta página enumera los doce, y la calculadora encuentra el tuyo a partir de tu fecha de nacimiento."}}]}</script>
 </head>
@@ -49,25 +49,29 @@
           <div><dt>Signo y grado</dt><dd>Aries 16°</dd></div>
         </dl>
       </section>
+      <section class="card theme" aria-labelledby="theme-title">
+        <h2 id="theme-title">El tema: Aries</h2>
+        <p>El signo de los comienzos, el valor y el impulso sincero.</p>
+      </section>
       <section class="card houses" aria-labelledby="houses-title">
         <h2 id="houses-title">En qué casa de tu carta cae</h2>
-        <p>La misma lunación cae en una casa distinta para cada ascendente. Busca el tuyo en la tabla; si no conoces tu ascendente, usa tu signo solar, que da una casa solar más sencilla.</p>
+        <p>La misma luna toca un área de la vida distinta según tu ascendente, el signo que salía cuando naciste. Busca el tuyo en la tabla; si no lo conoces, usa tu signo solar.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th scope="col">Ascendente</th><th scope="col">Casa</th><th scope="col">De qué trata esta área de la vida</th></tr></thead>
+            <thead><tr><th scope="col">Ascendente</th><th scope="col">Casa</th><th scope="col">Área de la vida</th></tr></thead>
             <tbody>
-              <tr><th scope="row">Aries</th><td>1</td><td>Esta parte de tu carta habla de ti y de cómo te muestras al mundo.</td></tr>
-              <tr><th scope="row">Tauro</th><td>12</td><td>Esta parte de tu carta habla del descanso, el silencio y tu mundo interior.</td></tr>
-              <tr><th scope="row">Géminis</th><td>11</td><td>Esta parte de tu carta habla de amistades, comunidad y esperanzas.</td></tr>
-              <tr><th scope="row">Cáncer</th><td>10</td><td>Esta parte de tu carta habla de metas, vocación y tu camino.</td></tr>
-              <tr><th scope="row">Leo</th><td>9</td><td>Esta parte de tu carta habla de horizontes: viajes, estudio y sentido.</td></tr>
-              <tr><th scope="row">Virgo</th><td>8</td><td>Esta parte de tu carta habla de confianza, de compartir y de transformación interior.</td></tr>
-              <tr><th scope="row">Libra</th><td>7</td><td>Esta parte de tu carta habla de las relaciones cercanas y la colaboración.</td></tr>
-              <tr><th scope="row">Escorpio</th><td>6</td><td>Esta parte de tu carta habla de tu día a día, tu trabajo y el cuidado de ti.</td></tr>
-              <tr><th scope="row">Sagitario</th><td>5</td><td>Esta parte de tu carta habla de alegría, creatividad y juego.</td></tr>
-              <tr><th scope="row">Capricornio</th><td>4</td><td>Esta parte de tu carta habla del hogar, las raíces y la calma interior.</td></tr>
-              <tr><th scope="row">Acuario</th><td>3</td><td>Esta parte de tu carta contiene las palabras que repites, las preguntas que sigues y las conversaciones cotidianas que moldean en silencio tus decisiones.</td></tr>
-              <tr><th scope="row">Piscis</th><td>2</td><td>Esta parte de tu carta habla de lo que valoras y de lo que te da estabilidad.</td></tr>
+              <tr><th scope="row">Aries</th><td data-label="Casa">1</td><td>Tú y cómo te muestras</td></tr>
+              <tr><th scope="row">Tauro</th><td data-label="Casa">12</td><td>Descanso y mundo interior</td></tr>
+              <tr><th scope="row">Géminis</th><td data-label="Casa">11</td><td>Amistades y comunidad</td></tr>
+              <tr><th scope="row">Cáncer</th><td data-label="Casa">10</td><td>Metas y vocación</td></tr>
+              <tr><th scope="row">Leo</th><td data-label="Casa">9</td><td>Viajes, estudio y sentido</td></tr>
+              <tr><th scope="row">Virgo</th><td data-label="Casa">8</td><td>Confianza, intimidad y transformación</td></tr>
+              <tr><th scope="row">Libra</th><td data-label="Casa">7</td><td>Relaciones cercanas</td></tr>
+              <tr><th scope="row">Escorpio</th><td data-label="Casa">6</td><td>Día a día, trabajo y autocuidado</td></tr>
+              <tr><th scope="row">Sagitario</th><td data-label="Casa">5</td><td>Alegría, creatividad y juego</td></tr>
+              <tr><th scope="row">Capricornio</th><td data-label="Casa">4</td><td>Hogar y raíces</td></tr>
+              <tr><th scope="row">Acuario</th><td data-label="Casa">3</td><td>Palabras y conversaciones cotidianas</td></tr>
+              <tr><th scope="row">Piscis</th><td data-label="Casa">2</td><td>Valores y estabilidad</td></tr>
             </tbody>
           </table>
         </div>
@@ -75,8 +79,8 @@
       <section class="card write" aria-labelledby="write-title">
         <h2 id="write-title">Qué escribir</h2>
         <p>Una intención en presente y un pequeño paso para los próximos días. Tus preguntas personales dependen de la casa donde cae la luna nueva.</p>
-        <p class="hint">Una pregunta para este día</p>
-        <ol class="prompts"><li>Completa la frase: En este mes lunar elijo...</li></ol>
+        <p class="hint">Preguntas para esta luna</p>
+        <ol class="prompts"><li>¿Qué empezarías este mes sin esperar el momento perfecto?</li><li>¿Dónde te gustaría tener un poco más de valor, y cuál es el primer paso pequeño?</li><li>Completa la frase: En este mes lunar elijo...</li></ol>
       </section>
       <section class="card cta" aria-labelledby="cta-title">
         <h2 id="cta-title">Míralo en tu propia carta</h2>

@@ -23,8 +23,8 @@
     <meta property="og:locale" content="pl_PL">
     <meta property="og:image" content="https://www.steliara.com/assets/brand/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="stylesheet" href="/css/kundli.css?v=2">
-    <link rel="stylesheet" href="/css/moon.css?v=2">
+    <link rel="stylesheet" href="/css/kundli.css?v=3">
+    <link rel="stylesheet" href="/css/moon.css?v=3">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Nów i pełnia Księżyca 2026–2027: daty i Twoje osobiste pytania do dziennika","url":"https://www.steliara.com/moon/pl","description":"Wszystkie nowie i pełnie 2026–2027 z dokładną godziną, dom Twojego horoskopu dla każdej lunacji oraz bezpłatne pytania do dziennika wdzięczności i afirmacje.","applicationCategory":"LifestyleApplication","operatingSystem":"Web","inLanguage":"pl","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Kiedy jest najbliższy nów Księżyca?","acceptedAnswer":{"@type":"Answer","text":"Tabela na tej stronie zawiera wszystkie nowie i pełnie do końca 2027 roku z dokładną godziną, a najbliższa lunacja jest wyróżniona."}},{"@type":"Question","name":"Czy potrzebuję godziny urodzenia?","acceptedAnswer":{"@type":"Answer","text":"Nie. Bez godziny urodzenia liczymy domy od znaku Słońca. Z godziną i miejscem urodzenia liczymy je od ascendentu, co daje bardziej osobisty wynik."}},{"@type":"Question","name":"Co zapisać na nów?","acceptedAnswer":{"@type":"Answer","text":"Jedną intencję w czasie teraźniejszym i jeden mały krok na najbliższe dni. Twoje osobiste pytania zależą od domu, w którym wypada nów."}},{"@type":"Question","name":"Co zapisać na pełnię?","acceptedAnswer":{"@type":"Answer","text":"Spójrz na ostatnie dwa tygodnie i wymień trzy rzeczy, za które czujesz wdzięczność. List dodaje dwa pytania dla domu, w którym wypada pełnia."}},{"@type":"Question","name":"Czy to jest bezpłatne?","acceptedAnswer":{"@type":"Answer","text":"Tak. Kalkulator i listy są bezpłatne, a w każdym liście jest link do wypisania się."}}]}</script>
 </head>
@@ -42,7 +42,12 @@
   <main id="main" class="shell tool moon-page">
       <h1>Nów i pełnia Księżyca 2026–2027: daty i Twoje osobiste pytania do dziennika</h1>
       <p class="lead">Sprawdź, w którym domu Twojego horoskopu wypada najbliższy nów i najbliższa pełnia, i otrzymaj kilka spokojnych pytań do dziennika: intencję na nów, wdzięczność na pełnię.</p>
+      <p class="trust">Liczymy na Swiss Ephemeris, silniku astronomicznym, z którego korzystają programy dla zawodowych astrologów. Bezpłatnie, bez zakładania konta.</p>
       <div class="moon-grid">
+        <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
+          <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
+          <div class="moon-highlight-copy"></div>
+        </section>
         <div class="moon-primary">
           <form id="moon-form" class="card" novalidate>
         <fieldset class="person">
@@ -70,7 +75,7 @@
           </div>
         </fieldset>
             <p id="form-error" class="error" role="alert" hidden></p>
-            <button class="btn" type="submit" data-label="Pokaż moje lunacje" data-busy="Obliczam…">Pokaż moje lunacje</button>
+            <button class="btn" type="submit" data-label="Pokaż moje nowie i pełnie" data-busy="Obliczam…">Pokaż moje nowie i pełnie</button>
             <noscript><p class="error">Ten kalkulator wymaga JavaScriptu.</p></noscript>
           </form>
           <section id="result" class="result" aria-live="polite" tabindex="-1" hidden></section>
@@ -90,14 +95,10 @@
           </section>
         </div>
         <aside class="moon-rail">
-          <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
-            <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
-            <div class="moon-highlight-copy"></div>
-          </section>
 
       <section class="lunations reveal-on-scroll" aria-labelledby="lunations-title">
         <h2 id="lunations-title">Nowie i pełnie od listopada 2026 do grudnia 2027</h2>
-        <p class="hint">Godziny podajemy według czasu polskiego. Najbliższa lunacja jest wyróżniona.</p>
+        <p class="hint" id="lunations-note">Godziny podajemy według czasu polskiego. Najbliższy nów lub pełnia są wyróżnione.</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th scope="col">Data i godzina</th><th scope="col">Faza</th><th scope="col">Znak</th></tr></thead>
@@ -253,22 +254,35 @@
       </section>
         </aside>
       </div>
-      <section class="plans reveal-on-scroll" aria-labelledby="plans-title">
-        <h2 id="plans-title">Dwa sposoby, by być bliżej własnego rytmu</h2>
-        <p>Niebo nie ma mówić Ci, co się wydarzy. Może dać chwilę, by zauważyć to, co już prosi o Twoją uwagę — przy każdym nowiu i pełni albo jako głębszą opowieść rozwijającą się przez cały miesiąc.</p>
-        <div class="plans-grid">
-          <article class="plan"><h3>Twój list księżycowy</h3><p class="plan-intro">Dwa razy w miesiącu krótki list spotyka Cię w naturalnym momencie zmiany. Tłumaczy nów lub pełnię przez Twój własny horoskop i daje spokojną przestrzeń, w której łatwiej usłyszeć siebie.</p><ul><li><strong>Twoje niebo, ludzkim językiem</strong><span>Zobacz, której części życia dotyka ta lunacja i dlaczego może być teraz bardziej wyczuwalna — bez żargonu i nieodwołalnych przepowiedni.</span></li><li><strong>Pytania, które coś otwierają</strong><span>Trzy starannie dobrane pytania pomagają nazwać to, czego pragniesz, co się zmieniło i co chcesz zabrać ze sobą dalej.</span></li><li><strong>Dziennik, który pamięta</strong><span>Twoje odpowiedzi zostają razem w prywatnym dzienniku, dzięki czemu przelotne odczucie z czasem może odsłonić ważny wzorzec.</span></li></ul><p class="plan-closing">Bezpłatnie, dwa razy w miesiącu. Kilka uważnych minut, które należą tylko do Ciebie.</p></article>
-          <article class="plan paid"><h3>Twój Osobisty Miesiąc</h3><p class="price">19 zł miesięcznie</p><p class="plan-intro">Osobisty Miesiąc pokazuje szerszy obraz. Zamiast przechodzić przez miesiąc jak przez rozmyty ciąg dat, widzisz jego emocjonalny rytm: okresy, które mogą coś poruszyć, pytania warte zatrzymania i nić łączącą wszystko w całość.</p><ul><li><strong>Daty, które mają znaczenie dla Ciebie</strong><span>Osobisty kalendarz najsilniejszych tranzytów miesiąca, przełożonych na sytuacje, które możesz rozpoznać w pracy, relacjach, domu i swoim wewnętrznym świecie.</span></li><li><strong>Wskazówki, z których da się skorzystać</strong><span>Każdy okres przynosi skupioną refleksję — nie polecenie — aby pomóc Ci dokonać własnego wyboru z większą świadomością.</span></li><li><strong>Wzorce, które odsłania dopiero czas</strong><span>Pod koniec miesiąca Twoje wpisy wracają obok nieba z tych dni, pokazując powracające potrzeby, napięcia i pragnienia.</span></li><li><strong>Twój rok jako opowieść</strong><span>W dniu urodzin te miesiące stają się prywatną księgą roku: nie listą przepowiedni, lecz portretem Twojej zmiany.</span></li></ul><p class="plan-closing">Dla osoby, która chce nie tylko wiedzieć, co dzieje się na niebie, ale rozumieć, co otwiera się przez to w jej własnym życiu.</p></article>
-        </div>
-        <div class="examples">
+      <section class="copy reveal-on-scroll">
+        <h2>Dziennik w rytmie Księżyca</h2>
+        <p>Co miesiąc Księżyc przechodzi od nowiu do pełni i z powrotem. Wiele osób prowadzi dziennik w tym rytmie: na nów zapisuje intencję, a na pełnię patrzy wstecz i notuje, za co czuje wdzięczność.</p>
+        <p>Dokładny moment każdego nowiu i każdej pełni obliczamy za pomocą Swiss Ephemeris i sprawdzamy, w którym domu Twojego horoskopu urodzeniowego wypada. Każdy dom ma swój temat, dlatego pytania zmieniają się z miesiąca na miesiąc.</p>
+      </section>
+      <section class="copy reveal-on-scroll">
+        <h2>Czym to jest, a czym nie jest</h2>
+        <p>To pytania do refleksji, a nie przepowiednie. Nie mówimy, co się wydarzy; proponujemy rytm, kilka pytań i afirmację, a odpowiedzi należą do Ciebie.</p>
+        <p>Twoje odpowiedzi zapisujemy w Twoim dzienniku, aby były dostępne na każdym urządzeniu. Przechowujemy też adres e-mail i dane urodzenia potrzebne do listów. Wszystko możesz usunąć w każdej chwili jednym kliknięciem.</p>
+      </section>
+      <section class="letter-example reveal-on-scroll" aria-labelledby="example-title">
+        <h2 id="example-title">Tak wygląda list</h2>
           <article class="example">
             <p class="example-label">Przykład bezpłatnego listu</p>
-            <h4><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca w Skorpionie, w Twoim 3. domu</h4>
+            <h4><span class="phase phase-new" aria-hidden="true"></span>Nów Księżyca w Skorpionie · Codzienne słowa i rozmowy (3. dom)</h4>
             <p class="when">9 listopada 2026, 08:02</p>
             <p>Ta część Twojego horoskopu obejmuje słowa, które powtarzasz, pytania, za którymi podążasz, i codzienne rozmowy, które po cichu kształtują Twoje wybory.</p>
             <ol class="prompts"><li>Którą rozmowę wciąż ćwiczysz w myślach? Zapisz jej pierwsze szczere zdanie.</li><li>Jaki temat stale wraca w Twoich kartach, notatkach lub zapisanych postach? Co mogłaby otworzyć jedna godzina pełnego skupienia na nim?</li><li>Dokończ zdanie: W tym miesiącu księżycowym wybieram...</li></ol>
             <p class="affirmation"><strong>Afirmacja</strong>Ufam sobie, że potrafię powiedzieć to jasno i życzliwie.</p>
           </article>
+      </section>
+      <section class="plans reveal-on-scroll" aria-labelledby="plans-title">
+        <h2 id="plans-title">Bezpłatne listy, a jeśli chcesz więcej — osobisty miesiąc</h2>
+        <p>Nie przepowiadamy wydarzeń. Wysyłamy Ci pytania w chwilach, gdy Księżyc zmienia fazę, i przechowujemy Twoje odpowiedzi, żeby można było do nich wrócić.</p>
+        <div class="plans-grid">
+          <article class="plan"><h3>Twój list księżycowy</h3><p class="plan-intro">W dniu każdego nowiu i pełni dostajesz krótki e-mail: obszar Twojego horoskopu, w którym wypada Księżyc, trzy pytania i afirmację. Odpowiadasz na prywatnej stronie; zajmuje to około pięciu minut.</p><ul><li><strong>Którego obszaru życia dotyczy ten Księżyc</strong><span>Miłość, dom, praca, odpoczynek: za każdym razem Księżyc wypada w innej części Twojego horoskopu, opisanej prostymi słowami.</span></li><li><strong>Trzy pytania do odpowiedzi</strong><span>Jedno o tym, czego chcesz, jedno o tym, co się zmieniło, i jedno na dalszą drogę. Wystarczająco krótkie na zabiegany dzień.</span></li><li><strong>Twoje odpowiedzi w jednym miejscu</strong><span>Wszystko, co napiszesz, zostaje w jednym prywatnym dzienniku, więc możesz wracać do poprzednich miesięcy i zauważać, co powraca.</span></li></ul><p class="plan-closing">Bezpłatnie, dwa e-maile w miesiącu. Wypisanie jednym kliknięciem.</p></article>
+          <article class="plan paid"><h3>Twój Osobisty Miesiąc</h3><p class="price">19 zł miesięcznie</p><p class="plan-intro">Kalendarz Twojego miesiąca na podstawie horoskopu urodzeniowego: które dni niosą jakie tematy, z pytaniem do każdego, a na koniec miesiąca spojrzenie wstecz na Twoje zapiski.</p><ul><li><strong>Twoje daty w tym miesiącu</strong><span>Dni, w których planety najmocniej dotykają Twojego horoskopu, i której części życia dotyczy każdy z nich: pracy, relacji, domu czy świata wewnętrznego.</span></li><li><strong>Pytanie na każdy okres</strong><span>Bez poleceń: jedno pytanie na każdy okres, które pomaga Ci zdecydować samodzielnie.</span></li><li><strong>Przegląd Twoich wpisów</strong><span>Pod koniec miesiąca zestawiamy Twoje wpisy z niebem tamtych dni, żeby powracające potrzeby i tematy stały się widoczne.</span></li><li><strong>Twój rok jako opowieść</strong><span>W dniu urodzin te miesiące stają się prywatną księgą roku: nie listą przepowiedni, lecz portretem Twojej zmiany.</span></li></ul><p class="plan-closing">Dla osób, które chcą widzieć cały miesiąc, a nie tylko dwa momenty.</p></article>
+        </div>
+        <div class="examples single">
           <article class="example paid">
             <p class="example-label">Przykład osobistego miesiąca</p>
             <p class="hint">Przykład dla fikcyjnej osoby urodzonej 17 maja 1990 r. Twój miesiąc obliczamy z Twoich danych urodzenia.</p>
@@ -312,16 +326,6 @@
           </div>
         </div>
       </section>
-      <section class="copy reveal-on-scroll">
-        <h2>Dziennik w rytmie Księżyca</h2>
-        <p>Co miesiąc Księżyc przechodzi od nowiu do pełni i z powrotem. Wiele osób prowadzi dziennik w tym rytmie: na nów zapisuje intencję, a na pełnię patrzy wstecz i notuje, za co czuje wdzięczność.</p>
-        <p>Dokładny moment każdego nowiu i każdej pełni obliczamy za pomocą Swiss Ephemeris i sprawdzamy, w którym domu Twojego horoskopu urodzeniowego wypada. Każdy dom ma swój temat, dlatego pytania zmieniają się z miesiąca na miesiąc.</p>
-      </section>
-      <section class="copy reveal-on-scroll">
-        <h2>Czym to jest, a czym nie jest</h2>
-        <p>To pytania do refleksji, a nie przepowiednie. Nie mówimy, co się wydarzy; proponujemy rytm, kilka pytań i afirmację, a odpowiedzi należą do Ciebie.</p>
-        <p>Twoje odpowiedzi zapisujemy w Twoim dzienniku, aby były dostępne na każdym urządzeniu. Przechowujemy też adres e-mail i dane urodzenia potrzebne do listów. Wszystko możesz usunąć w każdej chwili jednym kliknięciem.</p>
-      </section>
       <section class="copy faq reveal-on-scroll">
         <h2>Pytania</h2>
         <h3>Kiedy jest najbliższy nów Księżyca?</h3>
@@ -342,7 +346,7 @@
       <p class="links"><a href="/terms.html">Regulamin i prywatność</a></p>
     </div>
   </footer>
-  <script type="application/json" id="moon-i18n">{"legend":"Twoje dane urodzenia","date":"Data urodzenia","time":"Godzina urodzenia","timeUnknown":"Nie znam godziny urodzenia","place":"Miejsce urodzenia","placeHint":"Zacznij wpisywać miasto: ustawi strefę czasową i ascendent.","placeSearching":"Szukam…","placeNone":"Nie znaleziono miejsc","timezone":"Strefa czasowa","timezoneFromPlace":"Strefa czasowa ustawiona według miejsca urodzenia.","calculate":"Pokaż moje lunacje","calculating":"Obliczam…","noscript":"Ten kalkulator wymaga JavaScriptu.","required":"Podaj datę urodzenia.","resultTitle":"Twój najbliższy nów i najbliższa pełnia","promptsTitle":"Pytania do dziennika","affirmationTitle":"Afirmacja","signupTitle":"Otrzymuj swoje pytania na każdy nów i każdą pełnię","signupText":"Dwa krótkie e-maile w miesiącu, w dniu nowiu i pełni, z pytaniami dla domu Twojego horoskopu, w którym wypada lunacja. Bezpłatnie, a wypisać się można jednym kliknięciem.","email":"E-mail","consent":"Zgadzam się na otrzymywanie tych wiadomości i przechowywanie moich danych urodzenia w tym celu. Mogę je usunąć w każdej chwili.","subscribe":"Wysyłaj mi listy księżycowe","subscribing":"Wysyłam…","signupDone":"Prawie gotowe: otwórz wiadomość, którą właśnie wysłaliśmy, i potwierdź adres.","errorEmail":"Sprawdź adres e-mail.","errorConsent":"Zaznacz zgodę.","errorSignup":"Nie udało się wysłać wiadomości z potwierdzeniem. Spróbuj ponownie później.","errorUnavailable":"Zapisy są teraz niedostępne. Spróbuj ponownie później.","errorInvalid":"Sprawdź datę, godzinę i strefę czasową.","errorRateLimited":"Zbyt wiele prób. Odczekaj minutę i spróbuj ponownie.","errorGeneric":"Coś poszło nie tak. Spróbuj ponownie.","errorNetwork":"Brak połączenia. Sprawdź internet i spróbuj ponownie.","tableDate":"Data i godzina","tablePhase":"Faza","tableSign":"Znak","nextBadge":"najbliższa","selectedBadge":"Wybrana","loading":"Wczytuję Twój list…","invalidLink":"Ten link jest nieprawidłowy. Możesz zapisać się ponownie na stronie o Księżycu.","confirmed":"Dziękujemy, adres jest potwierdzony. Listy przychodzą w dniu każdego nowiu i każdej pełni.","pending":"Adres nie jest jeszcze potwierdzony: użyj linku z wiadomości z potwierdzeniem.","unsubscribedNote":"Subskrypcja jest wyłączona i kolejne listy nie będą wysyłane.","currentTitle":"Twój obecny Księżyc","writePlaceholder":"Pisz tutaj… Zapisuje się automatycznie.","saved":"Zapisano","nextLine":"Następna lunacja: {kind}, {date}, {sign_in}, w Twoim {house}. domu.","historyTitle":"Twój dziennik","historyEmpty":"Tutaj pojawią się Twoje odpowiedzi.","fakeTitle":"Osobisty miesiąc","fakePrice":"Planowana cena: {price}.","price":"19 zł miesięcznie","fakeButton":"Interesuje mnie to, dajcie znać, gdy będzie gotowe","fakeThanks":"Dziękujemy! Napiszemy, gdy będzie gotowe. Nic nie jest pobierane.","manageTitle":"Twoje listy","unsubscribe":"Wypisz się","unsubscribed":"Subskrypcja wyłączona.","erase":"Usuń moje dane","eraseConfirm":"Na pewno usunąć adres e-mail i dane urodzenia?","erased":"Twoje dane zostały usunięte.","manageError":"Nie udało się. Spróbuj ponownie.","backToMoon":"Wróć do kalendarza Księżyca","saving":"Zapisuję…","saveError":"Nie zapisano. Sprawdź połączenie.","linkPrivacy":"Ten link otwiera Twój dziennik. Nie przekazuj tych wiadomości innym osobom.","linkTitle":"Twój księżycowy dziennik","linkText":"Wybierz drogę odpowiednią dla miejsca, w którym jesteś dzisiaj.","linkNewTitle":"Jesteś tu pierwszy raz?","linkNewText":"Zacznij od danych urodzenia. Zobaczysz, gdzie w Twoim horoskopie wypada najbliższy nów i pełnia, a potem możesz wybrać bezpłatne osobiste listy.","linkNewButton":"Zobacz moje najbliższe lunacje","linkReturningTitle":"Otrzymujesz już listy?","linkReturningText":"Podaj e-mail, a wyślemy nowy link do Twojego prywatnego dziennika. Działa na każdym urządzeniu, bez hasła.","linkButton":"Wyślij mój link","linkSending":"Wysyłam…","linkDone":"Jeśli ten adres jest zapisany, link już jest w drodze.","fakeText":"Osobisty miesiąc nie jest jeszcze dostępny. Jeśli go chcesz, naciśnij przycisk: napiszemy, gdy będzie gotowy. Nic nie jest pobierane."}</script>
-  <script src="/js/moon-tool.js?v=2" defer></script>
+  <script type="application/json" id="moon-i18n">{"legend":"Twoje dane urodzenia","date":"Data urodzenia","time":"Godzina urodzenia","timeUnknown":"Nie znam godziny urodzenia","place":"Miejsce urodzenia","placeHint":"Zacznij wpisywać miasto: ustawi strefę czasową i ascendent.","placeSearching":"Szukam…","placeNone":"Nie znaleziono miejsc","timezone":"Strefa czasowa","timezoneFromPlace":"Strefa czasowa ustawiona według miejsca urodzenia.","calculate":"Pokaż moje nowie i pełnie","calculating":"Obliczam…","resultWhen":"{date} (Twój czas, {tz})","noscript":"Ten kalkulator wymaga JavaScriptu.","required":"Podaj datę urodzenia.","resultTitle":"Twój najbliższy nów i najbliższa pełnia","promptsTitle":"Pytania do dziennika","affirmationTitle":"Afirmacja","signupTitle":"Otrzymuj swoje pytania na każdy nów i każdą pełnię","signupText":"Dwa krótkie e-maile w miesiącu, w dniu nowiu i pełni, z pytaniami dla domu Twojego horoskopu, w którym wypada lunacja. Bezpłatnie, a wypisać się można jednym kliknięciem.","email":"E-mail","consent":"Zgadzam się na otrzymywanie tych wiadomości i przechowywanie moich danych urodzenia w tym celu. Mogę je usunąć w każdej chwili.","subscribe":"Wysyłaj mi listy księżycowe","subscribing":"Wysyłam…","signupDone":"Prawie gotowe: otwórz wiadomość, którą właśnie wysłaliśmy, i potwierdź adres.","errorEmail":"Sprawdź adres e-mail.","errorConsent":"Zaznacz zgodę.","errorSignup":"Nie udało się wysłać wiadomości z potwierdzeniem. Spróbuj ponownie później.","errorUnavailable":"Zapisy są teraz niedostępne. Spróbuj ponownie później.","errorInvalid":"Sprawdź datę, godzinę i strefę czasową.","errorRateLimited":"Zbyt wiele prób. Odczekaj minutę i spróbuj ponownie.","errorGeneric":"Coś poszło nie tak. Spróbuj ponownie.","errorNetwork":"Brak połączenia. Sprawdź internet i spróbuj ponownie.","tableDate":"Data i godzina","tablePhase":"Faza","tableSign":"Znak","tableNoteLocal":"Godziny w Twojej strefie czasowej ({tz}). Najbliższy nów lub pełnia są wyróżnione.","nextBadge":"najbliższa","selectedBadge":"Wybrana","loading":"Wczytuję Twój list…","invalidLink":"Ten link jest nieprawidłowy. Możesz zapisać się ponownie na stronie o Księżycu.","confirmed":"Dziękujemy, adres jest potwierdzony. Listy przychodzą w dniu każdego nowiu i każdej pełni.","pending":"Adres nie jest jeszcze potwierdzony: użyj linku z wiadomości z potwierdzeniem.","unsubscribedNote":"Subskrypcja jest wyłączona i kolejne listy nie będą wysyłane.","currentTitle":"Twój obecny Księżyc","writePlaceholder":"Pisz tutaj… Zapisuje się automatycznie.","saved":"Zapisano","nextLine":"Następnie: {kind}, {date}, {sign_in} · {area}.","historyTitle":"Twój dziennik","historyEmpty":"Tutaj pojawią się Twoje odpowiedzi.","fakeTitle":"Osobisty miesiąc","fakePrice":"Planowana cena: {price}.","price":"19 zł miesięcznie","fakeButton":"Interesuje mnie to, dajcie znać, gdy będzie gotowe","fakeThanks":"Dziękujemy! Napiszemy, gdy będzie gotowe. Nic nie jest pobierane.","manageTitle":"Twoje listy","unsubscribe":"Wypisz się","unsubscribed":"Subskrypcja wyłączona.","erase":"Usuń moje dane","eraseConfirm":"Na pewno usunąć adres e-mail i dane urodzenia?","erased":"Twoje dane zostały usunięte.","manageError":"Nie udało się. Spróbuj ponownie.","backToMoon":"Wróć do kalendarza Księżyca","saving":"Zapisuję…","saveError":"Nie zapisano. Sprawdź połączenie.","linkPrivacy":"Ten link otwiera Twój dziennik. Nie przekazuj tych wiadomości innym osobom.","linkTitle":"Twój księżycowy dziennik","linkText":"Wybierz drogę odpowiednią dla miejsca, w którym jesteś dzisiaj.","linkNewTitle":"Jesteś tu pierwszy raz?","linkNewText":"Zacznij od danych urodzenia. Zobaczysz, gdzie w Twoim horoskopie wypada najbliższy nów i pełnia, a potem możesz wybrać bezpłatne osobiste listy.","linkNewButton":"Zobacz moje najbliższe lunacje","linkReturningTitle":"Otrzymujesz już listy?","linkReturningText":"Podaj e-mail, a wyślemy nowy link do Twojego prywatnego dziennika. Działa na każdym urządzeniu, bez hasła.","linkButton":"Wyślij mój link","linkSending":"Wysyłam…","linkDone":"Jeśli ten adres jest zapisany, link już jest w drodze.","fakeText":"Osobisty miesiąc nie jest jeszcze dostępny. Jeśli go chcesz, naciśnij przycisk: napiszemy, gdy będzie gotowy. Nic nie jest pobierane.","months":["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"],"tableDateFormat":"{d} {month} {y}, {hh}:{mm}","intl":"pl-PL","tableTimezone":"Europe/Warsaw"}</script>
+  <script src="/js/moon-tool.js?v=3" defer></script>
 </body>
 </html>

@@ -18,8 +18,9 @@
    "description": "Toutes les nouvelles et pleines lunes 2026–2027 à l'heure exacte, la maison de ton thème pour chacune et des questions gratuites pour ton journal de gratitude.",
    "h1": "Nouvelle lune et pleine lune 2026–2027 : dates et questions personnelles pour ton journal",
    "lead": "Découvre dans quelle maison de ton thème natal tombent la prochaine nouvelle lune et la prochaine pleine lune, et reçois quelques questions douces pour ton journal : une intention à la nouvelle lune, de la gratitude à la pleine lune.",
+   "trust": "Calculé avec la Swiss Ephemeris, le moteur astronomique des logiciels d'astrologie professionnels. Gratuit, sans compte.",
    "tableTitle": "Nouvelles lunes et pleines lunes de novembre 2026 à décembre 2027",
-   "tableNote": "Heures de Paris. La prochaine lunaison est mise en évidence.",
+   "tableNote": "Heures de Paris. La prochaine lune est mise en évidence.",
    "sections": [
     {
      "h2": "Un journal au rythme de la Lune",
@@ -78,8 +79,9 @@
   "placeNone": "Aucun lieu trouvé",
   "timezone": "Fuseau horaire",
   "timezoneFromPlace": "Fuseau horaire réglé d'après le lieu de naissance.",
-  "calculate": "Voir mes lunaisons",
+  "calculate": "Voir mes lunes",
   "calculating": "Calcul en cours…",
+  "resultWhen": "{date} (ton heure, {tz})",
   "noscript": "Ce calculateur a besoin de JavaScript.",
   "required": "Indique ta date de naissance.",
   "resultTitle": "Ta prochaine nouvelle lune et ta prochaine pleine lune",
@@ -89,7 +91,7 @@
   "signupText": "Deux courts e-mails par mois, le jour de chaque nouvelle lune et de chaque pleine lune, avec des questions pour la maison de ton thème où elle tombe. Gratuit, et désinscription en un clic.",
   "email": "E-mail",
   "consent": "J'accepte de recevoir ces e-mails et la conservation de mes données de naissance à cette fin. Je peux les supprimer à tout moment.",
-  "subscribe": "Envoyez-moi mes lettres de la Lune",
+  "subscribe": "Je veux recevoir mes lettres de la Lune",
   "subscribing": "Envoi…",
   "signupDone": "C'est presque fini : ouvre l'e-mail que nous venons d'envoyer et confirme ton adresse.",
   "errorEmail": "Vérifie ton adresse e-mail.",
@@ -103,6 +105,7 @@
   "tableDate": "Date et heure",
   "tablePhase": "Phase",
   "tableSign": "Signe",
+  "tableNoteLocal": "Heures dans ton fuseau horaire ({tz}). La prochaine lune est mise en évidence.",
   "nextBadge": "prochaine",
   "selectedBadge": "Sélectionnée",
   "loading": "Chargement de ta lettre…",
@@ -113,7 +116,7 @@
   "currentTitle": "Ta Lune du moment",
   "writePlaceholder": "Écris ici… C'est enregistré automatiquement.",
   "saved": "Enregistré",
-  "nextLine": "Prochaine lunaison : {kind} le {date} {sign_in}, dans ta maison {house}.",
+  "nextLine": "Prochaine lune : {kind} le {date} {sign_in} · {area}.",
   "historyTitle": "Ton journal",
   "historyEmpty": "Tes réponses apparaîtront ici.",
   "fakeTitle": "Mois personnel",
@@ -160,25 +163,47 @@
  ],
  "tableDateFormat": "{d} {month} {y} à {hh}:{mm}",
  "plans": {
-  "title": "Deux façons de rester proche de ton propre rythme",
-  "lead": "Le ciel n'est pas là pour te dire ce qui va arriver. Il peut t'offrir un moment pour remarquer ce qui demande déjà ton attention — à chaque nouvelle et pleine lune, ou comme une histoire plus profonde qui se déploie tout au long du mois.",
+  "title": "Des lettres gratuites, et un mois personnel si tu veux aller plus loin",
+  "lead": "Nous ne prédisons pas d'événements. Nous t'envoyons des questions aux moments où la Lune change de phase, et nous gardons tes réponses pour que tu puisses y revenir.",
   "freeTitle": "Ta lettre de la Lune",
-  "freeIntro": "Deux fois par mois, une courte lettre te rejoint à un moment naturel de bascule. Elle traduit la nouvelle ou la pleine lune à travers ton propre thème et t'offre un espace calme où tu peux mieux t'entendre.",
+  "freeIntro": "Le jour de chaque nouvelle et pleine lune, tu reçois un court e-mail : le domaine de ton thème où tombe la Lune, trois questions et une affirmation. Tu réponds sur une page privée ; cela prend environ cinq minutes.",
   "freeItems": [
-   {"title": "Ton ciel, en langage humain", "text": "Découvre quelle partie de ta vie cette lune touche et pourquoi elle peut sembler plus vivante maintenant — sans jargon ni prédictions figées."},
-   {"title": "Des questions qui ouvrent quelque chose", "text": "Trois invitations soigneusement choisies t'aident à nommer ce que tu veux, ce qui a changé et ce que tu es prêt·e à emporter avec toi."},
-   {"title": "Un journal qui se souvient", "text": "Tes réponses restent réunies dans un journal privé, pour qu'une sensation passagère puisse devenir, avec le temps, un motif que tu reconnais."}
+   {
+    "title": "Le domaine de vie touché par cette lune",
+    "text": "Amour, foyer, travail, repos : la Lune tombe chaque fois dans un domaine différent de ton thème, expliqué avec des mots simples."
+   },
+   {
+    "title": "Trois questions auxquelles répondre",
+    "text": "Une sur ce que tu veux, une sur ce qui a changé, une à emporter avec toi. Assez courtes pour une journée chargée."
+   },
+   {
+    "title": "Tes réponses, au même endroit",
+    "text": "Tout ce que tu écris est gardé dans un journal privé, pour relire les mois passés et remarquer ce qui revient."
+   }
   ],
-  "freeClosing": "Gratuit, deux fois par mois. Quelques minutes d'attention qui n'appartiennent qu'à toi.",
+  "freeClosing": "Gratuit, deux e-mails par mois. Désinscription en un clic.",
   "paidTitle": "Ton Mois personnel",
-  "paidIntro": "Le Mois personnel t'offre une vue d'ensemble. Au lieu de traverser le mois comme un flou de dates, tu en vois le rythme émotionnel : les périodes susceptibles de remuer quelque chose, les questions qui méritent que l'on s'y attarde et le fil qui relie le tout.",
+  "paidIntro": "Un calendrier de ton mois, calculé à partir de ton thème natal : quels jours portent quels thèmes, avec une question pour chacun, et à la fin du mois un regard sur ce que tu as écrit.",
   "paidItems": [
-   {"title": "Les dates qui comptent pour toi", "text": "Un calendrier personnel des transits les plus forts du mois, traduits en situations que tu peux reconnaître dans le travail, les relations, le foyer et ta vie intérieure."},
-   {"title": "Une orientation vraiment utilisable", "text": "Chaque période s'accompagne d'une réflexion précise — pas d'une consigne — pour t'aider à faire ton propre choix avec plus de conscience."},
-   {"title": "Des motifs que seul le temps révèle", "text": "À la fin du mois, tes notes te sont renvoyées à côté du ciel de ces jours-là et révèlent des besoins, tensions et désirs qui reviennent."},
-   {"title": "Ton année comme une histoire", "text": "À ton anniversaire, ces mois deviennent un livre annuel privé : non pas une liste de prédictions, mais le portrait de ta transformation."}
+   {
+    "title": "Tes dates du mois",
+    "text": "Les jours où les planètes touchent le plus ton thème, et le domaine de vie concerné : travail, relations, foyer ou vie intérieure."
+   },
+   {
+    "title": "Une question pour chaque période",
+    "text": "Pas d'instructions : une question par période pour t'aider à décider par toi-même."
+   },
+   {
+    "title": "Un retour sur tes notes",
+    "text": "À la fin du mois, nous plaçons tes notes à côté du ciel de ces jours-là, pour faire apparaître les besoins et les thèmes qui reviennent."
+   },
+   {
+    "title": "Ton année comme une histoire",
+    "text": "À ton anniversaire, ces mois deviennent un livre annuel privé : non pas une liste de prédictions, mais le portrait de ta transformation."
+   }
   ],
-  "paidClosing": "Pour la personne qui ne veut pas seulement savoir ce qui se passe dans le ciel, mais comprendre ce que cela ouvre dans sa propre vie.",
+  "paidClosing": "Pour celles et ceux qui veulent voir tout le mois, pas seulement deux moments.",
+  "exampleHeading": "À quoi ressemble une lettre",
   "exampleFreeTitle": "Exemple de lettre gratuite",
   "examplePaidTitle": "Exemple de mois personnel",
   "exampleNote": "Exemple pour une personne fictive née le 17 mai 1990. Ton propre mois est calculé à partir de tes données de naissance.",
@@ -235,14 +260,149 @@
   "factUtc": "Temps universel (UTC)",
   "factSign": "Signe et degré",
   "housesTitle": "Dans quelle maison de ton thème elle tombe",
-  "housesLead": "La même lunaison tombe dans une maison différente selon l'ascendant. Trouve le tien dans le tableau ; si tu ne connais pas ton ascendant, prends ton signe solaire, qui donne une maison solaire plus simple.",
+  "housesLead": "La même lune touche un domaine de vie différent selon ton ascendant, le signe qui se levait à ta naissance. Trouve le tien dans le tableau ; si tu ne le connais pas, prends ton signe solaire.",
   "housesHeaders": [
    "Ascendant",
    "Maison",
-   "De quoi parle ce domaine de vie"
+   "Domaine de vie"
+  ],
+  "aboutTitle": "Le thème : {sign}",
+  "signs": [
+   {
+    "about": "Le signe des commencements, du courage et de l'élan sincère.",
+    "new": [
+     "Que commencerais-tu ce mois-ci sans attendre le moment parfait ?",
+     "Où aimerais-tu un peu plus de courage, et quel est le premier petit pas ?"
+    ],
+    "full": [
+     "Qu'as-tu osé commencer récemment, et qu'est-ce que cela t'apporte ?",
+     "Où as-tu suivi un élan sincère, et qu'est-ce qu'il t'a montré ?"
+    ]
+   },
+   {
+    "about": "Le signe du corps, des sens, de la stabilité et de ce qui compte vraiment pour toi.",
+    "new": [
+     "À quel plaisir simple veux-tu faire de la place ce mois-ci ?",
+     "Qu'est-ce qui rendrait tes journées plus stables et moins pressées ?"
+    ],
+    "full": [
+     "Qu'as-tu construit lentement que tu peux apprécier maintenant ?",
+     "Quel confort ordinaire a compté pour toi ces deux dernières semaines ?"
+    ]
+   },
+   {
+    "about": "Le signe de la curiosité, des conversations, de l'apprentissage et des petits échanges du quotidien.",
+    "new": [
+     "Qu'aimerais-tu apprendre ou explorer par pure curiosité ?",
+     "Quelle conversation aimerais-tu commencer, et avec qui ?"
+    ],
+    "full": [
+     "Quelle idée ou conversation t'est restée récemment, et pourquoi ?",
+     "Qu'as-tu compris de toi grâce aux mots de quelqu'un ?"
+    ]
+   },
+   {
+    "about": "Le signe du foyer, de l'appartenance et du soin, pour les autres et pour toi.",
+    "new": [
+     "Qu'est-ce qui rendrait ton foyer, ou ton foyer intérieur, plus chaleureux et plus sûr ?",
+     "Comment veux-tu prendre soin de toi ce mois-ci ?"
+    ],
+    "full": [
+     "Qui t'a fait te sentir chez toi récemment, et comment ?",
+     "Quel sentiment demande ton attention en ce moment ?"
+    ]
+   },
+   {
+    "about": "Le signe de la joie, de la créativité, de la générosité et du désir de te montrer pleinement.",
+    "new": [
+     "Que créerais-tu ce mois-ci si personne ne le notait ?",
+     "Où aimerais-tu te montrer davantage comme tu es ?"
+    ],
+    "full": [
+     "Qu'est-ce qui t'a donné de la fierté ou un vrai sentiment de vie récemment ?",
+     "Où ta chaleur ou ta générosité ont-elles fait une différence ?"
+    ]
+   },
+   {
+    "about": "Le signe du rythme quotidien, du travail soigné et des petites habitudes qui mettent la vie en ordre.",
+    "new": [
+     "Quelle petite habitude quotidienne ferait la plus grande différence, en douceur ?",
+     "Que pourrais-tu simplifier ou ranger ce mois-ci ?"
+    ],
+    "full": [
+     "Quelle routine a été un vrai soutien ces dernières semaines ?",
+     "Qu'as-tu fait avec soin qui mérite ta propre reconnaissance ?"
+    ]
+   },
+   {
+    "about": "Le signe des relations, de l'équilibre, de la justesse et de la beauté.",
+    "new": [
+     "Quel équilibre souhaites-tu entre donner et recevoir ?",
+     "À quelle relation veux-tu accorder plus d'attention ?"
+    ],
+    "full": [
+     "Où as-tu trouvé un bon équilibre récemment, et qu'est-ce qui a aidé ?",
+     "Pour quel lien éprouves-tu de la gratitude en ce moment ?"
+    ]
+   },
+   {
+    "about": "Le signe de la profondeur, de la confiance, de l'honnêteté envers soi et de la transformation intérieure.",
+    "new": [
+     "Que peux-tu laisser partir pour faire de la place au nouveau ?",
+     "Où aimerais-tu faire un peu plus confiance, à toi aussi ?"
+    ],
+    "full": [
+     "Quelle vérité sur toi est devenue plus claire récemment ?",
+     "Qu'est-ce qui a changé discrètement en toi depuis la dernière nouvelle lune ?"
+    ]
+   },
+   {
+    "about": "Le signe des horizons, du sens, des voyages, des études et de l'espoir.",
+    "new": [
+     "Qu'aimerais-tu explorer, apprendre ou regarder avec un œil neuf ?",
+     "Quelle conviction ou quel espoir veux-tu laisser guider tes choix ce mois-ci ?"
+    ],
+    "full": [
+     "Qu'est-ce qui a élargi ton regard sur la vie récemment ?",
+     "Sur quoi as-tu plus d'espoir aujourd'hui qu'il y a un mois ?"
+    ]
+   },
+   {
+    "about": "Le signe des objectifs, de la patience, de la responsabilité et de ce qui se construit dans la durée.",
+    "new": [
+     "Quel objectif à long terme mérite un pas concret ce mois-ci ?",
+     "Quelle structure ou quelle limite soutiendrait ce que tu construis ?"
+    ],
+    "full": [
+     "Quel progrès, même lent, peux-tu reconnaître aujourd'hui ?",
+     "Quelle responsabilité as-tu bien portée, et comment ?"
+    ]
+   },
+   {
+    "about": "Le signe de l'amitié, de la communauté, de la liberté et des idées neuves.",
+    "new": [
+     "Quelle idée te semble neuve et enthousiasmante en ce moment ?",
+     "Quelle communauté ou quelle amitié veux-tu nourrir ?"
+    ],
+    "full": [
+     "Qui, autour de toi, a été une source d'inspiration récemment ?",
+     "Où as-tu trouvé de la place pour être toi, sans t'adapter ?"
+    ]
+   },
+   {
+    "about": "Le signe de l'imagination, de la compassion, du repos et du monde intérieur.",
+    "new": [
+     "De quoi ton monde intérieur a-t-il le plus besoin ce mois-ci : repos, silence ou imagination ?",
+     "À quel rêve veux-tu laisser un peu de place ?"
+    ],
+    "full": [
+     "Quand as-tu ressenti récemment un lien avec quelque chose de plus grand que toi ?",
+     "Qu'est-ce que le repos ou le silence t'ont apporté ces dernières semaines ?"
+    ]
+   }
   ],
   "writeTitle": "Quoi écrire",
-  "writeLabel": "Une question pour ce jour",
+  "writeLabel": "Questions pour cette lune",
   "ctaTitle": "Vois-la dans ton propre thème",
   "ctaText": "Indique ta date de naissance pour obtenir ta maison, tes propres questions et une affirmation. Des lettres gratuites arrivent à chaque nouvelle et pleine lune.",
   "moreTitle": "Toutes les nouvelles et pleines lunes de {from} à {to}",
