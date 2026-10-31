@@ -21,7 +21,7 @@ const srcRoot = path.join(frontendRoot, 'kundli-src');
 const outRoot = path.join(frontendRoot, 'kundli');
 const ORIGIN = 'https://www.steliara.com';
 const LOCALES = ['en', 'hi'];
-const ASSET_VERSION = '1';
+const ASSET_VERSION = '2';
 
 const TOOLS = {
     'dasha-calculator': { tool: 'dasha', nav: 'navDasha' },
@@ -153,12 +153,17 @@ function header(locale, slug, catalog) {
   </header>`;
 }
 
+// The free tools stand apart from the pages for professional astrologers: the footer links to
+// the terms and, in English, to the sister free tools (moon calendar), never to the pro site.
 function footer(locale, catalog) {
     const site = catalog.site;
+    const also = site.alsoFree
+        ? `<p class="links also-free">${esc(site.alsoFree.text)} <a href="${site.alsoFree.href}">${esc(site.alsoFree.label)}</a></p>\n      `
+        : '';
     return `<footer class="site-footer">
     <div class="shell">
       <p class="disclaimer">${esc(site.footerNote)}</p>
-      <p class="links"><a href="/">${esc(site.footerAstrologers)}</a> · <a href="/terms.html">${esc(site.footerTerms)}</a></p>
+      ${also}<p class="links"><a href="/terms.html">${esc(site.footerTerms)}</a></p>
     </div>
   </footer>`;
 }

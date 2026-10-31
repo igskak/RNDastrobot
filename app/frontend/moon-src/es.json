@@ -10,7 +10,6 @@
   "skip": "Ir al contenido",
   "langLabel": "Idioma",
   "footerNote": "Steliara crea software para astrólogos profesionales. Estas páginas sobre la Luna son una herramienta gratuita para todos.",
-  "footerAstrologers": "Para astrólogos",
   "footerTerms": "Condiciones y privacidad"
  },
  "pages": {
@@ -209,6 +208,62 @@
    "En tus siete notas de noviembre vuelven tres palabras: «descanso», «hermana» y «proyecto». Tu vida privada y tu trabajo visible parecen pedir atención al mismo tiempo.",
    "Cerca de la luna llena en tu casa 10 escribes: «Quiero que mi trabajo se vea, pero no a costa de llegar a casa sin energía». La misma tensión apareció en agosto, cuando Júpiter pasaba por lo más alto de tu carta.",
    "Llévate a diciembre esta pregunta: ¿cómo sería un éxito visible que también dejara espacio para tu vida real?"
+  ]
+ },
+ "lunationPage": {
+  "slugKinds": {
+   "new_moon": "luna nueva",
+   "full_moon": "luna llena"
+  },
+  "dateFormat": "{d} de {month} de {y}",
+  "timeFormat": "{hh}:{mm}",
+  "monthYear": "{month} de {y}",
+  "tzName": "hora de Madrid",
+  "title": "{kind} {date}: hora y signo | Steliara",
+  "facts": "{kind}: {date}, {time} ({tz}), {sign} {degree}°.",
+  "descriptionTail": "La casa que activa para cada ascendente y preguntas gratuitas para tu diario.",
+  "h1": "{kind} {date}, {sign_in}",
+  "moment": {
+   "new_moon": "La luna nueva es tradicionalmente el momento de nombrar una intención.",
+   "full_moon": "La luna llena es tradicionalmente el momento de mirar atrás y notar aquello por lo que sientes gratitud."
+  },
+  "leadClosing": "Más abajo: en qué casa de tu carta cae y qué escribir.",
+  "crumbHub": "Calendario lunar",
+  "factsTitle": "El momento exacto",
+  "factDate": "Fecha",
+  "factLocal": "Hora ({tz})",
+  "factUtc": "Tiempo universal (UTC)",
+  "factSign": "Signo y grado",
+  "housesTitle": "En qué casa de tu carta cae",
+  "housesLead": "La misma lunación cae en una casa distinta para cada ascendente. Busca el tuyo en la tabla; si no conoces tu ascendente, usa tu signo solar, que da una casa solar más sencilla.",
+  "housesHeaders": [
+   "Ascendente",
+   "Casa",
+   "De qué trata esta área de la vida"
+  ],
+  "writeTitle": "Qué escribir",
+  "writeLabel": "Una pregunta para este día",
+  "ctaTitle": "Míralo en tu propia carta",
+  "ctaText": "Introduce tu fecha de nacimiento para recibir tu casa, tus propias preguntas y una afirmación. Las cartas gratuitas llegan en cada luna nueva y llena.",
+  "moreTitle": "Todas las lunas nuevas y llenas de {from} a {to}",
+  "prev": "Anterior",
+  "next": "Siguiente",
+  "languagesLabel": "Otros idiomas",
+  "details": "detalles",
+  "detailsAria": "Detalles: {kind}, {date}",
+  "faq": [
+   {
+    "q": "¿A qué hora es la {kind} del {date}?",
+    "a": "A las {time} ({tz}). En tiempo universal (UTC): {utc}."
+   },
+   {
+    "q": "¿En qué signo cae la {kind} del {date}?",
+    "a": "{kind} {sign_in}, a {degree}°."
+   },
+   {
+    "q": "¿En qué casa de mi carta cae?",
+    "a": "Depende de tu ascendente. La tabla de esta página enumera los doce, y la calculadora encuentra el tuyo a partir de tu fecha de nacimiento."
+   }
   ]
  }
 }

@@ -147,3 +147,4 @@ tr.current td { background: var(--accent-soft); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+.site-footer .also-free { margin-bottom: 6px; }

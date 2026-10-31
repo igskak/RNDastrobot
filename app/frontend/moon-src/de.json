@@ -10,7 +10,6 @@
   "skip": "Zum Inhalt springen",
   "langLabel": "Sprache",
   "footerNote": "Steliara entwickelt Software für professionelle Astrologinnen und Astrologen. Diese Mondseiten sind ein kostenloses Werkzeug für alle.",
-  "footerAstrologers": "Für Astrologen",
   "footerTerms": "AGB und Datenschutz"
  },
  "pages": {
@@ -209,6 +208,62 @@
    "In sieben November-Einträgen kehren drei Wörter wieder: „Ruhe“, „Schwester“ und „Projekt“. Dein privates Leben und deine sichtbare Arbeit scheinen gleichzeitig um Aufmerksamkeit zu bitten.",
    "Nahe dem Vollmond in deinem 10. Haus schreibst du: „Ich möchte, dass meine Arbeit gesehen wird, aber nicht um den Preis, erschöpft nach Hause zu kommen.“ Dieselbe Spannung zeigte sich im August, als Jupiter über die Spitze deines Horoskops lief.",
    "Nimm diese Frage mit in den Dezember: Wie sähe sichtbarer Erfolg aus, wenn er auch Raum für dein echtes Leben ließe?"
+  ]
+ },
+ "lunationPage": {
+  "slugKinds": {
+   "new_moon": "neumond",
+   "full_moon": "vollmond"
+  },
+  "dateFormat": "{d}. {month} {y}",
+  "timeFormat": "{hh}:{mm} Uhr",
+  "monthYear": "{month} {y}",
+  "tzName": "Berliner Zeit",
+  "title": "{kind} am {date}: Uhrzeit und Zeichen | Steliara",
+  "facts": "{kind}: {date}, {time} ({tz}), {sign} {degree}°.",
+  "descriptionTail": "Das Haus für jedes Aszendentenzeichen und kostenlose Tagebuchfragen.",
+  "h1": "{kind} am {date}, {sign_in}",
+  "moment": {
+   "new_moon": "Der Neumond ist traditionell der Moment, eine Absicht zu benennen.",
+   "full_moon": "Der Vollmond ist traditionell der Moment, zurückzublicken und zu bemerken, wofür du dankbar bist."
+  },
+  "leadClosing": "Unten: in welchem Haus deines Horoskops er liegt und was du aufschreiben kannst.",
+  "crumbHub": "Mondkalender",
+  "factsTitle": "Der genaue Zeitpunkt",
+  "factDate": "Datum",
+  "factLocal": "Uhrzeit ({tz})",
+  "factUtc": "Weltzeit (UTC)",
+  "factSign": "Zeichen und Grad",
+  "housesTitle": "In welchem Haus deines Horoskops er liegt",
+  "housesLead": "Dieselbe Lunation fällt für jedes Aszendentenzeichen in ein anderes Haus. Finde deines in der Tabelle; wenn du deinen Aszendenten nicht kennst, nimm dein Sonnenzeichen, das ein einfacheres Sonnenhaus ergibt.",
+  "housesHeaders": [
+   "Aszendent",
+   "Haus",
+   "Worum es in diesem Lebensbereich geht"
+  ],
+  "writeTitle": "Was du aufschreiben kannst",
+  "writeLabel": "Eine Frage für den Tag",
+  "ctaTitle": "Sieh es in deinem eigenen Horoskop",
+  "ctaText": "Gib dein Geburtsdatum ein und erhalte dein Haus, deine eigenen Fragen und eine Affirmation. Kostenlose Briefe kommen zu jedem Neumond und Vollmond.",
+  "moreTitle": "Alle Neu- und Vollmonde von {from} bis {to}",
+  "prev": "Vorherige",
+  "next": "Nächste",
+  "languagesLabel": "Andere Sprachen",
+  "details": "Details",
+  "detailsAria": "Details: {kind}, {date}",
+  "faq": [
+   {
+    "q": "Um wie viel Uhr ist {kind} am {date}?",
+    "a": "Um {time} ({tz}). In Weltzeit (UTC): {utc}."
+   },
+   {
+    "q": "In welchem Zeichen steht der Mond beim {kind} am {date}?",
+    "a": "{kind} {sign_in}, bei {degree}°."
+   },
+   {
+    "q": "In welchem Haus meines Horoskops fällt er?",
+    "a": "Das hängt von deinem Aszendenten ab. Die Tabelle auf dieser Seite nennt alle zwölf, und der Rechner findet deinen aus deinem Geburtsdatum."
+   }
   ]
  }
 }

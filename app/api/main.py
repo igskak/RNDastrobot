@@ -2,6 +2,7 @@
 FastAPI приложение для Astrobot
 """
 from contextlib import asynccontextmanager
+from functools import lru_cache
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +10,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, RedirectResponse, Response
+import json
 import os
 import re
 import sys
@@ -199,6 +201,7 @@ async def isolate_solo_marketing_routes(request: Request, call_next):
         _kundli_path(locale, slug) for locale in ("en", "hi") for slug in ("index", *_KUNDLI_SLUGS)
     }
     commercial_paths |= {moon_page_path(locale) for locale in MOON_LOCALES}
+    commercial_paths |= set(_MOON_LUNATION_GROUPS)
     # A prefixed URL is the same page in another language, so it needs the same fence.
     commercial_paths |= {
         localized_path_for("/pricing.html", locale) for locale in PREFIXED_LOCALES
@@ -531,8 +534,33 @@ _MOON_HREFLANG = {"en": "en", "pl": "pl", "de": "de", "fr": "fr", "it": "it", "e
 _MOON_PAGES = ("index", "letter")
 
 
+@lru_cache(maxsize=1)
+def _moon_lunation_pages() -> tuple:
+    """One {locale: path} mapping per lunation page the build wrote (build-moon-pages.mjs).
+
+    Each lunation has its own address in every language and the seven form one hreflang set.
+    A missing manifest only means the pages are not deployed: the calculators keep working.
+    """
+    try:
+        with open(os.path.join(FRONTEND_PATH, "moon", "lunation-pages.json"), encoding="utf-8") as handle:
+            return tuple(dict(page["paths"]) for page in json.load(handle)["pages"])
+    except (OSError, ValueError, KeyError, TypeError):
+        logging.getLogger(__name__).warning("moon lunation pages manifest is missing or unreadable")
+        return ()
+
+
+# path -> the whole language set of that lunation page; the slug is what the route accepts.
+_MOON_LUNATION_GROUPS = {path: paths for paths in _moon_lunation_pages() for path in paths.values()}
+_MOON_LUNATION_SLUGS = {
+    locale: frozenset(paths[locale].rsplit("/", 1)[1] for paths in _moon_lunation_pages())
+    for locale in MOON_LOCALES
+}
+
+
 def _moon_sitemap_pages() -> tuple:
-    return tuple((moon_page_path(locale), "0.6") for locale in MOON_LOCALES)
+    return tuple((moon_page_path(locale), "0.6") for locale in MOON_LOCALES) + tuple(
+        (path, "0.5") for paths in _moon_lunation_pages() for path in paths.values()
+    )
 
 
 _SITEMAP_PAGES = _SITEMAP_PAGES[:-1] + _kundli_sitemap_pages() + _moon_sitemap_pages() + _SITEMAP_PAGES[-1:]
@@ -543,7 +571,7 @@ _KUNDLI_ALTERNATES = {
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-10-28"
+_SITEMAP_LASTMOD = "2026-10-31"
 
 
 def _indexable_document_paths() -> frozenset:
@@ -562,7 +590,7 @@ def _indexable_document_paths() -> frozenset:
         # two contradictory instructions about the same page.
         if path != "/" and not path.endswith(".html"):
             paths.add(f"{path}.html")
-        if path in _KUNDLI_ALTERNATES or path in _MOON_INDEX_PATHS:
+        if path in _KUNDLI_ALTERNATES or path in _MOON_INDEX_PATHS or path in _MOON_LUNATION_GROUPS:
             paths.add(f"{path}/")
         if path in LOCALIZABLE_BARE_PATHS:
             paths.update(localized_path_for(path, locale) for locale in PREFIXED_LOCALES)
@@ -615,6 +643,13 @@ async def sitemap_xml():
                 f'<xhtml:link rel="alternate" hreflang="{_MOON_HREFLANG[locale]}" href="{base}{moon_page_path(locale)}"/>'
                 for locale in MOON_LOCALES
             ) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{base}{moon_page_path("en")}"/>'
+            locale_paths = [path]
+        elif path in _MOON_LUNATION_GROUPS:
+            group = _MOON_LUNATION_GROUPS[path]
+            alternates = "".join(
+                f'<xhtml:link rel="alternate" hreflang="{_MOON_HREFLANG[locale]}" href="{base}{group[locale]}"/>'
+                for locale in MOON_LOCALES
+            ) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{base}{group["en"]}"/>'
             locale_paths = [path]
         else:
             alternates = ""
@@ -1057,11 +1092,14 @@ async def moon_hub_page(request: Request):
 
 def _moon_document(request: Request, locale: str, page: str):
     page = page[:-5] if page.endswith(".html") else page
-    if page not in _MOON_PAGES:
+    is_lunation = page in _MOON_LUNATION_SLUGS.get(locale, ())
+    if page not in _MOON_PAGES and not is_lunation:
         raise HTTPException(status_code=404, detail="Page not found")
     folder = "moon" if locale == "en" else f"moon/{locale}"
     response = _serve_frontend_page(f"{folder}/{page}.html")
-    moon_track_page_view(locale, page, request.headers.get("user-agent"), request.headers.get("referer"))
+    moon_track_page_view(
+        locale, "lunation" if is_lunation else page, request.headers.get("user-agent"), request.headers.get("referer")
+    )
     return response
 
 

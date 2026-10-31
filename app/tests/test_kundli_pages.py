@@ -199,7 +199,12 @@ def test_catalogs_have_the_same_keys():
             return [shape(v) for v in node]
         return None
 
-    assert shape(CATALOGS["en"]) == shape(CATALOGS["hi"])
+    def comparable(locale):
+        result = shape(CATALOGS[locale])
+        result["site"].pop("alsoFree", None)  # only the English pages point at the English-only moon pages
+        return result
+
+    assert comparable("en") == comparable("hi")
 
 
 def test_hindi_copy_is_hindi():

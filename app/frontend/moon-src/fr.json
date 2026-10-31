@@ -10,7 +10,6 @@
   "skip": "Aller au contenu",
   "langLabel": "Langue",
   "footerNote": "Steliara crée des logiciels pour les astrologues professionnels. Ces pages sur la Lune sont un outil gratuit pour tous.",
-  "footerAstrologers": "Pour les astrologues",
   "footerTerms": "Conditions et confidentialité"
  },
  "pages": {
@@ -209,6 +208,62 @@
    "Dans tes sept notes de novembre, trois mots reviennent : « repos », « sœur » et « projet ». Ta vie privée et ton travail visible semblent demander ton attention en même temps.",
    "Près de la pleine lune en maison 10, tu écris : « Je veux que mon travail soit vu, mais pas au prix de rentrer chez moi épuisé·e. » La même tension apparaissait en août, quand Jupiter passait au sommet de ton thème.",
    "À emporter en décembre : à quoi ressemblerait une réussite visible qui laisserait aussi de la place à ta vraie vie ?"
+  ]
+ },
+ "lunationPage": {
+  "slugKinds": {
+   "new_moon": "nouvelle lune",
+   "full_moon": "pleine lune"
+  },
+  "dateFormat": "{d} {month} {y}",
+  "timeFormat": "{hh}:{mm}",
+  "monthYear": "{month} {y}",
+  "tzName": "heure de Paris",
+  "title": "{kind} {date} : heure et signe | Steliara",
+  "facts": "{kind} : {date}, {time} ({tz}), {sign} {degree}°.",
+  "descriptionTail": "La maison concernée pour chaque ascendant et des questions de journal gratuites.",
+  "h1": "{kind} {date}, {sign_in}",
+  "moment": {
+   "new_moon": "La nouvelle lune est traditionnellement le moment de formuler une intention.",
+   "full_moon": "La pleine lune est traditionnellement le moment de regarder en arrière et de remarquer ce pour quoi tu ressens de la gratitude."
+  },
+  "leadClosing": "Plus bas : dans quelle maison de ton thème elle tombe et quoi écrire.",
+  "crumbHub": "Calendrier lunaire",
+  "factsTitle": "Le moment exact",
+  "factDate": "Date",
+  "factLocal": "Heure ({tz})",
+  "factUtc": "Temps universel (UTC)",
+  "factSign": "Signe et degré",
+  "housesTitle": "Dans quelle maison de ton thème elle tombe",
+  "housesLead": "La même lunaison tombe dans une maison différente selon l'ascendant. Trouve le tien dans le tableau ; si tu ne connais pas ton ascendant, prends ton signe solaire, qui donne une maison solaire plus simple.",
+  "housesHeaders": [
+   "Ascendant",
+   "Maison",
+   "De quoi parle ce domaine de vie"
+  ],
+  "writeTitle": "Quoi écrire",
+  "writeLabel": "Une question pour ce jour",
+  "ctaTitle": "Vois-la dans ton propre thème",
+  "ctaText": "Indique ta date de naissance pour obtenir ta maison, tes propres questions et une affirmation. Des lettres gratuites arrivent à chaque nouvelle et pleine lune.",
+  "moreTitle": "Toutes les nouvelles et pleines lunes de {from} à {to}",
+  "prev": "Précédente",
+  "next": "Suivante",
+  "languagesLabel": "Autres langues",
+  "details": "détails",
+  "detailsAria": "Détails : {kind}, {date}",
+  "faq": [
+   {
+    "q": "À quelle heure est la {kind} du {date} ?",
+    "a": "À {time} ({tz}). En temps universel (UTC) : {utc}."
+   },
+   {
+    "q": "Dans quel signe est la {kind} du {date} ?",
+    "a": "{kind} {sign_in}, à {degree}°."
+   },
+   {
+    "q": "Dans quelle maison de mon thème tombe-t-elle ?",
+    "a": "Cela dépend de ton ascendant. Le tableau de cette page donne les douze, et le calculateur trouve le tien à partir de ta date de naissance."
+   }
   ]
  }
 }

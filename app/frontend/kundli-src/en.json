@@ -8,9 +8,9 @@
     "langSwitch": "हिन्दी",
     "langSwitchLabel": "Hindi version",
     "footerNote": "A reflective, tradition-based guide for personal inspiration. It does not replace the advice of qualified professionals.",
-    "footerAstrologers": "Steliara for practising astrologers",
     "skip": "Skip to content",
-    "footerTerms": "Terms"
+    "footerTerms": "Terms",
+    "alsoFree": {"text": "Also free:", "label": "Moon calendar and journal questions", "href": "/moon"}
   },
   "pages": {
     "index": {

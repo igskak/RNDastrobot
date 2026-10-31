@@ -10,7 +10,6 @@
   "skip": "Ir para o conteúdo",
   "langLabel": "Idioma",
   "footerNote": "A Steliara cria software para astrólogos profissionais. Estas páginas sobre a Lua são uma ferramenta gratuita para todos.",
-  "footerAstrologers": "Para astrólogos",
   "footerTerms": "Termos e privacidade"
  },
  "pages": {
@@ -209,6 +208,62 @@
    "Nas suas sete anotações de novembro, três palavras continuam voltando: “descanso”, “irmã” e “projeto”. Sua vida privada e seu trabalho visível parecem pedir atenção ao mesmo tempo.",
    "Perto da lua cheia na sua casa 10, você escreve: “Quero que meu trabalho seja visto, mas não ao custo de chegar em casa sem energia”. A mesma tensão apareceu em agosto, quando Júpiter passava pelo ponto mais alto do seu mapa.",
    "Leve esta pergunta para dezembro: como seria um sucesso visível que também deixasse espaço para a sua vida real?"
+  ]
+ },
+ "lunationPage": {
+  "slugKinds": {
+   "new_moon": "lua nova",
+   "full_moon": "lua cheia"
+  },
+  "dateFormat": "{d} de {month} de {y}",
+  "timeFormat": "{hh}:{mm}",
+  "monthYear": "{month} de {y}",
+  "tzName": "horário de Brasília",
+  "title": "{kind} {date}: horário e signo | Steliara",
+  "facts": "{kind}: {date}, {time} ({tz}), {sign} {degree}°.",
+  "descriptionTail": "A casa que ativa para cada ascendente e perguntas gratuitas para o diário.",
+  "h1": "{kind} {date}, {sign_in}",
+  "moment": {
+   "new_moon": "A lua nova é tradicionalmente o momento de nomear uma intenção.",
+   "full_moon": "A lua cheia é tradicionalmente o momento de olhar para trás e perceber pelo que você sente gratidão."
+  },
+  "leadClosing": "Abaixo: em que casa do seu mapa ela cai e o que escrever.",
+  "crumbHub": "Calendário lunar",
+  "factsTitle": "O momento exato",
+  "factDate": "Data",
+  "factLocal": "Horário ({tz})",
+  "factUtc": "Tempo universal (UTC)",
+  "factSign": "Signo e grau",
+  "housesTitle": "Em que casa do seu mapa ela cai",
+  "housesLead": "A mesma lunação cai em uma casa diferente para cada ascendente. Encontre o seu na tabela; se não souber o ascendente, use o signo solar, que dá uma casa solar mais simples.",
+  "housesHeaders": [
+   "Ascendente",
+   "Casa",
+   "Do que trata essa área da vida"
+  ],
+  "writeTitle": "O que escrever",
+  "writeLabel": "Uma pergunta para este dia",
+  "ctaTitle": "Veja no seu próprio mapa",
+  "ctaText": "Informe sua data de nascimento para receber sua casa, suas próprias perguntas e uma afirmação. As cartas gratuitas chegam em cada lua nova e cheia.",
+  "moreTitle": "Todas as luas novas e cheias de {from} a {to}",
+  "prev": "Anterior",
+  "next": "Próxima",
+  "languagesLabel": "Outros idiomas",
+  "details": "detalhes",
+  "detailsAria": "Detalhes: {kind}, {date}",
+  "faq": [
+   {
+    "q": "A que horas é a {kind} em {date}?",
+    "a": "Às {time} ({tz}). Em tempo universal (UTC): {utc}."
+   },
+   {
+    "q": "Em que signo está a {kind} em {date}?",
+    "a": "{kind} {sign_in}, a {degree}°."
+   },
+   {
+    "q": "Em que casa do meu mapa ela cai?",
+    "a": "Depende do seu ascendente. A tabela desta página lista os doze, e a calculadora encontra o seu a partir da data de nascimento."
+   }
   ]
  }
 }

@@ -3,15 +3,16 @@
  * Build the public moon pages from app/frontend/moon-src/<locale>.json.
  *
  * Output: app/frontend/moon/{index,letter}.html (English) and app/frontend/moon/<locale>/...
- * for pl, de, fr, it, es, pt. They are build output: edit the catalogs (copy), the lunation
- * table (app/scripts/build_moon_lunations.py) or this file (structure) and rebuild. `--check`
- * rebuilds in memory and fails on any difference, which is what CI runs.
+ * for pl, de, fr, it, es, pt, plus one page per lunation until mid-2027 and lunation-pages.json
+ * (the server's list of those pages). They are build output: edit the catalogs (copy), the
+ * lunation table (app/scripts/build_moon_lunations.py) or this file (structure) and rebuild.
+ * `--check` rebuilds in memory and fails on any difference, which is what CI runs.
  *
  * Sign and phase names come from the letter catalogs in app/services/moon_journal_content, so
  * the page and the email never name a sign differently. Dates are formatted here from those
  * catalogs rather than with Intl date styles, whose output changes between Node versions.
  */
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,7 +25,7 @@ const outRoot = path.join(frontendRoot, 'moon');
 const ORIGIN = 'https://www.steliara.com';
 const LOCALES = ['en', 'pl', 'de', 'fr', 'it', 'es', 'pt'];
 const PAGES = ['index', 'letter'];
-const ASSET_VERSION = '1';
+const ASSET_VERSION = '2';
 
 const TIMEZONES = [
     'Europe/Warsaw', 'Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/Paris', 'Europe/Brussels',
@@ -52,14 +53,34 @@ function wallClock(utcIso, timeZone) {
     return { y: +parts.year, m: +parts.month, d: +parts.day, h: +parts.hour, min: +parts.minute };
 }
 
-function formatDate(utcIso, catalog) {
-    const t = wallClock(utcIso, catalog.tableTimezone);
+function fill(template, values) {
+    return template.replace(/\{(\w+)\}/g, (_, key) => String(values[key]));
+}
+
+function clockValues(utcIso, catalog, timeZone = catalog.tableTimezone) {
+    const t = wallClock(utcIso, timeZone);
     const pad = (n) => String(n).padStart(2, '0');
-    const values = {
+    return {
         d: t.d, y: t.y, month: catalog.months[t.m - 1], hh: pad(t.h), mm: pad(t.min),
         h12: t.h % 12 || 12, ampm: t.h < 12 ? 'AM' : 'PM',
     };
-    return catalog.tableDateFormat.replace(/\{(\w+)\}/g, (_, key) => String(values[key]));
+}
+
+function formatDate(utcIso, catalog, timeZone) {
+    return fill(catalog.tableDateFormat, clockValues(utcIso, catalog, timeZone));
+}
+
+const dayLabel = (utcIso, catalog) => fill(catalog.lunationPage.dateFormat, clockValues(utcIso, catalog));
+const timeLabel = (utcIso, catalog) => fill(catalog.lunationPage.timeFormat, clockValues(utcIso, catalog));
+
+// Slugs are ASCII so every address is easy to type, share and match in a log.
+function slugify(text) {
+    return text.toLowerCase().replace(/ł/g, 'l').normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function lunationSlug(lun, catalog) {
+    return slugify(`${catalog.lunationPage.slugKinds[lun.kind]} ${dayLabel(lun.utc, catalog)}`);
 }
 
 function jsonLd(locale, catalog) {
@@ -78,14 +99,7 @@ function jsonLd(locale, catalog) {
     return blocks.map((block) => `    <script type="application/ld+json">${JSON.stringify(block)}</script>`).join('\n');
 }
 
-function head(locale, slug, catalog, catalogs) {
-    const page = catalog.pages[slug];
-    const indexable = slug === 'index';
-    const url = `${ORIGIN}${pagePath(locale, slug)}`;
-    const alternates = indexable
-        ? LOCALES.map((l) => `    <link rel="alternate" hreflang="${catalogs[l].hreflang}" href="${ORIGIN}${pagePath(l)}">`).join('\n')
-          + `\n    <link rel="alternate" hreflang="x-default" href="${ORIGIN}${pagePath('en')}">\n`
-        : '';
+function headHtml(catalog, { title, description, url, indexable, alternates = '', ld = '' }) {
     return `<!DOCTYPE html>
 <html lang="${catalog.lang}">
 <head>
@@ -93,11 +107,11 @@ function head(locale, slug, catalog, catalogs) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
     <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
-    <title>${esc(page.title)}</title>
-    <meta name="description" content="${esc(page.description)}">
+    <title>${esc(title)}</title>
+    <meta name="description" content="${esc(description)}">
 ${indexable ? '' : '    <meta name="robots" content="noindex, nofollow">\n    <meta name="referrer" content="no-referrer">\n'}    <link rel="canonical" href="${url}">
-${alternates}    <meta property="og:title" content="${esc(page.title)}">
-    <meta property="og:description" content="${esc(page.description)}">
+${alternates}    <meta property="og:title" content="${esc(title)}">
+    <meta property="og:description" content="${esc(description)}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="${url}">
     <meta property="og:locale" content="${catalog.ogLocale}">
@@ -105,7 +119,20 @@ ${alternates}    <meta property="og:title" content="${esc(page.title)}">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="/css/kundli.css?v=${ASSET_VERSION}">
     <link rel="stylesheet" href="/css/moon.css?v=${ASSET_VERSION}">
-${indexable ? jsonLd(locale, catalog) + '\n' : ''}</head>`;
+${ld ? ld + '\n' : ''}</head>`;
+}
+
+function head(locale, slug, catalog, catalogs) {
+    const page = catalog.pages[slug];
+    const indexable = slug === 'index';
+    const alternates = indexable
+        ? LOCALES.map((l) => `    <link rel="alternate" hreflang="${catalogs[l].hreflang}" href="${ORIGIN}${pagePath(l)}">`).join('\n')
+          + `\n    <link rel="alternate" hreflang="x-default" href="${ORIGIN}${pagePath('en')}">\n`
+        : '';
+    return headHtml(catalog, {
+        title: page.title, description: page.description, url: `${ORIGIN}${pagePath(locale, slug)}`,
+        indexable, alternates, ld: indexable ? jsonLd(locale, catalog) : '',
+    });
 }
 
 function header(locale, slug, catalog, catalogs) {
@@ -125,12 +152,17 @@ function header(locale, slug, catalog, catalogs) {
   </header>`;
 }
 
+// The moon pages stand apart from the pages for professional astrologers: no link to them, only
+// to the terms and, in English, to the sister free tools (kundli).
 function footer(catalog) {
     const site = catalog.site;
+    const also = site.alsoFree
+        ? `<p class="links also-free">${esc(site.alsoFree.text)} <a href="${site.alsoFree.href}">${esc(site.alsoFree.label)}</a></p>\n      `
+        : '';
     return `<footer class="site-footer">
     <div class="shell">
       <p class="disclaimer">${esc(site.footerNote)}</p>
-      <p class="links"><a href="/">${esc(site.footerAstrologers)}</a> · <a href="/terms.html">${esc(site.footerTerms)}</a></p>
+      ${also}<p class="links"><a href="/terms.html">${esc(site.footerTerms)}</a></p>
     </div>
   </footer>`;
 }
@@ -165,11 +197,17 @@ function birthFields(catalog) {
         </fieldset>`;
 }
 
-function lunationTable(catalog, letters, lunations) {
+function lunationTable(catalog, letters, lunations, links) {
     const ui = catalog.ui;
+    const more = (lun) => {
+        const href = links.get(lun.utc);
+        if (!href) return '';
+        const aria = fill(catalog.lunationPage.detailsAria, { kind: letters.kinds[lun.kind], date: dayLabel(lun.utc, catalog) });
+        return `<a class="lunation-more" href="${href}" aria-label="${esc(aria)}">${esc(catalog.lunationPage.details)}</a>`;
+    };
     const rows = lunations.map((lun) => `
             <tr data-utc="${lun.utc}">
-              <td><button class="lunation-pick" type="button">${esc(formatDate(lun.utc, catalog))}</button><span class="badge" hidden> · ${esc(ui.nextBadge)}</span></td>
+              <td><button class="lunation-pick" type="button">${esc(formatDate(lun.utc, catalog))}</button><span class="badge" hidden> · ${esc(ui.nextBadge)}</span>${more(lun)}</td>
               <td><span class="phase phase-${lun.kind === 'new_moon' ? 'new' : 'full'}" aria-hidden="true"></span>${esc(letters.kinds[lun.kind])}</td>
               <td>${esc(letters.signs[lun.sign])} ${lun.degree}°</td>
             </tr>`).join('');
@@ -292,7 +330,7 @@ function copy(page) {
     return sections + faq;
 }
 
-function indexMain(catalog, letters, lunations) {
+function indexMain(catalog, letters, lunations, links) {
     const page = catalog.pages.index;
     const ui = catalog.ui;
     return `<main id="main" class="shell tool moon-page">
@@ -326,7 +364,7 @@ function indexMain(catalog, letters, lunations) {
             <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
             <div class="moon-highlight-copy"></div>
           </section>
-${lunationTable(catalog, letters, lunations)}
+${lunationTable(catalog, letters, lunations, links)}
         </aside>
       </div>${plans(catalog, letters, lunations)}${linkCard(ui)}${copy(page)}
     </main>`;
@@ -367,9 +405,173 @@ function letterMain(locale, catalog) {
     </main>`;
 }
 
-function render(locale, slug, catalogs, letters, lunations) {
+// One page per lunation until the middle of 2027 (exclusive bound). Each language has its own
+// address (the date is part of what people search for) and all seven form one hreflang set.
+const DATE_PAGES_BEFORE = '2027-07-01';
+
+function datePagePlan(catalogs, lunations) {
+    const range = lunations.filter((lun) => lun.utc < DATE_PAGES_BEFORE);
+    return range.map((lun) => ({
+        lun,
+        slugs: Object.fromEntries(LOCALES.map((l) => [l, lunationSlug(lun, catalogs[l])])),
+    }));
+}
+
+function lunationLinks(locale, plan) {
+    return new Map(plan.map((entry) => [entry.lun.utc, pagePath(locale, entry.slugs[locale])]));
+}
+
+function lunationJsonLd(locale, catalog, entry, texts) {
+    const url = (slug) => `${ORIGIN}${pagePath(locale, slug)}`;
+    const blocks = [
+        {
+            '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+            itemListElement: [
+                { '@type': 'ListItem', position: 1, name: catalog.lunationPage.crumbHub, item: `${ORIGIN}${pagePath(locale)}` },
+                { '@type': 'ListItem', position: 2, name: texts.name, item: url(entry.slugs[locale]) },
+            ],
+        },
+        {
+            '@context': 'https://schema.org', '@type': 'FAQPage',
+            mainEntity: texts.faq.map((item) => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } })),
+        },
+    ];
+    return blocks.map((block) => `    <script type="application/ld+json">${JSON.stringify(block)}</script>`).join('\n');
+}
+
+function lunationTexts(locale, catalog, letters, entry) {
+    const lp = catalog.lunationPage;
+    const lun = entry.lun;
+    const kind = letters.kinds[lun.kind];
+    const values = {
+        kind, date: dayLabel(lun.utc, catalog), time: timeLabel(lun.utc, catalog), tz: lp.tzName,
+        utc: formatDate(lun.utc, catalog, 'UTC'), sign: letters.signs[lun.sign], sign_in: letters.signs_in[lun.sign], degree: lun.degree,
+    };
+    const name = `${kind} ${values.date}`;
+    const facts = fill(lp.facts, values);
+    return {
+        values, name, facts,
+        title: fill(lp.title, values),
+        description: `${facts} ${lp.descriptionTail}`,
+        h1: fill(lp.h1, values),
+        lead: `${facts} ${lp.moment[lun.kind]} ${lp.leadClosing}`,
+        faq: lp.faq.map((item) => ({ q: fill(item.q, values), a: fill(item.a, values) })),
+    };
+}
+
+function lunationMain(locale, catalog, letters, plan, index, catalogs) {
+    const lp = catalog.lunationPage;
+    const entry = plan[index];
+    const lun = entry.lun;
+    const texts = lunationTexts(locale, catalog, letters, entry);
+    const v = texts.values;
+    const href = (e) => pagePath(locale, e.slugs[locale]);
+    const label = (e) => `${letters.kinds[e.lun.kind]} ${dayLabel(e.lun.utc, catalog)}`;
+    const dot = (e) => `<span class="phase phase-${e.lun.kind === 'new_moon' ? 'new' : 'full'}" aria-hidden="true"></span>`;
+
+    const rows = letters.signs.map((sign, rising) => {
+        const house = (lun.sign - rising + 12) % 12 + 1;
+        return `
+              <tr><th scope="row">${esc(sign)}</th><td>${house}</td><td>${esc(letters.houses[house - 1].theme)}</td></tr>`;
+    }).join('');
+
+    const prev = plan[index - 1];
+    const next = plan[index + 1];
+    const stepper = [
+        prev ? `<a class="step prev" rel="prev" href="${href(prev)}"><span class="step-dir">${esc(lp.prev)}</span><span>${dot(prev)}${esc(label(prev))}</span></a>` : '',
+        next ? `<a class="step next" rel="next" href="${href(next)}"><span class="step-dir">${esc(lp.next)}</span><span>${dot(next)}${esc(label(next))}</span></a>` : '',
+    ].join('');
+
+    const first = plan[0].lun;
+    const last = plan[plan.length - 1].lun;
+    const span = (l) => fill(lp.monthYear, clockValues(l.utc, catalog));
+    const list = plan.map((e, i) => (i === index
+        ? `<li class="current">${dot(e)}<span aria-current="page">${esc(label(e))}</span></li>`
+        : `<li>${dot(e)}<a href="${href(e)}">${esc(label(e))}</a></li>`)).join('\n          ');
+
+    const faqIndex = lun.kind === 'new_moon' ? 2 : 3;
+    const writeFaq = catalog.pages.index.faq[faqIndex];
+    const langs = LOCALES.map((l) => (l === locale
+        ? `<li><span aria-current="page">${esc(catalogs[l].languageName)}</span></li>`
+        : `<li><a href="${pagePath(l, entry.slugs[l])}" hreflang="${catalogs[l].hreflang}" lang="${l}">${esc(catalogs[l].languageName)}</a></li>`)).join('');
+
+    return `<main id="main" class="shell lunation-page">
+      <nav class="crumbs" aria-label="${esc(lp.crumbHub)}"><a href="${pagePath(locale)}">${esc(lp.crumbHub)}</a> <span aria-hidden="true">›</span> <span aria-current="page">${esc(texts.name)}</span></nav>
+      <h1>${esc(texts.h1)}</h1>
+      <p class="lead">${esc(texts.lead)}</p>
+      <section class="card facts" aria-labelledby="facts-title">
+        <h2 id="facts-title">${esc(lp.factsTitle)}</h2>
+        <dl class="facts-list">
+          <div><dt>${esc(lp.factDate)}</dt><dd>${esc(v.date)}</dd></div>
+          <div><dt>${esc(fill(lp.factLocal, v))}</dt><dd>${esc(v.time)}</dd></div>
+          <div><dt>${esc(lp.factUtc)}</dt><dd>${esc(v.utc)}</dd></div>
+          <div><dt>${esc(lp.factSign)}</dt><dd>${esc(`${v.sign} ${v.degree}°`)}</dd></div>
+        </dl>
+      </section>
+      <section class="card houses" aria-labelledby="houses-title">
+        <h2 id="houses-title">${esc(lp.housesTitle)}</h2>
+        <p>${esc(lp.housesLead)}</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">${esc(lp.housesHeaders[0])}</th><th scope="col">${esc(lp.housesHeaders[1])}</th><th scope="col">${esc(lp.housesHeaders[2])}</th></tr></thead>
+            <tbody>${rows}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="card write" aria-labelledby="write-title">
+        <h2 id="write-title">${esc(lp.writeTitle)}</h2>
+        <p>${esc(writeFaq.a)}</p>
+        <p class="hint">${esc(lp.writeLabel)}</p>
+        <ol class="prompts"><li>${esc(letters.universal[lun.kind === 'new_moon' ? 'new' : 'full'])}</li></ol>
+      </section>
+      <section class="card cta" aria-labelledby="cta-title">
+        <h2 id="cta-title">${esc(lp.ctaTitle)}</h2>
+        <p>${esc(lp.ctaText)}</p>
+        <a class="btn" href="${pagePath(locale)}#moon-form">${esc(catalog.ui.calculate)}</a>
+      </section>
+      <section class="copy faq" aria-labelledby="faq-title">
+        <h2 id="faq-title">${esc(catalog.pages.index.faqTitle)}</h2>
+        ${texts.faq.map((item) => `<h3>${esc(item.q)}</h3>\n        <p>${esc(item.a)}</p>`).join('\n        ')}
+      </section>
+      <nav class="steps" aria-label="${esc(lp.crumbHub)}">${stepper}</nav>
+      <section class="more" aria-labelledby="more-title">
+        <h2 id="more-title">${esc(fill(lp.moreTitle, { from: span(first), to: span(last) }))}</h2>
+        <ul class="lunation-list">
+          ${list}
+        </ul>
+      </section>
+      <nav class="lang-links" aria-label="${esc(lp.languagesLabel)}">
+        <h2>${esc(lp.languagesLabel)}</h2>
+        <ul>${langs}</ul>
+      </nav>
+    </main>`;
+}
+
+function renderLunation(locale, entry, index, plan, ctx) {
+    const { catalogs, letters } = ctx;
     const catalog = catalogs[locale];
-    const main = slug === 'index' ? indexMain(catalog, letters[locale], lunations) : letterMain(locale, catalog);
+    const texts = lunationTexts(locale, catalog, letters[locale], entry);
+    const alternates = LOCALES.map((l) => `    <link rel="alternate" hreflang="${catalogs[l].hreflang}" href="${ORIGIN}${pagePath(l, entry.slugs[l])}">`).join('\n')
+        + `\n    <link rel="alternate" hreflang="x-default" href="${ORIGIN}${pagePath('en', entry.slugs.en)}">\n`;
+    const html = headHtml(catalog, {
+        title: texts.title, description: texts.description, url: `${ORIGIN}${pagePath(locale, entry.slugs[locale])}`,
+        indexable: true, alternates, ld: lunationJsonLd(locale, catalog, entry, texts),
+    });
+    return `${html}
+<body data-page="lunation" data-locale="${locale}">
+  <a class="skip" href="#main">${esc(catalog.site.skip)}</a>
+  ${header(locale, 'lunation', catalog, catalogs)}
+  ${lunationMain(locale, catalog, letters[locale], plan, index, catalogs)}
+  ${footer(catalog)}
+</body>
+</html>
+`;
+}
+
+function render(locale, slug, catalogs, letters, lunations, links) {
+    const catalog = catalogs[locale];
+    const main = slug === 'index' ? indexMain(catalog, letters[locale], lunations, links) : letterMain(locale, catalog);
     const script = slug === 'index' ? 'moon-tool' : 'moon-letter';
     return `${head(locale, slug, catalog, catalogs)}
 <body data-page="${slug}" data-locale="${locale}">
@@ -397,9 +599,32 @@ async function main() {
         letters[locale] = await readJson(path.join(letterRoot, `${locale}.json`));
     }
     const { lunations } = await readJson(path.join(srcRoot, 'lunations.json'));
+    const plan = datePagePlan(catalogs, lunations);
     const outputs = new Map();
     for (const locale of LOCALES) {
-        for (const slug of PAGES) outputs.set(outFile(locale, slug), render(locale, slug, catalogs, letters, lunations));
+        const links = lunationLinks(locale, plan);
+        for (const slug of PAGES) outputs.set(outFile(locale, slug), render(locale, slug, catalogs, letters, lunations, links));
+        plan.forEach((entry, index) => {
+            outputs.set(outFile(locale, entry.slugs[locale]), renderLunation(locale, entry, index, plan, { catalogs, letters }));
+        });
+    }
+    // The server reads this to route, to list the pages in the sitemap and to pair the languages.
+    const manifest = {
+        before: DATE_PAGES_BEFORE,
+        pages: plan.map((entry) => ({
+            utc: entry.lun.utc, kind: entry.lun.kind,
+            paths: Object.fromEntries(LOCALES.map((l) => [l, pagePath(l, entry.slugs[l])])),
+        })),
+    };
+    outputs.set(path.join(outRoot, 'lunation-pages.json'), `${JSON.stringify(manifest, null, 1)}\n`);
+
+    // Pages that are no longer generated (a shorter range, a renamed slug) must not linger.
+    const stale = [];
+    for (const dir of [outRoot, ...LOCALES.filter((l) => l !== 'en').map((l) => path.join(outRoot, l))]) {
+        for (const name of await readdir(dir).catch(() => [])) {
+            const file = path.join(dir, name);
+            if (/\.(html|json)$/.test(name) && !outputs.has(file)) stale.push(file);
+        }
     }
 
     if (check) {
@@ -409,6 +634,7 @@ async function main() {
             try { current = await readFile(file, 'utf8'); } catch { /* missing */ }
             if (current !== html) drifted.push(path.relative(frontendRoot, file));
         }
+        drifted.push(...stale.map((file) => `${path.relative(frontendRoot, file)} (stale)`));
         if (drifted.length) {
             console.error(`[moon-pages] out of date, run "npm --prefix app run build:moon":\n  ${drifted.join('\n  ')}`);
             process.exit(1);
@@ -417,6 +643,7 @@ async function main() {
         return;
     }
 
+    for (const file of stale) await rm(file);
     for (const [file, html] of outputs) {
         await mkdir(path.dirname(file), { recursive: true });
         await writeFile(file, html, 'utf8');

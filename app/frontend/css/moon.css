@@ -137,3 +137,32 @@ body[data-page="index"] > .site-header, body[data-page="index"] > .moon-page, bo
   .moon-primary .lunation, .moon-highlight.is-changing { animation: none; }
   .motion-ready .reveal-on-scroll { opacity: 1; transform: none; transition: none; }
 }
+
+/* One page per lunation (/moon/<date>): facts, the twelve rising signs, neighbours, languages. */
+.lunation-more { display: inline-block; margin-left: 10px; font-size: .82rem; white-space: nowrap; }
+.lunation-page h1 { max-width: 22ch; font-size: clamp(1.9rem, 4.2vw, 3.1rem); }
+.lunation-page > .card, .lunation-page > .more, .lunation-page > .steps, .lunation-page > .lang-links { max-width: 860px; }
+.lunation-page > .card { margin-top: 18px; }
+.lunation-page .card h2 { margin-top: 0; font-family: Georgia, "Times New Roman", serif; font-size: 1.5rem; }
+.crumbs { margin-bottom: 14px; color: var(--text-2); font-size: .9rem; }
+.crumbs a { color: var(--text-2); }
+.facts-list { display: grid; gap: 0; margin: 0; }
+.facts-list > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.facts-list > div:last-child { border-bottom: 0; }
+.facts-list dt { color: var(--text-2); }
+.facts-list dd { margin: 0; font-weight: 600; }
+.houses td:first-child { white-space: nowrap; }
+.houses tbody th { color: var(--text); font-weight: 600; }
+.houses td:not(:first-child):not(:last-child) { white-space: normal; }
+.steps { display: grid; gap: 12px; margin: 22px 0; }
+.steps:empty { display: none; }
+.step { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; color: var(--text); text-decoration: none; background: var(--surface); border: 1px solid var(--border); border-radius: calc(var(--radius) - 4px); }
+.step-dir { color: var(--text-2); font-size: .82rem; }
+.step:hover { border-color: var(--accent); }
+.lunation-list, .lang-links ul { display: flex; flex-wrap: wrap; gap: 6px 18px; list-style: none; padding: 0; margin: 10px 0; }
+.lunation-list li { display: flex; align-items: center; min-width: 14rem; }
+.lunation-list .current span { font-weight: 700; }
+.lang-links h2 { font-size: 1.05rem; margin: 22px 0 0; }
+.lang-links [aria-current="page"] { font-weight: 700; }
+.more h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.4rem; }
+@media (min-width: 640px) { .steps { grid-template-columns: 1fr 1fr; } .step.next { text-align: right; align-items: flex-end; grid-column: 2; } }

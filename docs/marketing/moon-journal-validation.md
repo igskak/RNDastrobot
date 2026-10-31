@@ -48,6 +48,20 @@ volume; IT, ES and BR are harder and are included because the page costs nothing
   one hreflang set, all in the sitemap. Each has a table of every new and full moon from November 2026
   to December 2027 in the market's time zone, the calculator (date, optional time and place) and the signup.
   Letter pages `/moon/<lang>/letter?t=...` are noindexed.
+- One page per lunation until June 2027 (16 lunations, 112 pages), added 2026-10-31 because search
+  already showed impressions for date queries ("vollmond dezember", "luna nueva diciembre") that no page
+  answered. Address = kind + the date as written in that language, e.g. `/moon/pl/pelnia-24-grudnia-2026`,
+  `/moon/new-moon-december-8-2026`; the date is in the market's time zone (US Eastern for English), UTC is
+  shown too. Each page: the exact moment, sign and degree, a table of the twelve rising signs with the house
+  and its theme (no birth data needed), what to write, a way to the calculator, three FAQ answers,
+  previous/next and a link to every other lunation page, and the same lunation in the six other languages
+  (one hreflang set per lunation). The index table links to them. The build writes
+  `app/frontend/moon/lunation-pages.json`, which the server reads for routing and the sitemap; to extend
+  the range change `DATE_PAGES_BEFORE` in `build-moon-pages.mjs` and rebuild (needs lunations in
+  `moon-src/lunations.json`). Page views of these are counted as `moon.page_view` with `page = lunation`.
+- Isolation: the moon and kundli pages do not link to the professional-astrologer pages and nothing there
+  links to them (decision 2026-10-31). The footer of the English moon and kundli pages links to each other
+  ("Also free").
 - Houses are whole-sign from the rising sign (time and place known) or from the Sun sign (solar houses,
   said so on the page and in every letter).
 - Double opt-in. Then one email on the day of every new and full moon: the house theme, two questions for
@@ -85,7 +99,7 @@ exact, unique visitors cannot be counted by design. Crawlers and empty user agen
 
 | Event | Sent when | Properties |
 |---|---|---|
-| `moon.page_view` | a /moon page is opened (calculator or letter page) | `locale`, `page` (index / letter), `referrer_host` (host only, or `direct`) |
+| `moon.page_view` | a /moon page is opened (calculator, letter or lunation date page) | `locale`, `page` (index / letter / lunation), `referrer_host` (host only, or `direct`) |
 | `moon.chart_calculated` | someone presses "Show my moons" | `locale`, `frame` (rising / sun) |
 | `moon.signup_requested` | the confirmation email goes out | `locale`, `frame` |
 | `moon.confirmed` | the address is confirmed | `locale` |
@@ -102,6 +116,7 @@ these insights (all events start with `moon.`, so a search for `moon.` finds the
 3. **Journey in numbers**: Trends, total value, series `moon.page_view` (page = index), `moon.chart_calculated`, `moon.signup_requested`, `moon.confirmed`, `moon.journal_entry`, `moon.interest_clicked`; breakdown `locale`. Read it as ratios: calculated / visits, signups / calculated, confirmed / signups.
 4. **Letters**: Trends, `moon.letter_sent`, breakdown `kind`, by week.
 5. **Leaving**: Trends, `moon.unsubscribed` and `moon.erased` per week.
+6. **Date pages**: Trends, `moon.page_view` where `page` = `lunation`, breakdown `locale`, stacked bars, last 30 days (visits that start on a lunation date page; the calculator visits in 1-3 are counted separately).
 
 Per-language funnel numbers with exact confirmed / writers / interested counts remain in the stats
 endpoint below; PostHog is for traffic and the shape of the journey.

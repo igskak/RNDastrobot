@@ -10,8 +10,8 @@
   "skip": "Skip to content",
   "langLabel": "Language",
   "footerNote": "Steliara makes software for professional astrologers. These moon pages are a free tool for everyone.",
-  "footerAstrologers": "For astrologers",
-  "footerTerms": "Terms and privacy"
+  "footerTerms": "Terms and privacy",
+  "alsoFree": {"text": "Also free:", "label": "Kundli and Vedic astrology calculators", "href": "/kundli"}
  },
  "pages": {
   "index": {
@@ -230,6 +230,62 @@
    "Across seven November entries, three words keep returning: “rest”, “sister” and “project”. Your private life and visible work seem to be asking for attention at the same time.",
    "Near the full moon in your 10th house you wrote: “I want my work to be seen, but not at the cost of coming home depleted.” The same tension appeared in August, when Jupiter crossed the top of your chart.",
    "Carry into December: what would visible success look like if it also left room for your real life?"
+  ]
+ },
+ "lunationPage": {
+  "slugKinds": {
+   "new_moon": "new moon",
+   "full_moon": "full moon"
+  },
+  "dateFormat": "{month} {d}, {y}",
+  "timeFormat": "{h12}:{mm} {ampm}",
+  "monthYear": "{month} {y}",
+  "tzName": "Eastern Time",
+  "title": "{kind} {date}: time and sign | Steliara",
+  "facts": "{kind}: {date}, {time} ({tz}), {sign} {degree}°.",
+  "descriptionTail": "The house it falls in for each rising sign, and free journal questions.",
+  "h1": "{kind} {date}, {sign_in}",
+  "moment": {
+   "new_moon": "A New Moon is the traditional moment to name an intention.",
+   "full_moon": "A Full Moon is the traditional moment to look back and notice what you are grateful for."
+  },
+  "leadClosing": "Below: where it falls in your chart, and what to write.",
+  "crumbHub": "Moon calendar",
+  "factsTitle": "The exact moment",
+  "factDate": "Date",
+  "factLocal": "Time ({tz})",
+  "factUtc": "Universal time (UTC)",
+  "factSign": "Sign and degree",
+  "housesTitle": "Where it falls in your chart",
+  "housesLead": "The same lunation lands in a different house for each rising sign. Find yours in the table; if you do not know your rising sign, use your Sun sign for a simpler solar house.",
+  "housesHeaders": [
+   "Rising sign",
+   "House",
+   "What this part of life is about"
+  ],
+  "writeTitle": "What to write",
+  "writeLabel": "A question for the day",
+  "ctaTitle": "See it in your own chart",
+  "ctaText": "Enter your birth date to get your house, your own questions and an affirmation. Free letters arrive on every New and Full Moon.",
+  "moreTitle": "All New and Full Moons from {from} to {to}",
+  "prev": "Previous",
+  "next": "Next",
+  "languagesLabel": "Other languages",
+  "details": "details",
+  "detailsAria": "Details: {kind}, {date}",
+  "faq": [
+   {
+    "q": "What time is the {kind} on {date}?",
+    "a": "At {time} ({tz}). In universal time (UTC): {utc}."
+   },
+   {
+    "q": "In which sign is the {kind} on {date}?",
+    "a": "{kind} {sign_in}, at {degree}°."
+   },
+   {
+    "q": "In which house of my chart does it fall?",
+    "a": "It depends on your rising sign. The table on this page lists all twelve, and the calculator finds yours from your birth date."
+   }
   ]
  }
 }

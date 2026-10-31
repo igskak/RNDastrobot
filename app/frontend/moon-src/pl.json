@@ -10,7 +10,6 @@
   "skip": "Przejdź do treści",
   "langLabel": "Język",
   "footerNote": "Steliara tworzy oprogramowanie dla zawodowych astrologów. Te strony o Księżycu to bezpłatne narzędzie dla wszystkich.",
-  "footerAstrologers": "Dla astrologów",
   "footerTerms": "Regulamin i prywatność"
  },
  "pages": {
@@ -209,6 +208,62 @@
    "W siedmiu listopadowych wpisach powracają trzy słowa: „odpoczynek”, „siostra” i „projekt”. Życie prywatne i widoczna praca zdają się jednocześnie prosić o uwagę.",
    "W pobliżu pełni w 10. domu zapisujesz: „Chcę, by moja praca była widoczna, ale nie za cenę powrotów do domu bez sił”. To samo napięcie pojawiło się w sierpniu, gdy Jowisz przechodził przez szczyt Twojego horoskopu.",
    "Zabierz do grudnia pytanie: jak wyglądałby widoczny sukces, który zostawia miejsce także na Twoje prawdziwe życie?"
+  ]
+ },
+ "lunationPage": {
+  "slugKinds": {
+   "new_moon": "nów",
+   "full_moon": "pełnia"
+  },
+  "dateFormat": "{d} {month} {y}",
+  "timeFormat": "{hh}:{mm}",
+  "monthYear": "{month} {y}",
+  "tzName": "czas polski",
+  "title": "{kind} {date}: godzina i znak | Steliara",
+  "facts": "{kind}: {date}, {time} ({tz}), {sign} {degree}°.",
+  "descriptionTail": "Dom, w którym wypada, dla każdego ascendentu oraz bezpłatne pytania do dziennika.",
+  "h1": "{kind} {date}, {sign_in}",
+  "moment": {
+   "new_moon": "Nów to tradycyjny moment, by nazwać intencję.",
+   "full_moon": "Pełnia to tradycyjny moment, by spojrzeć wstecz i zauważyć, za co czujesz wdzięczność."
+  },
+  "leadClosing": "Poniżej: w którym domu Twojego horoskopu wypada i co zapisać.",
+  "crumbHub": "Kalendarz Księżyca",
+  "factsTitle": "Dokładny moment",
+  "factDate": "Data",
+  "factLocal": "Godzina ({tz})",
+  "factUtc": "Czas uniwersalny (UTC)",
+  "factSign": "Znak i stopień",
+  "housesTitle": "W którym domu Twojego horoskopu wypada",
+  "housesLead": "Ta sama lunacja wypada w innym domu dla każdego ascendentu. Znajdź swój w tabeli; jeśli nie znasz ascendentu, użyj znaku Słońca, co daje prostszy dom słoneczny.",
+  "housesHeaders": [
+   "Ascendent",
+   "Dom",
+   "O czym jest ta część życia"
+  ],
+  "writeTitle": "Co zapisać",
+  "writeLabel": "Pytanie na ten dzień",
+  "ctaTitle": "Zobacz to w swoim horoskopie",
+  "ctaText": "Podaj datę urodzenia, a zobaczysz swój dom, własne pytania i afirmację. Bezpłatne listy przychodzą na każdy nów i każdą pełnię.",
+  "moreTitle": "Wszystkie nowie i pełnie od {from} do {to}",
+  "prev": "Poprzednia",
+  "next": "Następna",
+  "languagesLabel": "Inne języki",
+  "details": "szczegóły",
+  "detailsAria": "Szczegóły: {kind}, {date}",
+  "faq": [
+   {
+    "q": "O której godzinie jest {kind} {date}?",
+    "a": "O {time} ({tz}). W czasie uniwersalnym (UTC): {utc}."
+   },
+   {
+    "q": "W jakim znaku jest {kind} {date}?",
+    "a": "{kind} {sign_in}, na {degree}°."
+   },
+   {
+    "q": "W którym domu mojego horoskopu wypada?",
+    "a": "To zależy od Twojego ascendentu. Tabela na tej stronie podaje wszystkie dwanaście, a kalkulator znajdzie Twój na podstawie daty urodzenia."
+   }
   ]
  }
 }
