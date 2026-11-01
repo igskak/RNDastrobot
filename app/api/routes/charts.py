@@ -98,7 +98,8 @@ class ChartCreateRequest(BaseModel):
     location_name: Optional[str] = Field(None, max_length=255)
     latitude: Optional[float] = Field(None, ge=-90, le=90)
     longitude: Optional[float] = Field(None, ge=-180, le=180)
-    house_system: str = Field("P")
+    # Omitted -> the account's chart-creation default (see create_chart).
+    house_system: Optional[str] = None
     first_name: Optional[str] = Field(None, max_length=100)
     last_name: Optional[str] = Field(None, max_length=100)
     person_id: Optional[UUID] = None
@@ -129,7 +130,9 @@ class ChartCreateRequest(BaseModel):
 
     @field_validator("house_system")
     @classmethod
-    def validate_house_system(cls, value: str) -> str:
+    def validate_house_system(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
         code = normalize_house_system_code(value)
         if code not in VALID_HOUSE_SYSTEMS:
             raise ValueError(f"Unsupported house_system: {value}")
@@ -384,7 +387,7 @@ def create_chart(
             place=payload.location_name,
             latitude=payload.latitude,
             longitude=payload.longitude,
-            house_system=payload.house_system,
+            house_system=payload.house_system or normalize_house_system_code(auth.astrologer.default_house_system),
             save_to_db=True,
             db_session=db,
             first_name=payload.first_name,

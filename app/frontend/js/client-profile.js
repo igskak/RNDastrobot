@@ -1618,7 +1618,6 @@ async function handleEditClientSubmit(e) {
                     time: window.AstroAPI.formatTime(refs.editHour.value, refs.editMinute.value),
                     timezone: refs.editTimezone.value,
                     location_name: place,
-                    house_system: 'P',
                     chart_kind: 'birth',
                     person_id: createdPerson.person_id,
                 };
