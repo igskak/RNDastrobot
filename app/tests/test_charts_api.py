@@ -201,6 +201,77 @@ def test_create_chart_persists_chart_metadata_after_existing_natal_save(monkeypa
     assert data["location_name"] == "Madrid"
 
 
+def _capture_house_system(monkeypatch, seen):
+    monkeypatch.setattr(charts_route, "assert_can_create_saved_chart", lambda *_args, **_kwargs: None)
+
+    def fake_calculate_natal_chart(**kwargs):
+        seen.append(kwargs["house_system"])
+        user = User(
+            astrologer_id=kwargs["astrologer_id"],
+            birth_date=kwargs["birth_date"],
+            birth_time=kwargs["birth_time"],
+            timezone=kwargs["timezone"],
+            birth_place=kwargs.get("place") or "Tallinn",
+            lat=59.437,
+            lon=24.7536,
+            julian_day=2460000.0,
+            house_system=kwargs["house_system"],
+            tags=[],
+        )
+        kwargs["db_session"].add(user)
+        kwargs["db_session"].flush()
+        return {"user_id": str(user.user_id)}
+
+    monkeypatch.setattr(charts_route.natal_service, "calculate_natal_chart", fake_calculate_natal_chart)
+
+
+def _set_default_house_system(astrologer_id, code):
+    db = TestingSessionLocal()
+    try:
+        db.query(Astrologer).filter(Astrologer.id == astrologer_id).update({"default_house_system": code})
+        db.commit()
+    finally:
+        db.close()
+
+
+CHART_BODY = {
+    "date": "1990-01-01",
+    "time": "09:45:00",
+    "timezone": "Europe/Tallinn",
+    "location_name": "Tallinn",
+    "latitude": 59.437,
+    "longitude": 24.7536,
+}
+
+
+def test_create_chart_without_house_system_uses_account_default(monkeypatch):
+    owner_id = _create_astrologer()
+    _set_default_house_system(owner_id, "K")
+    seen = []
+    _capture_house_system(monkeypatch, seen)
+
+    app.dependency_overrides[require_auth] = lambda: _auth_override(owner_id)
+    with TestClient(app) as client:
+        response = client.post("/api/v1/charts", json=CHART_BODY)
+
+    assert response.status_code == 201
+    assert seen == ["K"]
+
+
+def test_create_chart_explicit_house_system_wins_over_account_default(monkeypatch):
+    owner_id = _create_astrologer()
+    _set_default_house_system(owner_id, "K")
+    seen = []
+    _capture_house_system(monkeypatch, seen)
+
+    app.dependency_overrides[require_auth] = lambda: _auth_override(owner_id)
+    with TestClient(app) as client:
+        response = client.post("/api/v1/charts", json={**CHART_BODY, "house_system": "W"})
+
+    assert response.status_code == 201
+    assert seen == ["W"]
+
+
 def test_delete_chart_removes_it():
     owner_id = _create_astrologer()
     chart_id = _create_chart(owner_id, title="To delete")
