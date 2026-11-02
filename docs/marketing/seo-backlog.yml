@@ -562,7 +562,7 @@ items:
 
   - id: astro-gold-alternative
     status: shipped
-    pr: "seo-agent/astro-gold-alternative"
+    pr: "#39"
     built: >-
       2026-11-02. Every Astro Gold fact on the page was checked against astrogold.io the same
       day (home, /get-astro-gold/for-macos/, /for-windows/, /for-ios/, /help/faqs/,
