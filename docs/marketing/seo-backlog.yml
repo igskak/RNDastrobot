@@ -561,7 +561,25 @@ items:
       internal_links_from: [/answers/what-software-do-professional-astrologers-use, /cloud-astrology-software]
 
   - id: astro-gold-alternative
-    status: todo
+    status: shipped
+    pr: "seo-agent/astro-gold-alternative"
+    built: >-
+      2026-11-02. Every Astro Gold fact on the page was checked against astrogold.io the same
+      day (home, /get-astro-gold/for-macos/, /for-windows/, /for-ios/, /help/faqs/,
+      /help/comparison-table/) and Solar Fire X's US$360 against alabe.com/solar-fire-x-buy.html.
+      The frame changed in the building: the premise note below already said Astro Gold is not
+      Apple-only, and the live pages go further, since one US$249.99 desktop licence now covers
+      macOS and Windows together ("a single dual-platform licence"). So the page leads by
+      correcting that, because most aggregator pages still call Astro Gold the Mac answer for
+      people who cannot run Solar Fire, and it answers "Astro Gold or Solar Fire" (20 a month,
+      the only real comparison intent in the cluster) by saying platform is no longer the
+      deciding question for either. Concedes outright: more than 25 house systems against our
+      six, nine sidereal zodiacs against five ayanamshas, Astro Locality Mapping, Professional
+      Reports, offline, and store apps on iOS and Android where we have a phone browser.
+      Honest about the prize: "astro gold alternative" returned no Semrush data and its SERP on
+      2026-11-02 is crypto and gold-investment noise, so the realistic audience is the 20 a
+      month on "astro gold vs solar fire" plus whatever the navigational queries leak. A guard
+      test pins the 700-word floor, the platform correction, the concession section and .SFcht.
     # Measured 2026-10-26, Semrush US. Cluster sum 110 a month, best query "astro gold software"
     # at 50 with KD 32, so it clears the rule (100 and KD 45), but only just, and it is made of
     # small queries: "astro gold software" 50, "astro gold for windows" 20, "astro gold vs solar
