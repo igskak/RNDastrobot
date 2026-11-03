@@ -798,7 +798,7 @@ items:
 
   - id: consultation-recording-privacy
     status: shipped
-    pr: pending
+    pr: 44
     volume_checked: true
     # Measured 2026-11-03, Semrush US: "record astrology consultation" returns no row (n/a,
     # counted as 0). Built for trust and citability, not volume: it protects the hero claim
