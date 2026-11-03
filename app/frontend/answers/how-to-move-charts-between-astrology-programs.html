@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/brand/icon-192.png">
+    <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+    <title>How to Move Charts Between Astrology Programs | Steliara</title>
+    <meta name="description" content="How to export charts from ZET, Astro.com, Solar Fire, Astro Gold and Astrolog and import them elsewhere: the formats, what carries across and what does not.">
+    <link rel="canonical" href="https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs">
+    <meta property="og:title" content="How to Move Charts Between Astrology Programs">
+    <meta property="og:description" content="Export from one astrology program and import into another: the file formats, what comes across, what does not.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:image" content="https://www.steliara.com/assets/brand/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:image" content="https://www.steliara.com/assets/brand/og-image.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/conquest.css?v=2">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Organization","name":"Steliara","url":"https://www.steliara.com/","description":"Steliara makes practice management software for professional astrologers, combining Swiss Ephemeris chart calculation, profiles for the people you read for, and video consultations whose audio is recorded, transcribed and summarized."}
+    </script>
+    <script type="application/ld+json">
+    {"@context": "https://schema.org", "@type": "FAQPage", "dateModified": "2026-11-03", "mainEntity": [{"@type": "Question", "name": "How do I move my charts from one astrology program to another?", "acceptedAnswer": {"@type": "Answer", "text": "Export them from the old program as a file, then import the file into the new one. Which formats work depends on the new program, so look at its import list first. Names, birth dates, local times, places and coordinates move reliably; calculation settings, extra charts stored inside a record and anything you recorded or wrote outside the chart file usually do not."}}, {"@type": "Question", "name": "Which file formats can Steliara read?", "acceptedAnswer": {"@type": "Answer", "text": "ZET .zbs database files, Astro.com AAF files saved as .aaf or .txt, Solar Fire and Astro Gold .SFcht files, Astrolog .as chart lists or single charts, and the text file Solar Fire can send from its chart database. A file can be up to 5 MiB and 2,000 records."}}, {"@type": "Question", "name": "Will my notes come across?", "acceptedAnswer": {"@type": "Answer", "text": "Notes you kept against a chart come across from ZET, Astro.com, Solar Fire and Astro Gold files, and from Solar Fire text exports, and land as notes on the chart. Astrolog files carry none, so there is nothing to bring. Notes you kept in a separate notebook, a document or a spreadsheet are not in any chart file."}}, {"@type": "Question", "name": "Can I move my Solar Fire X charts?", "acceptedAnswer": {"@type": "Answer", "text": "The importer has been verified against Solar Fire 9 files and Solar Fire text exports. We have not tested a file saved by Solar Fire X itself, so with those, start from a text export or a file from an earlier version and check the first few charts."}}, {"@type": "Question", "name": "Does the import change a chart's birth time?", "acceptedAnswer": {"@type": "Answer", "text": "It is built not to. It uses the UTC offset stored in the source file rather than guessing one from the place name, and a record it cannot read unambiguously is flagged and left out instead of being adjusted quietly. In Solar Fire, Astro Gold, Astrolog and Solar Fire text files, dates before 15 October 1582 are refused, because the calendar cannot be determined safely."}}, {"@type": "Question", "name": "What happens with duplicates?", "acceptedAnswer": {"@type": "Answer", "text": "Possible duplicates are flagged before anything is saved, both inside the file and against charts already in your library, and charts that were already imported are marked as such. You choose what to keep."}}]}
+    </script>
+    <script type="application/ld+json">
+    {"@context": "https://schema.org", "@type": "HowTo", "name": "How to move charts from another astrology program into Steliara", "step": [{"@type": "HowToStep", "name": "Export from the old program", "text": "Save a .zbs file from ZET, an .aaf or .txt file from Astro.com, a .SFcht file from Solar Fire or Astro Gold, a chart list from Astrolog, or a text export from Solar Fire."}, {"@type": "HowToStep", "name": "Upload the file", "text": "Open Import charts in your account settings and drop the file there. The file can be up to 5 MiB and 2,000 records."}, {"@type": "HowToStep", "name": "Review the preview", "text": "Check the status of each record, including warnings and possible duplicates, and untick what you do not want."}, {"@type": "HowToStep", "name": "Choose where the charts go", "text": "Save them as separate charts in your library or together in one person's profile, and pick the house system the charts are calculated with."}, {"@type": "HowToStep", "name": "Import and spot-check", "text": "Run the import, then open a few charts you know well and compare them with the old program."}]}
+    </script>
+</head>
+<body class="conquest-page">
+    <div class="shell">
+        <header class="header">
+            <a class="logo" href="/">
+                <svg width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="14" cy="14" r="12.5" stroke="#1E3A5F" stroke-width="1.25"/>
+                    <circle cx="14" cy="14" r="7.5" stroke="#B8935A" stroke-width="0.8" stroke-dasharray="2.5 3"/>
+                    <circle cx="14" cy="14" r="2.2" fill="#1E3A5F"/>
+                    <circle cx="14" cy="2.2" r="1.3" fill="#B8935A"/>
+                    <circle cx="14" cy="25.8" r="1.3" fill="#B8935A"/>
+                </svg>
+                <span>Steliara</span>
+            </a>
+            <nav class="nav-links">
+                <a href="/astrology-practice-management">Practice tools</a>
+                <a href="/record-astrology-consultations">Recorded consultations</a>
+                <a href="/cloud-astrology-software">Cloud software</a>
+                <a href="/pricing.html">Pricing</a>
+            </nav>
+            <div class="header-actions">
+                <a href="/login.html" class="btn-link">Sign in</a>
+                <a href="/login.html?mode=register" class="nav-cta">Start free</a>
+            </div>
+        </header>
+
+                <section class="hero">
+            <p class="kicker">Answers</p>
+            <h1>How do you move charts between astrology programs?</h1>
+            <p class="sub">The file formats, what comes across, what does not, and where each program makes it easy or hard.</p>
+        </section>
+
+        <section class="section">
+            <div class="answer">
+                <p>Export your charts from the old program as a file, then import that file into the new one. Names, birth data and places move reliably. Calculation settings, extra charts inside a record and your session history usually do not, so check those before you switch.</p>
+            </div>
+            <p>Switching programs is mostly an export and an import, and the part that decides whether it goes well is knowing in advance which formats the new program reads. Below, one section per source program, written from the way Steliara's own importer behaves, with the limits stated as plainly as the features.</p>
+        </section>
+
+        <section class="section">
+            <h2>What moves and what does not, from any program</h2>
+            <p>Every chart file is a list of birth data. The name, the date, the local time, the place and its coordinates and the time-zone offset are the part that always travels, because every program needs them to draw a chart. Anything the new program calculates itself, such as house systems, orbs and chart styles, is rebuilt there, so it is not part of the transfer and should not be.</p>
+            <p>What gets lost is everything that was never in the file. Your calculation settings, the extra charts some programs save inside a record, the notebook beside the program, the folder of session documents and the recordings of past readings all stay behind unless you bring them by hand. Most people bring only the people they are still reading for, and that is a sensible way to do it.</p>
+        </section>
+
+        <section class="section">
+            <h2>From Astro.com</h2>
+            <p>In your stored data on Astro.com, choose the AAF option and save the text as a .aaf or .txt file. Steliara reads both. The name, birth date and time, place, coordinates and the time zone come across, and so do the comments you saved against each chart, which become notes on the chart.</p>
+            <p>The AAF format has corners the importer does not cover yet, and it says so record by record rather than guessing: Julian calendar dates, some time types and some chart types are flagged as not supported. Those records are left out and the rest of the file is unaffected.</p>
+        </section>
+
+        <section class="section">
+            <h2>From ZET</h2>
+            <p>ZET keeps its charts in .zbs database files. Export the database you want as a .zbs file and upload it. Each line becomes a chart with its name, date and local time, place and coordinates, offset from world time and comment, and the comment becomes a note on the chart. ZET does not record what kind of chart each entry is, so imported charts are saved as type Other and the review screen tells you so.</p>
+            <p>There is more on ZET itself, including why it has no browser version, on the Russian-language page <a href="/zet-online">ZET онлайн</a>.</p>
+        </section>
+
+        <section class="section">
+            <h2>From Solar Fire and Astro Gold</h2>
+            <p>The two programs share one chart file. Save your .SFcht file and upload it directly. The name, birth date and local time, place, coordinates and the UTC offset stored in the file come across, together with the notes you kept against each chart.</p>
+            <p>Two things are left behind and the review screen warns you about both. A Solar Fire record can hold subsidiary charts, for example a progression stored beside the radix. Only the main chart is saved, and you rebuild the others when you need them. The source program's calculation settings are not moved either, so the charts are recalculated with the house system and zodiac you pick during the import. Check those two choices before you confirm.</p>
+            <p>The reader accepts only the file layout it has been verified against, and anything else is refused with a message instead of being read loosely. The verification was done with Solar Fire 9 files. We have not tested a file saved by Solar Fire X itself.</p>
+        </section>
+
+        <section class="section">
+            <h2>From Solar Fire without a .SFcht file</h2>
+            <p>Solar Fire can also send the whole chart database to a text file. Open the chart database, choose Send/Add, then Email All Charts, then Text File, and upload the charts.txt that results. The importer reads the header of each chart, its date, time and place, and the details text under it, which arrives as notes. As with .SFcht, calculation settings are not moved and are chosen again at import.</p>
+            <p>This is also the route to try first with files from Solar Fire X, since it does not depend on the binary file layout.</p>
+        </section>
+
+        <section class="section">
+            <h2>From Astrolog</h2>
+            <p>In Astrolog choose File, then Other Formats, then Save Chart List, and upload the .as file. A single saved .as chart works too. The date, time, place and coordinates come across. Astrolog files carry no notes, so none arrive, and the importer is strict about Astrolog's time-zone and daylight settings: if it cannot read them without ambiguity, the record is flagged instead of being converted on a guess.</p>
+        </section>
+
+        <section class="section">
+            <h2>What the import does with your file</h2>
+            <p>You upload the file in your account settings under Import charts and nothing is saved yet. A review table lists every record with its local date and time, its place and a status: ready, review needed or possible duplicate. Duplicates are checked inside the file and against charts you already have. A file can be up to 5 MiB and 2,000 records.</p>
+            <p>Then you choose where the charts go: each as a separate chart in your library, with shared tags if you like, or all together in one person's profile, new or existing. Large files can be paused and finished later, and an unfinished import is kept for 24 hours. When it is done you get a count of what was added and what could not be.</p>
+            <p>About times: the importer uses the UTC offset stored in the source file, not a guess from the place name, because the offset on the event date is the one that matters. Historical clock rules changed, and a file that already holds the right offset is the most reliable record there is.</p>
+        </section>
+
+        <section class="section">
+            <h2>Moving to somewhere else, and where it is easier than here</h2>
+            <p>This page describes Steliara's importer because it is the one we can describe exactly, but the steps are the same for any move: export a file, check the new program's import list, import, then spot-check a few charts you know well.</p>
+            <p>Other programs do parts of this better. Solar Fire X has an import for its own library: choose Utilities, then Import Charts, Files, and Settings and select a folder or ZIP, which brings files and settings, not only charts (see Astrolabe's system requirements page). Astro Gold says its chart files are fully compatible and interchangeable with Solar Fire. Astrologer says you can paste chart data from Astro.com or Astro-Seek, and that its Practitioner and Professional plans offer a guided import of Solar Fire and AstroGold libraries. Steliara's list does not include Astro-Seek pasted data, and it does not move calculation settings, so a move between two Solar Fire programs is easier inside the Solar Fire family.</p>
+            <p>Sources, read on 3 November 2026: <a href="https://sfx.alabe.com/system-requirements" rel="nofollow">sfx.alabe.com/system-requirements</a>, <a href="https://www.astrogold.io/get-astro-gold/for-macos/" rel="nofollow">astrogold.io/get-astro-gold/for-macos</a>, <a href="https://astrologerapp.org/" rel="nofollow">astrologerapp.org</a>.</p>
+        </section>
+
+        <section class="section">
+            <h2>What no program moves for you</h2>
+            <p>Your session history. Chart software was never built to hold what someone told you in March or what you answered, so no chart file contains it, and no importer can bring it across. In Steliara, the history starts when you begin recording a consultation with someone, with the audio recorded once both sides agree, transcribed and summarized onto their profile. Past sessions you kept in a notebook or a recording on your phone stay where they are until you add them by hand.</p>
+        </section>
+
+        <section class="section">
+            <h2>Related answers</h2>
+            <ul class="bullets">
+                <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#2B7A4B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><a href="/solar-fire-alternative">A Solar Fire alternative that runs in any browser</a></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#2B7A4B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><a href="/astro-gold-alternative">An Astro Gold alternative for the part that is not the chart</a></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#2B7A4B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><a href="/answers/what-software-do-professional-astrologers-use">What software do professional astrologers use?</a></span></li>
+                <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#2B7A4B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><a href="/answers/best-astrology-software-for-windows">What is the best astrology software for Windows?</a> and <a href="/answers/best-astrology-software-for-mac">for a Mac</a>.</span></li>
+            </ul>
+        </section>
+
+        <section class="faq">
+            <h2>Questions</h2>
+            <details><summary>How do I move my charts from one astrology program to another?</summary><p>Export them from the old program as a file, then import the file into the new one. Which formats work depends on the new program, so look at its import list first. Names, birth dates, local times, places and coordinates move reliably; calculation settings, extra charts stored inside a record and anything you recorded or wrote outside the chart file usually do not.</p></details>
+            <details><summary>Which file formats can Steliara read?</summary><p>ZET .zbs database files, Astro.com AAF files saved as .aaf or .txt, Solar Fire and Astro Gold .SFcht files, Astrolog .as chart lists or single charts, and the text file Solar Fire can send from its chart database. A file can be up to 5 MiB and 2,000 records.</p></details>
+            <details><summary>Will my notes come across?</summary><p>Notes you kept against a chart come across from ZET, Astro.com, Solar Fire and Astro Gold files, and from Solar Fire text exports, and land as notes on the chart. Astrolog files carry none, so there is nothing to bring. Notes you kept in a separate notebook, a document or a spreadsheet are not in any chart file.</p></details>
+            <details><summary>Can I move my Solar Fire X charts?</summary><p>The importer has been verified against Solar Fire 9 files and Solar Fire text exports. We have not tested a file saved by Solar Fire X itself, so with those, start from a text export or a file from an earlier version and check the first few charts.</p></details>
+            <details><summary>Does the import change a chart's birth time?</summary><p>It is built not to. It uses the UTC offset stored in the source file rather than guessing one from the place name, and a record it cannot read unambiguously is flagged and left out instead of being adjusted quietly. In Solar Fire, Astro Gold, Astrolog and Solar Fire text files, dates before 15 October 1582 are refused, because the calendar cannot be determined safely.</p></details>
+            <details><summary>What happens with duplicates?</summary><p>Possible duplicates are flagged before anything is saved, both inside the file and against charts already in your library, and charts that were already imported are marked as such. You choose what to keep.</p></details>
+        </section>
+
+        <section class="cta-band">
+            <h2>Bring your charts and see how they land</h2>
+            <p>Upload a file, read the preview and decide what to keep. Nothing is saved until you confirm.</p>
+            <a class="btn-primary" href="/login.html?mode=register">Start free, no card needed</a>
+            <p class="updated">Last reviewed 3 November 2026.</p>
+        </section>
+
+        <footer class="site">
+            <div>
+                <a href="/astrology-practice-management">Practice management</a>
+                <a href="/record-astrology-consultations">Recorded consultations</a>
+                <a href="/terms.html#terms">Terms</a>
+                <a href="/terms.html#privacy">Privacy</a>
+                <a href="/pricing.html">Pricing</a>
+            </div>
+            <p style="margin-top:14px;">&copy; 2026 Steliara. Payments processed by Stripe as merchant of record (Stripe Managed Payments).</p>
+        </footer>
+    </div>
+    <script src="/runtime-config.js"></script>
+    <script src="/js/analytics.js?v=1"></script>
+</body>
+</html>
