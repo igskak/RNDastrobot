@@ -513,6 +513,54 @@
       "phrase": "first produced in 1992",
       "page_text": "since 1992",
       "checked": "2026-11-03"
+    },
+    {
+      "id": "astrolog-freeware",
+      "competitor": "Astrolog",
+      "claim": "Astrolog is freeware with versions for Windows, Unix and Macintosh",
+      "pages": [
+        "answers/best-astrology-software-for-windows.html"
+      ],
+      "source": "https://www.astrolog.org/astrolog.htm",
+      "phrase": "100% freeware astrology program, with versions for Windows, Unix, Macintosh",
+      "page_text": "Windows, Unix and Macintosh",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "halloran-astrology-for-windows",
+      "competitor": "Halloran Software",
+      "claim": "Astrology for Windows is $45",
+      "pages": [
+        "answers/best-astrology-software-for-windows.html"
+      ],
+      "source": "https://halloran.com/allsoft.htm",
+      "phrase": "Astrology for Windows - $45.00",
+      "page_text": "Astrology for Windows at $45",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "halloran-astroldeluxe-reportwriter",
+      "competitor": "Halloran Software",
+      "claim": "AstrolDeluxe ReportWriter is $169",
+      "pages": [
+        "answers/best-astrology-software-for-windows.html"
+      ],
+      "source": "https://halloran.com/allsoft.htm",
+      "phrase": "AstrolDeluxe ReportWriter, ver. 8.7 - $169.00",
+      "page_text": "$169 for ReportWriter",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "halloran-astroldeluxe-platinum",
+      "competitor": "Halloran Software",
+      "claim": "AstrolDeluxe Platinum is $300",
+      "pages": [
+        "answers/best-astrology-software-for-windows.html"
+      ],
+      "source": "https://halloran.com/allsoft.htm",
+      "phrase": "AstrolDeluxe Platinum, ver. 11.4 - $300.00",
+      "page_text": "$300 for Platinum",
+      "checked": "2026-11-03"
     }
   ]
 }
