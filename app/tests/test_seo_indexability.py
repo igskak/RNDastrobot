@@ -57,6 +57,8 @@ PUBLIC_PATHS = [
     "/answers/how-astrologers-keep-client-notes.html",
     "/answers/best-astrology-software-for-mac",
     "/answers/best-astrology-software-for-mac.html",
+    "/answers/best-astrology-software-for-windows",
+    "/answers/best-astrology-software-for-windows.html",
 ]
 
 # The answer pages exist to be quoted by an AI engine, so the properties that make them
@@ -265,6 +267,7 @@ LINK_TARGETS = [
     "/answers/best-astrology-software-for-professional-practice",
     "/answers/how-astrologers-keep-client-notes",
     "/answers/best-astrology-software-for-mac",
+    "/answers/best-astrology-software-for-windows",
 ]
 
 
@@ -472,3 +475,30 @@ def test_shared_links_get_a_preview_image(client, path):
     assert 'property="og:image" content="https://www.steliara.com/assets/brand/og-image.png"' in html
     assert 'name="twitter:image"' in html
     assert client.get("/assets/brand/og-image.png").status_code == 200
+
+
+def test_the_windows_answer_keeps_the_depth_and_does_not_copy_the_mac_page(client):
+    """The backlog set 900 words as the floor for /answers/best-astrology-software-for-windows.
+
+    It is the sibling of the Mac answer, not a copy: it has to open with its own answer inside
+    the first 40 words, carry a dated review line, and keep the licence-per-computer and
+    Windows-version facts that the Mac page has no reason to hold.
+    """
+    import re
+
+    html = client.get("/answers/best-astrology-software-for-windows").text
+    body = html[html.find("<body") :]
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(script|style|svg)\b.*?</\1>", " ", body))
+    words = text.split()
+
+    assert len(words) >= 900
+    first_answer = re.search(r'(?s)<div class="answer">\s*<p>(.*?)</p>', html).group(1)
+    assert "Windows" in " ".join(first_answer.split()[:40])
+    assert "Last reviewed 3 November 2026" in text
+    assert "two computers" in text and "dual-platform" in text and "64-bit" in text
+    mac = client.get("/answers/best-astrology-software-for-mac").text
+    mac_answer = re.search(r'(?s)<div class="answer">\s*<p>(.*?)</p>', mac).group(1)
+    assert first_answer != mac_answer
+    assert "/answers/best-astrology-software-for-mac" in html
+    for phrase in STALE_SOLAR_FIRE_PHRASES:
+        assert phrase not in text
