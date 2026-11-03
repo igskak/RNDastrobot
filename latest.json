@@ -26,7 +26,7 @@
     }
   },
   "base": "https://www.steliara.com",
-  "date": "2026-11-02",
+  "date": "2026-11-03",
   "errors": 0,
   "findings": [],
   "pages": {
@@ -100,6 +100,20 @@
       "title_length": 57,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/astro-gold-alternative": {
+      "body_words": 2691,
+      "bytes": 33304,
+      "canonical": "https://www.steliara.com/astro-gold-alternative",
+      "description_length": 158,
+      "empty_i18n_nodes": 0,
+      "h1": "An Astro Gold alternative for the part that is not the chart",
+      "hreflang_count": 0,
+      "jsonld_blocks": 3,
+      "status": 200,
+      "title": "Astro Gold Alternative for Astrologers Who Consult | Steliara",
+      "title_length": 61,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/astrologer-workspace": {
       "body_words": 566,
       "bytes": 13788,
@@ -157,8 +171,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/cloud-astrology-software": {
-      "body_words": 2316,
-      "bytes": 30455,
+      "body_words": 2325,
+      "bytes": 30553,
       "canonical": "https://www.steliara.com/cloud-astrology-software",
       "description_length": 152,
       "empty_i18n_nodes": 0,
@@ -2061,8 +2075,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/solar-fire-alternative": {
-      "body_words": 2354,
-      "bytes": 30688,
+      "body_words": 2359,
+      "bytes": 30761,
       "canonical": "https://www.steliara.com/solar-fire-alternative",
       "description_length": 162,
       "empty_i18n_nodes": 0,
@@ -2160,6 +2174,6 @@
     }
   },
   "regressions": [],
-  "sitemap_url_count": 152,
+  "sitemap_url_count": 153,
   "warnings": 0
 }
