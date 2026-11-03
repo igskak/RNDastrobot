@@ -37,6 +37,8 @@ PUBLIC_PATHS = [
     "/cloud-astrology-software.html",
     "/solar-fire-alternative",
     "/solar-fire-alternative.html",
+    "/astro-gold-alternative",
+    "/astro-gold-alternative.html",
     "/astroprocessor",
     "/astroprocessor.html",
     "/astroprocessor-uk",
@@ -258,6 +260,7 @@ LINK_TARGETS = [
     "/zet-online",
     "/zet-online-uk",
     "/solar-fire-alternative",
+    "/astro-gold-alternative",
     "/answers/what-software-do-professional-astrologers-use",
     "/answers/best-astrology-software-for-professional-practice",
     "/answers/how-astrologers-keep-client-notes",
@@ -307,6 +310,31 @@ def test_the_mac_answer_keeps_the_depth_and_the_solar_fire_x_fact(client):
     assert len(text.split()) >= 900
     assert "Solar Fire X" in text and "native Mac" in text
     assert "no Mac version" not in text
+
+
+def test_the_astro_gold_page_keeps_its_depth_and_the_platform_fact(client):
+    """The backlog set 700 words as the floor for /astro-gold-alternative.
+
+    It also pins the correction the page exists to make. The item was queued believing
+    Astro Gold was Apple-only, which would have been the switch reason; astrogold.io
+    sells macOS, Windows, iOS and Android, so the page has to say so rather than sell a
+    platform gap that is not there. And it has to keep conceding the two places Astro
+    Gold wins outright: calculation depth and a real app in the stores.
+    """
+    import re
+
+    html = client.get("/astro-gold-alternative").text
+    body = html[html.find("<body") :]
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(script|style|svg)\b.*?</\1>", " ", body))
+
+    assert len(text.split()) >= 700
+    # The correction, stated and not quietly dropped.
+    assert "not Apple-only" in text
+    assert "Windows" in text and "Android" in text
+    # Where the competitor is better (agent brief, writing rules).
+    assert "better buy" in text
+    # The migration bridge, which is the strongest line an alternative page has.
+    assert ".SFcht" in text
 
 
 # Solar Fire X shipped as a native Mac app (macOS 14+, US$360) and Solar Fire 9 stopped being

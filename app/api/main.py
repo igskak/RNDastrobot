@@ -485,6 +485,11 @@ _SITEMAP_PAGES = (
     # searchers, so it sits below the category landings rather than beside them.
     ("/solar-fire-alternative", "0.8"),
     ("/pricing.html", "0.8"),
+    # Below /solar-fire-alternative on purpose. Same page shape and the same importer
+    # story, but a tenth of the measured demand (about 110 searches a month against
+    # Solar Fire's cluster) and more of it navigational, so it should not be read as
+    # equal in importance to the page it links from.
+    ("/astro-gold-alternative", "0.7"),
     # The Russian and Ukrainian astroprocessor guides answer the biggest keyword
     # cluster we found, but only the Ukrainian, Belarusian, Kazakh and diaspora share
     # of it can actually pay, so they sit below the English pages rather than beside
@@ -571,7 +576,7 @@ _KUNDLI_ALTERNATES = {
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-10-31"
+_SITEMAP_LASTMOD = "2026-11-02"
 
 
 def _indexable_document_paths() -> frozenset:
@@ -1164,6 +1169,21 @@ async def conquest_solar_fire_page():
     page among them.
     """
     return _serve_frontend_page("solar-fire-alternative.html")
+
+
+@app.get("/astro-gold-alternative")
+@app.get("/astro-gold-alternative.html")
+async def conquest_astro_gold_page():
+    """SEO alternative landing: Astro Gold, Solar Fire's sibling from the same makers.
+
+    A small cluster (about 110 searches a month, Semrush US 2026-10-26) and mostly
+    navigational, so the page earns its place by answering the two questions the SERP
+    gets wrong rather than by volume: Astro Gold is not Apple-only (astrogold.io sells
+    Windows, macOS, iOS and Android under one dual-platform desktop licence), and
+    "Astro Gold or Solar Fire" is no longer a platform question now that both run on
+    Mac and Windows. Its .SFcht files open in our importer, same as Solar Fire's.
+    """
+    return _serve_frontend_page("astro-gold-alternative.html")
 
 
 @app.get("/astroprocessor")
