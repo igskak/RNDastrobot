@@ -657,10 +657,11 @@ items:
   # ---------------------------------------------------------------------------------
 
   - id: competitor-facts-recheck
-    status: todo
+    status: shipped
+    pr: pending  # replaced with the PR number once opened
     volume_checked: true  # not a page; there is no query to measure
     type: technical
-    slug: docs/marketing/competitor-facts.yml, app/scripts/check_competitor_facts.py
+    slug: docs/marketing/competitor-facts.json, app/scripts/check_competitor_facts.py  # JSON, not yml: the checker is stdlib-only and Python has no YAML parser
     target_queries:
       - none; this protects pages that already exist
     why: >-
