@@ -658,7 +658,7 @@ items:
 
   - id: competitor-facts-recheck
     status: shipped
-    pr: pending  # replaced with the PR number once opened
+    pr: 41
     volume_checked: true  # not a page; there is no query to measure
     type: technical
     slug: docs/marketing/competitor-facts.json, app/scripts/check_competitor_facts.py  # JSON, not yml: the checker is stdlib-only and Python has no YAML parser
