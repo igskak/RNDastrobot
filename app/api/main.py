@@ -510,6 +510,7 @@ _SITEMAP_PAGES = (
     ("/answers/best-astrology-software-for-mac", "0.6"),
     ("/answers/best-astrology-software-for-windows", "0.6"),
     ("/answers/how-to-move-charts-between-astrology-programs", "0.6"),
+    ("/answers/how-astrology-consultation-recordings-are-stored", "0.6"),
     ("/terms.html", "0.3"),
 )
 
@@ -758,6 +759,8 @@ date each competitor page was checked:
   {base}/answers/best-astrology-software-for-windows
 - How to move charts between astrology programs, formats and limits:
   {base}/answers/how-to-move-charts-between-astrology-programs
+- How astrology consultation recordings are stored, consent and retention:
+  {base}/answers/how-astrology-consultation-recordings-are-stored
 
 Last updated: {_SITEMAP_LASTMOD}
 """
@@ -1288,6 +1291,13 @@ async def answer_best_astrology_software_for_windows_page():
 async def answer_how_to_move_charts_between_astrology_programs_page():
     """Answer page: moving charts between astrology programs, formats and limits."""
     return _serve_frontend_page("answers/how-to-move-charts-between-astrology-programs.html")
+
+
+@app.get("/answers/how-astrology-consultation-recordings-are-stored")
+@app.get("/answers/how-astrology-consultation-recordings-are-stored.html")
+async def answer_how_astrology_consultation_recordings_are_stored_page():
+    """Answer page: what is recorded in a consultation, consent, retention and deletion."""
+    return _serve_frontend_page("answers/how-astrology-consultation-recordings-are-stored.html")
 
 
 @app.get("/health")
