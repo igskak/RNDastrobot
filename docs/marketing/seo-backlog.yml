@@ -703,7 +703,8 @@ items:
         /solar-fire-alternative, since those are the most recent and the most exposed.
 
   - id: astrology-software-for-windows
-    status: todo
+    status: shipped
+    pr: 42
     # Measured 2026-11-03, Semrush US (Keyword Magic): "astrology software for windows" 140 a
     # month, KD 14; "astrology programs for windows" 140, KD 40; "astrology software windows"
     # 110, KD 39; "astrology software for pc" 20 and "astrology programs for pc" 20 (KD not
