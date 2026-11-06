@@ -1,0 +1,380 @@
+{
+  "meta": {
+    "purpose": "One entry per claim the public pages make about a competitor. app/scripts/check_competitor_facts.py re-reads each source and reports whether the phrase is still there; app/tests/test_competitor_facts_file.py checks this file offline.",
+    "how_to_read": "pages are paths under app/frontend. page_text is the short string that must appear on each of those pages. phrase is the string that must still appear on the source for the claim to hold."
+  },
+  "facts": [
+    {
+      "id": "sfx-price-new",
+      "competitor": "Solar Fire X",
+      "claim": "Solar Fire X costs US$360 for a new licence",
+      "pages": [
+        "solar-fire-alternative.html",
+        "answers/best-astrology-software-for-mac.html",
+        "cloud-astrology-software.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://alabe.com/solar-fire-x-buy.html",
+      "phrase": "US$360",
+      "page_text": "US$360",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "sfx-price-upgrade",
+      "competitor": "Solar Fire X",
+      "claim": "The upgrade from Solar Fire 9 is US$99",
+      "pages": [
+        "solar-fire-alternative.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://alabe.com/solar-fire-x-upgrade-from-9.html",
+      "phrase": "US$99",
+      "page_text": "US$99",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "sf9-not-sold",
+      "competitor": "Solar Fire 9",
+      "claim": "Solar Fire 9 is no longer sold",
+      "pages": [
+        "solar-fire-alternative.html",
+        "answers/best-astrology-software-for-mac.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://alabe.com/solarfireV9.html",
+      "phrase": "Solar Fire 9 is no longer sold",
+      "page_text": "no longer sold",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "sfx-mac-native",
+      "competitor": "Solar Fire X",
+      "claim": "Solar Fire X is a native Mac app for macOS 14 or newer",
+      "pages": [
+        "solar-fire-alternative.html",
+        "answers/best-astrology-software-for-mac.html",
+        "cloud-astrology-software.html"
+      ],
+      "source": "https://sfx.alabe.com/system-requirements",
+      "phrase": "macOS 14 Sonoma or newer",
+      "page_text": "macOS 14",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "sfx-mac-no-emulation",
+      "competitor": "Solar Fire X",
+      "claim": "On a Mac it runs directly, with no Parallels or Windows",
+      "pages": [
+        "solar-fire-alternative.html",
+        "answers/best-astrology-software-for-mac.html"
+      ],
+      "source": "https://sfx.alabe.com/system-requirements",
+      "phrase": "runs directly on your Mac",
+      "page_text": "Parallels",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "sfx-windows",
+      "competitor": "Solar Fire X",
+      "claim": "Solar Fire X runs on Windows 10 and 11",
+      "pages": [
+        "solar-fire-alternative.html",
+        "answers/best-astrology-software-for-mac.html",
+        "cloud-astrology-software.html"
+      ],
+      "source": "https://sfx.alabe.com/system-requirements",
+      "phrase": "Windows 10 (64-bit) or Windows 11",
+      "page_text": "Windows 10",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "sfx-two-computers",
+      "competitor": "Solar Fire X",
+      "claim": "A licence covers up to two computers",
+      "pages": [
+        "solar-fire-alternative.html"
+      ],
+      "source": "https://sfx.alabe.com/system-requirements",
+      "phrase": "up to two computers",
+      "page_text": "two computers",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "sfx-no-mobile",
+      "competitor": "Solar Fire X",
+      "claim": "There is no iPad, iPhone, Android or Linux version and no tablet edition",
+      "pages": [
+        "solar-fire-alternative.html"
+      ],
+      "source": "https://sfx.alabe.com/system-requirements",
+      "phrase": "There is no iPad, iPhone, Android, or Linux version",
+      "page_text": "iPad",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "sf9-mac-unsupported",
+      "competitor": "Solar Fire 9",
+      "claim": "The maker does not officially support Solar Fire 9 and earlier on a Mac",
+      "pages": [
+        "solar-fire-alternative.html",
+        "answers/best-astrology-software-for-professional-practice.html"
+      ],
+      "source": "https://alabe.com/support/windowsmac.htm",
+      "phrase": "We do not officially support Solar Fire on the Mac",
+      "page_text": "officially support",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "ag-price",
+      "competitor": "Astro Gold",
+      "claim": "The desktop app is US$249.99",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html",
+        "astro-gold-alternative.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://www.astrogold.io/get-astro-gold/for-macos/",
+      "phrase": "US$249.99",
+      "page_text": "249.99",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "ag-dual-licence",
+      "competitor": "Astro Gold",
+      "claim": "One purchase covers macOS and Windows under a single dual-platform licence",
+      "pages": [
+        "astro-gold-alternative.html"
+      ],
+      "source": "https://www.astrogold.io/get-astro-gold/for-windows/",
+      "phrase": "single dual-platform licence",
+      "page_text": "dual-platform",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "ag-windows-version",
+      "competitor": "Astro Gold",
+      "claim": "Astro Gold runs on Windows 10 or later",
+      "pages": [
+        "astro-gold-alternative.html"
+      ],
+      "source": "https://www.astrogold.io/get-astro-gold/for-windows/",
+      "phrase": "Windows 10 or higher",
+      "page_text": "Windows 10",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "ag-macos-version",
+      "competitor": "Astro Gold",
+      "claim": "Astro Gold runs on macOS 10.13 or later",
+      "pages": [
+        "astro-gold-alternative.html"
+      ],
+      "source": "https://www.astrogold.io/get-astro-gold/for-macos/",
+      "phrase": "macOS 10.13 or higher",
+      "page_text": "10.13",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "ag-chart-files",
+      "competitor": "Astro Gold",
+      "claim": "Its chart files are interchangeable with Solar Fire",
+      "pages": [
+        "astro-gold-alternative.html"
+      ],
+      "source": "https://www.astrogold.io/get-astro-gold/for-macos/",
+      "phrase": "fully compatible and interchangeable with Solar Fire",
+      "page_text": "interchangeable",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "ag-house-systems",
+      "competitor": "Astro Gold",
+      "claim": "More than 25 house systems",
+      "pages": [
+        "astro-gold-alternative.html"
+      ],
+      "source": "https://www.astrogold.io/get-astro-gold/for-macos/",
+      "phrase": "25+ systems available",
+      "page_text": "25 house systems",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "ag-points",
+      "competitor": "Astro Gold",
+      "claim": "44 displayed chart points",
+      "pages": [
+        "astro-gold-alternative.html"
+      ],
+      "source": "https://www.astrogold.io/get-astro-gold/for-macos/",
+      "phrase": "44 standard Displayed chart points",
+      "page_text": "44 displayed points",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "tp-price-basic",
+      "competitor": "TimePassages",
+      "claim": "Basic edition $79",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://astrograph.com/timepassages/editions",
+      "phrase": "$79.00",
+      "page_text": "Basic $79",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "tp-price-standard",
+      "competitor": "TimePassages",
+      "claim": "Standard edition $179",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://astrograph.com/timepassages/editions",
+      "phrase": "$179.00",
+      "page_text": "Standard $179",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "tp-price-advanced",
+      "competitor": "TimePassages",
+      "claim": "Advanced edition $279",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://astrograph.com/timepassages/editions",
+      "phrase": "$279.00",
+      "page_text": "Advanced $279",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "tp-price-complete",
+      "competitor": "TimePassages",
+      "claim": "Complete Package $699",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://astrograph.com/timepassages/editions",
+      "phrase": "$699.00",
+      "page_text": "Complete Package $699",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "tp-macos-version",
+      "competitor": "TimePassages",
+      "claim": "The desktop edition needs macOS 11 or newer",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html"
+      ],
+      "source": "https://astrograph.com/timepassages/editions",
+      "phrase": "macOS version 11 and above",
+      "page_text": "macOS 11",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "tp-windows-mac",
+      "competitor": "TimePassages",
+      "claim": "The desktop edition is available for both Windows and macOS",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://astrograph.com/timepassages/editions",
+      "phrase": "Available for both Windows and macOS",
+      "page_text": "macOS",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "astrolium-tiers",
+      "competitor": "Astrolium",
+      "claim": "Plans are Free, Pro $11, Adept $29, Master $79 a month",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://www.astrolium.com/pricing",
+      "phrase": "Free, $11, $29, $79",
+      "page_text": "Adept $29",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "astrolium-free-clients",
+      "competitor": "Astrolium",
+      "claim": "The free plan has five client profiles",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html"
+      ],
+      "source": "https://www.astrolium.com/pricing",
+      "phrase": "5 client profiles",
+      "page_text": "five client profiles",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "astrologer-plans",
+      "competitor": "Astrologer",
+      "claim": "Essentials $14, Practitioner $27 and Professional $65 a month, 14-day trial",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html",
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://astrologerapp.org/",
+      "phrase": "Essentials is $14 a month",
+      "page_text": "$14",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "astrologer-desktop",
+      "competitor": "Astrologer",
+      "claim": "There are Mac and Windows desktop apps as well as the browser",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html"
+      ],
+      "source": "https://astrologerapp.org/",
+      "phrase": "Mac and Windows desktop apps",
+      "page_text": "desktop apps",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "astrologer-astrocartography",
+      "competitor": "Astrologer",
+      "claim": "It includes astrocartography",
+      "pages": [
+        "answers/best-astrology-software-for-mac.html"
+      ],
+      "source": "https://astrologerapp.org/",
+      "phrase": "Astrocartography",
+      "page_text": "astrocartography",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "astrologer-sessions",
+      "competitor": "Astrologer",
+      "claim": "Its features page lists live sessions, auto-transcribed and replayable",
+      "pages": [
+        "answers/what-software-do-professional-astrologers-use.html",
+        "answers/best-astrology-software-for-professional-practice.html",
+        "record-astrology-consultations.html",
+        "answers/how-astrologers-keep-client-notes.html"
+      ],
+      "source": "https://astrologerapp.org/features",
+      "phrase": "auto-transcribed and replayable",
+      "page_text": "auto-transcribed",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "astrologer-practitioner-video",
+      "competitor": "Astrologer",
+      "claim": "The Practitioner plan lists live video sessions",
+      "pages": [
+        "answers/what-software-do-professional-astrologers-use.html"
+      ],
+      "source": "https://astrologerapp.org/pricing",
+      "phrase": "live video sessions",
+      "page_text": "live video sessions",
+      "checked": "2026-11-03"
+    }
+  ]
+}
