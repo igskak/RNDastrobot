@@ -2395,6 +2395,8 @@
         "astrologerWorkspace": "Astrologer workspace",
         "practiceManagement": "Practice management",
         "recordedConsultations": "Recorded consultations",
+        "moonCalendar": "Moon calendar",
+        "kundli": "Kundli calculators",
         "product": "Product",
         "consultations": "Consultations"
       },
@@ -3182,7 +3184,9 @@
         "copyright": "© 2026 Steliara. Payments processed by Stripe as merchant of record (Stripe Managed Payments).",
         "cloudSoftware": "Cloud astrology software",
         "workspace": "Astrologer workspace",
-        "practiceManagement": "Practice management"
+        "practiceManagement": "Practice management",
+        "moonCalendar": "Moon calendar",
+        "kundli": "Kundli calculators"
       }
     },
     "legal": {

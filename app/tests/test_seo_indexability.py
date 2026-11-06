@@ -563,3 +563,46 @@ def test_the_recording_privacy_answer_is_pinned_to_the_product_and_gives_no_lega
     lowered = text.lower()
     for phrase in ("complies with", "compliant", "legal in", "is legal", "gdpr compliant", "the law requires"):
         assert phrase not in lowered, phrase
+
+
+FREE_TOOL_FOOTER_PAGES = [
+    "/",
+    "/pricing.html",
+    "/astrology-practice-management",
+    "/record-astrology-consultations",
+    "/astrologer-workspace",
+    "/cloud-astrology-software",
+    "/solar-fire-alternative",
+    "/astro-gold-alternative",
+    "/answers/what-software-do-professional-astrologers-use",
+    "/answers/best-astrology-software-for-professional-practice",
+    "/answers/how-astrologers-keep-client-notes",
+    "/answers/best-astrology-software-for-mac",
+    "/answers/best-astrology-software-for-windows",
+    "/answers/how-to-move-charts-between-astrology-programs",
+    "/answers/how-astrology-consultation-recordings-are-stored",
+]
+
+
+@pytest.mark.parametrize("path", FREE_TOOL_FOOTER_PAGES)
+def test_professional_pages_link_to_the_free_tools_from_a_visible_footer(client, path):
+    """Ordinary footer links, in view of every visitor. Hidden links are a spam-policy violation
+    that would put the whole domain at risk, so there is no variant of this that a crawler alone sees."""
+    html = client.get(path).text
+    footer = html[html.rfind("<footer") :]
+    assert 'href="/moon"' in footer and 'href="/kundli"' in footer, path
+    assert "display:none" not in footer.replace(" ", "").lower() and "hidden" not in footer, path
+
+
+def test_the_german_home_page_links_to_the_german_moon_calendar(client):
+    footer = client.get("/de/").text
+    footer = footer[footer.rfind("<footer") :]
+    assert 'href="/moon/de"' in footer and 'href="/kundli"' in footer
+
+
+def test_llms_txt_lists_the_free_tools_in_their_own_section(client):
+    body = client.get("/llms.txt").text
+    section = body.split("## Free tools from the same team", 1)[1]
+    for path in ("/moon", "/moon/de", "/moon/pl", "/kundli", "/kundli/hi"):
+        assert f"/{path.lstrip('/')}" in section
+    assert "separate from the practice software" in section

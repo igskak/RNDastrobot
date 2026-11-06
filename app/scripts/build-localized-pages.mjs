@@ -37,6 +37,8 @@ const SITE_ORIGIN = (process.env.FRONTEND_BASE_URL || 'https://www.steliara.com'
 // Pages that exist as their own indexable document in every locale. Conquest landing
 // pages are deliberately absent: they carry no data-i18n markup yet.
 const LOCALIZED_PAGES = ['index.html', 'pricing.html', 'terms.html', 'login.html'];
+// Locales (of those built here) in which the free moon calendar has its own page, at /moon/<locale>.
+const FREE_MOON_LOCALES = ['de'];
 
 const OG_LOCALES = { en: 'en_US', de: 'de_DE', ru: 'ru_RU', uk: 'uk_UA' };
 
@@ -118,6 +120,9 @@ function rewriteUrl(value, locale) {
 
     if (!target.startsWith('/')) target = `/${target}`;
     if (target === '/index.html') target = '/';
+
+    // The free moon calendar exists in German as well; the footer link follows the visitor there.
+    if (target === '/moon' && FREE_MOON_LOCALES.includes(locale)) return `/moon/${locale}${suffix}`;
 
     const page = target === '/' ? 'index.html' : target.slice(1);
     if (!LOCALIZED_PAGES.includes(page)) {
