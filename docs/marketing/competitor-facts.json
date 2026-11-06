@@ -187,7 +187,8 @@
       "competitor": "Astro Gold",
       "claim": "Its chart files are interchangeable with Solar Fire",
       "pages": [
-        "astro-gold-alternative.html"
+        "astro-gold-alternative.html",
+        "answers/how-to-move-charts-between-astrology-programs.html"
       ],
       "source": "https://www.astrogold.io/get-astro-gold/for-macos/",
       "phrase": "fully compatible and interchangeable with Solar Fire",
@@ -560,6 +561,30 @@
       "source": "https://halloran.com/allsoft.htm",
       "phrase": "AstrolDeluxe Platinum, ver. 11.4 - $300.00",
       "page_text": "$300 for Platinum",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "sfx-import-utility",
+      "competitor": "Solar Fire X",
+      "claim": "Solar Fire X imports a library folder or ZIP with files and settings",
+      "pages": [
+        "answers/how-to-move-charts-between-astrology-programs.html"
+      ],
+      "source": "https://sfx.alabe.com/system-requirements",
+      "phrase": "Import Charts, Files, and Settings",
+      "page_text": "Import Charts, Files, and Settings",
+      "checked": "2026-11-03"
+    },
+    {
+      "id": "astrologer-import",
+      "competitor": "Astrologer",
+      "claim": "Paste chart data from Astro.com or Astro-Seek; guided import of Solar Fire and AstroGold libraries on Practitioner and Professional",
+      "pages": [
+        "answers/how-to-move-charts-between-astrology-programs.html"
+      ],
+      "source": "https://astrologerapp.org/",
+      "phrase": "Paste chart data from Astro.com or Astro-Seek",
+      "page_text": "paste chart data from Astro.com or Astro-Seek",
       "checked": "2026-11-03"
     }
   ]

@@ -59,6 +59,8 @@ PUBLIC_PATHS = [
     "/answers/best-astrology-software-for-mac.html",
     "/answers/best-astrology-software-for-windows",
     "/answers/best-astrology-software-for-windows.html",
+    "/answers/how-to-move-charts-between-astrology-programs",
+    "/answers/how-to-move-charts-between-astrology-programs.html",
 ]
 
 # The answer pages exist to be quoted by an AI engine, so the properties that make them
@@ -268,6 +270,7 @@ LINK_TARGETS = [
     "/answers/how-astrologers-keep-client-notes",
     "/answers/best-astrology-software-for-mac",
     "/answers/best-astrology-software-for-windows",
+    "/answers/how-to-move-charts-between-astrology-programs",
 ]
 
 
@@ -502,3 +505,29 @@ def test_the_windows_answer_keeps_the_depth_and_does_not_copy_the_mac_page(clien
     assert "/answers/best-astrology-software-for-mac" in html
     for phrase in STALE_SOLAR_FIRE_PHRASES:
         assert phrase not in text
+
+
+def test_the_chart_migration_answer_keeps_the_depth_and_the_importer_facts(client):
+    """The backlog set 700 words as the floor for /answers/how-to-move-charts-between-astrology-programs.
+
+    The page is written from app/services/chart_import, so its numbers are pinned to the code:
+    the file limits, the formats, and the Solar Fire X caveat that no Solar Fire X file has been
+    tested. If the importer changes, this fails and the page gets re-read.
+    """
+    import re
+
+    from app.services.chart_import import service
+
+    html = client.get("/answers/how-to-move-charts-between-astrology-programs").text
+    body = html[html.find("<body") :]
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(script|style|svg)\b.*?</\1>", " ", body))
+
+    assert len(text.split()) >= 700
+    assert "Last reviewed 3 November 2026" in text
+    assert f"{service.MAX_FILE_BYTES // (1024 * 1024)} MiB" in text
+    assert f"{service.MAX_RECORDS:,} records" in text
+    assert f"{service.PREVIEW_TTL_HOURS} hours" in text
+    for fmt in (".zbs", ".aaf", ".SFcht", ".as", "Solar Fire text"):
+        assert fmt in text
+    assert "not tested a file saved by Solar Fire X" in text
+    assert '"@type": "HowTo"' in html or '"@type":"HowTo"' in html
