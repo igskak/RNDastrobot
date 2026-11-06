@@ -648,3 +648,189 @@ items:
       - >-
         Honest gaps from product-marketing.md: web app, not a store app; tap-to-talk (tap to start, tap to send);
         desktop stays the main surface.
+
+  # ---------------------------------------------------------------------------------
+  # Refill of 2026-11-03. Order is priority. None of these rests on a Semrush volume:
+  # the first is a guard, the other two are written from facts only we hold (our own
+  # code and terms), which is why they can be believed without a keyword number. Each
+  # carries volume_checked so the agent's rule is visible, not implied.
+  # ---------------------------------------------------------------------------------
+
+  - id: competitor-facts-recheck
+    status: todo
+    volume_checked: true  # not a page; there is no query to measure
+    type: technical
+    slug: docs/marketing/competitor-facts.yml, app/scripts/check_competitor_facts.py
+    target_queries:
+      - none; this protects pages that already exist
+    why: >-
+      On 2026-10-28, building the Mac answer page, we found that Solar Fire X had shipped as a
+      native Mac app and Solar Fire 9 had stopped being sold. Six public pages, the product
+      context and the backlog all still said "Solar Fire has no Mac version", and had for
+      weeks. It was found by accident. Competitors ship, and a comparison page that is wrong
+      is worse than none (agent brief, writing rules). Every page is dated "last reviewed"
+      but nothing re-reads the sources behind those dates.
+    must_cover:
+      - >-
+        A data file, one entry per claim we make about a competitor: the page(s) that make it,
+        the competitor, the claim in a sentence, the source URL, the date it was last checked,
+        and one short string that must still appear on the source page for the claim to hold
+        (for example "native Mac" on sfx.alabe.com, "single dual-platform licence" on
+        astrogold.io/get-astro-gold/for-windows). Start from the sources already listed under
+        the tables on the answer pages and the two alternative pages; do not add a claim that
+        is not on a page today.
+      - >-
+        A script that fetches each source with the standard library only and reports, per
+        entry, held / phrase missing / fetch failed. It must tolerate pages that are mostly
+        inline images (alabe.com pages are about 700,000 characters, nearly all base64) by
+        stripping data: URIs before searching. A failed fetch is reported, never treated as a
+        pass. Exit status non-zero when a phrase is missing.
+      - >-
+        A unit test that needs no network: it checks the data file parses, every entry has the
+        fields above, every listed page path exists, and every "page" named in an entry
+        actually contains the sentence's key figure or name. The network check itself is not
+        a pytest, so CI never goes red because a vendor was down.
+      - >-
+        Do not wire it into a workflow in this PR (the agent may not edit workflows). Say in
+        the PR how it should run: weekly, next to the SEO monitor, filing an issue when a
+        phrase is missing.
+    acceptance:
+      guard_test: the data-file test above, in app/tests
+      notes: >-
+        Seed it with at least the Solar Fire X, Astro Gold, TimePassages, Astrolium and
+        Astrologer claims on /answers/best-astrology-software-for-mac and
+        /solar-fire-alternative, since those are the most recent and the most exposed.
+
+  - id: astrology-software-for-windows
+    status: todo
+    # Measured 2026-11-03, Semrush US (Keyword Magic): "astrology software for windows" 140 a
+    # month, KD 14; "astrology programs for windows" 140, KD 40; "astrology software windows"
+    # 110, KD 39; "astrology software for pc" 20 and "astrology programs for pc" 20 (KD not
+    # computed). Cluster sum about 430, against 200 for Mac, and the head term is easier (KD
+    # 14 against 27). Search Console already shows "astrology software for windows" at
+    # position 21.5. Caveat: three of the five are near-duplicates of one intent, so read it
+    # as a few hundred searches a month, not a thousand.
+    volume_checked: true
+    type: answer-page
+    slug: /answers/best-astrology-software-for-windows
+    target_queries:
+      - astrology software for windows
+      - astrology programs for windows
+      - astrology software windows
+      - astrology software for pc
+      - best astrology software for pc
+    why: >-
+      The sibling of /answers/best-astrology-software-for-mac, which shipped on 2026-10-28
+      and has not been indexed long enough to judge. Windows is where the desktop programs
+      live, so the SERP is likely to be vendors and aggregators; check who ranks. The honest
+      frame is "what runs on Windows and what each costs", not a Windows advantage for
+      Steliara (it is a browser app).
+    must_cover:
+      - >-
+        A direct answer in the first 40 words, then a table of programs with how each runs on
+        Windows, price and what to know. Re-check every platform and price on the vendor's page
+        on the build date: Solar Fire X (Windows 10 and 11, US$360), Astro Gold (Windows 10 or
+        later, one US$249.99 licence for Mac and Windows), TimePassages (Windows and macOS
+        editions), and the browser tools Astrolium, Astrologer (it also ships a native Windows
+        desktop app) and Steliara. Solar Fire 9 is no longer sold; say so once.
+      - >-
+        Not a copy of the Mac page. Different first paragraph, different emphasis (desktop
+        installs, Windows versions, licence per computer, what a browser tool saves you), and
+        a link to the Mac page as a sibling rather than a repeat of its table.
+      - >-
+        Where Steliara is the weaker choice, as on the other answer pages: six house systems,
+        no astrocartography, no Vedic dashas, no offline mode, no free tier.
+      - >-
+        The competitor-facts file from competitor-facts-recheck, if it has shipped by then:
+        add this page's claims to it.
+    acceptance:
+      min_words: 900
+      schema: [FAQPage]
+      internal_links_from: [/answers/best-astrology-software-for-mac, /answers/what-software-do-professional-astrologers-use]
+      guard_test: first-40-words answer, dated review line, 900-word floor, none of the stale Solar Fire phrases
+
+  - id: move-charts-between-programs
+    status: todo
+    volume_checked: true
+    # Measured 2026-11-03, Semrush US: "import charts from solar fire" and "export charts from
+    # astro.com" return no row (n/a, counted as 0). So this page makes no keyword claim and
+    # is NOT built for search volume; it is built because the page is written from our own
+    # importer, which no competitor page can say, and the readers are mid-switch. Marked true
+    # so the agent runs it; an owner who wants the volume rule applied strictly should set it
+    # back to false. Build it as a substantive answer page, not a thin one.
+    type: answer-page
+    slug: /answers/how-to-move-charts-between-astrology-programs
+    target_queries:
+      - import charts from Solar Fire
+      - transfer ZET charts to another program
+      - export charts from Astro.com
+      - switch astrology software without retyping charts
+    why: >-
+      The strongest line an alternative page has is the migration, and no competitor page
+      describes theirs honestly. We hold the facts: formats, limits, what carries across and
+      what does not, in app/services/chart_import and product-marketing.md. People who type
+      these queries are mid-switch, which is closer to a purchase than any category query.
+    must_cover:
+      - >-
+        A direct answer in the first 40 words, then one section per source program (ZET .zbs,
+        Astro.com / AAF, Solar Fire and Astro Gold .SFcht, Astrolog .as, Solar Fire text
+        export), each stating what comes across and what does not. Limits: 5 MiB and 2,000
+        records per file, possible duplicates flagged.
+      - >-
+        The honest gaps: calculation settings and subsidiary charts inside a Solar Fire record
+        do not travel; recordings and notes made in other tools do not come across. Notes on
+        a source chart come across for every format except Astrolog.
+      - >-
+        Solar Fire X: the importer is verified against Solar Fire 9 files and text exports.
+        Whether Solar Fire X saves .SFcht is untested. Either say exactly that, or, better,
+        have a human test a real Solar Fire X file first and state the result.
+      - >-
+        Written so it is useful to someone moving to ANY program, not only to us. Where
+        another program imports a format better than we do, say so.
+    acceptance:
+      min_words: 700
+      schema: [FAQPage, HowTo]
+      internal_links_from: [/solar-fire-alternative, /astroprocessor, /zet-online]
+      guard_test: first-40-words answer, dated review line, 700-word floor
+
+  - id: consultation-recording-privacy
+    status: todo
+    volume_checked: true
+    # Measured 2026-11-03, Semrush US: "record astrology consultation" returns no row (n/a,
+    # counted as 0). Built for trust and citability, not volume: it protects the hero claim
+    # (recording) from its first objection with facts only we hold. Marked true so the agent
+    # runs it; set back to false if the volume rule should be applied strictly.
+    type: answer-page
+    slug: /answers/how-astrology-consultation-recordings-are-stored
+    target_queries:
+      - is it safe to record astrology consultations
+      - do I need consent to record a client session
+      - how long are consultation recordings kept
+    why: >-
+      Recording is our one real differentiator and the first objection to it is "who holds
+      this, and is it legal". The answer lives in our own product and terms, so every line
+      is traceable, and an answer engine asked about recording a client session has nothing
+      first-party to cite today. This protects the hero claim rather than chasing volume.
+    must_cover:
+      - >-
+        Only what the product does, from the code and the terms: audio only, never video;
+        recording starts only after both sides agree; the audio is kept for six months and
+        then deleted automatically; transcript and summary live on the person's profile.
+        Sources: app/services/recording_retention_service.py (RECORDING_RETENTION_DAYS = 180),
+        the consent notices in the catalog, and terms.html section 5.
+      - >-
+        The nuance in the code: RETENTION_APPLIES_FROM is 2026-09-26, and recordings made
+        before that date are never touched. State what the terms promise today and do not
+        round it up. Check the live terms and the code on the build date and say which.
+      - >-
+        No legal advice. Consent law differs by country and by state. Say that plainly, say
+        what Steliara does by default (asks both sides, every time), and point to the
+        astrologer's own jurisdiction. Do not state what the law requires anywhere.
+      - >-
+        Studio-only, said once, near the top. Recording, transcripts and summaries are the
+        Studio plan.
+    acceptance:
+      min_words: 600
+      schema: [FAQPage]
+      internal_links_from: [/record-astrology-consultations, /astrology-practice-management]
+      guard_test: first-40-words answer, dated review line, and a pin that the page never says "complies with" or "legal in"
