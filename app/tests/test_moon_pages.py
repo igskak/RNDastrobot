@@ -19,6 +19,9 @@ INDEX = {loc: "/moon" if loc == "en" else f"/moon/{loc}" for loc in LOCALES}
 LETTER = {loc: f"{INDEX[loc]}/letter" for loc in LOCALES}
 
 
+PRO_PAGE_PREFIXES = ("/pricing", "/cloud-", "/astro", "/record-", "/solar-fire", "/answers", "/zet-")
+
+
 @pytest.fixture(scope="module")
 def client():
     with TestClient(app) as test_client:
@@ -144,7 +147,7 @@ def test_lunation_pages_are_indexable_and_complete(client, locale):
         # Twelve rising signs, a way back to the calculator and no link to the professional site.
         assert response.text.count("<tr><th scope=\"row\">") == 12
         assert INDEX[locale] + "#moon-form" in facts.links and INDEX[locale] in facts.links
-        assert "/" not in facts.links and not any(link.startswith(("/pricing", "/cloud-", "/astro")) for link in facts.links)
+        assert not any(link.startswith(PRO_PAGE_PREFIXES) for link in facts.links)
 
 
 def test_lunation_pages_link_to_their_neighbours_and_every_other_lunation(client):
@@ -179,11 +182,18 @@ def test_lunation_slugs_belong_to_their_own_language(client):
     assert client.get(first["en"] + "x").status_code == 404
 
 
-def test_moon_and_kundli_pages_do_not_link_to_the_professional_site(client):
+def test_moon_and_kundli_pages_reach_the_home_page_only_through_one_visible_footer_credit(client):
+    """The free pages stay apart from the professional ones: nothing in the body or the nav points
+    there. The single link is a plain, visible "Steliara" credit in the footer (never hidden)."""
     paths = [INDEX[locale] for locale in LOCALES] + [LETTER[locale] for locale in LOCALES]
     paths += ["/kundli", "/kundli/hi", "/kundli/dasha-calculator"]
     for path in paths:
-        assert "/" not in _facts(client, path)[1].links, path
+        response, facts = _facts(client, path)
+        assert facts.links.count("/") == 1, path
+        assert not any(link.startswith(PRO_PAGE_PREFIXES) for link in facts.links), path
+        footer = response.text.split("<footer", 1)[1]
+        assert '<a href="/">Steliara</a>' in footer, path
+        assert "display:none" not in response.text.replace(" ", "").lower().split("<footer", 1)[1], path
     # The English pages of the two free-tool sets point at each other.
     assert "/kundli" in _facts(client, "/moon")[1].links
     assert "/moon" in _facts(client, "/kundli")[1].links

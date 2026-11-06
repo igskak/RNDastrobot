@@ -579,7 +579,7 @@ _KUNDLI_ALTERNATES = {
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-11-03"
+_SITEMAP_LASTMOD = "2026-11-06"
 
 
 def _indexable_document_paths() -> frozenset:
@@ -761,6 +761,18 @@ date each competitor page was checked:
   {base}/answers/how-to-move-charts-between-astrology-programs
 - How astrology consultation recordings are stored, consent and retention:
   {base}/answers/how-astrology-consultation-recordings-are-stored
+
+## Free tools from the same team
+
+Free calculators for the general public, separate from the practice software above.
+They are not part of the product and need no account:
+
+- Moon calendar: next new and full moon, with journal questions
+  (English {base}/moon, also German {base}/moon/de, French {base}/moon/fr,
+  Italian {base}/moon/it, Spanish {base}/moon/es, Polish {base}/moon/pl,
+  Portuguese {base}/moon/pt)
+- Kundli (Vedic) calculators: dasha, sade sati and kundli matching
+  (English {base}/kundli, Hindi {base}/kundli/hi)
 
 Last updated: {_SITEMAP_LASTMOD}
 """

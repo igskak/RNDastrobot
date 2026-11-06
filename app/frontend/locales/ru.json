@@ -2449,6 +2449,8 @@
         "astrologerWorkspace": "Рабочее пространство астролога",
         "practiceManagement": "Управление практикой",
         "recordedConsultations": "Записи консультаций",
+        "moonCalendar": "Лунный календарь (English)",
+        "kundli": "Расчёт кундли (English)",
         "product": "Возможности",
         "consultations": "Консультации"
       },
@@ -3236,7 +3238,9 @@
         "copyright": "© 2026 Steliara. Платежи обрабатывает Stripe как merchant of record (Stripe Managed Payments).",
         "cloudSoftware": "Облачная программа для астрологов",
         "workspace": "Рабочее пространство астролога",
-        "practiceManagement": "Управление практикой"
+        "practiceManagement": "Управление практикой",
+        "moonCalendar": "Лунный календарь (English)",
+        "kundli": "Расчёт кундли (English)"
       }
     },
     "legal": {

@@ -152,8 +152,10 @@ function header(locale, slug, catalog, catalogs) {
   </header>`;
 }
 
-// The moon pages stand apart from the pages for professional astrologers: no link to them, only
-// to the terms and, in English, to the sister free tools (kundli).
+// The free pages stand apart from the pages for professional astrologers: nothing in the body or
+// the nav points there. The footer carries one plain, visible link on the brand name to the home
+// page (an ordinary "made by" credit, so the two sites are connected honestly), the terms and,
+// in English, the sister free tools. Never a link that only a crawler can see.
 function footer(catalog) {
     const site = catalog.site;
     const also = site.alsoFree
@@ -162,7 +164,7 @@ function footer(catalog) {
     return `<footer class="site-footer">
     <div class="shell">
       <p class="disclaimer">${esc(site.footerNote)}</p>
-      ${also}<p class="links"><a href="/terms.html">${esc(site.footerTerms)}</a></p>
+      ${also}<p class="links"><a href="/">Steliara</a> &middot; <a href="/terms.html">${esc(site.footerTerms)}</a></p>
     </div>
   </footer>`;
 }
