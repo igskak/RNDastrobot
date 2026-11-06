@@ -797,7 +797,8 @@ items:
       guard_test: first-40-words answer, dated review line, 700-word floor
 
   - id: consultation-recording-privacy
-    status: todo
+    status: shipped
+    pr: 44
     volume_checked: true
     # Measured 2026-11-03, Semrush US: "record astrology consultation" returns no row (n/a,
     # counted as 0). Built for trust and citability, not volume: it protects the hero claim

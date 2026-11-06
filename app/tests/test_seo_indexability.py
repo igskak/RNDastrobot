@@ -61,6 +61,8 @@ PUBLIC_PATHS = [
     "/answers/best-astrology-software-for-windows.html",
     "/answers/how-to-move-charts-between-astrology-programs",
     "/answers/how-to-move-charts-between-astrology-programs.html",
+    "/answers/how-astrology-consultation-recordings-are-stored",
+    "/answers/how-astrology-consultation-recordings-are-stored.html",
 ]
 
 # The answer pages exist to be quoted by an AI engine, so the properties that make them
@@ -271,6 +273,7 @@ LINK_TARGETS = [
     "/answers/best-astrology-software-for-mac",
     "/answers/best-astrology-software-for-windows",
     "/answers/how-to-move-charts-between-astrology-programs",
+    "/answers/how-astrology-consultation-recordings-are-stored",
 ]
 
 
@@ -531,3 +534,32 @@ def test_the_chart_migration_answer_keeps_the_depth_and_the_importer_facts(clien
         assert fmt in text
     assert "not tested a file saved by Solar Fire X" in text
     assert '"@type": "HowTo"' in html or '"@type":"HowTo"' in html
+
+
+def test_the_recording_privacy_answer_is_pinned_to_the_product_and_gives_no_legal_advice(client):
+    """The backlog set 600 words as the floor for /answers/how-astrology-consultation-recordings-are-stored.
+
+    Every product fact on it is read from the code or the terms, so this test reads them too:
+    the retention period, the date the deletion job started applying, and the plan that has
+    recording. And it pins the line the page must never cross. It states what Steliara does and
+    says consent law differs by country and state; it never says what any law requires and never
+    claims compliance.
+    """
+    import re
+
+    from app.services import recording_retention_service as retention
+
+    html = client.get("/answers/how-astrology-consultation-recordings-are-stored").text
+    body = html[html.find("<body") :]
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(script|style|svg)\b.*?</\1>", " ", body))
+
+    assert len(text.split()) >= 600
+    assert "Last reviewed 3 November 2026" in text
+    assert retention.RECORDING_RETENTION_DAYS == 180 and "180 days" in text and "six months" in text
+    assert retention.RETENTION_APPLIES_FROM.strftime("%-d %B %Y") in text
+    answer = re.search(r'(?s)<div class="answer">\s*<p>(.*?)</p>', html).group(1)
+    assert "Studio" in answer and "audio only" in answer
+    assert "differ by country and by state" in text
+    lowered = text.lower()
+    for phrase in ("complies with", "compliant", "legal in", "is legal", "gdpr compliant", "the law requires"):
+        assert phrase not in lowered, phrase
