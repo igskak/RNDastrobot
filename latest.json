@@ -26,7 +26,7 @@
     }
   },
   "base": "https://www.steliara.com",
-  "date": "2026-11-05",
+  "date": "2026-11-06",
   "errors": 0,
   "findings": [],
   "pages": {
@@ -45,8 +45,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/best-astrology-software-for-mac": {
-      "body_words": 1272,
-      "bytes": 17147,
+      "body_words": 1298,
+      "bytes": 17596,
       "canonical": "https://www.steliara.com/answers/best-astrology-software-for-mac",
       "description_length": 157,
       "empty_i18n_nodes": 0,
@@ -59,8 +59,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/best-astrology-software-for-professional-practice": {
-      "body_words": 1491,
-      "bytes": 20332,
+      "body_words": 1548,
+      "bytes": 20953,
       "canonical": "https://www.steliara.com/answers/best-astrology-software-for-professional-practice",
       "description_length": 153,
       "empty_i18n_nodes": 0,
@@ -72,9 +72,23 @@
       "title_length": 62,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/answers/best-astrology-software-for-windows": {
+      "body_words": 1792,
+      "bytes": 21540,
+      "canonical": "https://www.steliara.com/answers/best-astrology-software-for-windows",
+      "description_length": 156,
+      "empty_i18n_nodes": 0,
+      "h1": "What is the best astrology software for Windows?",
+      "hreflang_count": 0,
+      "jsonld_blocks": 2,
+      "status": 200,
+      "title": "Best Astrology Software for Windows, Compared | Steliara",
+      "title_length": 56,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/answers/how-astrologers-keep-client-notes": {
-      "body_words": 1362,
-      "bytes": 20605,
+      "body_words": 1353,
+      "bytes": 20573,
       "canonical": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
       "description_length": 161,
       "empty_i18n_nodes": 0,
@@ -86,9 +100,37 @@
       "title_length": 48,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/answers/how-astrology-consultation-recordings-are-stored": {
+      "body_words": 1406,
+      "bytes": 17349,
+      "canonical": "https://www.steliara.com/answers/how-astrology-consultation-recordings-are-stored",
+      "description_length": 154,
+      "empty_i18n_nodes": 0,
+      "h1": "How are astrology consultation recordings stored?",
+      "hreflang_count": 0,
+      "jsonld_blocks": 2,
+      "status": 200,
+      "title": "How Astrology Consultation Recordings Are Stored | Steliara",
+      "title_length": 59,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs": {
+      "body_words": 1727,
+      "bytes": 21206,
+      "canonical": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
+      "description_length": 156,
+      "empty_i18n_nodes": 0,
+      "h1": "How do you move charts between astrology programs?",
+      "hreflang_count": 0,
+      "jsonld_blocks": 3,
+      "status": 200,
+      "title": "How to Move Charts Between Astrology Programs | Steliara",
+      "title_length": 56,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/answers/what-software-do-professional-astrologers-use": {
-      "body_words": 1315,
-      "bytes": 19504,
+      "body_words": 1401,
+      "bytes": 20584,
       "canonical": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
       "description_length": 153,
       "empty_i18n_nodes": 0,
@@ -101,8 +143,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/astro-gold-alternative": {
-      "body_words": 2691,
-      "bytes": 33304,
+      "body_words": 2709,
+      "bytes": 33480,
       "canonical": "https://www.steliara.com/astro-gold-alternative",
       "description_length": 158,
       "empty_i18n_nodes": 0,
@@ -129,8 +171,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/astrology-practice-management": {
-      "body_words": 803,
-      "bytes": 16930,
+      "body_words": 825,
+      "bytes": 17126,
       "canonical": "https://www.steliara.com/astrology-practice-management",
       "description_length": 156,
       "empty_i18n_nodes": 0,
@@ -143,8 +185,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/astroprocessor": {
-      "body_words": 2138,
-      "bytes": 45316,
+      "body_words": 2156,
+      "bytes": 45574,
       "canonical": "https://www.steliara.com/astroprocessor",
       "description_length": 145,
       "empty_i18n_nodes": 0,
@@ -2019,8 +2061,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/record-astrology-consultations": {
-      "body_words": 1643,
-      "bytes": 24979,
+      "body_words": 1683,
+      "bytes": 25310,
       "canonical": "https://www.steliara.com/record-astrology-consultations",
       "description_length": 163,
       "empty_i18n_nodes": 0,
@@ -2075,8 +2117,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/solar-fire-alternative": {
-      "body_words": 2359,
-      "bytes": 30761,
+      "body_words": 2380,
+      "bytes": 30950,
       "canonical": "https://www.steliara.com/solar-fire-alternative",
       "description_length": 162,
       "empty_i18n_nodes": 0,
@@ -2145,8 +2187,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/zet-online": {
-      "body_words": 1745,
-      "bytes": 38749,
+      "body_words": 1759,
+      "bytes": 38952,
       "canonical": "https://www.steliara.com/zet-online",
       "description_length": 161,
       "empty_i18n_nodes": 0,
@@ -2174,6 +2216,6 @@
     }
   },
   "regressions": [],
-  "sitemap_url_count": 153,
+  "sitemap_url_count": 156,
   "warnings": 0
 }
