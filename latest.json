@@ -26,13 +26,13 @@
     }
   },
   "base": "https://www.steliara.com",
-  "date": "2026-11-06",
+  "date": "2026-11-07",
   "errors": 0,
   "findings": [],
   "pages": {
     "https://www.steliara.com/": {
-      "body_words": 986,
-      "bytes": 58272,
+      "body_words": 990,
+      "bytes": 58453,
       "canonical": "https://www.steliara.com/",
       "description_length": 157,
       "empty_i18n_nodes": 0,
@@ -45,8 +45,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/best-astrology-software-for-mac": {
-      "body_words": 1298,
-      "bytes": 17596,
+      "body_words": 1302,
+      "bytes": 17703,
       "canonical": "https://www.steliara.com/answers/best-astrology-software-for-mac",
       "description_length": 157,
       "empty_i18n_nodes": 0,
@@ -59,8 +59,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/best-astrology-software-for-professional-practice": {
-      "body_words": 1548,
-      "bytes": 20953,
+      "body_words": 1552,
+      "bytes": 21060,
       "canonical": "https://www.steliara.com/answers/best-astrology-software-for-professional-practice",
       "description_length": 153,
       "empty_i18n_nodes": 0,
@@ -73,8 +73,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/best-astrology-software-for-windows": {
-      "body_words": 1792,
-      "bytes": 21540,
+      "body_words": 1796,
+      "bytes": 21647,
       "canonical": "https://www.steliara.com/answers/best-astrology-software-for-windows",
       "description_length": 156,
       "empty_i18n_nodes": 0,
@@ -87,8 +87,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/how-astrologers-keep-client-notes": {
-      "body_words": 1353,
-      "bytes": 20573,
+      "body_words": 1357,
+      "bytes": 20680,
       "canonical": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
       "description_length": 161,
       "empty_i18n_nodes": 0,
@@ -101,8 +101,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/how-astrology-consultation-recordings-are-stored": {
-      "body_words": 1406,
-      "bytes": 17349,
+      "body_words": 1410,
+      "bytes": 17456,
       "canonical": "https://www.steliara.com/answers/how-astrology-consultation-recordings-are-stored",
       "description_length": 154,
       "empty_i18n_nodes": 0,
@@ -115,8 +115,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs": {
-      "body_words": 1727,
-      "bytes": 21206,
+      "body_words": 1731,
+      "bytes": 21313,
       "canonical": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
       "description_length": 156,
       "empty_i18n_nodes": 0,
@@ -129,8 +129,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/answers/what-software-do-professional-astrologers-use": {
-      "body_words": 1401,
-      "bytes": 20584,
+      "body_words": 1405,
+      "bytes": 20691,
       "canonical": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
       "description_length": 153,
       "empty_i18n_nodes": 0,
@@ -143,8 +143,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/astro-gold-alternative": {
-      "body_words": 2709,
-      "bytes": 33480,
+      "body_words": 2713,
+      "bytes": 33587,
       "canonical": "https://www.steliara.com/astro-gold-alternative",
       "description_length": 158,
       "empty_i18n_nodes": 0,
@@ -157,8 +157,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/astrologer-workspace": {
-      "body_words": 566,
-      "bytes": 13788,
+      "body_words": 570,
+      "bytes": 13895,
       "canonical": "https://www.steliara.com/astrologer-workspace",
       "description_length": 163,
       "empty_i18n_nodes": 0,
@@ -171,8 +171,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/astrology-practice-management": {
-      "body_words": 825,
-      "bytes": 17126,
+      "body_words": 829,
+      "bytes": 17233,
       "canonical": "https://www.steliara.com/astrology-practice-management",
       "description_length": 156,
       "empty_i18n_nodes": 0,
@@ -213,8 +213,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/cloud-astrology-software": {
-      "body_words": 2325,
-      "bytes": 30553,
+      "body_words": 2329,
+      "bytes": 30660,
       "canonical": "https://www.steliara.com/cloud-astrology-software",
       "description_length": 152,
       "empty_i18n_nodes": 0,
@@ -227,8 +227,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/de/": {
-      "body_words": 965,
-      "bytes": 59273,
+      "body_words": 967,
+      "bytes": 59452,
       "canonical": "https://www.steliara.com/de/",
       "description_length": 151,
       "empty_i18n_nodes": 0,
@@ -241,8 +241,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/de/pricing.html": {
-      "body_words": 325,
-      "bytes": 22702,
+      "body_words": 327,
+      "bytes": 22891,
       "canonical": "https://www.steliara.com/de/pricing.html",
       "description_length": 147,
       "empty_i18n_nodes": 0,
@@ -269,8 +269,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/kundli": {
-      "body_words": 428,
-      "bytes": 6866,
+      "body_words": 430,
+      "bytes": 6900,
       "canonical": "https://www.steliara.com/kundli",
       "description_length": 154,
       "empty_i18n_nodes": 0,
@@ -283,8 +283,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/kundli/dasha-calculator": {
-      "body_words": 599,
-      "bytes": 16111,
+      "body_words": 601,
+      "bytes": 16145,
       "canonical": "https://www.steliara.com/kundli/dasha-calculator",
       "description_length": 148,
       "empty_i18n_nodes": 0,
@@ -297,8 +297,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/kundli/hi": {
-      "body_words": 438,
-      "bytes": 11698,
+      "body_words": 440,
+      "bytes": 11732,
       "canonical": "https://www.steliara.com/kundli/hi",
       "description_length": 131,
       "empty_i18n_nodes": 0,
@@ -311,8 +311,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/kundli/hi/dasha-calculator": {
-      "body_words": 605,
-      "bytes": 26366,
+      "body_words": 607,
+      "bytes": 26400,
       "canonical": "https://www.steliara.com/kundli/hi/dasha-calculator",
       "description_length": 138,
       "empty_i18n_nodes": 0,
@@ -325,8 +325,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/kundli/hi/kundli-matching": {
-      "body_words": 454,
-      "bytes": 25258,
+      "body_words": 456,
+      "bytes": 25292,
       "canonical": "https://www.steliara.com/kundli/hi/kundli-matching",
       "description_length": 130,
       "empty_i18n_nodes": 0,
@@ -339,8 +339,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/kundli/hi/sade-sati-calculator": {
-      "body_words": 571,
-      "bytes": 25472,
+      "body_words": 573,
+      "bytes": 25506,
       "canonical": "https://www.steliara.com/kundli/hi/sade-sati-calculator",
       "description_length": 140,
       "empty_i18n_nodes": 0,
@@ -353,8 +353,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/kundli/kundli-matching": {
-      "body_words": 415,
-      "bytes": 16073,
+      "body_words": 417,
+      "bytes": 16107,
       "canonical": "https://www.steliara.com/kundli/kundli-matching",
       "description_length": 150,
       "empty_i18n_nodes": 0,
@@ -367,8 +367,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/kundli/sade-sati-calculator": {
-      "body_words": 579,
-      "bytes": 15723,
+      "body_words": 581,
+      "bytes": 15757,
       "canonical": "https://www.steliara.com/kundli/sade-sati-calculator",
       "description_length": 142,
       "empty_i18n_nodes": 0,
@@ -381,8 +381,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon": {
-      "body_words": 1694,
-      "bytes": 36234,
+      "body_words": 1696,
+      "bytes": 36268,
       "canonical": "https://www.steliara.com/moon",
       "description_length": 151,
       "empty_i18n_nodes": 0,
@@ -395,8 +395,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de": {
-      "body_words": 1559,
-      "bytes": 37894,
+      "body_words": 1561,
+      "bytes": 37928,
       "canonical": "https://www.steliara.com/moon/de",
       "description_length": 155,
       "empty_i18n_nodes": 0,
@@ -409,8 +409,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/neumond-4-juni-2027": {
-      "body_words": 436,
-      "bytes": 12452,
+      "body_words": 438,
+      "bytes": 12486,
       "canonical": "https://www.steliara.com/moon/de/neumond-4-juni-2027",
       "description_length": 133,
       "empty_i18n_nodes": 0,
@@ -423,8 +423,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/neumond-6-februar-2027": {
-      "body_words": 431,
-      "bytes": 12535,
+      "body_words": 433,
+      "bytes": 12569,
       "canonical": "https://www.steliara.com/moon/de/neumond-6-februar-2027",
       "description_length": 137,
       "empty_i18n_nodes": 0,
@@ -437,8 +437,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/neumond-6-mai-2027": {
-      "body_words": 435,
-      "bytes": 12378,
+      "body_words": 437,
+      "bytes": 12412,
       "canonical": "https://www.steliara.com/moon/de/neumond-6-mai-2027",
       "description_length": 128,
       "empty_i18n_nodes": 0,
@@ -451,8 +451,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/neumond-7-april-2027": {
-      "body_words": 440,
-      "bytes": 12455,
+      "body_words": 442,
+      "bytes": 12489,
       "canonical": "https://www.steliara.com/moon/de/neumond-7-april-2027",
       "description_length": 131,
       "empty_i18n_nodes": 0,
@@ -465,8 +465,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/neumond-7-januar-2027": {
-      "body_words": 434,
-      "bytes": 12531,
+      "body_words": 436,
+      "bytes": 12565,
       "canonical": "https://www.steliara.com/moon/de/neumond-7-januar-2027",
       "description_length": 135,
       "empty_i18n_nodes": 0,
@@ -479,8 +479,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/neumond-8-marz-2027": {
-      "body_words": 436,
-      "bytes": 12436,
+      "body_words": 438,
+      "bytes": 12470,
       "canonical": "https://www.steliara.com/moon/de/neumond-8-marz-2027",
       "description_length": 130,
       "empty_i18n_nodes": 0,
@@ -493,8 +493,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/neumond-9-dezember-2026": {
-      "body_words": 435,
-      "bytes": 12576,
+      "body_words": 437,
+      "bytes": 12610,
       "canonical": "https://www.steliara.com/moon/de/neumond-9-dezember-2026",
       "description_length": 135,
       "empty_i18n_nodes": 0,
@@ -507,8 +507,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/neumond-9-november-2026": {
-      "body_words": 434,
-      "bytes": 12354,
+      "body_words": 436,
+      "bytes": 12388,
       "canonical": "https://www.steliara.com/moon/de/neumond-9-november-2026",
       "description_length": 136,
       "empty_i18n_nodes": 0,
@@ -521,8 +521,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/vollmond-19-juni-2027": {
-      "body_words": 442,
-      "bytes": 12307,
+      "body_words": 444,
+      "bytes": 12341,
       "canonical": "https://www.steliara.com/moon/de/vollmond-19-juni-2027",
       "description_length": 133,
       "empty_i18n_nodes": 0,
@@ -535,8 +535,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/vollmond-20-mai-2027": {
-      "body_words": 448,
-      "bytes": 12497,
+      "body_words": 450,
+      "bytes": 12531,
       "canonical": "https://www.steliara.com/moon/de/vollmond-20-mai-2027",
       "description_length": 133,
       "empty_i18n_nodes": 0,
@@ -549,8 +549,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/vollmond-21-april-2027": {
-      "body_words": 448,
-      "bytes": 12553,
+      "body_words": 450,
+      "bytes": 12587,
       "canonical": "https://www.steliara.com/moon/de/vollmond-21-april-2027",
       "description_length": 134,
       "empty_i18n_nodes": 0,
@@ -563,8 +563,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/vollmond-21-februar-2027": {
-      "body_words": 453,
-      "bytes": 12665,
+      "body_words": 455,
+      "bytes": 12699,
       "canonical": "https://www.steliara.com/moon/de/vollmond-21-februar-2027",
       "description_length": 136,
       "empty_i18n_nodes": 0,
@@ -577,8 +577,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/vollmond-22-januar-2027": {
-      "body_words": 446,
-      "bytes": 12577,
+      "body_words": 448,
+      "bytes": 12611,
       "canonical": "https://www.steliara.com/moon/de/vollmond-22-januar-2027",
       "description_length": 131,
       "empty_i18n_nodes": 0,
@@ -591,8 +591,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/vollmond-22-marz-2027": {
-      "body_words": 446,
-      "bytes": 12520,
+      "body_words": 448,
+      "bytes": 12554,
       "canonical": "https://www.steliara.com/moon/de/vollmond-22-marz-2027",
       "description_length": 130,
       "empty_i18n_nodes": 0,
@@ -605,8 +605,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/vollmond-24-dezember-2026": {
-      "body_words": 445,
-      "bytes": 12614,
+      "body_words": 447,
+      "bytes": 12648,
       "canonical": "https://www.steliara.com/moon/de/vollmond-24-dezember-2026",
       "description_length": 134,
       "empty_i18n_nodes": 0,
@@ -619,8 +619,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/de/vollmond-24-november-2026": {
-      "body_words": 454,
-      "bytes": 12719,
+      "body_words": 456,
+      "bytes": 12753,
       "canonical": "https://www.steliara.com/moon/de/vollmond-24-november-2026",
       "description_length": 138,
       "empty_i18n_nodes": 0,
@@ -633,8 +633,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es": {
-      "body_words": 1679,
-      "bytes": 37294,
+      "body_words": 1681,
+      "bytes": 37328,
       "canonical": "https://www.steliara.com/moon/es",
       "description_length": 159,
       "empty_i18n_nodes": 0,
@@ -647,8 +647,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-llena-19-de-junio-de-2027": {
-      "body_words": 532,
-      "bytes": 12582,
+      "body_words": 534,
+      "bytes": 12616,
       "canonical": "https://www.steliara.com/moon/es/luna-llena-19-de-junio-de-2027",
       "description_length": 149,
       "empty_i18n_nodes": 0,
@@ -661,8 +661,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-llena-20-de-mayo-de-2027": {
-      "body_words": 543,
-      "bytes": 12798,
+      "body_words": 545,
+      "bytes": 12832,
       "canonical": "https://www.steliara.com/moon/es/luna-llena-20-de-mayo-de-2027",
       "description_length": 147,
       "empty_i18n_nodes": 0,
@@ -675,8 +675,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-llena-21-de-abril-de-2027": {
-      "body_words": 543,
-      "bytes": 12835,
+      "body_words": 545,
+      "bytes": 12869,
       "canonical": "https://www.steliara.com/moon/es/luna-llena-21-de-abril-de-2027",
       "description_length": 147,
       "empty_i18n_nodes": 0,
@@ -689,8 +689,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-llena-21-de-febrero-de-2027": {
-      "body_words": 540,
-      "bytes": 12869,
+      "body_words": 542,
+      "bytes": 12903,
       "canonical": "https://www.steliara.com/moon/es/luna-llena-21-de-febrero-de-2027",
       "description_length": 146,
       "empty_i18n_nodes": 0,
@@ -703,8 +703,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-llena-22-de-enero-de-2027": {
-      "body_words": 542,
-      "bytes": 12814,
+      "body_words": 544,
+      "bytes": 12848,
       "canonical": "https://www.steliara.com/moon/es/luna-llena-22-de-enero-de-2027",
       "description_length": 142,
       "empty_i18n_nodes": 0,
@@ -717,8 +717,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-llena-22-de-marzo-de-2027": {
-      "body_words": 533,
-      "bytes": 12754,
+      "body_words": 535,
+      "bytes": 12788,
       "canonical": "https://www.steliara.com/moon/es/luna-llena-22-de-marzo-de-2027",
       "description_length": 144,
       "empty_i18n_nodes": 0,
@@ -731,8 +731,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-llena-24-de-diciembre-de-2026": {
-      "body_words": 538,
-      "bytes": 12892,
+      "body_words": 540,
+      "bytes": 12926,
       "canonical": "https://www.steliara.com/moon/es/luna-llena-24-de-diciembre-de-2026",
       "description_length": 149,
       "empty_i18n_nodes": 0,
@@ -745,8 +745,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-llena-24-de-noviembre-de-2026": {
-      "body_words": 543,
-      "bytes": 12965,
+      "body_words": 545,
+      "bytes": 12999,
       "canonical": "https://www.steliara.com/moon/es/luna-llena-24-de-noviembre-de-2026",
       "description_length": 150,
       "empty_i18n_nodes": 0,
@@ -759,8 +759,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-nueva-4-de-junio-de-2027": {
-      "body_words": 519,
-      "bytes": 12697,
+      "body_words": 521,
+      "bytes": 12731,
       "canonical": "https://www.steliara.com/moon/es/luna-nueva-4-de-junio-de-2027",
       "description_length": 146,
       "empty_i18n_nodes": 0,
@@ -773,8 +773,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-nueva-6-de-febrero-de-2027": {
-      "body_words": 515,
-      "bytes": 12718,
+      "body_words": 517,
+      "bytes": 12752,
       "canonical": "https://www.steliara.com/moon/es/luna-nueva-6-de-febrero-de-2027",
       "description_length": 148,
       "empty_i18n_nodes": 0,
@@ -787,8 +787,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-nueva-6-de-mayo-de-2027": {
-      "body_words": 519,
-      "bytes": 12616,
+      "body_words": 521,
+      "bytes": 12650,
       "canonical": "https://www.steliara.com/moon/es/luna-nueva-6-de-mayo-de-2027",
       "description_length": 143,
       "empty_i18n_nodes": 0,
@@ -801,8 +801,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-nueva-7-de-abril-de-2027": {
-      "body_words": 523,
-      "bytes": 12673,
+      "body_words": 525,
+      "bytes": 12707,
       "canonical": "https://www.steliara.com/moon/es/luna-nueva-7-de-abril-de-2027",
       "description_length": 144,
       "empty_i18n_nodes": 0,
@@ -815,8 +815,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-nueva-7-de-enero-de-2027": {
-      "body_words": 523,
-      "bytes": 12757,
+      "body_words": 525,
+      "bytes": 12791,
       "canonical": "https://www.steliara.com/moon/es/luna-nueva-7-de-enero-de-2027",
       "description_length": 150,
       "empty_i18n_nodes": 0,
@@ -829,8 +829,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-nueva-8-de-marzo-de-2027": {
-      "body_words": 521,
-      "bytes": 12678,
+      "body_words": 523,
+      "bytes": 12712,
       "canonical": "https://www.steliara.com/moon/es/luna-nueva-8-de-marzo-de-2027",
       "description_length": 145,
       "empty_i18n_nodes": 0,
@@ -843,8 +843,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-nueva-9-de-diciembre-de-2026": {
-      "body_words": 522,
-      "bytes": 12837,
+      "body_words": 524,
+      "bytes": 12871,
       "canonical": "https://www.steliara.com/moon/es/luna-nueva-9-de-diciembre-de-2026",
       "description_length": 152,
       "empty_i18n_nodes": 0,
@@ -857,8 +857,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es/luna-nueva-9-de-noviembre-de-2026": {
-      "body_words": 514,
-      "bytes": 12594,
+      "body_words": 516,
+      "bytes": 12628,
       "canonical": "https://www.steliara.com/moon/es/luna-nueva-9-de-noviembre-de-2026",
       "description_length": 151,
       "empty_i18n_nodes": 0,
@@ -871,8 +871,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr": {
-      "body_words": 1749,
-      "bytes": 38327,
+      "body_words": 1751,
+      "bytes": 38361,
       "canonical": "https://www.steliara.com/moon/fr",
       "description_length": 159,
       "empty_i18n_nodes": 0,
@@ -885,8 +885,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/nouvelle-lune-4-juin-2027": {
-      "body_words": 487,
-      "bytes": 12676,
+      "body_words": 489,
+      "bytes": 12710,
       "canonical": "https://www.steliara.com/moon/fr/nouvelle-lune-4-juin-2027",
       "description_length": 146,
       "empty_i18n_nodes": 0,
@@ -899,8 +899,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/nouvelle-lune-6-fevrier-2027": {
-      "body_words": 489,
-      "bytes": 12766,
+      "body_words": 491,
+      "bytes": 12800,
       "canonical": "https://www.steliara.com/moon/fr/nouvelle-lune-6-fevrier-2027",
       "description_length": 149,
       "empty_i18n_nodes": 0,
@@ -913,8 +913,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/nouvelle-lune-6-mai-2027": {
-      "body_words": 496,
-      "bytes": 12635,
+      "body_words": 498,
+      "bytes": 12669,
       "canonical": "https://www.steliara.com/moon/fr/nouvelle-lune-6-mai-2027",
       "description_length": 145,
       "empty_i18n_nodes": 0,
@@ -927,8 +927,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/nouvelle-lune-7-avril-2027": {
-      "body_words": 491,
-      "bytes": 12682,
+      "body_words": 493,
+      "bytes": 12716,
       "canonical": "https://www.steliara.com/moon/fr/nouvelle-lune-7-avril-2027",
       "description_length": 146,
       "empty_i18n_nodes": 0,
@@ -941,8 +941,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/nouvelle-lune-7-janvier-2027": {
-      "body_words": 498,
-      "bytes": 12805,
+      "body_words": 500,
+      "bytes": 12839,
       "canonical": "https://www.steliara.com/moon/fr/nouvelle-lune-7-janvier-2027",
       "description_length": 152,
       "empty_i18n_nodes": 0,
@@ -955,8 +955,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/nouvelle-lune-8-mars-2027": {
-      "body_words": 496,
-      "bytes": 12685,
+      "body_words": 498,
+      "bytes": 12719,
       "canonical": "https://www.steliara.com/moon/fr/nouvelle-lune-8-mars-2027",
       "description_length": 147,
       "empty_i18n_nodes": 0,
@@ -969,8 +969,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/nouvelle-lune-9-decembre-2026": {
-      "body_words": 492,
-      "bytes": 12841,
+      "body_words": 494,
+      "bytes": 12875,
       "canonical": "https://www.steliara.com/moon/fr/nouvelle-lune-9-decembre-2026",
       "description_length": 153,
       "empty_i18n_nodes": 0,
@@ -983,8 +983,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026": {
-      "body_words": 492,
-      "bytes": 12604,
+      "body_words": 494,
+      "bytes": 12638,
       "canonical": "https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026",
       "description_length": 151,
       "empty_i18n_nodes": 0,
@@ -997,8 +997,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/pleine-lune-19-juin-2027": {
-      "body_words": 505,
-      "bytes": 12571,
+      "body_words": 507,
+      "bytes": 12605,
       "canonical": "https://www.steliara.com/moon/fr/pleine-lune-19-juin-2027",
       "description_length": 148,
       "empty_i18n_nodes": 0,
@@ -1011,8 +1011,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/pleine-lune-20-mai-2027": {
-      "body_words": 513,
-      "bytes": 12787,
+      "body_words": 515,
+      "bytes": 12821,
       "canonical": "https://www.steliara.com/moon/fr/pleine-lune-20-mai-2027",
       "description_length": 145,
       "empty_i18n_nodes": 0,
@@ -1025,8 +1025,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/pleine-lune-21-avril-2027": {
-      "body_words": 513,
-      "bytes": 12843,
+      "body_words": 515,
+      "bytes": 12877,
       "canonical": "https://www.steliara.com/moon/fr/pleine-lune-21-avril-2027",
       "description_length": 146,
       "empty_i18n_nodes": 0,
@@ -1039,8 +1039,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/pleine-lune-21-fevrier-2027": {
-      "body_words": 512,
-      "bytes": 12893,
+      "body_words": 514,
+      "bytes": 12927,
       "canonical": "https://www.steliara.com/moon/fr/pleine-lune-21-fevrier-2027",
       "description_length": 146,
       "empty_i18n_nodes": 0,
@@ -1053,8 +1053,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/pleine-lune-22-janvier-2027": {
-      "body_words": 517,
-      "bytes": 12873,
+      "body_words": 519,
+      "bytes": 12907,
       "canonical": "https://www.steliara.com/moon/fr/pleine-lune-22-janvier-2027",
       "description_length": 144,
       "empty_i18n_nodes": 0,
@@ -1067,8 +1067,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/pleine-lune-22-mars-2027": {
-      "body_words": 510,
-      "bytes": 12765,
+      "body_words": 512,
+      "bytes": 12799,
       "canonical": "https://www.steliara.com/moon/fr/pleine-lune-22-mars-2027",
       "description_length": 144,
       "empty_i18n_nodes": 0,
@@ -1081,8 +1081,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/pleine-lune-24-decembre-2026": {
-      "body_words": 508,
-      "bytes": 12882,
+      "body_words": 510,
+      "bytes": 12916,
       "canonical": "https://www.steliara.com/moon/fr/pleine-lune-24-decembre-2026",
       "description_length": 147,
       "empty_i18n_nodes": 0,
@@ -1095,8 +1095,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/pleine-lune-24-novembre-2026": {
-      "body_words": 508,
-      "bytes": 12928,
+      "body_words": 510,
+      "bytes": 12962,
       "canonical": "https://www.steliara.com/moon/fr/pleine-lune-24-novembre-2026",
       "description_length": 148,
       "empty_i18n_nodes": 0,
@@ -1109,8 +1109,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/full-moon-april-20-2027": {
-      "body_words": 495,
-      "bytes": 12340,
+      "body_words": 497,
+      "bytes": 12374,
       "canonical": "https://www.steliara.com/moon/full-moon-april-20-2027",
       "description_length": 134,
       "empty_i18n_nodes": 0,
@@ -1123,8 +1123,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/full-moon-december-23-2026": {
-      "body_words": 496,
-      "bytes": 12421,
+      "body_words": 498,
+      "bytes": 12455,
       "canonical": "https://www.steliara.com/moon/full-moon-december-23-2026",
       "description_length": 136,
       "empty_i18n_nodes": 0,
@@ -1137,8 +1137,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/full-moon-february-20-2027": {
-      "body_words": 503,
-      "bytes": 12441,
+      "body_words": 505,
+      "bytes": 12475,
       "canonical": "https://www.steliara.com/moon/full-moon-february-20-2027",
       "description_length": 135,
       "empty_i18n_nodes": 0,
@@ -1151,8 +1151,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/full-moon-january-22-2027": {
-      "body_words": 500,
-      "bytes": 12393,
+      "body_words": 502,
+      "bytes": 12427,
       "canonical": "https://www.steliara.com/moon/full-moon-january-22-2027",
       "description_length": 132,
       "empty_i18n_nodes": 0,
@@ -1165,8 +1165,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/full-moon-june-18-2027": {
-      "body_words": 489,
-      "bytes": 12136,
+      "body_words": 491,
+      "bytes": 12170,
       "canonical": "https://www.steliara.com/moon/full-moon-june-18-2027",
       "description_length": 138,
       "empty_i18n_nodes": 0,
@@ -1179,8 +1179,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/full-moon-march-22-2027": {
-      "body_words": 493,
-      "bytes": 12309,
+      "body_words": 495,
+      "bytes": 12343,
       "canonical": "https://www.steliara.com/moon/full-moon-march-22-2027",
       "description_length": 132,
       "empty_i18n_nodes": 0,
@@ -1193,8 +1193,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/full-moon-may-20-2027": {
-      "body_words": 495,
-      "bytes": 12284,
+      "body_words": 497,
+      "bytes": 12318,
       "canonical": "https://www.steliara.com/moon/full-moon-may-20-2027",
       "description_length": 133,
       "empty_i18n_nodes": 0,
@@ -1207,8 +1207,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/full-moon-november-24-2026": {
-      "body_words": 500,
-      "bytes": 12476,
+      "body_words": 502,
+      "bytes": 12510,
       "canonical": "https://www.steliara.com/moon/full-moon-november-24-2026",
       "description_length": 136,
       "empty_i18n_nodes": 0,
@@ -1221,8 +1221,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it": {
-      "body_words": 1631,
-      "bytes": 37087,
+      "body_words": 1633,
+      "bytes": 37121,
       "canonical": "https://www.steliara.com/moon/it",
       "description_length": 162,
       "empty_i18n_nodes": 0,
@@ -1235,8 +1235,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-nuova-4-giugno-2027": {
-      "body_words": 464,
-      "bytes": 12400,
+      "body_words": 466,
+      "bytes": 12434,
       "canonical": "https://www.steliara.com/moon/it/luna-nuova-4-giugno-2027",
       "description_length": 134,
       "empty_i18n_nodes": 0,
@@ -1249,8 +1249,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-nuova-6-febbraio-2027": {
-      "body_words": 463,
-      "bytes": 12458,
+      "body_words": 465,
+      "bytes": 12492,
       "canonical": "https://www.steliara.com/moon/it/luna-nuova-6-febbraio-2027",
       "description_length": 137,
       "empty_i18n_nodes": 0,
@@ -1263,8 +1263,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-nuova-6-maggio-2027": {
-      "body_words": 473,
-      "bytes": 12354,
+      "body_words": 475,
+      "bytes": 12388,
       "canonical": "https://www.steliara.com/moon/it/luna-nuova-6-maggio-2027",
       "description_length": 131,
       "empty_i18n_nodes": 0,
@@ -1277,8 +1277,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-nuova-7-aprile-2027": {
-      "body_words": 469,
-      "bytes": 12391,
+      "body_words": 471,
+      "bytes": 12425,
       "canonical": "https://www.steliara.com/moon/it/luna-nuova-7-aprile-2027",
       "description_length": 133,
       "empty_i18n_nodes": 0,
@@ -1291,8 +1291,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-nuova-7-gennaio-2027": {
-      "body_words": 472,
-      "bytes": 12501,
+      "body_words": 474,
+      "bytes": 12535,
       "canonical": "https://www.steliara.com/moon/it/luna-nuova-7-gennaio-2027",
       "description_length": 138,
       "empty_i18n_nodes": 0,
@@ -1305,8 +1305,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-nuova-8-marzo-2027": {
-      "body_words": 472,
-      "bytes": 12378,
+      "body_words": 474,
+      "bytes": 12412,
       "canonical": "https://www.steliara.com/moon/it/luna-nuova-8-marzo-2027",
       "description_length": 131,
       "empty_i18n_nodes": 0,
@@ -1319,8 +1319,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-nuova-9-dicembre-2026": {
-      "body_words": 471,
-      "bytes": 12525,
+      "body_words": 473,
+      "bytes": 12559,
       "canonical": "https://www.steliara.com/moon/it/luna-nuova-9-dicembre-2026",
       "description_length": 139,
       "empty_i18n_nodes": 0,
@@ -1333,8 +1333,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-nuova-9-novembre-2026": {
-      "body_words": 466,
-      "bytes": 12288,
+      "body_words": 468,
+      "bytes": 12322,
       "canonical": "https://www.steliara.com/moon/it/luna-nuova-9-novembre-2026",
       "description_length": 138,
       "empty_i18n_nodes": 0,
@@ -1347,8 +1347,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-piena-19-giugno-2027": {
-      "body_words": 479,
-      "bytes": 12304,
+      "body_words": 481,
+      "bytes": 12338,
       "canonical": "https://www.steliara.com/moon/it/luna-piena-19-giugno-2027",
       "description_length": 138,
       "empty_i18n_nodes": 0,
@@ -1361,8 +1361,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-piena-20-maggio-2027": {
-      "body_words": 486,
-      "bytes": 12531,
+      "body_words": 488,
+      "bytes": 12565,
       "canonical": "https://www.steliara.com/moon/it/luna-piena-20-maggio-2027",
       "description_length": 137,
       "empty_i18n_nodes": 0,
@@ -1375,8 +1375,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-piena-21-aprile-2027": {
-      "body_words": 486,
-      "bytes": 12551,
+      "body_words": 488,
+      "bytes": 12585,
       "canonical": "https://www.steliara.com/moon/it/luna-piena-21-aprile-2027",
       "description_length": 136,
       "empty_i18n_nodes": 0,
@@ -1389,8 +1389,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-piena-21-febbraio-2027": {
-      "body_words": 488,
-      "bytes": 12608,
+      "body_words": 490,
+      "bytes": 12642,
       "canonical": "https://www.steliara.com/moon/it/luna-piena-21-febbraio-2027",
       "description_length": 136,
       "empty_i18n_nodes": 0,
@@ -1403,8 +1403,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-piena-22-gennaio-2027": {
-      "body_words": 490,
-      "bytes": 12567,
+      "body_words": 492,
+      "bytes": 12601,
       "canonical": "https://www.steliara.com/moon/it/luna-piena-22-gennaio-2027",
       "description_length": 133,
       "empty_i18n_nodes": 0,
@@ -1417,8 +1417,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-piena-22-marzo-2027": {
-      "body_words": 479,
-      "bytes": 12480,
+      "body_words": 481,
+      "bytes": 12514,
       "canonical": "https://www.steliara.com/moon/it/luna-piena-22-marzo-2027",
       "description_length": 134,
       "empty_i18n_nodes": 0,
@@ -1431,8 +1431,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-piena-24-dicembre-2026": {
-      "body_words": 485,
-      "bytes": 12563,
+      "body_words": 487,
+      "bytes": 12597,
       "canonical": "https://www.steliara.com/moon/it/luna-piena-24-dicembre-2026",
       "description_length": 135,
       "empty_i18n_nodes": 0,
@@ -1445,8 +1445,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-piena-24-novembre-2026": {
-      "body_words": 484,
-      "bytes": 12616,
+      "body_words": 486,
+      "bytes": 12650,
       "canonical": "https://www.steliara.com/moon/it/luna-piena-24-novembre-2026",
       "description_length": 136,
       "empty_i18n_nodes": 0,
@@ -1459,8 +1459,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/new-moon-april-6-2027": {
-      "body_words": 492,
-      "bytes": 12270,
+      "body_words": 494,
+      "bytes": 12304,
       "canonical": "https://www.steliara.com/moon/new-moon-april-6-2027",
       "description_length": 131,
       "empty_i18n_nodes": 0,
@@ -1473,8 +1473,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/new-moon-december-8-2026": {
-      "body_words": 485,
-      "bytes": 12386,
+      "body_words": 487,
+      "bytes": 12420,
       "canonical": "https://www.steliara.com/moon/new-moon-december-8-2026",
       "description_length": 140,
       "empty_i18n_nodes": 0,
@@ -1487,8 +1487,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/new-moon-february-6-2027": {
-      "body_words": 479,
-      "bytes": 12340,
+      "body_words": 481,
+      "bytes": 12374,
       "canonical": "https://www.steliara.com/moon/new-moon-february-6-2027",
       "description_length": 138,
       "empty_i18n_nodes": 0,
@@ -1501,8 +1501,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/new-moon-january-7-2027": {
-      "body_words": 481,
-      "bytes": 12348,
+      "body_words": 483,
+      "bytes": 12382,
       "canonical": "https://www.steliara.com/moon/new-moon-january-7-2027",
       "description_length": 137,
       "empty_i18n_nodes": 0,
@@ -1515,8 +1515,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/new-moon-june-4-2027": {
-      "body_words": 487,
-      "bytes": 12234,
+      "body_words": 489,
+      "bytes": 12268,
       "canonical": "https://www.steliara.com/moon/new-moon-june-4-2027",
       "description_length": 131,
       "empty_i18n_nodes": 0,
@@ -1529,8 +1529,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/new-moon-march-8-2027": {
-      "body_words": 485,
-      "bytes": 12248,
+      "body_words": 487,
+      "bytes": 12282,
       "canonical": "https://www.steliara.com/moon/new-moon-march-8-2027",
       "description_length": 132,
       "empty_i18n_nodes": 0,
@@ -1543,8 +1543,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/new-moon-may-6-2027": {
-      "body_words": 486,
-      "bytes": 12188,
+      "body_words": 488,
+      "bytes": 12222,
       "canonical": "https://www.steliara.com/moon/new-moon-may-6-2027",
       "description_length": 130,
       "empty_i18n_nodes": 0,
@@ -1557,8 +1557,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/new-moon-november-9-2026": {
-      "body_words": 481,
-      "bytes": 12145,
+      "body_words": 483,
+      "bytes": 12179,
       "canonical": "https://www.steliara.com/moon/new-moon-november-9-2026",
       "description_length": 136,
       "empty_i18n_nodes": 0,
@@ -1571,8 +1571,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl": {
-      "body_words": 1416,
-      "bytes": 37701,
+      "body_words": 1418,
+      "bytes": 37735,
       "canonical": "https://www.steliara.com/moon/pl",
       "description_length": 157,
       "empty_i18n_nodes": 0,
@@ -1585,8 +1585,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/now-4-czerwca-2027": {
-      "body_words": 423,
-      "bytes": 12529,
+      "body_words": 425,
+      "bytes": 12563,
       "canonical": "https://www.steliara.com/moon/pl/now-4-czerwca-2027",
       "description_length": 147,
       "empty_i18n_nodes": 0,
@@ -1599,8 +1599,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/now-6-lutego-2027": {
-      "body_words": 419,
-      "bytes": 12520,
+      "body_words": 421,
+      "bytes": 12554,
       "canonical": "https://www.steliara.com/moon/pl/now-6-lutego-2027",
       "description_length": 143,
       "empty_i18n_nodes": 0,
@@ -1613,8 +1613,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/now-6-maja-2027": {
-      "body_words": 426,
-      "bytes": 12432,
+      "body_words": 428,
+      "bytes": 12466,
       "canonical": "https://www.steliara.com/moon/pl/now-6-maja-2027",
       "description_length": 138,
       "empty_i18n_nodes": 0,
@@ -1627,8 +1627,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/now-7-kwietnia-2027": {
-      "body_words": 430,
-      "bytes": 12559,
+      "body_words": 432,
+      "bytes": 12593,
       "canonical": "https://www.steliara.com/moon/pl/now-7-kwietnia-2027",
       "description_length": 144,
       "empty_i18n_nodes": 0,
@@ -1641,8 +1641,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/now-7-stycznia-2027": {
-      "body_words": 424,
-      "bytes": 12613,
+      "body_words": 426,
+      "bytes": 12647,
       "canonical": "https://www.steliara.com/moon/pl/now-7-stycznia-2027",
       "description_length": 149,
       "empty_i18n_nodes": 0,
@@ -1655,8 +1655,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/now-8-marca-2027": {
-      "body_words": 423,
-      "bytes": 12481,
+      "body_words": 425,
+      "bytes": 12515,
       "canonical": "https://www.steliara.com/moon/pl/now-8-marca-2027",
       "description_length": 140,
       "empty_i18n_nodes": 0,
@@ -1669,8 +1669,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/now-9-grudnia-2026": {
-      "body_words": 423,
-      "bytes": 12571,
+      "body_words": 425,
+      "bytes": 12605,
       "canonical": "https://www.steliara.com/moon/pl/now-9-grudnia-2026",
       "description_length": 146,
       "empty_i18n_nodes": 0,
@@ -1683,8 +1683,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/now-9-listopada-2026": {
-      "body_words": 418,
-      "bytes": 12395,
+      "body_words": 420,
+      "bytes": 12429,
       "canonical": "https://www.steliara.com/moon/pl/now-9-listopada-2026",
       "description_length": 148,
       "empty_i18n_nodes": 0,
@@ -1697,8 +1697,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/pelnia-19-czerwca-2027": {
-      "body_words": 432,
-      "bytes": 12457,
+      "body_words": 434,
+      "bytes": 12491,
       "canonical": "https://www.steliara.com/moon/pl/pelnia-19-czerwca-2027",
       "description_length": 150,
       "empty_i18n_nodes": 0,
@@ -1711,8 +1711,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/pelnia-20-maja-2027": {
-      "body_words": 440,
-      "bytes": 12621,
+      "body_words": 442,
+      "bytes": 12655,
       "canonical": "https://www.steliara.com/moon/pl/pelnia-20-maja-2027",
       "description_length": 147,
       "empty_i18n_nodes": 0,
@@ -1725,8 +1725,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/pelnia-21-kwietnia-2027": {
-      "body_words": 440,
-      "bytes": 12711,
+      "body_words": 442,
+      "bytes": 12745,
       "canonical": "https://www.steliara.com/moon/pl/pelnia-21-kwietnia-2027",
       "description_length": 150,
       "empty_i18n_nodes": 0,
@@ -1739,8 +1739,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/pelnia-21-lutego-2027": {
-      "body_words": 441,
-      "bytes": 12698,
+      "body_words": 443,
+      "bytes": 12732,
       "canonical": "https://www.steliara.com/moon/pl/pelnia-21-lutego-2027",
       "description_length": 145,
       "empty_i18n_nodes": 0,
@@ -1753,8 +1753,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/pelnia-22-marca-2027": {
-      "body_words": 438,
-      "bytes": 12616,
+      "body_words": 440,
+      "bytes": 12650,
       "canonical": "https://www.steliara.com/moon/pl/pelnia-22-marca-2027",
       "description_length": 143,
       "empty_i18n_nodes": 0,
@@ -1767,8 +1767,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/pelnia-22-stycznia-2027": {
-      "body_words": 442,
-      "bytes": 12706,
+      "body_words": 444,
+      "bytes": 12740,
       "canonical": "https://www.steliara.com/moon/pl/pelnia-22-stycznia-2027",
       "description_length": 145,
       "empty_i18n_nodes": 0,
@@ -1781,8 +1781,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/pelnia-24-grudnia-2026": {
-      "body_words": 442,
-      "bytes": 12677,
+      "body_words": 444,
+      "bytes": 12711,
       "canonical": "https://www.steliara.com/moon/pl/pelnia-24-grudnia-2026",
       "description_length": 144,
       "empty_i18n_nodes": 0,
@@ -1795,8 +1795,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl/pelnia-24-listopada-2026": {
-      "body_words": 441,
-      "bytes": 12812,
+      "body_words": 443,
+      "bytes": 12846,
       "canonical": "https://www.steliara.com/moon/pl/pelnia-24-listopada-2026",
       "description_length": 152,
       "empty_i18n_nodes": 0,
@@ -1809,8 +1809,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt": {
-      "body_words": 1706,
-      "bytes": 37340,
+      "body_words": 1708,
+      "bytes": 37374,
       "canonical": "https://www.steliara.com/moon/pt",
       "description_length": 157,
       "empty_i18n_nodes": 0,
@@ -1823,8 +1823,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-cheia-18-de-junho-de-2027": {
-      "body_words": 543,
-      "bytes": 12579,
+      "body_words": 545,
+      "bytes": 12613,
       "canonical": "https://www.steliara.com/moon/pt/lua-cheia-18-de-junho-de-2027",
       "description_length": 150,
       "empty_i18n_nodes": 0,
@@ -1837,8 +1837,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-cheia-20-de-abril-de-2027": {
-      "body_words": 547,
-      "bytes": 12816,
+      "body_words": 549,
+      "bytes": 12850,
       "canonical": "https://www.steliara.com/moon/pt/lua-cheia-20-de-abril-de-2027",
       "description_length": 149,
       "empty_i18n_nodes": 0,
@@ -1851,8 +1851,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-cheia-20-de-fevereiro-de-2027": {
-      "body_words": 550,
-      "bytes": 12888,
+      "body_words": 552,
+      "bytes": 12922,
       "canonical": "https://www.steliara.com/moon/pt/lua-cheia-20-de-fevereiro-de-2027",
       "description_length": 150,
       "empty_i18n_nodes": 0,
@@ -1865,8 +1865,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-cheia-20-de-maio-de-2027": {
-      "body_words": 547,
-      "bytes": 12779,
+      "body_words": 549,
+      "bytes": 12813,
       "canonical": "https://www.steliara.com/moon/pt/lua-cheia-20-de-maio-de-2027",
       "description_length": 149,
       "empty_i18n_nodes": 0,
@@ -1879,8 +1879,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-cheia-22-de-janeiro-de-2027": {
-      "body_words": 550,
-      "bytes": 12849,
+      "body_words": 552,
+      "bytes": 12883,
       "canonical": "https://www.steliara.com/moon/pt/lua-cheia-22-de-janeiro-de-2027",
       "description_length": 146,
       "empty_i18n_nodes": 0,
@@ -1893,8 +1893,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-cheia-22-de-marco-de-2027": {
-      "body_words": 542,
-      "bytes": 12749,
+      "body_words": 544,
+      "bytes": 12783,
       "canonical": "https://www.steliara.com/moon/pt/lua-cheia-22-de-marco-de-2027",
       "description_length": 145,
       "empty_i18n_nodes": 0,
@@ -1907,8 +1907,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-cheia-23-de-dezembro-de-2026": {
-      "body_words": 546,
-      "bytes": 12855,
+      "body_words": 548,
+      "bytes": 12889,
       "canonical": "https://www.steliara.com/moon/pt/lua-cheia-23-de-dezembro-de-2026",
       "description_length": 149,
       "empty_i18n_nodes": 0,
@@ -1921,8 +1921,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-cheia-24-de-novembro-de-2026": {
-      "body_words": 549,
-      "bytes": 12893,
+      "body_words": 551,
+      "bytes": 12927,
       "canonical": "https://www.steliara.com/moon/pt/lua-cheia-24-de-novembro-de-2026",
       "description_length": 149,
       "empty_i18n_nodes": 0,
@@ -1935,8 +1935,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-nova-4-de-junho-de-2027": {
-      "body_words": 523,
-      "bytes": 12609,
+      "body_words": 525,
+      "bytes": 12643,
       "canonical": "https://www.steliara.com/moon/pt/lua-nova-4-de-junho-de-2027",
       "description_length": 145,
       "empty_i18n_nodes": 0,
@@ -1949,8 +1949,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-nova-6-de-abril-de-2027": {
-      "body_words": 527,
-      "bytes": 12618,
+      "body_words": 529,
+      "bytes": 12652,
       "canonical": "https://www.steliara.com/moon/pt/lua-nova-6-de-abril-de-2027",
       "description_length": 144,
       "empty_i18n_nodes": 0,
@@ -1963,8 +1963,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-nova-6-de-fevereiro-de-2027": {
-      "body_words": 517,
-      "bytes": 12701,
+      "body_words": 519,
+      "bytes": 12735,
       "canonical": "https://www.steliara.com/moon/pt/lua-nova-6-de-fevereiro-de-2027",
       "description_length": 150,
       "empty_i18n_nodes": 0,
@@ -1977,8 +1977,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-nova-6-de-maio-de-2027": {
-      "body_words": 523,
-      "bytes": 12559,
+      "body_words": 525,
+      "bytes": 12593,
       "canonical": "https://www.steliara.com/moon/pt/lua-nova-6-de-maio-de-2027",
       "description_length": 143,
       "empty_i18n_nodes": 0,
@@ -1991,8 +1991,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-nova-7-de-janeiro-de-2027": {
-      "body_words": 526,
-      "bytes": 12731,
+      "body_words": 528,
+      "bytes": 12765,
       "canonical": "https://www.steliara.com/moon/pt/lua-nova-7-de-janeiro-de-2027",
       "description_length": 152,
       "empty_i18n_nodes": 0,
@@ -2005,8 +2005,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-nova-8-de-dezembro-de-2026": {
-      "body_words": 526,
-      "bytes": 12760,
+      "body_words": 528,
+      "bytes": 12794,
       "canonical": "https://www.steliara.com/moon/pt/lua-nova-8-de-dezembro-de-2026",
       "description_length": 151,
       "empty_i18n_nodes": 0,
@@ -2019,8 +2019,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-nova-8-de-marco-de-2027": {
-      "body_words": 525,
-      "bytes": 12632,
+      "body_words": 527,
+      "bytes": 12666,
       "canonical": "https://www.steliara.com/moon/pt/lua-nova-8-de-marco-de-2027",
       "description_length": 145,
       "empty_i18n_nodes": 0,
@@ -2033,8 +2033,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pt/lua-nova-9-de-novembro-de-2026": {
-      "body_words": 518,
-      "bytes": 12535,
+      "body_words": 520,
+      "bytes": 12569,
       "canonical": "https://www.steliara.com/moon/pt/lua-nova-9-de-novembro-de-2026",
       "description_length": 151,
       "empty_i18n_nodes": 0,
@@ -2047,8 +2047,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/pricing.html": {
-      "body_words": 312,
-      "bytes": 22072,
+      "body_words": 316,
+      "bytes": 22263,
       "canonical": "https://www.steliara.com/pricing.html",
       "description_length": 143,
       "empty_i18n_nodes": 0,
@@ -2061,8 +2061,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/record-astrology-consultations": {
-      "body_words": 1683,
-      "bytes": 25310,
+      "body_words": 1687,
+      "bytes": 25417,
       "canonical": "https://www.steliara.com/record-astrology-consultations",
       "description_length": 163,
       "empty_i18n_nodes": 0,
@@ -2075,8 +2075,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/ru/": {
-      "body_words": 918,
-      "bytes": 63954,
+      "body_words": 924,
+      "bytes": 64180,
       "canonical": "https://www.steliara.com/ru/",
       "description_length": 149,
       "empty_i18n_nodes": 0,
@@ -2089,8 +2089,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/ru/pricing.html": {
-      "body_words": 290,
-      "bytes": 24066,
+      "body_words": 296,
+      "bytes": 24302,
       "canonical": "https://www.steliara.com/ru/pricing.html",
       "description_length": 148,
       "empty_i18n_nodes": 0,
@@ -2117,8 +2117,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/solar-fire-alternative": {
-      "body_words": 2380,
-      "bytes": 30950,
+      "body_words": 2384,
+      "bytes": 31057,
       "canonical": "https://www.steliara.com/solar-fire-alternative",
       "description_length": 162,
       "empty_i18n_nodes": 0,
@@ -2145,8 +2145,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/uk/": {
-      "body_words": 877,
-      "bytes": 63396,
+      "body_words": 883,
+      "bytes": 63632,
       "canonical": "https://www.steliara.com/uk/",
       "description_length": 143,
       "empty_i18n_nodes": 0,
@@ -2159,8 +2159,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/uk/pricing.html": {
-      "body_words": 281,
-      "bytes": 23959,
+      "body_words": 287,
+      "bytes": 24205,
       "canonical": "https://www.steliara.com/uk/pricing.html",
       "description_length": 145,
       "empty_i18n_nodes": 0,
