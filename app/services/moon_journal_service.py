@@ -74,7 +74,35 @@ def normalize_locale(locale: Optional[str]) -> str:
 _BOT_MARKERS = (
     "bot", "crawl", "spider", "slurp", "preview", "headless", "monitor", "curl/", "wget", "python-", "go-http",
     "facebookexternalhit", "lighthouse", "pingdom", "uptime",
+    # Found 2026-11-07: our own daily SEO audit ("SteliaraSEOAudit/1.0 (+https://...)") fetches all 112
+    # lunation pages every morning and was being counted as ~120 visitors a day. Tools announce
+    # themselves with a URL in the user agent; people's browsers never do.
+    "http", "audit", "indexnow", "check", "fetch", "scan", "validator", "inspectiontool", "googleother",
+    "chatgpt", "perplexity", "externalagent", "compatible;",
 )
+
+
+def looks_like_a_visitor(
+    user_agent: Optional[str],
+    fetch_mode: Optional[str] = None,
+    fetch_dest: Optional[str] = None,
+    purpose: Optional[str] = None,
+) -> bool:
+    """True for what is probably a person opening the page in a browser.
+
+    Every real browser says ``Mozilla/`` and none of them carries a URL or a tool name in its user
+    agent. Modern browsers also say how a request came about (Sec-Fetch-*): a page that someone
+    opened is a ``navigate`` to a ``document``, and a prefetch is announced. A header that is
+    missing proves nothing (older browsers), so it is not held against the request.
+    """
+    agent = (user_agent or "").lower()
+    if not agent.startswith("mozilla/") or any(marker in agent for marker in _BOT_MARKERS):
+        return False
+    if fetch_mode and fetch_mode.strip().lower() != "navigate":
+        return False
+    if fetch_dest and fetch_dest.strip().lower() != "document":
+        return False
+    return not any(word in (purpose or "").lower() for word in ("prefetch", "prerender"))
 
 
 def track(event: str, locale: str, **props: Any) -> None:
@@ -86,13 +114,30 @@ def track(event: str, locale: str, **props: Any) -> None:
     capture_anonymous(f"moon.{event}", {"locale": normalize_locale(locale), **props})
 
 
-def track_page_view(locale: str, page: str, user_agent: Optional[str], referer: Optional[str]) -> None:
-    """Count a visit to a moon page. Crawlers are left out; the referrer is reduced to its host."""
-    agent = (user_agent or "").lower()
-    if not agent or any(marker in agent for marker in _BOT_MARKERS):
+def track_page_view(
+    locale: str,
+    page: str,
+    user_agent: Optional[str],
+    referer: Optional[str],
+    *,
+    fetch_mode: Optional[str] = None,
+    fetch_dest: Optional[str] = None,
+    purpose: Optional[str] = None,
+    from_page: Optional[str] = None,
+) -> None:
+    """Count a visit to a moon page. Tools and crawlers are left out; the referrer is reduced to its host.
+
+    ``from_page`` says which kind of our own page the visitor came from (lunation, hub, other),
+    so the click from a dated page to its hub can be counted without a script on the page.
+    ``nav`` tells a browser that proved it navigated (Sec-Fetch-Mode) from one that said nothing.
+    """
+    if not looks_like_a_visitor(user_agent, fetch_mode, fetch_dest, purpose):
         return
     host = (urlsplit(referer or "").hostname or "").removeprefix("www.")
-    track("page_view", locale, page=page, referrer_host=host or "direct")
+    extra: Dict[str, Any] = {"nav": "navigate" if fetch_mode else "unknown"}
+    if from_page:
+        extra["from_page"] = from_page
+    track("page_view", locale, page=page, referrer_host=host or "direct", **extra)
 
 
 @lru_cache(maxsize=None)
