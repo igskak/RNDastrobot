@@ -59,7 +59,8 @@
      "q": "Czy to jest bezpłatne?",
      "a": "Tak. Kalkulator i listy są bezpłatne, a w każdym liście jest link do wypisania się."
     }
-   ]
+   ],
+   "formHook": "Podaj datę urodzenia: za minutę zobaczysz dom każdego nowiu i każdej pełni, a pytania możesz dostawać w ich dniu, bezpłatnie."
   },
   "letter": {
    "title": "Twój list księżycowy | Steliara",
@@ -424,6 +425,9 @@
     "q": "W którym domu mojego horoskopu wypada?",
     "a": "To zależy od Twojego ascendentu. Tabela na tej stronie podaje wszystkie dwanaście, a kalkulator znajdzie Twój na podstawie daty urodzenia."
    }
-  ]
+  ],
+  "hookTitle": "Ten sam Księżyc wypada w innym domu w każdym horoskopie",
+  "hookText": "Kalendarz Księżyca pokaże, w którym domu Twojego horoskopu wypada każdy nów i każda pełnia, a w ich dniu wyśle Ci trzy pytania. Bezpłatnie, za każdym razem około pięciu minut.",
+  "hookLink": "Otwórz kalendarz Księżyca"
  }
 }

@@ -25,7 +25,7 @@ const outRoot = path.join(frontendRoot, 'moon');
 const ORIGIN = 'https://www.steliara.com';
 const LOCALES = ['en', 'pl', 'de', 'fr', 'it', 'es', 'pt'];
 const PAGES = ['index', 'letter'];
-const ASSET_VERSION = '3';
+const ASSET_VERSION = '4';
 
 const TIMEZONES = [
     'Europe/Warsaw', 'Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/Paris', 'Europe/Brussels',
@@ -356,6 +356,7 @@ function indexMain(catalog, letters, lunations, links) {
           <div class="moon-highlight-copy"></div>
         </section>
         <div class="moon-primary">
+          <p class="form-hook">${esc(page.formHook)}</p>
           <form id="moon-form" class="card" novalidate>${birthFields(catalog)}
             <p id="form-error" class="error" role="alert" hidden></p>
             <button class="btn" type="submit" data-label="${esc(ui.calculate)}" data-busy="${esc(ui.calculating)}">${esc(ui.calculate)}</button>
@@ -524,6 +525,11 @@ function lunationMain(locale, catalog, letters, plan, index, catalogs) {
           <div><dt>${esc(lp.factUtc)}</dt><dd>${esc(v.utc)}</dd></div>
           <div><dt>${esc(lp.factSign)}</dt><dd>${esc(`${v.sign} ${v.degree}°`)}</dd></div>
         </dl>
+      </section>
+      <section class="card hook" aria-labelledby="hook-title">
+        <h2 id="hook-title">${esc(lp.hookTitle)}</h2>
+        <p>${esc(lp.hookText)}</p>
+        <a class="hook-link" href="${pagePath(locale)}">${esc(lp.hookLink)} <span aria-hidden="true">→</span></a>
       </section>
       <section class="card theme" aria-labelledby="theme-title">
         <h2 id="theme-title">${esc(fill(lp.aboutTitle, { sign: v.sign }))}</h2>
