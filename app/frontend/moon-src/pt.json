@@ -426,7 +426,7 @@
     "a": "Depende do seu ascendente. A tabela desta página lista os doze, e a calculadora encontra o seu a partir da data de nascimento."
    }
   ],
-  "hookTitle": "A mesma Lua cai num lugar diferente em cada mapa",
+  "hookTitle": "A mesma Lua cai em uma casa diferente em cada mapa",
   "hookText": "O calendário lunar mostra em que casa do seu mapa cai cada lua nova e cheia e envia três perguntas no próprio dia. Grátis, cerca de cinco minutos a cada vez.",
   "hookLink": "Abrir o calendário lunar"
  }
