@@ -59,7 +59,8 @@
      "q": "Ist das kostenlos?",
      "a": "Ja. Der Rechner und die Briefe sind kostenlos, und jeder Brief enthält einen Link zum Abmelden."
     }
-   ]
+   ],
+   "formHook": "Gib dein Geburtsdatum ein: In einer Minute siehst du das Haus jedes Neumonds und Vollmonds, und die Fragen kannst du dir am Tag selbst schicken lassen, kostenlos."
   },
   "letter": {
    "title": "Dein Mondbrief | Steliara",
@@ -424,6 +425,9 @@
     "q": "In welchem Haus meines Horoskops fällt er?",
     "a": "Das hängt von deinem Aszendenten ab. Die Tabelle auf dieser Seite nennt alle zwölf, und der Rechner findet deinen aus deinem Geburtsdatum."
    }
-  ]
+  ],
+  "hookTitle": "Derselbe Mond fällt in jedem Horoskop an eine andere Stelle",
+  "hookText": "Der Mondkalender zeigt dir, in welches Haus deines Horoskops jeder Neumond und Vollmond fällt, und schickt dir am Tag selbst drei Fragen. Kostenlos, jedes Mal etwa fünf Minuten.",
+  "hookLink": "Mondkalender öffnen"
  }
 }

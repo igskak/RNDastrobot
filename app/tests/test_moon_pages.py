@@ -197,3 +197,25 @@ def test_moon_and_kundli_pages_reach_the_home_page_only_through_one_visible_foot
     # The English pages of the two free-tool sets point at each other.
     assert "/kundli" in _facts(client, "/moon")[1].links
     assert "/moon" in _facts(client, "/kundli")[1].links
+
+
+@pytest.mark.parametrize("locale", LOCALES)
+def test_every_lunation_page_hooks_the_visitor_to_the_hub_right_after_the_facts(client, locale):
+    """The visitor came for the date. Right after the facts they see why the calendar is worth a
+    click, and the link goes to that language's hub (a plain visible link, no tracking tricks)."""
+    for _, loc, path in LUNATION_PAGES:
+        if loc != locale:
+            continue
+        html = client.get(path).text
+        hook = html.index('class="card hook"')
+        assert html.index('id="facts-title"') < hook < html.index('id="theme-title"'), path
+        block = html[hook : html.index("</section>", hook)]
+        assert f'<a class="hook-link" href="{INDEX[locale]}">' in block, path
+        assert CATALOGS[locale]["lunationPage"]["hookTitle"].split(" ")[0] in block, path
+
+
+@pytest.mark.parametrize("locale", LOCALES)
+def test_the_hub_opens_with_a_line_that_asks_for_the_action_it_wants(client, locale):
+    html = client.get(INDEX[locale]).text
+    line = CATALOGS[locale]["pages"]["index"]["formHook"]
+    assert line.split(":")[0] in html and html.index('class="form-hook"') < html.index('id="moon-form"')

@@ -59,7 +59,8 @@
      "q": "È gratuito?",
      "a": "Sì. Il calcolatore e le lettere sono gratuiti e ogni lettera contiene un link per annullare l'iscrizione."
     }
-   ]
+   ],
+   "formHook": "Inserisci la data di nascita: in un minuto vedi la casa di ogni luna nuova e piena e puoi ricevere le domande il giorno stesso, gratis."
   },
   "letter": {
    "title": "La tua lettera della Luna | Steliara",
@@ -424,6 +425,9 @@
     "q": "In quale casa del mio tema cade?",
     "a": "Dipende dal tuo ascendente. La tabella in questa pagina li elenca tutti e dodici, e il calcolatore trova il tuo dalla data di nascita."
    }
-  ]
+  ],
+  "hookTitle": "La stessa Luna cade in un punto diverso in ogni tema",
+  "hookText": "Il calendario lunare ti mostra in quale casa del tuo tema cade ogni luna nuova e piena e ti invia tre domande il giorno stesso. Gratis, circa cinque minuti ogni volta.",
+  "hookLink": "Apri il calendario lunare"
  }
 }

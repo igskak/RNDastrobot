@@ -64,7 +64,8 @@
      "q": "Is it free?",
      "a": "Yes. The calculator and the letters are free, and every letter has a link to unsubscribe."
     }
-   ]
+   ],
+   "formHook": "Enter your birth date: in a minute you will see the house of every new and full moon, and you can have the questions sent to you on the day, free."
   },
   "letter": {
    "title": "Your moon letter | Steliara",
@@ -429,6 +430,9 @@
     "q": "In which house of my chart does it fall?",
     "a": "It depends on your rising sign. The table on this page lists all twelve, and the calculator finds yours from your birth date."
    }
-  ]
+  ],
+  "hookTitle": "The same Moon lands in a different place in every chart",
+  "hookText": "The moon calendar shows where each new and full moon falls in your own chart and sends you three questions on the day. Free, about five minutes each time.",
+  "hookLink": "Open the moon calendar"
  }
 }

@@ -182,3 +182,9 @@ body[data-page="index"] > .site-header, body[data-page="index"] > .moon-page, bo
 .lang-links [aria-current="page"] { font-weight: 700; }
 .more h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.4rem; }
 @media (min-width: 640px) { .steps { grid-template-columns: 1fr 1fr; } .step.next { text-align: right; align-items: flex-end; grid-column: 2; } }
+.moon-primary .form-hook { margin: 0 0 14px; padding: 10px 14px; border-left: 3px solid var(--gold); background: #fffaf1; border-radius: 0 8px 8px 0; color: var(--text-2); font-size: .95rem; }
+.lunation-page .card.hook { border-color: var(--gold); background: #fffaf1; }
+.lunation-page .card.hook h2 { font-size: 1.25rem; }
+.lunation-page .card.hook p { margin: 0 0 10px; }
+.hook-link { font-weight: 600; }
+.hook-link:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 4px; }

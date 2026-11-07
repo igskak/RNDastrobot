@@ -59,7 +59,8 @@
      "q": "¿Es gratis?",
      "a": "Sí. La calculadora y las cartas son gratuitas, y cada carta tiene un enlace para darte de baja."
     }
-   ]
+   ],
+   "formHook": "Introduce tu fecha de nacimiento: en un minuto verás la casa de cada luna nueva y llena y podrás recibir las preguntas ese mismo día, gratis."
   },
   "letter": {
    "title": "Tu carta de la Luna | Steliara",
@@ -424,6 +425,9 @@
     "q": "¿En qué casa de mi carta cae?",
     "a": "Depende de tu ascendente. La tabla de esta página enumera los doce, y la calculadora encuentra el tuyo a partir de tu fecha de nacimiento."
    }
-  ]
+  ],
+  "hookTitle": "La misma Luna cae en un lugar distinto en cada carta",
+  "hookText": "El calendario lunar te muestra en qué casa de tu carta cae cada luna nueva y llena, y te envía tres preguntas ese mismo día. Gratis, unos cinco minutos cada vez.",
+  "hookLink": "Abrir el calendario lunar"
  }
 }
