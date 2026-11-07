@@ -400,6 +400,68 @@ def test_page_views_are_counted_without_identifying_anyone(client, events):
     assert len({e["distinct_id"] for e in events}) == 3  # no visitor can be followed across events
 
 
+REAL_BROWSERS = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0",
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
+)
+MACHINES = (
+    # Our own daily SEO audit: it fetched all 112 lunation pages every morning and was counted as visitors.
+    "SteliaraSEOAudit/1.0 (+https://www.steliara.com)",
+    "SteliaraIndexNow/1.0",
+    "Mozilla/5.0 (compatible; steliara-competitor-facts-check)",
+    "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.1; +https://openai.com/gptbot)",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+    "Mozilla/5.0 (compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user)",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36 Google-InspectionTool/1.0",
+    "Mozilla/5.0 (compatible; Bytespider; spider-feedback@bytedance.com)",
+    "python-requests/2.32", "curl/8.4.0", "Go-http-client/2.0", "node", "axios/1.6", "",
+)
+
+
+@pytest.mark.parametrize("agent", REAL_BROWSERS)
+def test_real_browsers_count_as_visitors(client, events, agent):
+    assert client.get("/moon/de", headers={"User-Agent": agent}).status_code == 200
+    assert len(events) == 1 and events[0]["properties"]["nav"] == "unknown"
+
+
+@pytest.mark.parametrize("agent", MACHINES)
+def test_tools_and_crawlers_never_count_as_visitors(client, events, agent):
+    assert client.get("/moon/de", headers={"User-Agent": agent}).status_code == 200
+    assert events == []
+
+
+def test_browsers_that_prove_they_navigated_are_counted_and_everything_else_is_not(client, events):
+    chrome = REAL_BROWSERS[2]
+    base = {"User-Agent": chrome}
+    client.get("/moon", headers={**base, "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Dest": "document"})
+    assert events[-1]["properties"]["nav"] == "navigate"
+    before = len(events)
+    client.get("/moon", headers={**base, "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty"})  # a script fetching the page
+    client.get("/moon", headers={**base, "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Dest": "iframe"})
+    client.get("/moon", headers={**base, "Sec-Purpose": "prefetch"})
+    client.get("/moon", headers={**base, "Purpose": "prefetch"})
+    assert len(events) == before
+
+
+def test_a_click_from_a_dated_page_to_the_hub_is_told_apart_from_other_arrivals(client, events):
+    browser = {"User-Agent": REAL_BROWSERS[0]}
+    dated = "/moon/new-moon-november-9-2026"
+    host = "http://testserver"
+    client.get("/moon", headers={**browser, "Referer": f"{host}{dated}"})
+    client.get("/moon/de", headers={**browser, "Referer": f"{host}/moon/de/neumond-9-november-2026.html"})
+    client.get("/moon/fr", headers={**browser, "Referer": f"{host}/moon/"})
+    client.get("/moon/pl", headers={**browser, "Referer": f"{host}/pricing.html"})
+    client.get("/moon/es", headers={**browser, "Referer": "https://www.google.com/"})
+    client.get("/moon/it", headers=browser)
+    kinds = [e["properties"].get("from_page") for e in events]
+    assert kinds == ["lunation", "lunation", "hub", "other", None, None]
+    assert "referrer_host" in events[0]["properties"] and "path" not in json.dumps(events).lower().replace("pathname", "")
+
+
 def test_nothing_is_sent_without_a_project_key(client, monkeypatch):
     sent_events = []
     monkeypatch.delenv("POSTHOG_PROJECT_API_KEY", raising=False)

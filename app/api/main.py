@@ -18,7 +18,7 @@ import threading
 import time
 import logging
 from typing import List, Optional
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 from dotenv import load_dotenv
 
 # Загрузка переменных окружения (из app/.env)
@@ -1123,10 +1123,31 @@ def _moon_document(request: Request, locale: str, page: str):
         raise HTTPException(status_code=404, detail="Page not found")
     folder = "moon" if locale == "en" else f"moon/{locale}"
     response = _serve_frontend_page(f"{folder}/{page}.html")
+    headers = request.headers
     moon_track_page_view(
-        locale, "lunation" if is_lunation else page, request.headers.get("user-agent"), request.headers.get("referer")
+        locale,
+        "lunation" if is_lunation else page,
+        headers.get("user-agent"),
+        headers.get("referer"),
+        fetch_mode=headers.get("sec-fetch-mode"),
+        fetch_dest=headers.get("sec-fetch-dest"),
+        purpose=headers.get("sec-purpose") or headers.get("purpose"),
+        from_page=_moon_referrer_kind(headers.get("referer"), headers.get("host")),
     )
     return response
+
+
+def _moon_referrer_kind(referer: Optional[str], host: Optional[str]) -> Optional[str]:
+    """Which kind of our own page a visitor came from: "lunation", "hub" or "other". None for outside referrers."""
+    if not referer or not host:
+        return None
+    parts = urlsplit(referer)
+    if (parts.hostname or "").removeprefix("www.") != host.split(":")[0].removeprefix("www."):
+        return None
+    path = parts.path.removesuffix(".html").rstrip("/") or "/"
+    if path in _MOON_LUNATION_GROUPS:
+        return "lunation"
+    return "hub" if path in _MOON_INDEX_PATHS else "other"
 
 
 @app.get("/moon/{locale}/{page}")
