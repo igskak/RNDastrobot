@@ -1,0 +1,299 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Steliara//Moon calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Steliara: Nów Księżyca / Pełnia Księżyca
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:PT24H
+BEGIN:VEVENT
+UID:new_moon-20261109T070207Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261109T070207Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Skorpionie 16°
+DESCRIPTION:https://www.steliara.com/moon/pl/now-9-listopada-2026
+URL:https://www.steliara.com/moon/pl/now-9-listopada-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261124T145334Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261124T145334Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Bliźniętach 2°
+DESCRIPTION:https://www.steliara.com/moon/pl/pelnia-24-listopada-2026
+URL:https://www.steliara.com/moon/pl/pelnia-24-listopada-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20261209T005151Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261209T005151Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Strzelcu 16°
+DESCRIPTION:https://www.steliara.com/moon/pl/now-9-grudnia-2026
+URL:https://www.steliara.com/moon/pl/now-9-grudnia-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261224T012814Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261224T012814Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Raku 2°
+DESCRIPTION:https://www.steliara.com/moon/pl/pelnia-24-grudnia-2026
+URL:https://www.steliara.com/moon/pl/pelnia-24-grudnia-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270107T202423Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270107T202423Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Koziorożcu 17°
+DESCRIPTION:https://www.steliara.com/moon/pl/now-7-stycznia-2027
+URL:https://www.steliara.com/moon/pl/now-7-stycznia-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270122T121723Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270122T121723Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Lwie 2°
+DESCRIPTION:https://www.steliara.com/moon/pl/pelnia-22-stycznia-2027
+URL:https://www.steliara.com/moon/pl/pelnia-22-stycznia-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270206T155607Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270206T155607Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Wodniku 17°
+DESCRIPTION:https://www.steliara.com/moon/pl/now-6-lutego-2027
+URL:https://www.steliara.com/moon/pl/now-6-lutego-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270220T232339Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270220T232339Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Pannie 2°
+DESCRIPTION:https://www.steliara.com/moon/pl/pelnia-21-lutego-2027
+URL:https://www.steliara.com/moon/pl/pelnia-21-lutego-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270308T092929Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270308T092929Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Rybach 17°
+DESCRIPTION:https://www.steliara.com/moon/pl/now-8-marca-2027
+URL:https://www.steliara.com/moon/pl/now-8-marca-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270322T104348Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270322T104348Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Wadze 1°
+DESCRIPTION:https://www.steliara.com/moon/pl/pelnia-22-marca-2027
+URL:https://www.steliara.com/moon/pl/pelnia-22-marca-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270406T235110Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270406T235110Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Baranie 16°
+DESCRIPTION:https://www.steliara.com/moon/pl/now-7-kwietnia-2027
+URL:https://www.steliara.com/moon/pl/now-7-kwietnia-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270420T222709Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270420T222709Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Skorpionie 0°
+DESCRIPTION:https://www.steliara.com/moon/pl/pelnia-21-kwietnia-2027
+URL:https://www.steliara.com/moon/pl/pelnia-21-kwietnia-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270506T105838Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270506T105838Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Byku 15°
+DESCRIPTION:https://www.steliara.com/moon/pl/now-6-maja-2027
+URL:https://www.steliara.com/moon/pl/now-6-maja-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270520T105901Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270520T105901Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Skorpionie 29°
+DESCRIPTION:https://www.steliara.com/moon/pl/pelnia-20-maja-2027
+URL:https://www.steliara.com/moon/pl/pelnia-20-maja-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270604T194021Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270604T194021Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Bliźniętach 13°
+DESCRIPTION:https://www.steliara.com/moon/pl/now-4-czerwca-2027
+URL:https://www.steliara.com/moon/pl/now-4-czerwca-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270619T004421Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270619T004421Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Strzelcu 27°
+DESCRIPTION:https://www.steliara.com/moon/pl/pelnia-19-czerwca-2027
+URL:https://www.steliara.com/moon/pl/pelnia-19-czerwca-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270704T030205Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270704T030205Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Raku 11°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270718T154456Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270718T154456Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Koziorożcu 25°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270802T100514Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270802T100514Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Lwie 9°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270817T072842Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270817T072842Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Wodniku 24°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270831T174111Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270831T174111Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Pannie 8°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270915T230331Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270915T230331Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Rybach 22°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270930T023605Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270930T023605Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Wadze 6°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271015T134701Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271015T134701Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Baranie 21°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271029T133634Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271029T133634Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Skorpionie 5°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271114T032556Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271114T032556Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Byku 21°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271128T032426Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271128T032426Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Strzelcu 5°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271213T160848Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271213T160848Z
+DURATION:PT30M
+SUMMARY:Pełnia Księżyca w Bliźniętach 21°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271227T201220Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271227T201220Z
+DURATION:PT30M
+SUMMARY:Nów Księżyca w Koziorożcu 5°
+DESCRIPTION:https://www.steliara.com/moon/pl
+URL:https://www.steliara.com/moon/pl
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

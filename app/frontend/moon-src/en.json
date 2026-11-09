@@ -434,5 +434,82 @@
   "hookTitle": "The same Moon falls in a different house in every chart",
   "hookText": "The moon calendar shows where each new and full moon falls in your own chart and sends you three questions on the day. Free, about five minutes each time.",
   "hookLink": "Open the moon calendar"
+ },
+ "tools": {
+  "title": "Take the dates with you",
+  "calendarLink": "Subscribe in your calendar",
+  "calendarDownload": "download the .ics file",
+  "calendarNote": "Every new and full moon through 2027, in your own time zone.",
+  "plannerLink": "Print the 2027 moon planner",
+  "plannerNote": "All the dates, one question each, room to write.",
+  "dataLink": "Dates, method and downloads"
+ },
+ "planner": {
+  "title": "Moon Journal Planner 2027: Printable New & Full Moon Dates",
+  "description": "Free printable 2027 moon planner: every new and full moon with date, time in your time zone and zodiac sign, a journal question and space to write.",
+  "h1": "Moon journal planner 2027",
+  "lead": "Every new moon and full moon of 2027 on a page you can print, each with a journal question and room to write. Pick your time zone first and the times follow it.",
+  "timesNote": "Times are in {tz}.",
+  "print": "Print the planner",
+  "questionLabel": "Question",
+  "notesLabel": "Notes",
+  "calendarText": "Want the dates on your phone too?",
+  "hubText": "The dates are the same for everyone. What each moon touches in your life depends on your chart.",
+  "hubLink": "See which house of your chart each one falls in"
+ },
+ "data": {
+  "title": "New & Full Moon Dates 2026–2027 in UTC: Data and Method",
+  "description": "Every new and full moon from November 2026 to December 2027 to the second in UTC, with CSV, JSON and calendar downloads, and how the times are calculated and checked.",
+  "h1": "New moon and full moon dates, 2026–2027",
+  "lead": "Every new moon and full moon from November 2026 to December 2027, to the second, in UTC. Download them as a table, as data or as a calendar. Free to use with a link back to this page.",
+  "tableTitle": "All dates in UTC",
+  "tableNote": "UTC is one clock for the whole planet. The local date can differ: the new moon of 9 December 2026 at 00:51 UTC falls on 8 December in New York (19:51) and on 9 December in Berlin (01:51).",
+  "headers": [
+   "Date and time (UTC)",
+   "Phase",
+   "Moon longitude",
+   "Sign"
+  ],
+  "downloadsTitle": "Downloads",
+  "downloads": [
+   {
+    "label": "Table (CSV)",
+    "href": "/moon/lunations.csv",
+    "text": "One row per lunation: time in UTC, phase, longitude, sign and degree."
+   },
+   {
+    "label": "Data (JSON)",
+    "href": "/moon/lunations.json",
+    "text": "The same rows for a program, with an ISO 8601 time in UTC."
+   },
+   {
+    "label": "Calendar (ICS)",
+    "href": "/moon/lunations.ics",
+    "text": "For Apple Calendar, Google Calendar and Outlook. Subscribe once and the dates stay in your calendar."
+   }
+  ],
+  "sections": [
+   {
+    "h2": "How the times are calculated",
+    "p": [
+     "Each moment is the exact instant at which the ecliptic longitude of the Moon equals that of the Sun (new moon) or differs from it by 180 degrees (full moon). The longitudes are apparent geocentric positions from the Swiss Ephemeris by Astrodienst, which is built on the planetary ephemerides of NASA's Jet Propulsion Laboratory.",
+     "The instant is found by halving a six-hour interval until the difference is far smaller than a second, then cut to the whole second. Times are in UTC, so there is no daylight saving or time-zone ambiguity. The sign is the tropical zodiac sign of the Moon's longitude at that instant, with signs starting at the March equinox point, and the degree is the whole degree inside the sign."
+    ]
+   },
+   {
+    "h2": "How we checked them",
+    "p": [
+     "On 9 November 2026 we compared all 29 dates in the table with an independent calculation made with the JPL DE421 ephemeris through the Skyfield library. The largest difference was 0.6 seconds, which is the second we cut off. We did not compare them with a calendar or an almanac: the check is against the ephemeris the others are built on."
+    ]
+   },
+   {
+    "h2": "Using the dates and sending corrections",
+    "p": [
+     "The dates are facts and free to use. A link back to this page is appreciated, in print too. If you compare them with another source and find a difference of more than a minute, tell us through the contact on the terms page and say which date and which source. We check it and publish the outcome here."
+    ]
+   }
+  ],
+  "contactLabel": "terms page",
+  "contactHref": "/terms.html"
  }
 }

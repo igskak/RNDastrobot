@@ -429,5 +429,26 @@
   "hookTitle": "Ten sam Księżyc wypada w innym domu w każdym horoskopie",
   "hookText": "Kalendarz Księżyca pokaże, w którym domu Twojego horoskopu wypada każdy nów i każda pełnia, a w ich dniu wyśle Ci trzy pytania. Bezpłatnie, za każdym razem około pięciu minut.",
   "hookLink": "Otwórz kalendarz Księżyca"
+ },
+ "tools": {
+  "title": "Zabierz daty ze sobą",
+  "calendarLink": "Zasubskrybuj w kalendarzu",
+  "calendarDownload": "pobierz plik .ics",
+  "calendarNote": "Wszystkie nowie i pełnie do końca 2027 roku, w Twojej strefie czasowej.",
+  "plannerLink": "Wydrukuj planer księżycowy 2027",
+  "plannerNote": "Wszystkie daty, po jednym pytaniu i miejsce na notatki."
+ },
+ "planner": {
+  "title": "Planer księżycowy 2027 do druku: nowie i pełnie Księżyca",
+  "description": "Darmowy planer księżycowy 2027 do druku: każdy nów i pełnia z datą, godziną w Twojej strefie i znakiem zodiaku, plus pytanie do dziennika i miejsce na notatki.",
+  "h1": "Planer księżycowy 2027 do dziennika",
+  "lead": "Wszystkie nowie i pełnie Księżyca w 2027 roku na stronie do wydruku, każdy z pytaniem do dziennika i miejscem na notatki. Najpierw wybierz strefę czasową, godziny dostosują się do niej.",
+  "timesNote": "Godziny w strefie: {tz}.",
+  "print": "Wydrukuj planer",
+  "questionLabel": "Pytanie",
+  "notesLabel": "Notatki",
+  "calendarText": "Chcesz mieć daty także w telefonie?",
+  "hubText": "Daty są takie same dla wszystkich. To, czego dotyka każdy nów czy pełnia w Twoim życiu, zależy od Twojego horoskopu.",
+  "hubLink": "Sprawdź, w którym domu Twojego horoskopu wypada każdy z nich"
  }
 }

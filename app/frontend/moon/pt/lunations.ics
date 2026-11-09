@@ -1,0 +1,304 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Steliara//Moon calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Steliara: Lua Nova / Lua Cheia
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:PT24H
+BEGIN:VEVENT
+UID:new_moon-20261109T070207Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261109T070207Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Escorpião 16°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-nova-9-de-novembro-de-2026
+URL:https://www.steliara.com/moon/pt/lua-nova-9-de-novembro-de-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261124T145334Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261124T145334Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Gêmeos 2°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-cheia-24-de-novembro-de-20
+ 26
+URL:https://www.steliara.com/moon/pt/lua-cheia-24-de-novembro-de-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20261209T005151Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261209T005151Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Sagitário 16°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-nova-8-de-dezembro-de-2026
+URL:https://www.steliara.com/moon/pt/lua-nova-8-de-dezembro-de-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261224T012814Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261224T012814Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Câncer 2°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-cheia-23-de-dezembro-de-20
+ 26
+URL:https://www.steliara.com/moon/pt/lua-cheia-23-de-dezembro-de-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270107T202423Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270107T202423Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Capricórnio 17°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-nova-7-de-janeiro-de-2027
+URL:https://www.steliara.com/moon/pt/lua-nova-7-de-janeiro-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270122T121723Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270122T121723Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Leão 2°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-cheia-22-de-janeiro-de-202
+ 7
+URL:https://www.steliara.com/moon/pt/lua-cheia-22-de-janeiro-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270206T155607Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270206T155607Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Aquário 17°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-nova-6-de-fevereiro-de-202
+ 7
+URL:https://www.steliara.com/moon/pt/lua-nova-6-de-fevereiro-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270220T232339Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270220T232339Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Virgem 2°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-cheia-20-de-fevereiro-de-2
+ 027
+URL:https://www.steliara.com/moon/pt/lua-cheia-20-de-fevereiro-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270308T092929Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270308T092929Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Peixes 17°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-nova-8-de-marco-de-2027
+URL:https://www.steliara.com/moon/pt/lua-nova-8-de-marco-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270322T104348Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270322T104348Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Libra 1°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-cheia-22-de-marco-de-2027
+URL:https://www.steliara.com/moon/pt/lua-cheia-22-de-marco-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270406T235110Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270406T235110Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Áries 16°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-nova-6-de-abril-de-2027
+URL:https://www.steliara.com/moon/pt/lua-nova-6-de-abril-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270420T222709Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270420T222709Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Escorpião 0°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-cheia-20-de-abril-de-2027
+URL:https://www.steliara.com/moon/pt/lua-cheia-20-de-abril-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270506T105838Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270506T105838Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Touro 15°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-nova-6-de-maio-de-2027
+URL:https://www.steliara.com/moon/pt/lua-nova-6-de-maio-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270520T105901Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270520T105901Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Escorpião 29°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-cheia-20-de-maio-de-2027
+URL:https://www.steliara.com/moon/pt/lua-cheia-20-de-maio-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270604T194021Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270604T194021Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Gêmeos 13°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-nova-4-de-junho-de-2027
+URL:https://www.steliara.com/moon/pt/lua-nova-4-de-junho-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270619T004421Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270619T004421Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Sagitário 27°
+DESCRIPTION:https://www.steliara.com/moon/pt/lua-cheia-18-de-junho-de-2027
+URL:https://www.steliara.com/moon/pt/lua-cheia-18-de-junho-de-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270704T030205Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270704T030205Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Câncer 11°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270718T154456Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270718T154456Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Capricórnio 25°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270802T100514Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270802T100514Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Leão 9°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270817T072842Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270817T072842Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Aquário 24°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270831T174111Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270831T174111Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Virgem 8°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270915T230331Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270915T230331Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Peixes 22°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270930T023605Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270930T023605Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Libra 6°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271015T134701Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271015T134701Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Áries 21°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271029T133634Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271029T133634Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Escorpião 5°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271114T032556Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271114T032556Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Touro 21°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271128T032426Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271128T032426Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Sagitário 5°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271213T160848Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271213T160848Z
+DURATION:PT30M
+SUMMARY:Lua Cheia em Gêmeos 21°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271227T201220Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271227T201220Z
+DURATION:PT30M
+SUMMARY:Lua Nova em Capricórnio 5°
+DESCRIPTION:https://www.steliara.com/moon/pt
+URL:https://www.steliara.com/moon/pt
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

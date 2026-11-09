@@ -188,3 +188,31 @@ body[data-page="index"] > .site-header, body[data-page="index"] > .moon-page, bo
 .lunation-page .card.hook p { margin: 0 0 10px; }
 .hook-link { font-weight: 600; }
 .hook-link:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+
+/* Free assets: tools card on the hub, the data page, the printable planner. */
+.tools-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.tools-list li { display: flex; flex-direction: column; gap: 2px; }
+.tools-list li span { color: var(--text-2); font-size: .9rem; }
+.moon-rail .card.tools { margin-top: 18px; }
+.moon-rail .card.tools h2, .data-page .card h2 { margin-top: 0; font-family: Georgia, "Times New Roman", serif; font-size: 1.3rem; }
+.data-page > .card, .data-page > .copy { max-width: 860px; margin-top: 18px; }
+.data-page table td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.planner-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin: 14px 0 6px; }
+.planner-controls select { min-height: 44px; }
+.planner-grid { display: grid; gap: 16px; margin: 14px 0 24px; }
+.planner-item { padding: 16px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: calc(var(--radius) - 4px); break-inside: avoid; }
+.planner-item h2 { margin: 0 0 4px; font-family: Georgia, "Times New Roman", serif; font-size: 1.2rem; }
+.planner-item p { margin: 4px 0; }
+.planner-item .when { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.planner-item .notes-label { margin-top: 10px; color: var(--text-2); font-size: .85rem; }
+.planner-item .lines { height: 5.6rem; background: repeating-linear-gradient(to bottom, transparent 0, transparent 1.75rem, var(--border) 1.75rem, var(--border) calc(1.75rem + 1px)); }
+.planner-more { max-width: 860px; }
+@media (min-width: 720px) { .planner-grid { grid-template-columns: 1fr 1fr; } }
+@media print {
+  .site-header, .site-footer .links, .no-print, .skip { display: none !important; }
+  body { background: #fff; color: #000; }
+  .planner-page { max-width: none; padding: 0; }
+  .planner-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .planner-item { border-color: #999; padding: 10px 12px; }
+  .planner-item .lines { height: 4.2rem; background: repeating-linear-gradient(to bottom, transparent 0, transparent 1.4rem, #999 1.4rem, #999 calc(1.4rem + 1px)); }
+}

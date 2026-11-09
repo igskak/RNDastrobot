@@ -1,0 +1,299 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Steliara//Moon calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Steliara: Neumond / Vollmond
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:PT24H
+BEGIN:VEVENT
+UID:new_moon-20261109T070207Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261109T070207Z
+DURATION:PT30M
+SUMMARY:Neumond im Skorpion 16°
+DESCRIPTION:https://www.steliara.com/moon/de/neumond-9-november-2026
+URL:https://www.steliara.com/moon/de/neumond-9-november-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261124T145334Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261124T145334Z
+DURATION:PT30M
+SUMMARY:Vollmond in den Zwillingen 2°
+DESCRIPTION:https://www.steliara.com/moon/de/vollmond-24-november-2026
+URL:https://www.steliara.com/moon/de/vollmond-24-november-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20261209T005151Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261209T005151Z
+DURATION:PT30M
+SUMMARY:Neumond im Schützen 16°
+DESCRIPTION:https://www.steliara.com/moon/de/neumond-9-dezember-2026
+URL:https://www.steliara.com/moon/de/neumond-9-dezember-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261224T012814Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261224T012814Z
+DURATION:PT30M
+SUMMARY:Vollmond im Krebs 2°
+DESCRIPTION:https://www.steliara.com/moon/de/vollmond-24-dezember-2026
+URL:https://www.steliara.com/moon/de/vollmond-24-dezember-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270107T202423Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270107T202423Z
+DURATION:PT30M
+SUMMARY:Neumond im Steinbock 17°
+DESCRIPTION:https://www.steliara.com/moon/de/neumond-7-januar-2027
+URL:https://www.steliara.com/moon/de/neumond-7-januar-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270122T121723Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270122T121723Z
+DURATION:PT30M
+SUMMARY:Vollmond im Löwen 2°
+DESCRIPTION:https://www.steliara.com/moon/de/vollmond-22-januar-2027
+URL:https://www.steliara.com/moon/de/vollmond-22-januar-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270206T155607Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270206T155607Z
+DURATION:PT30M
+SUMMARY:Neumond im Wassermann 17°
+DESCRIPTION:https://www.steliara.com/moon/de/neumond-6-februar-2027
+URL:https://www.steliara.com/moon/de/neumond-6-februar-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270220T232339Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270220T232339Z
+DURATION:PT30M
+SUMMARY:Vollmond in der Jungfrau 2°
+DESCRIPTION:https://www.steliara.com/moon/de/vollmond-21-februar-2027
+URL:https://www.steliara.com/moon/de/vollmond-21-februar-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270308T092929Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270308T092929Z
+DURATION:PT30M
+SUMMARY:Neumond in den Fischen 17°
+DESCRIPTION:https://www.steliara.com/moon/de/neumond-8-marz-2027
+URL:https://www.steliara.com/moon/de/neumond-8-marz-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270322T104348Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270322T104348Z
+DURATION:PT30M
+SUMMARY:Vollmond in der Waage 1°
+DESCRIPTION:https://www.steliara.com/moon/de/vollmond-22-marz-2027
+URL:https://www.steliara.com/moon/de/vollmond-22-marz-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270406T235110Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270406T235110Z
+DURATION:PT30M
+SUMMARY:Neumond im Widder 16°
+DESCRIPTION:https://www.steliara.com/moon/de/neumond-7-april-2027
+URL:https://www.steliara.com/moon/de/neumond-7-april-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270420T222709Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270420T222709Z
+DURATION:PT30M
+SUMMARY:Vollmond im Skorpion 0°
+DESCRIPTION:https://www.steliara.com/moon/de/vollmond-21-april-2027
+URL:https://www.steliara.com/moon/de/vollmond-21-april-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270506T105838Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270506T105838Z
+DURATION:PT30M
+SUMMARY:Neumond im Stier 15°
+DESCRIPTION:https://www.steliara.com/moon/de/neumond-6-mai-2027
+URL:https://www.steliara.com/moon/de/neumond-6-mai-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270520T105901Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270520T105901Z
+DURATION:PT30M
+SUMMARY:Vollmond im Skorpion 29°
+DESCRIPTION:https://www.steliara.com/moon/de/vollmond-20-mai-2027
+URL:https://www.steliara.com/moon/de/vollmond-20-mai-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270604T194021Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270604T194021Z
+DURATION:PT30M
+SUMMARY:Neumond in den Zwillingen 13°
+DESCRIPTION:https://www.steliara.com/moon/de/neumond-4-juni-2027
+URL:https://www.steliara.com/moon/de/neumond-4-juni-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270619T004421Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270619T004421Z
+DURATION:PT30M
+SUMMARY:Vollmond im Schützen 27°
+DESCRIPTION:https://www.steliara.com/moon/de/vollmond-19-juni-2027
+URL:https://www.steliara.com/moon/de/vollmond-19-juni-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270704T030205Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270704T030205Z
+DURATION:PT30M
+SUMMARY:Neumond im Krebs 11°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270718T154456Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270718T154456Z
+DURATION:PT30M
+SUMMARY:Vollmond im Steinbock 25°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270802T100514Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270802T100514Z
+DURATION:PT30M
+SUMMARY:Neumond im Löwen 9°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270817T072842Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270817T072842Z
+DURATION:PT30M
+SUMMARY:Vollmond im Wassermann 24°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270831T174111Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270831T174111Z
+DURATION:PT30M
+SUMMARY:Neumond in der Jungfrau 8°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270915T230331Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270915T230331Z
+DURATION:PT30M
+SUMMARY:Vollmond in den Fischen 22°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270930T023605Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270930T023605Z
+DURATION:PT30M
+SUMMARY:Neumond in der Waage 6°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271015T134701Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271015T134701Z
+DURATION:PT30M
+SUMMARY:Vollmond im Widder 21°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271029T133634Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271029T133634Z
+DURATION:PT30M
+SUMMARY:Neumond im Skorpion 5°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271114T032556Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271114T032556Z
+DURATION:PT30M
+SUMMARY:Vollmond im Stier 21°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271128T032426Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271128T032426Z
+DURATION:PT30M
+SUMMARY:Neumond im Schützen 5°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271213T160848Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271213T160848Z
+DURATION:PT30M
+SUMMARY:Vollmond in den Zwillingen 21°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271227T201220Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271227T201220Z
+DURATION:PT30M
+SUMMARY:Neumond im Steinbock 5°
+DESCRIPTION:https://www.steliara.com/moon/de
+URL:https://www.steliara.com/moon/de
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

@@ -429,5 +429,26 @@
   "hookTitle": "La stessa Luna cade in una casa diversa in ogni tema",
   "hookText": "Il calendario lunare ti mostra in quale casa del tuo tema cade ogni luna nuova e piena e ti invia tre domande il giorno stesso. Gratis, circa cinque minuti ogni volta.",
   "hookLink": "Apri il calendario lunare"
+ },
+ "tools": {
+  "title": "Porta le date con te",
+  "calendarLink": "Abbonati dal tuo calendario",
+  "calendarDownload": "scarica il file .ics",
+  "calendarNote": "Tutte le lune nuove e piene fino al 2027, nel tuo fuso orario.",
+  "plannerLink": "Stampa il planner lunare 2027",
+  "plannerNote": "Tutte le date, una domanda ciascuna, spazio per scrivere."
+ },
+ "planner": {
+  "title": "Planner lunare 2027 da stampare: lune nuove e lune piene",
+  "description": "Planner lunare 2027 gratuito da stampare: ogni luna nuova e piena con data, ora nel tuo fuso e segno, più una domanda per il diario e spazio per scrivere.",
+  "h1": "Planner lunare 2027 per il tuo diario",
+  "lead": "Tutte le lune nuove e le lune piene del 2027 in una pagina da stampare, ognuna con una domanda per il diario e lo spazio per scrivere. Scegli prima il tuo fuso orario: gli orari si adattano.",
+  "timesNote": "Orari in {tz}.",
+  "print": "Stampa il planner",
+  "questionLabel": "Domanda",
+  "notesLabel": "Appunti",
+  "calendarText": "Vuoi le date anche sul telefono?",
+  "hubText": "Le date sono uguali per tutti. Ciò che ogni luna tocca nella tua vita dipende dal tuo tema.",
+  "hubLink": "Scopri in quale casa del tuo tema cade ciascuna"
  }
 }

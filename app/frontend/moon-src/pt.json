@@ -429,5 +429,26 @@
   "hookTitle": "A mesma Lua cai em uma casa diferente em cada mapa",
   "hookText": "O calendário lunar mostra em que casa do seu mapa cai cada lua nova e cheia e envia três perguntas no próprio dia. Grátis, cerca de cinco minutos a cada vez.",
   "hookLink": "Abrir o calendário lunar"
+ },
+ "tools": {
+  "title": "Leve as datas com você",
+  "calendarLink": "Assinar no seu calendário",
+  "calendarDownload": "baixar o arquivo .ics",
+  "calendarNote": "Todas as luas novas e cheias até 2027, no seu fuso horário.",
+  "plannerLink": "Imprimir o planner lunar 2027",
+  "plannerNote": "Todas as datas, uma pergunta para cada uma e espaço para escrever."
+ },
+ "planner": {
+  "title": "Planner lunar 2027 para imprimir: luas novas e luas cheias",
+  "description": "Planner lunar 2027 grátis para imprimir: cada lua nova e cheia com data, hora no seu fuso horário e signo, mais uma pergunta para o diário e espaço para escrever.",
+  "h1": "Planner lunar 2027 para o seu diário",
+  "lead": "Todas as luas novas e luas cheias de 2027 em uma página para imprimir, cada uma com uma pergunta para o diário e espaço para escrever. Escolha primeiro o seu fuso horário e os horários se ajustam.",
+  "timesNote": "Horários em {tz}.",
+  "print": "Imprimir o planner",
+  "questionLabel": "Pergunta",
+  "notesLabel": "Anotações",
+  "calendarText": "Quer as datas também no celular?",
+  "hubText": "As datas são as mesmas para todos. O que cada lua toca na sua vida depende do seu mapa.",
+  "hubLink": "Veja em qual casa do seu mapa cada uma cai"
  }
 }

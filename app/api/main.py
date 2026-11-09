@@ -201,7 +201,7 @@ async def isolate_solo_marketing_routes(request: Request, call_next):
         _kundli_path(locale, slug) for locale in ("en", "hi") for slug in ("index", *_KUNDLI_SLUGS)
     }
     commercial_paths |= {moon_page_path(locale) for locale in MOON_LOCALES}
-    commercial_paths |= set(_MOON_LUNATION_GROUPS)
+    commercial_paths |= set(_MOON_LUNATION_GROUPS) | set(_MOON_PLANNER_GROUP) | {_MOON_DATA_PATH}
     # A prefixed URL is the same page in another language, so it needs the same fence.
     commercial_paths |= {
         localized_path_for("/pricing.html", locale) for locale in PREFIXED_LOCALES
@@ -539,7 +539,13 @@ def _kundli_sitemap_pages() -> tuple:
 # Public moon pages: one calculator page per market language, all one hreflang set. The
 # letter page sits behind a signed link and stays out of the sitemap (so it is noindexed).
 _MOON_HREFLANG = {"en": "en", "pl": "pl", "de": "de", "fr": "fr", "it": "it", "es": "es", "pt": "pt-BR"}
-_MOON_PAGES = ("index", "letter")
+_MOON_PAGES = ("index", "letter", "planner", "data")
+# Downloads built next to the pages: a calendar feed per language, the data as CSV and JSON (English only).
+_MOON_FILES = {
+    "lunations.ics": "text/calendar; charset=utf-8",
+    "lunations.csv": "text/csv; charset=utf-8",
+    "lunations.json": "application/json",
+}
 
 
 @lru_cache(maxsize=1)
@@ -565,9 +571,16 @@ _MOON_LUNATION_SLUGS = {
 }
 
 
+_MOON_PLANNER_GROUP = {f"{moon_page_path(locale)}/planner": locale for locale in MOON_LOCALES}
+_MOON_DATA_PATH = f"{moon_page_path('en')}/data"
+
+
 def _moon_sitemap_pages() -> tuple:
-    return tuple((moon_page_path(locale), "0.6") for locale in MOON_LOCALES) + tuple(
-        (path, "0.5") for paths in _moon_lunation_pages() for path in paths.values()
+    return (
+        tuple((moon_page_path(locale), "0.6") for locale in MOON_LOCALES)
+        + tuple((path, "0.5") for path in _MOON_PLANNER_GROUP)
+        + ((_MOON_DATA_PATH, "0.5"),)
+        + tuple((path, "0.5") for paths in _moon_lunation_pages() for path in paths.values())
     )
 
 
@@ -579,7 +592,7 @@ _KUNDLI_ALTERNATES = {
 
 # Bumped by hand when the public marketing pages change in substance. AI engines
 # weight recency, and an undated URL loses to a dated one.
-_SITEMAP_LASTMOD = "2026-11-06"
+_SITEMAP_LASTMOD = "2026-11-09"
 
 
 def _indexable_document_paths() -> frozenset:
@@ -651,6 +664,12 @@ async def sitemap_xml():
                 f'<xhtml:link rel="alternate" hreflang="{_MOON_HREFLANG[locale]}" href="{base}{moon_page_path(locale)}"/>'
                 for locale in MOON_LOCALES
             ) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{base}{moon_page_path("en")}"/>'
+            locale_paths = [path]
+        elif path in _MOON_PLANNER_GROUP:
+            alternates = "".join(
+                f'<xhtml:link rel="alternate" hreflang="{_MOON_HREFLANG[locale]}" href="{base}{moon_page_path(locale)}/planner"/>'
+                for locale in MOON_LOCALES
+            ) + f'<xhtml:link rel="alternate" hreflang="x-default" href="{base}{moon_page_path("en")}/planner"/>'
             locale_paths = [path]
         elif path in _MOON_LUNATION_GROUPS:
             group = _MOON_LUNATION_GROUPS[path]
@@ -771,6 +790,9 @@ They are not part of the product and need no account:
   (English {base}/moon, also German {base}/moon/de, French {base}/moon/fr,
   Italian {base}/moon/it, Spanish {base}/moon/es, Polish {base}/moon/pl,
   Portuguese {base}/moon/pt)
+- Moon calendar feed (subscribe in any calendar app): {base}/moon/lunations.ics
+- Printable 2027 moon journal planner: {base}/moon/planner
+- Exact new and full moon dates 2026-2027 in UTC, with method, CSV and JSON: {base}/moon/data
 - Kundli (Vedic) calculators: dasha, sade sati and kundli matching
   (English {base}/kundli, Hindi {base}/kundli/hi)
 
@@ -1117,6 +1139,12 @@ async def moon_hub_page(request: Request):
 
 
 def _moon_document(request: Request, locale: str, page: str):
+    if page in _MOON_FILES:
+        folder = "moon" if locale == "en" else f"moon/{locale}"
+        path = os.path.join(FRONTEND_PATH, folder, page)
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail="Page not found")
+        return FileResponse(path, media_type=_MOON_FILES[page], headers={"Cache-Control": "public, max-age=3600"})
     page = page[:-5] if page.endswith(".html") else page
     is_lunation = page in _MOON_LUNATION_SLUGS.get(locale, ())
     if page not in _MOON_PAGES and not is_lunation:

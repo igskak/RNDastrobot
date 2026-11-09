@@ -100,6 +100,8 @@ def test_catalogs_have_the_same_keys():
     def comparable(locale):
         result = shape(CATALOGS[locale])
         result["site"].pop("alsoFree", None)  # only the English pages point at the English-only kundli tools
+        result["tools"].pop("dataLink", None)  # the data page exists in English only
+        result.pop("data", None)
         return result
 
     english = comparable("en")
@@ -219,3 +221,72 @@ def test_the_hub_opens_with_a_line_that_asks_for_the_action_it_wants(client, loc
     html = client.get(INDEX[locale]).text
     line = CATALOGS[locale]["pages"]["index"]["formHook"]
     assert line.split(":")[0] in html and html.index('class="form-hook"') < html.index('id="moon-form"')
+
+
+# --- free assets: calendar feed, data page, printable planner -------------------------------------
+
+LUNATIONS = json.loads((SRC / "lunations.json").read_text(encoding="utf-8"))["lunations"]
+ICS = {loc: f"{INDEX[loc]}/lunations.ics" for loc in LOCALES}
+
+
+@pytest.mark.parametrize("locale", LOCALES)
+def test_calendar_feed_is_valid_and_complete(client, locale):
+    response = client.get(ICS[locale])
+    assert response.status_code == 200 and response.headers["content-type"].startswith("text/calendar")
+    text = response.content.decode("utf-8")
+    assert text.startswith("BEGIN:VCALENDAR\r\n") and text.endswith("END:VCALENDAR\r\n")
+    assert text.count("BEGIN:VEVENT") == text.count("END:VEVENT") == len(LUNATIONS)
+    assert all(len(line.encode("utf-8")) <= 75 for line in text.split("\r\n"))
+    uids = [line for line in text.split("\r\n") if line.startswith("UID:")]
+    assert len(set(uids)) == len(LUNATIONS)
+    first = LUNATIONS[0]["utc"].replace("-", "").replace(":", "")
+    assert f"DTSTART:{first}" in text
+    assert "/moon" in text and "https://www.steliara.com" in text
+
+
+def test_data_downloads_match_the_lunation_table(client):
+    rows = client.get("/moon/lunations.csv")
+    assert rows.status_code == 200 and rows.headers["content-type"].startswith("text/csv")
+    lines = rows.text.strip().split("\n")
+    assert lines[0] == "utc,phase,longitude,sign,degree" and len(lines) == len(LUNATIONS) + 1
+    assert lines[1].startswith(LUNATIONS[0]["utc"] + ",new_moon,")
+    data = client.get("/moon/lunations.json").json()
+    assert len(data["lunations"]) == len(LUNATIONS) and data["lunations"][0]["utc"] == LUNATIONS[0]["utc"]
+    assert all(0 <= row["longitude"] < 360 for row in data["lunations"])
+    for locale in LOCALES:
+        if locale != "en":
+            assert client.get(f"{INDEX[locale]}/lunations.csv").status_code == 404
+
+
+def test_data_page_is_indexable_english_only_and_lists_every_lunation(client):
+    response, facts = _facts(client, "/moon/data")
+    assert facts.canonical == "https://www.steliara.com/moon/data" and facts.h1 == 1
+    assert 15 <= len(facts.title.strip()) <= 70 and 70 <= len(facts.description) <= 170
+    assert "noindex" not in response.headers.get("x-robots-tag", "")
+    assert response.text.count("<time datetime=") == len(LUNATIONS)
+    assert {"/moon/lunations.csv", "/moon/lunations.json", "/moon/lunations.ics"} <= set(facts.links)
+    assert any(json.loads(block).get("@type") == "Dataset" for block in facts.ldjson)
+    assert client.get("/moon/pl/data").status_code == 404
+    assert "/moon/data" in client.get("/sitemap.xml").text
+
+
+@pytest.mark.parametrize("locale", LOCALES)
+def test_planner_pages_cover_2027_and_form_one_hreflang_set(client, locale):
+    path = f"{INDEX[locale]}/planner"
+    response, facts = _facts(client, path)
+    assert facts.lang == CATALOGS[locale]["lang"] and facts.h1 == 1
+    assert 15 <= len(facts.title.strip()) <= 70 and 70 <= len(facts.description) <= 170, (facts.title, len(facts.description))
+    assert facts.canonical == "https://www.steliara.com" + path
+    assert len(facts.alternates) == len(LOCALES) + 1 and facts.alternates["pt-BR"].endswith("/moon/pt/planner")
+    in_2027 = [lun for lun in LUNATIONS if lun["utc"].startswith("2027")]
+    assert response.text.count('class="planner-item"') == len(in_2027)
+    assert f"{INDEX[locale]}#moon-form" in facts.links and f"{INDEX[locale]}/lunations.ics" not in facts.links
+    assert f"webcal://www.steliara.com{ICS[locale]}" in response.text
+    assert f"<loc>https://www.steliara.com{path}</loc>" in client.get("/sitemap.xml").text
+
+
+@pytest.mark.parametrize("locale", LOCALES)
+def test_the_hub_offers_the_calendar_and_the_planner(client, locale):
+    html = client.get(INDEX[locale]).text
+    assert f'href="{ICS[locale]}" download' in html and f'href="{INDEX[locale]}/planner"' in html
+    assert ('href="/moon/data"' in html) == (locale == "en")
