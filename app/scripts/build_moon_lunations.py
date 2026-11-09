@@ -29,7 +29,8 @@ def build(start: datetime, end: datetime) -> dict:
     for lun in lunations_from(start, 40):
         if lun.utc > end:
             break
-        rows.append({"kind": lun.kind, "utc": lun.utc.isoformat() + "Z", "sign": lun.sign, "degree": lun.degree})
+        rows.append({"kind": lun.kind, "utc": lun.utc.isoformat() + "Z", "sign": lun.sign, "degree": lun.degree,
+                     "longitude": round(lun.longitude, 4)})
     return {"start": start.date().isoformat(), "end": end.date().isoformat(), "lunations": rows}
 
 

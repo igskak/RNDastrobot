@@ -1,0 +1,214 @@
+{
+ "description": "New moons and full moons, exact instants in UTC. longitude = ecliptic longitude of the Moon in degrees (tropical zodiac), sign and degree derived from it.",
+ "source": "Swiss Ephemeris (Astrodienst), apparent geocentric positions; checked against JPL DE421.",
+ "page": "https://www.steliara.com/moon/data",
+ "range": {
+  "start": "2026-11-01",
+  "end": "2027-12-31"
+ },
+ "lunations": [
+  {
+   "utc": "2026-11-09T07:02:07Z",
+   "phase": "new_moon",
+   "longitude": 226.8898,
+   "sign": "Scorpio",
+   "degree": 16
+  },
+  {
+   "utc": "2026-11-24T14:53:34Z",
+   "phase": "full_moon",
+   "longitude": 62.3362,
+   "sign": "Gemini",
+   "degree": 2
+  },
+  {
+   "utc": "2026-12-09T00:51:51Z",
+   "phase": "new_moon",
+   "longitude": 256.9466,
+   "sign": "Sagittarius",
+   "degree": 16
+  },
+  {
+   "utc": "2026-12-24T01:28:14Z",
+   "phase": "full_moon",
+   "longitude": 92.2328,
+   "sign": "Cancer",
+   "degree": 2
+  },
+  {
+   "utc": "2027-01-07T20:24:23Z",
+   "phase": "new_moon",
+   "longitude": 287.3043,
+   "sign": "Capricorn",
+   "degree": 17
+  },
+  {
+   "utc": "2027-01-22T12:17:23Z",
+   "phase": "full_moon",
+   "longitude": 122.2378,
+   "sign": "Leo",
+   "degree": 2
+  },
+  {
+   "utc": "2027-02-06T15:56:07Z",
+   "phase": "new_moon",
+   "longitude": 317.6271,
+   "sign": "Aquarius",
+   "degree": 17
+  },
+  {
+   "utc": "2027-02-20T23:23:39Z",
+   "phase": "full_moon",
+   "longitude": 152.0931,
+   "sign": "Virgo",
+   "degree": 2
+  },
+  {
+   "utc": "2027-03-08T09:29:29Z",
+   "phase": "new_moon",
+   "longitude": 347.5801,
+   "sign": "Pisces",
+   "degree": 17
+  },
+  {
+   "utc": "2027-03-22T10:43:48Z",
+   "phase": "full_moon",
+   "longitude": 181.5852,
+   "sign": "Libra",
+   "degree": 1
+  },
+  {
+   "utc": "2027-04-06T23:51:10Z",
+   "phase": "new_moon",
+   "longitude": 16.9518,
+   "sign": "Aries",
+   "degree": 16
+  },
+  {
+   "utc": "2027-04-20T22:27:09Z",
+   "phase": "full_moon",
+   "longitude": 210.6165,
+   "sign": "Scorpio",
+   "degree": 0
+  },
+  {
+   "utc": "2027-05-06T10:58:38Z",
+   "phase": "new_moon",
+   "longitude": 45.7089,
+   "sign": "Taurus",
+   "degree": 15
+  },
+  {
+   "utc": "2027-05-20T10:59:01Z",
+   "phase": "full_moon",
+   "longitude": 239.2255,
+   "sign": "Scorpio",
+   "degree": 29
+  },
+  {
+   "utc": "2027-06-04T19:40:21Z",
+   "phase": "new_moon",
+   "longitude": 73.972,
+   "sign": "Gemini",
+   "degree": 13
+  },
+  {
+   "utc": "2027-06-19T00:44:21Z",
+   "phase": "full_moon",
+   "longitude": 267.5574,
+   "sign": "Sagittarius",
+   "degree": 27
+  },
+  {
+   "utc": "2027-07-04T03:02:05Z",
+   "phase": "new_moon",
+   "longitude": 101.9565,
+   "sign": "Cancer",
+   "degree": 11
+  },
+  {
+   "utc": "2027-07-18T15:44:56Z",
+   "phase": "full_moon",
+   "longitude": 295.8126,
+   "sign": "Capricorn",
+   "degree": 25
+  },
+  {
+   "utc": "2027-08-02T10:05:14Z",
+   "phase": "new_moon",
+   "longitude": 129.9174,
+   "sign": "Leo",
+   "degree": 9
+  },
+  {
+   "utc": "2027-08-17T07:28:42Z",
+   "phase": "full_moon",
+   "longitude": 324.1968,
+   "sign": "Aquarius",
+   "degree": 24
+  },
+  {
+   "utc": "2027-08-31T17:41:11Z",
+   "phase": "new_moon",
+   "longitude": 158.1043,
+   "sign": "Virgo",
+   "degree": 8
+  },
+  {
+   "utc": "2027-09-15T23:03:31Z",
+   "phase": "full_moon",
+   "longitude": 352.8828,
+   "sign": "Pisces",
+   "degree": 22
+  },
+  {
+   "utc": "2027-09-30T02:36:05Z",
+   "phase": "new_moon",
+   "longitude": 186.724,
+   "sign": "Libra",
+   "degree": 6
+  },
+  {
+   "utc": "2027-10-15T13:47:01Z",
+   "phase": "full_moon",
+   "longitude": 21.9826,
+   "sign": "Aries",
+   "degree": 21
+  },
+  {
+   "utc": "2027-10-29T13:36:34Z",
+   "phase": "new_moon",
+   "longitude": 215.9036,
+   "sign": "Scorpio",
+   "degree": 5
+  },
+  {
+   "utc": "2027-11-14T03:25:56Z",
+   "phase": "full_moon",
+   "longitude": 51.5214,
+   "sign": "Taurus",
+   "degree": 21
+  },
+  {
+   "utc": "2027-11-28T03:24:26Z",
+   "phase": "new_moon",
+   "longitude": 245.6533,
+   "sign": "Sagittarius",
+   "degree": 5
+  },
+  {
+   "utc": "2027-12-13T16:08:48Z",
+   "phase": "full_moon",
+   "longitude": 81.4129,
+   "sign": "Gemini",
+   "degree": 21
+  },
+  {
+   "utc": "2027-12-27T20:12:20Z",
+   "phase": "new_moon",
+   "longitude": 275.8381,
+   "sign": "Capricorn",
+   "degree": 5
+  }
+ ]
+}

@@ -170,3 +170,17 @@ test('letter page without a valid token says so', async () => {
     await tick();
     assert.equal(forged.window.document.querySelector('#letter .error').textContent.length > 10, true);
 });
+
+test('the planner shows each moon in the chosen time zone and says which zone it is', () => {
+    const plannerSource = fs.readFileSync(path.join(appRoot, 'frontend', 'js', 'moon-planner.js'), 'utf8');
+    const dom = makeDom('planner.html', plannerSource, 'https://www.steliara.com/moon/planner', () => json(200, {}));
+    const { document, Event } = dom.window;
+    const select = document.getElementById('planner-tz');
+    select.value = 'America/New_York';
+    select.dispatchEvent(new Event('change'));
+    const first = document.querySelector('.planner-item');
+    const utc = new Date(first.getAttribute('data-utc'));
+    const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hourCycle: 'h23' }).format(utc));
+    assert.match(first.querySelector('time').textContent, new RegExp(`${hour % 12 || 12}:\\d\\d ${hour < 12 ? 'AM' : 'PM'}`));
+    assert.match(document.getElementById('planner-times').textContent, /^Times are in /);
+});

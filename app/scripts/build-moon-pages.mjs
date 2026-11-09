@@ -8,6 +8,10 @@
  * lunation table (app/scripts/build_moon_lunations.py) or this file (structure) and rebuild.
  * `--check` rebuilds in memory and fails on any difference, which is what CI runs.
  *
+ * Besides the pages it writes the free assets the pages link to: a calendar feed per language
+ * (lunations.ics), the English data page (data.html) with CSV and JSON downloads, and the printable
+ * 2027 planner per language (planner.html). All of them come from the same lunation table.
+ *
  * Sign and phase names come from the letter catalogs in app/services/moon_journal_content, so
  * the page and the email never name a sign differently. Dates are formatted here from those
  * catalogs rather than with Intl date styles, whose output changes between Node versions.
@@ -25,7 +29,7 @@ const outRoot = path.join(frontendRoot, 'moon');
 const ORIGIN = 'https://www.steliara.com';
 const LOCALES = ['en', 'pl', 'de', 'fr', 'it', 'es', 'pt'];
 const PAGES = ['index', 'letter'];
-const ASSET_VERSION = '4';
+const ASSET_VERSION = '5';
 
 const TIMEZONES = [
     'Europe/Warsaw', 'Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/Paris', 'Europe/Brussels',
@@ -343,7 +347,7 @@ function faqSection(page) {
       </section>`;
 }
 
-function indexMain(catalog, letters, lunations, links) {
+function indexMain(locale, catalog, letters, lunations, links) {
     const page = catalog.pages.index;
     const ui = catalog.ui;
     return `<main id="main" class="shell tool moon-page">
@@ -380,6 +384,7 @@ function indexMain(catalog, letters, lunations, links) {
         </div>
         <aside class="moon-rail">
 ${lunationTable(catalog, letters, lunations, links)}
+${toolsCard(locale, catalog)}
         </aside>
       </div>${copy(page)}${letterExample(catalog, letters, lunations)}${plans(catalog)}${linkCard(ui)}${faqSection(page)}
     </main>`;
@@ -605,7 +610,7 @@ function i18n(catalog) {
 
 function render(locale, slug, catalogs, letters, lunations, links) {
     const catalog = catalogs[locale];
-    const main = slug === 'index' ? indexMain(catalog, letters[locale], lunations, links) : letterMain(locale, catalog);
+    const main = slug === 'index' ? indexMain(locale, catalog, letters[locale], lunations, links) : letterMain(locale, catalog);
     const script = slug === 'index' ? 'moon-tool' : 'moon-letter';
     return `${head(locale, slug, catalog, catalogs)}
 <body data-page="${slug}" data-locale="${locale}">
@@ -615,6 +620,204 @@ function render(locale, slug, catalogs, letters, lunations, links) {
   ${footer(catalog)}
   <script type="application/json" id="moon-i18n">${JSON.stringify(i18n(catalog)).replace(/</g, '\\u003c')}</script>
   <script src="/js/${script}.js?v=${ASSET_VERSION}" defer></script>
+</body>
+</html>
+`;
+}
+
+// --- free assets: calendar feed, data page, printable planner -----------------------------------
+
+const PLANNER_YEAR = '2027';
+const ICS_HOST = 'www.steliara.com';
+const icsPath = (locale) => `${locale === 'en' ? '/moon' : `/moon/${locale}`}/lunations.ics`;
+
+function toolsCard(locale, catalog) {
+    const t = catalog.tools;
+    const data = t.dataLink
+        ? `\n          <li><a href="/moon/data">${esc(t.dataLink)}</a></li>`
+        : '';
+    return `        <section class="card tools reveal-on-scroll" aria-labelledby="tools-title">
+          <h2 id="tools-title">${esc(t.title)}</h2>
+          <ul class="tools-list">
+            <li><a href="webcal://${ICS_HOST}${icsPath(locale)}">${esc(t.calendarLink)}</a> (<a href="${icsPath(locale)}" download>${esc(t.calendarDownload)}</a>)<span>${esc(t.calendarNote)}</span></li>
+            <li><a href="${pagePath(locale, 'planner')}">${esc(t.plannerLink)}</a><span>${esc(t.plannerNote)}</span></li>${data}
+          </ul>
+        </section>`;
+}
+
+// RFC 5545: text values escape \ ; , and newlines, and lines are folded at 75 octets.
+const icsText = (value) => String(value).replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+
+function icsFold(line) {
+    if (Buffer.byteLength(line) <= 75) return line;
+    const out = [];
+    let current = '';
+    let limit = 75;
+    for (const ch of line) {
+        if (Buffer.byteLength(current + ch) > limit) {
+            out.push(current);
+            current = ' ';
+            limit = 75;
+        }
+        current += ch;
+    }
+    out.push(current);
+    return out.join('\r\n');
+}
+
+const icsStamp = (utc) => utc.replace(/[-:]/g, '');
+
+function buildIcs(locale, catalog, letters, lunations, plan, stampDay) {
+    const pageFor = new Map(plan.map((entry) => [entry.lun.utc, pagePath(locale, entry.slugs[locale])]));
+    const lines = [
+        'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Steliara//Moon calendar//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+        `X-WR-CALNAME:${icsText(`${catalog.site.brand}: ${letters.kinds.new_moon} / ${letters.kinds.full_moon}`)}`,
+        'REFRESH-INTERVAL;VALUE=DURATION:P1D', 'X-PUBLISHED-TTL:PT24H',
+    ];
+    for (const lun of lunations) {
+        const url = `${ORIGIN}${pageFor.get(lun.utc) || pagePath(locale)}`;
+        lines.push(
+            'BEGIN:VEVENT',
+            `UID:${lun.kind}-${icsStamp(lun.utc)}@steliara.com`,
+            `DTSTAMP:${stampDay}T000000Z`,
+            `DTSTART:${icsStamp(lun.utc)}`,
+            'DURATION:PT30M',
+            `SUMMARY:${icsText(`${letters.kinds[lun.kind]} ${letters.signs_in[lun.sign]} ${lun.degree}°`)}`,
+            `DESCRIPTION:${icsText(url)}`,
+            `URL:${url}`,
+            'TRANSP:TRANSPARENT',
+            'END:VEVENT',
+        );
+    }
+    lines.push('END:VCALENDAR');
+    return `${lines.map(icsFold).join('\r\n')}\r\n`;
+}
+
+const englishRows = (letters, lunations) => lunations.map((lun) => ({
+    utc: lun.utc, phase: lun.kind, longitude: lun.longitude, sign: letters.signs[lun.sign], degree: lun.degree,
+}));
+
+const buildCsv = (rows) => `utc,phase,longitude,sign,degree\n${rows.map((r) => `${r.utc},${r.phase},${r.longitude},${r.sign},${r.degree}`).join('\n')}\n`;
+
+const buildJson = (rows, range) => `${JSON.stringify({
+    description: 'New moons and full moons, exact instants in UTC. longitude = ecliptic longitude of the Moon in degrees (tropical zodiac), sign and degree derived from it.',
+    source: 'Swiss Ephemeris (Astrodienst), apparent geocentric positions; checked against JPL DE421.',
+    page: `${ORIGIN}/moon/data`, range, lunations: rows,
+}, null, 1)}\n`;
+
+function dataJsonLd(catalog, range) {
+    const page = catalog.data;
+    return `    <script type="application/ld+json">${JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'Dataset', name: page.h1, description: page.description,
+        url: `${ORIGIN}/moon/data`, creator: { '@type': 'Organization', name: catalog.site.brand, url: ORIGIN },
+        temporalCoverage: `${range.start}/${range.end}`, isAccessibleForFree: true, inLanguage: 'en',
+        distribution: [
+            { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: `${ORIGIN}/moon/lunations.csv` },
+            { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${ORIGIN}/moon/lunations.json` },
+            { '@type': 'DataDownload', encodingFormat: 'text/calendar', contentUrl: `${ORIGIN}/moon/lunations.ics` },
+        ],
+    })}</script>`;
+}
+
+function renderData(catalogs, letters, lunations, range) {
+    const catalog = catalogs.en;
+    const page = catalog.data;
+    const rows = englishRows(letters.en, lunations);
+    const body = rows.map((r) => `
+            <tr><td><time datetime="${r.utc}">${r.utc.replace('T', ' ').replace('Z', '')}</time></td><td>${esc(letters.en.kinds[r.phase])}</td><td>${r.longitude.toFixed(4)}°</td><td>${esc(r.sign)} ${r.degree}°</td></tr>`).join('');
+    const downloads = page.downloads.map((d) => `<li><a href="${d.href}" download>${esc(d.label)}</a><span>${esc(d.text)}</span></li>`).join('\n          ');
+    const sections = page.sections.map((section) => `
+      <section class="copy">
+        <h2>${esc(section.h2)}</h2>
+        ${section.p.map((text) => `<p>${esc(text)}</p>`).join('\n        ')}
+      </section>`).join('');
+    const html = headHtml(catalog, {
+        title: page.title, description: page.description, url: `${ORIGIN}/moon/data`, indexable: true, ld: dataJsonLd(catalog, range),
+    });
+    return `${html}
+<body data-page="data" data-locale="en">
+  <a class="skip" href="#main">${esc(catalog.site.skip)}</a>
+  ${header('en', 'data', catalog, catalogs)}
+  <main id="main" class="shell data-page">
+      <nav class="crumbs" aria-label="${esc(catalog.lunationPage.crumbHub)}"><a href="${pagePath('en')}">${esc(catalog.lunationPage.crumbHub)}</a> <span aria-hidden="true">›</span> <span aria-current="page">${esc(page.h1)}</span></nav>
+      <h1>${esc(page.h1)}</h1>
+      <p class="lead">${esc(page.lead)}</p>
+      <section class="card downloads" aria-labelledby="downloads-title">
+        <h2 id="downloads-title">${esc(page.downloadsTitle)}</h2>
+        <ul class="tools-list">
+          ${downloads}
+        </ul>
+      </section>
+      <section class="card" aria-labelledby="data-table-title">
+        <h2 id="data-table-title">${esc(page.tableTitle)}</h2>
+        <p class="hint">${esc(page.tableNote)}</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>${page.headers.map((h) => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead>
+            <tbody>${body}
+            </tbody>
+          </table>
+        </div>
+      </section>${sections}
+      <p><a href="${pagePath('en')}">${esc(catalog.ui.backToMoon)}</a></p>
+    </main>
+  ${footer(catalog)}
+</body>
+</html>
+`;
+}
+
+function renderPlanner(locale, catalogs, letters, lunations) {
+    const catalog = catalogs[locale];
+    const page = catalog.planner;
+    const lp = catalog.lunationPage;
+    const year = lunations.filter((lun) => lun.utc.startsWith(PLANNER_YEAR));
+    const tzOptions = TIMEZONES.map((tz) => `<option value="${tz}"${tz === catalog.tableTimezone ? ' selected' : ''}>${tz}</option>`).join('');
+    const items = year.map((lun) => {
+        const short = lun.kind === 'new_moon' ? 'new' : 'full';
+        const question = lp.signs[lun.sign][short][0];
+        const dot = `<span class="phase phase-${short}" aria-hidden="true"></span>`;
+        return `
+        <article class="planner-item" data-utc="${lun.utc}">
+          <h2>${dot}${esc(letters[locale].kinds[lun.kind])} ${esc(letters[locale].signs_in[lun.sign])} ${lun.degree}°</h2>
+          <p class="when"><time datetime="${lun.utc}">${esc(formatDate(lun.utc, catalog))}</time></p>
+          <p class="question"><strong>${esc(page.questionLabel)}:</strong> ${esc(question)}</p>
+          <p class="notes-label">${esc(page.notesLabel)}</p>
+          <div class="lines" aria-hidden="true"></div>
+        </article>`;
+    }).join('');
+    const alternates = LOCALES.map((l) => `    <link rel="alternate" hreflang="${catalogs[l].hreflang}" href="${ORIGIN}${pagePath(l, 'planner')}">`).join('\n')
+        + `\n    <link rel="alternate" hreflang="x-default" href="${ORIGIN}${pagePath('en', 'planner')}">\n`;
+    const ld = `    <script type="application/ld+json">${JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'WebPage', name: page.h1, description: page.description,
+        url: `${ORIGIN}${pagePath(locale, 'planner')}`, inLanguage: catalog.hreflang, isAccessibleForFree: true,
+    })}</script>`;
+    const html = headHtml(catalog, {
+        title: page.title, description: page.description, url: `${ORIGIN}${pagePath(locale, 'planner')}`, indexable: true, alternates, ld,
+    });
+    return `${html}
+<body data-page="planner" data-locale="${locale}">
+  <a class="skip" href="#main">${esc(catalog.site.skip)}</a>
+  ${header(locale, 'planner', catalog, catalogs)}
+  <main id="main" class="shell planner-page">
+      <h1>${esc(page.h1)}</h1>
+      <p class="lead">${esc(page.lead)}</p>
+      <div class="planner-controls no-print">
+        <label for="planner-tz">${esc(catalog.ui.timezone)}</label>
+        <select id="planner-tz">${tzOptions}</select>
+        <button id="planner-print" class="btn" type="button">${esc(page.print)}</button>
+      </div>
+      <p class="hint" id="planner-times">${esc(fill(page.timesNote, { tz: lp.tzName }))}</p>
+      <div class="planner-grid">${items}
+      </div>
+      <section class="card no-print planner-more" aria-label="${esc(catalog.tools.title)}">
+        <p>${esc(page.calendarText)} <a href="webcal://${ICS_HOST}${icsPath(locale)}">${esc(catalog.tools.calendarLink)}</a></p>
+        <p>${esc(page.hubText)} <a href="${pagePath(locale)}#moon-form">${esc(page.hubLink)}</a></p>
+      </section>
+    </main>
+  ${footer(catalog)}
+  <script type="application/json" id="moon-i18n">${JSON.stringify({ ...i18n(catalog), timesNote: page.timesNote }).replace(/</g, '\\u003c')}</script>
+  <script src="/js/moon-planner.js?v=${ASSET_VERSION}" defer></script>
 </body>
 </html>
 `;
@@ -632,16 +835,23 @@ async function main() {
         catalogs[locale] = await readJson(path.join(srcRoot, `${locale}.json`));
         letters[locale] = await readJson(path.join(letterRoot, `${locale}.json`));
     }
-    const { lunations } = await readJson(path.join(srcRoot, 'lunations.json'));
+    const { lunations, start, end } = await readJson(path.join(srcRoot, 'lunations.json'));
     const plan = datePagePlan(catalogs, lunations);
     const outputs = new Map();
     for (const locale of LOCALES) {
         const links = lunationLinks(locale, plan);
         for (const slug of PAGES) outputs.set(outFile(locale, slug), render(locale, slug, catalogs, letters, lunations, links));
+        outputs.set(outFile(locale, 'planner'), renderPlanner(locale, catalogs, letters, lunations));
+        outputs.set(path.join(path.dirname(outFile(locale, 'index')), 'lunations.ics'),
+            buildIcs(locale, catalogs[locale], letters[locale], lunations, plan, start.replace(/-/g, '')));
         plan.forEach((entry, index) => {
             outputs.set(outFile(locale, entry.slugs[locale]), renderLunation(locale, entry, index, plan, { catalogs, letters }));
         });
     }
+    const rows = englishRows(letters.en, lunations);
+    outputs.set(outFile('en', 'data'), renderData(catalogs, letters, lunations, { start, end }));
+    outputs.set(path.join(outRoot, 'lunations.csv'), buildCsv(rows));
+    outputs.set(path.join(outRoot, 'lunations.json'), buildJson(rows, { start, end }));
     // The server reads this to route, to list the pages in the sitemap and to pair the languages.
     const manifest = {
         before: DATE_PAGES_BEFORE,
@@ -657,7 +867,7 @@ async function main() {
     for (const dir of [outRoot, ...LOCALES.filter((l) => l !== 'en').map((l) => path.join(outRoot, l))]) {
         for (const name of await readdir(dir).catch(() => [])) {
             const file = path.join(dir, name);
-            if (/\.(html|json)$/.test(name) && !outputs.has(file)) stale.push(file);
+            if (/\.(html|json|ics|csv)$/.test(name) && !outputs.has(file)) stale.push(file);
         }
     }
 

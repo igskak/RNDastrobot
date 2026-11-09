@@ -1,0 +1,299 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Steliara//Moon calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Steliara: Luna Nuova / Luna Piena
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:PT24H
+BEGIN:VEVENT
+UID:new_moon-20261109T070207Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261109T070207Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Scorpione 16°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-nuova-9-novembre-2026
+URL:https://www.steliara.com/moon/it/luna-nuova-9-novembre-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261124T145334Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261124T145334Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Gemelli 2°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-piena-24-novembre-2026
+URL:https://www.steliara.com/moon/it/luna-piena-24-novembre-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20261209T005151Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261209T005151Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Sagittario 16°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-nuova-9-dicembre-2026
+URL:https://www.steliara.com/moon/it/luna-nuova-9-dicembre-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261224T012814Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261224T012814Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Cancro 2°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-piena-24-dicembre-2026
+URL:https://www.steliara.com/moon/it/luna-piena-24-dicembre-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270107T202423Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270107T202423Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Capricorno 17°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-nuova-7-gennaio-2027
+URL:https://www.steliara.com/moon/it/luna-nuova-7-gennaio-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270122T121723Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270122T121723Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Leone 2°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-piena-22-gennaio-2027
+URL:https://www.steliara.com/moon/it/luna-piena-22-gennaio-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270206T155607Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270206T155607Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Acquario 17°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-nuova-6-febbraio-2027
+URL:https://www.steliara.com/moon/it/luna-nuova-6-febbraio-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270220T232339Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270220T232339Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Vergine 2°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-piena-21-febbraio-2027
+URL:https://www.steliara.com/moon/it/luna-piena-21-febbraio-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270308T092929Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270308T092929Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Pesci 17°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-nuova-8-marzo-2027
+URL:https://www.steliara.com/moon/it/luna-nuova-8-marzo-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270322T104348Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270322T104348Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Bilancia 1°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-piena-22-marzo-2027
+URL:https://www.steliara.com/moon/it/luna-piena-22-marzo-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270406T235110Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270406T235110Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Ariete 16°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-nuova-7-aprile-2027
+URL:https://www.steliara.com/moon/it/luna-nuova-7-aprile-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270420T222709Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270420T222709Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Scorpione 0°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-piena-21-aprile-2027
+URL:https://www.steliara.com/moon/it/luna-piena-21-aprile-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270506T105838Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270506T105838Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Toro 15°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-nuova-6-maggio-2027
+URL:https://www.steliara.com/moon/it/luna-nuova-6-maggio-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270520T105901Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270520T105901Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Scorpione 29°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-piena-20-maggio-2027
+URL:https://www.steliara.com/moon/it/luna-piena-20-maggio-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270604T194021Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270604T194021Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Gemelli 13°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-nuova-4-giugno-2027
+URL:https://www.steliara.com/moon/it/luna-nuova-4-giugno-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270619T004421Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270619T004421Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Sagittario 27°
+DESCRIPTION:https://www.steliara.com/moon/it/luna-piena-19-giugno-2027
+URL:https://www.steliara.com/moon/it/luna-piena-19-giugno-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270704T030205Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270704T030205Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Cancro 11°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270718T154456Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270718T154456Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Capricorno 25°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270802T100514Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270802T100514Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Leone 9°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270817T072842Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270817T072842Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Acquario 24°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270831T174111Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270831T174111Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Vergine 8°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270915T230331Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270915T230331Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Pesci 22°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270930T023605Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270930T023605Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Bilancia 6°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271015T134701Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271015T134701Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Ariete 21°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271029T133634Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271029T133634Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Scorpione 5°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271114T032556Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271114T032556Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Toro 21°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271128T032426Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271128T032426Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Sagittario 5°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271213T160848Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271213T160848Z
+DURATION:PT30M
+SUMMARY:Luna Piena in Gemelli 21°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271227T201220Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271227T201220Z
+DURATION:PT30M
+SUMMARY:Luna Nuova in Capricorno 5°
+DESCRIPTION:https://www.steliara.com/moon/it
+URL:https://www.steliara.com/moon/it
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

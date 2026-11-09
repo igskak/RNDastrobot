@@ -1,0 +1,299 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Steliara//Moon calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Steliara: Nouvelle Lune / Pleine Lune
+REFRESH-INTERVAL;VALUE=DURATION:P1D
+X-PUBLISHED-TTL:PT24H
+BEGIN:VEVENT
+UID:new_moon-20261109T070207Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261109T070207Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Scorpion 16°
+DESCRIPTION:https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026
+URL:https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261124T145334Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261124T145334Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Gémeaux 2°
+DESCRIPTION:https://www.steliara.com/moon/fr/pleine-lune-24-novembre-2026
+URL:https://www.steliara.com/moon/fr/pleine-lune-24-novembre-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20261209T005151Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261209T005151Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Sagittaire 16°
+DESCRIPTION:https://www.steliara.com/moon/fr/nouvelle-lune-9-decembre-2026
+URL:https://www.steliara.com/moon/fr/nouvelle-lune-9-decembre-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20261224T012814Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20261224T012814Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Cancer 2°
+DESCRIPTION:https://www.steliara.com/moon/fr/pleine-lune-24-decembre-2026
+URL:https://www.steliara.com/moon/fr/pleine-lune-24-decembre-2026
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270107T202423Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270107T202423Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Capricorne 17°
+DESCRIPTION:https://www.steliara.com/moon/fr/nouvelle-lune-7-janvier-2027
+URL:https://www.steliara.com/moon/fr/nouvelle-lune-7-janvier-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270122T121723Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270122T121723Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Lion 2°
+DESCRIPTION:https://www.steliara.com/moon/fr/pleine-lune-22-janvier-2027
+URL:https://www.steliara.com/moon/fr/pleine-lune-22-janvier-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270206T155607Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270206T155607Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Verseau 17°
+DESCRIPTION:https://www.steliara.com/moon/fr/nouvelle-lune-6-fevrier-2027
+URL:https://www.steliara.com/moon/fr/nouvelle-lune-6-fevrier-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270220T232339Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270220T232339Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Vierge 2°
+DESCRIPTION:https://www.steliara.com/moon/fr/pleine-lune-21-fevrier-2027
+URL:https://www.steliara.com/moon/fr/pleine-lune-21-fevrier-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270308T092929Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270308T092929Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Poissons 17°
+DESCRIPTION:https://www.steliara.com/moon/fr/nouvelle-lune-8-mars-2027
+URL:https://www.steliara.com/moon/fr/nouvelle-lune-8-mars-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270322T104348Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270322T104348Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Balance 1°
+DESCRIPTION:https://www.steliara.com/moon/fr/pleine-lune-22-mars-2027
+URL:https://www.steliara.com/moon/fr/pleine-lune-22-mars-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270406T235110Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270406T235110Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Bélier 16°
+DESCRIPTION:https://www.steliara.com/moon/fr/nouvelle-lune-7-avril-2027
+URL:https://www.steliara.com/moon/fr/nouvelle-lune-7-avril-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270420T222709Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270420T222709Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Scorpion 0°
+DESCRIPTION:https://www.steliara.com/moon/fr/pleine-lune-21-avril-2027
+URL:https://www.steliara.com/moon/fr/pleine-lune-21-avril-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270506T105838Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270506T105838Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Taureau 15°
+DESCRIPTION:https://www.steliara.com/moon/fr/nouvelle-lune-6-mai-2027
+URL:https://www.steliara.com/moon/fr/nouvelle-lune-6-mai-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270520T105901Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270520T105901Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Scorpion 29°
+DESCRIPTION:https://www.steliara.com/moon/fr/pleine-lune-20-mai-2027
+URL:https://www.steliara.com/moon/fr/pleine-lune-20-mai-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270604T194021Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270604T194021Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Gémeaux 13°
+DESCRIPTION:https://www.steliara.com/moon/fr/nouvelle-lune-4-juin-2027
+URL:https://www.steliara.com/moon/fr/nouvelle-lune-4-juin-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270619T004421Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270619T004421Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Sagittaire 27°
+DESCRIPTION:https://www.steliara.com/moon/fr/pleine-lune-19-juin-2027
+URL:https://www.steliara.com/moon/fr/pleine-lune-19-juin-2027
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270704T030205Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270704T030205Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Cancer 11°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270718T154456Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270718T154456Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Capricorne 25°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270802T100514Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270802T100514Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Lion 9°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270817T072842Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270817T072842Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Verseau 24°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270831T174111Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270831T174111Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Vierge 8°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20270915T230331Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270915T230331Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Poissons 22°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20270930T023605Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20270930T023605Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Balance 6°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271015T134701Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271015T134701Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Bélier 21°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271029T133634Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271029T133634Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Scorpion 5°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271114T032556Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271114T032556Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Taureau 21°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271128T032426Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271128T032426Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Sagittaire 5°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:full_moon-20271213T160848Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271213T160848Z
+DURATION:PT30M
+SUMMARY:Pleine Lune en Gémeaux 21°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:new_moon-20271227T201220Z@steliara.com
+DTSTAMP:20261101T000000Z
+DTSTART:20271227T201220Z
+DURATION:PT30M
+SUMMARY:Nouvelle Lune en Capricorne 5°
+DESCRIPTION:https://www.steliara.com/moon/fr
+URL:https://www.steliara.com/moon/fr
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

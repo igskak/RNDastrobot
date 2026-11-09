@@ -429,5 +429,26 @@
   "hookTitle": "La même Lune tombe dans une autre maison selon chaque thème",
   "hookText": "Le calendrier lunaire te montre dans quelle maison de ton thème tombe chaque nouvelle et pleine lune, et t'envoie trois questions le jour même. Gratuit, environ cinq minutes à chaque fois.",
   "hookLink": "Ouvrir le calendrier lunaire"
+ },
+ "tools": {
+  "title": "Emporte les dates avec toi",
+  "calendarLink": "S'abonner dans ton agenda",
+  "calendarDownload": "télécharger le fichier .ics",
+  "calendarNote": "Toutes les nouvelles et pleines lunes jusqu'en 2027, dans ton fuseau horaire.",
+  "plannerLink": "Imprimer le planning lunaire 2027",
+  "plannerNote": "Toutes les dates, une question chacune, de la place pour écrire."
+ },
+ "planner": {
+  "title": "Planning lunaire 2027 à imprimer : nouvelles et pleines lunes",
+  "description": "Planning lunaire 2027 gratuit à imprimer : chaque nouvelle et pleine lune avec date, heure dans ton fuseau et signe, plus une question de journal et de la place.",
+  "h1": "Planning lunaire 2027 pour ton journal",
+  "lead": "Toutes les nouvelles lunes et pleines lunes de 2027 sur une page à imprimer, chacune avec une question de journal et de la place pour écrire. Choisis d'abord ton fuseau horaire, les heures s'adaptent.",
+  "timesNote": "Heures en {tz}.",
+  "print": "Imprimer le planning",
+  "questionLabel": "Question",
+  "notesLabel": "Notes",
+  "calendarText": "Tu veux aussi les dates sur ton téléphone ?",
+  "hubText": "Les dates sont les mêmes pour tout le monde. Ce que chaque lune touche dans ta vie dépend de ton thème.",
+  "hubLink": "Découvre dans quelle maison de ton thème chacune tombe"
  }
 }
