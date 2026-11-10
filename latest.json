@@ -26,9 +26,16 @@
     }
   },
   "base": "https://www.steliara.com",
-  "date": "2026-11-09",
+  "date": "2026-11-10",
   "errors": 0,
-  "findings": [],
+  "findings": [
+    {
+      "check": "page.description-length",
+      "detail": "166 chars (want 70-165)",
+      "level": "warning",
+      "url": "https://www.steliara.com/moon/data"
+    }
+  ],
   "pages": {
     "https://www.steliara.com/": {
       "body_words": 990,
@@ -381,8 +388,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon": {
-      "body_words": 1727,
-      "bytes": 36450,
+      "body_words": 1768,
+      "bytes": 37121,
       "canonical": "https://www.steliara.com/moon",
       "description_length": 151,
       "empty_i18n_nodes": 0,
@@ -394,9 +401,23 @@
       "title_length": 62,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/moon/data": {
+      "body_words": 557,
+      "bytes": 10977,
+      "canonical": "https://www.steliara.com/moon/data",
+      "description_length": 166,
+      "empty_i18n_nodes": 0,
+      "h1": "New moon and full moon dates, 2026–2027",
+      "hreflang_count": 0,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "New & Full Moon Dates 2026–2027 in UTC: Data and Method",
+      "title_length": 55,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/moon/de": {
-      "body_words": 1588,
-      "bytes": 38126,
+      "body_words": 1617,
+      "bytes": 38729,
       "canonical": "https://www.steliara.com/moon/de",
       "description_length": 155,
       "empty_i18n_nodes": 0,
@@ -520,6 +541,20 @@
       "title_length": 59,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/moon/de/planner": {
+      "body_words": 638,
+      "bytes": 23329,
+      "canonical": "https://www.steliara.com/moon/de/planner",
+      "description_length": 159,
+      "empty_i18n_nodes": 0,
+      "h1": "Mond-Journal-Planer 2027",
+      "hreflang_count": 8,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Mond-Journal-Planer 2027 zum Ausdrucken: Neumond & Vollmond",
+      "title_length": 59,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/moon/de/vollmond-19-juni-2027": {
       "body_words": 485,
       "bytes": 12814,
@@ -633,8 +668,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/es": {
-      "body_words": 1707,
-      "bytes": 37508,
+      "body_words": 1746,
+      "bytes": 38158,
       "canonical": "https://www.steliara.com/moon/es",
       "description_length": 159,
       "empty_i18n_nodes": 0,
@@ -870,9 +905,23 @@
       "title_length": 58,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/moon/es/planner": {
+      "body_words": 693,
+      "bytes": 23066,
+      "canonical": "https://www.steliara.com/moon/es/planner",
+      "description_length": 156,
+      "empty_i18n_nodes": 0,
+      "h1": "Planificador lunar 2027 para tu diario",
+      "hreflang_count": 8,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Planificador lunar 2027 para imprimir: lunas nuevas y llenas",
+      "title_length": 60,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/moon/fr": {
-      "body_words": 1780,
-      "bytes": 38557,
+      "body_words": 1819,
+      "bytes": 39214,
       "canonical": "https://www.steliara.com/moon/fr",
       "description_length": 159,
       "empty_i18n_nodes": 0,
@@ -994,6 +1043,20 @@
       "status": 200,
       "title": "Nouvelle Lune 9 novembre 2026 : heure et signe | Steliara",
       "title_length": 57,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/moon/fr/planner": {
+      "body_words": 704,
+      "bytes": 23526,
+      "canonical": "https://www.steliara.com/moon/fr/planner",
+      "description_length": 161,
+      "empty_i18n_nodes": 0,
+      "h1": "Planning lunaire 2027 pour ton journal",
+      "hreflang_count": 8,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Planning lunaire 2027 à imprimer : nouvelles et pleines lunes",
+      "title_length": 61,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/fr/pleine-lune-19-juin-2027": {
@@ -1221,8 +1284,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it": {
-      "body_words": 1659,
-      "bytes": 37292,
+      "body_words": 1697,
+      "bytes": 37909,
       "canonical": "https://www.steliara.com/moon/it",
       "description_length": 162,
       "empty_i18n_nodes": 0,
@@ -1458,6 +1521,20 @@
       "title_length": 51,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/moon/it/planner": {
+      "body_words": 689,
+      "bytes": 23110,
+      "canonical": "https://www.steliara.com/moon/it/planner",
+      "description_length": 154,
+      "empty_i18n_nodes": 0,
+      "h1": "Planner lunare 2027 per il tuo diario",
+      "hreflang_count": 8,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Planner lunare 2027 da stampare: lune nuove e lune piene",
+      "title_length": 56,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/moon/new-moon-april-6-2027": {
       "body_words": 539,
       "bytes": 12748,
@@ -1571,8 +1648,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/pl": {
-      "body_words": 1438,
-      "bytes": 37904,
+      "body_words": 1471,
+      "bytes": 38530,
       "canonical": "https://www.steliara.com/moon/pl",
       "description_length": 157,
       "empty_i18n_nodes": 0,
@@ -1808,9 +1885,37 @@
       "title_length": 60,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/moon/pl/planner": {
+      "body_words": 612,
+      "bytes": 23337,
+      "canonical": "https://www.steliara.com/moon/pl/planner",
+      "description_length": 159,
+      "empty_i18n_nodes": 0,
+      "h1": "Planer księżycowy 2027 do dziennika",
+      "hreflang_count": 8,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Planer księżycowy 2027 do druku: nowie i pełnie Księżyca",
+      "title_length": 56,
+      "x_robots_tag": ""
+    },
+    "https://www.steliara.com/moon/planner": {
+      "body_words": 705,
+      "bytes": 22686,
+      "canonical": "https://www.steliara.com/moon/planner",
+      "description_length": 147,
+      "empty_i18n_nodes": 0,
+      "h1": "Moon journal planner 2027",
+      "hreflang_count": 8,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Moon Journal Planner 2027: Printable New & Full Moon Dates",
+      "title_length": 58,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/moon/pt": {
-      "body_words": 1735,
-      "bytes": 37550,
+      "body_words": 1775,
+      "bytes": 38179,
       "canonical": "https://www.steliara.com/moon/pt",
       "description_length": 157,
       "empty_i18n_nodes": 0,
@@ -2046,6 +2151,20 @@
       "title_length": 58,
       "x_robots_tag": ""
     },
+    "https://www.steliara.com/moon/pt/planner": {
+      "body_words": 704,
+      "bytes": 23274,
+      "canonical": "https://www.steliara.com/moon/pt/planner",
+      "description_length": 162,
+      "empty_i18n_nodes": 0,
+      "h1": "Planner lunar 2027 para o seu diário",
+      "hreflang_count": 8,
+      "jsonld_blocks": 1,
+      "status": 200,
+      "title": "Planner lunar 2027 para imprimir: luas novas e luas cheias",
+      "title_length": 58,
+      "x_robots_tag": ""
+    },
     "https://www.steliara.com/pricing.html": {
       "body_words": 316,
       "bytes": 22263,
@@ -2216,6 +2335,6 @@
     }
   },
   "regressions": [],
-  "sitemap_url_count": 156,
-  "warnings": 0
+  "sitemap_url_count": 164,
+  "warnings": 1
 }
