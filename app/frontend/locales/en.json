@@ -2968,6 +2968,7 @@
         "rateLimited": "Too many attempts. Wait a bit and try again.",
         "loginFailed": "Unable to sign in right now.",
         "googleFailed": "Google sign-in could not be completed.",
+        "googleStorage": "Google sign-in needs your browser to keep this site's data. Allow site data for steliara.com, or try another browser.",
         "googleUnavailable": "Google sign-in is not available right now.",
         "forgotFailed": "Unable to send a reset link right now.",
         "resetFailed": "Unable to update the password right now.",

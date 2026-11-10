@@ -121,6 +121,14 @@ jobs:
             app/tests/test_kundli_pages.test.cjs \
             app/tests/test_moon_pages.test.cjs
 
+      # Sign-in flow and the localStorage budget it depends on (a full quota broke
+      # Google sign-in on 2026-11-10).
+      - name: Sign-in and storage frontend tests
+        run: |
+          node --test \
+            app/tests/test_frontend_login_auth.test.cjs \
+            app/tests/test_storage_hygiene.test.cjs
+
       # Forecast workspace tests are self-running scripts (process.exit on failure),
       # not `node --test` suites — invoke each directly so a red assertion fails CI.
       - name: Forecast workspace frontend tests

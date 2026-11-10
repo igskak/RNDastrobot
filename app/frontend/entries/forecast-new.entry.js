@@ -22,6 +22,7 @@ import '../js/prognostic-layer-normalizer.js';
 import '../js/forecast-new-card-identity.js';
 import '../js/forecast-new-deep-link.js';
 import '../js/prognostic-rings-wheel.js';
+import '../js/storage-hygiene.js';
 import '../js/forecast-new-state-storage.js';
 import '../js/forecast-new-panel-layout.js';
 import '../js/forecast-source-utils.js';

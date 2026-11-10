@@ -8,6 +8,37 @@
     // and forth before we stop and show the sign-in form. Must match api.js.
     const MAX_AUTH_BOUNCES = 2;
 
+    // supabase-js is loaded by this script, not by a <script> tag: the library tests
+    // localStorage once, while its file executes, and keeps the answer for the life
+    // of the page. A full quota at that moment puts the PKCE verifier and the session
+    // in memory, and the redirect to Google wipes them. Loading it after
+    // StorageHygiene.prepareAuthStorage() has made room avoids that. Pinned with an
+    // integrity hash; login.html preloads the same URL. To upgrade, change both
+    // places and recompute the hash.
+    const SUPABASE_JS_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js';
+    const SUPABASE_JS_INTEGRITY = 'sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O';
+
+    function loadSupabaseLibrary(documentRef) {
+        if (global.supabase?.createClient) {
+            return Promise.resolve(global.supabase.createClient);
+        }
+        const parent = documentRef?.head || documentRef?.body;
+        if (typeof documentRef?.createElement !== 'function' || !parent?.appendChild) {
+            return Promise.resolve(null);
+        }
+        return new Promise((resolve) => {
+            const script = documentRef.createElement('script');
+            script.src = SUPABASE_JS_URL;
+            script.integrity = SUPABASE_JS_INTEGRITY;
+            script.crossOrigin = 'anonymous';
+            script.async = true;
+            script.onload = () => resolve(global.supabase?.createClient || null);
+            // A blocked CDN leaves Google sign-in unavailable; password sign-in works.
+            script.onerror = () => resolve(null);
+            parent.appendChild(script);
+        });
+    }
+
     // Send authenticated users to the app root. The "/" route serves the
     // client base (clients.html) when a session cookie is present and the
     // marketing landing (index.html) otherwise. "/new" is a dumb alias that
@@ -316,7 +347,10 @@
         const historyRef = options.history || global.history;
         const locationRef = options.location || global.location;
         const fetchFn = options.fetchFn || (global.fetch ? global.fetch.bind(global) : null);
-        const supabaseFactory = options.supabaseFactory || global.supabase?.createClient;
+        const supabaseFactoryOverride = options.supabaseFactory || null;
+        const prepareAuthStorage = options.prepareAuthStorage
+            || global.StorageHygiene?.prepareAuthStorage
+            || (() => null);
         const getCurrentAstrologer = options.getCurrentAstrologer || global.AstroAPI?.getCurrentAstrologer?.bind(global.AstroAPI);
         // Loop breaker, shared with api.js requireAuth (see AUTH_BOUNCE_KEY there).
         const authBounceCount = options.authBounceCount
@@ -370,6 +404,9 @@
             loadingAction: '',
             supabaseClient: null,
             supabaseConfig: null,
+            // Result of StorageHygiene.prepareAuthStorage(): whether a Supabase
+            // session fits into localStorage on this browser.
+            authStorage: null,
             googleEnabled: false,
             soloMode: false,
         };
@@ -963,9 +1000,51 @@
             }
         }
 
+        // supabase-js keeps the PKCE verifier and the session in localStorage and,
+        // when it cannot write there, silently falls back to memory, which the
+        // redirect to Google wipes. With no room even after freeing our caches,
+        // say so instead of sending the person on a round trip that cannot work.
+        function authStorageBlocked() {
+            return Boolean(state.authStorage && state.authStorage.writable === false);
+        }
+
+        function googleFailureKey(error) {
+            return authStorageBlocked()
+                ? 'page.login.errors.googleStorage'
+                : mapAuthErrorToKey('google', error?.message);
+        }
+
+        // The page shows one message for every failure; this records which step
+        // failed and why, so a failed sign-in can be diagnosed without the
+        // person's browser. Only codes and statuses, never free-text messages.
+        function reportGoogleFailure(stage, error) {
+            const rawReason = error?.code
+                || (error?.name && error.name !== 'Error' ? error.name : error?.message)
+                || 'unknown';
+            const reason = String(rawReason).replace(/[^A-Za-z0-9_.:-]/g, '').slice(0, 64) || 'unknown';
+            try {
+                global.console?.warn?.('[login] Google sign-in failed', stage, error);
+            } catch (_error) { /* console may be unavailable */ }
+            try {
+                global.AstroAnalytics?.track?.('login_failed', {
+                    method: 'google',
+                    stage,
+                    reason,
+                    status: Number.isFinite(error?.status) ? error.status : null,
+                    storage_writable: state.authStorage ? state.authStorage.writable : null,
+                    storage_freed: state.authStorage ? state.authStorage.freedEntries : null,
+                });
+            } catch (_error) { /* analytics must never break sign-in */ }
+        }
+
         async function loginWithGoogle() {
             if (!state.supabaseClient) {
                 setStatus('page.login.errors.googleUnavailable', 'error');
+                return;
+            }
+            if (authStorageBlocked()) {
+                reportGoogleFailure('storage', { code: 'storage_unwritable' });
+                setStatus('page.login.errors.googleStorage', 'error');
                 return;
             }
             // Google sign-in leaves the page, so a typed code has to be stored first. An
@@ -985,7 +1064,8 @@
                     throw result.error;
                 }
             } catch (error) {
-                setStatus(mapAuthErrorToKey('google', error.message), 'error');
+                reportGoogleFailure('redirect', error);
+                setStatus(googleFailureKey(error), 'error');
                 setLoading('');
             }
         }
@@ -1278,18 +1358,24 @@
             if (!route.oauthCallback || !state.supabaseClient) return;
             setLoading('google');
             setStatus('page.login.status.completingGoogle', 'info');
+            let stage = 'oauth_error';
             try {
                 if (route.oauthError) {
-                    throw new Error(route.oauthError);
+                    throw Object.assign(new Error(route.oauthError), { code: route.oauthError });
                 }
+                stage = 'supabase_session';
                 const accessToken = await resolveSupabaseAccessTokenFromCallback();
+                stage = 'backend';
                 const response = await apiFetch(`${API_BASE}/auth/google`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ access_token: accessToken }),
                 }, fetchFn);
                 if (!response.ok) {
-                    throw new Error(await readErrorMessage(response));
+                    throw Object.assign(new Error(await readErrorMessage(response)), {
+                        status: response.status,
+                        code: `http_${response.status}`,
+                    });
                 }
                 // A 2xx here means the backend already issued the session cookie
                 // (POST /auth/google → issue_session). From this point the login
@@ -1303,7 +1389,8 @@
                 await finalizeGoogleCallback(me);
                 redirect(getPostAuthRedirect(route));
             } catch (error) {
-                setStatus(mapAuthErrorToKey('google', error.message), 'error');
+                reportGoogleFailure(stage, error);
+                setStatus(googleFailureKey(error), 'error');
                 setLoading('');
             }
         }
@@ -1538,12 +1625,25 @@
                 return;
             }
 
+            // Make room in localStorage first, then load supabase-js (see
+            // SUPABASE_JS_URL). The library downloads while the config is fetched.
+            try {
+                state.authStorage = prepareAuthStorage();
+            } catch (_error) {
+                state.authStorage = null;
+            }
+            const supabaseLibrary = supabaseFactoryOverride
+                ? Promise.resolve(supabaseFactoryOverride)
+                : loadSupabaseLibrary(documentRef);
+
             loadSignupPromo();
 
             state.supabaseConfig = await loadSupabaseConfig();
             state.soloMode = Boolean(state.supabaseConfig?.solo_mode);
             state.registerPlanCode = state.soloMode ? 'solo' : 'trial';
-            if (state.supabaseConfig && state.supabaseConfig.supabase_url && state.supabaseConfig.supabase_anon_key && supabaseFactory) {
+            const hasSupabaseConfig = Boolean(state.supabaseConfig?.supabase_url && state.supabaseConfig?.supabase_anon_key);
+            const supabaseFactory = hasSupabaseConfig ? await supabaseLibrary : null;
+            if (hasSupabaseConfig && supabaseFactory) {
                 state.supabaseClient = supabaseFactory(
                     state.supabaseConfig.supabase_url,
                     state.supabaseConfig.supabase_anon_key,
