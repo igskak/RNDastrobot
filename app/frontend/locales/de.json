@@ -2963,6 +2963,7 @@
         "rateLimited": "Zu viele Versuche. Warten Sie kurz und versuchen Sie es erneut.",
         "loginFailed": "Die Anmeldung ist derzeit nicht möglich.",
         "googleFailed": "Die Anmeldung mit Google konnte nicht abgeschlossen werden.",
+        "googleStorage": "Für die Anmeldung mit Google muss Ihr Browser die Daten dieser Website speichern dürfen. Erlauben Sie Websitedaten für steliara.com oder verwenden Sie einen anderen Browser.",
         "googleUnavailable": "Die Anmeldung mit Google ist derzeit nicht verfügbar.",
         "forgotFailed": "Der Link zum Zurücksetzen kann derzeit nicht gesendet werden.",
         "resetFailed": "Das Passwort kann derzeit nicht geändert werden.",

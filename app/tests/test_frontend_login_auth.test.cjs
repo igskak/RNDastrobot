@@ -572,6 +572,247 @@ test('google oauth callback redirects even when the session-readiness poll never
     delete global.FrontendI18n;
 });
 
+function createCallbackApp({ search, fetchFn, supabaseAuth, prepareAuthStorage }) {
+    return AstroLogin.createAuthApp({
+        document: {
+            title: 'Login',
+            body: { dataset: {} },
+            getElementById() { return null; },
+            querySelector() { return null; },
+            querySelectorAll() { return []; },
+            addEventListener() {},
+        },
+        history: { replaceState() {} },
+        location: { search },
+        fetchFn: async (url, init = {}) => {
+            if (String(url).endsWith('/auth/frontend-config')) {
+                return {
+                    ok: true,
+                    json: async () => ({
+                        supabase_url: 'https://example.supabase.co',
+                        supabase_anon_key: 'anon-key',
+                    }),
+                };
+            }
+            if (fetchFn) return fetchFn(url, init);
+            throw new Error(`Unexpected fetch: ${url}`);
+        },
+        supabaseFactory: () => ({ auth: supabaseAuth }),
+        prepareAuthStorage,
+        getCurrentAstrologer: async () => null,
+        wait: async () => {},
+        redirect: () => {
+            throw new Error('a failed sign-in must not redirect');
+        },
+    });
+}
+
+function captureAnalytics() {
+    const events = [];
+    global.AstroAnalytics = { track: (event, props) => events.push({ event, props }) };
+    const warn = console.warn;
+    console.warn = () => {};
+    return {
+        events,
+        restore() {
+            delete global.AstroAnalytics;
+            console.warn = warn;
+        },
+    };
+}
+
+test('google callback reports a lost PKCE verifier as a supabase_session failure', async () => {
+    // Regression (2026-11-10): with localStorage full, supabase-js keeps the
+    // verifier in memory, the redirect wipes it, and the callback has nothing to
+    // exchange. The page used to fail without a trace.
+    await installLocale('en');
+    const analytics = captureAnalytics();
+    let backendCalls = 0;
+    const missing = Object.assign(new Error('PKCE code verifier not found in storage.'), {
+        name: 'AuthPKCECodeVerifierMissingError',
+        code: 'pkce_code_verifier_not_found',
+    });
+
+    const app = createCallbackApp({
+        search: '?oauth=callback&code=oauth-code-123',
+        fetchFn: async () => {
+            backendCalls += 1;
+            return { ok: true, json: async () => ({}) };
+        },
+        supabaseAuth: {
+            getSession: async () => ({ data: { session: null }, error: null }),
+            exchangeCodeForSession: async () => ({ data: { session: null }, error: missing }),
+        },
+        prepareAuthStorage: () => ({ available: true, writable: true, freedEntries: 3 }),
+    });
+
+    await app.init();
+    analytics.restore();
+
+    assert.equal(backendCalls, 0);
+    assert.equal(app.state.statusText, 'Google sign-in could not be completed.');
+    assert.deepEqual(analytics.events, [{
+        event: 'login_failed',
+        props: {
+            method: 'google',
+            stage: 'supabase_session',
+            reason: 'pkce_code_verifier_not_found',
+            status: null,
+            storage_writable: true,
+            storage_freed: 3,
+        },
+    }]);
+    delete global.FrontendI18n;
+});
+
+test('google callback reports a backend rejection with its status', async () => {
+    await installLocale('en');
+    const analytics = captureAnalytics();
+
+    const app = createCallbackApp({
+        search: '?oauth=callback',
+        fetchFn: async () => ({
+            ok: false,
+            status: 401,
+            json: async () => ({ detail: 'Invalid Supabase token: expired' }),
+        }),
+        supabaseAuth: {
+            getSession: async () => ({ data: { session: { access_token: 'token' } }, error: null }),
+        },
+    });
+
+    await app.init();
+    analytics.restore();
+
+    assert.equal(analytics.events.length, 1);
+    assert.equal(analytics.events[0].props.stage, 'backend');
+    assert.equal(analytics.events[0].props.reason, 'http_401');
+    assert.equal(analytics.events[0].props.status, 401);
+    // The free-text detail never reaches analytics.
+    assert.ok(!JSON.stringify(analytics.events).includes('expired'));
+    delete global.FrontendI18n;
+});
+
+test('google callback explains blocked site storage instead of the generic failure', async () => {
+    await installLocale('en');
+    const analytics = captureAnalytics();
+
+    const app = createCallbackApp({
+        search: '?oauth=callback&code=oauth-code-123',
+        supabaseAuth: {
+            getSession: async () => ({ data: { session: null }, error: null }),
+            exchangeCodeForSession: async () => ({ data: { session: null }, error: new Error('gse') }),
+        },
+        prepareAuthStorage: () => ({ available: true, writable: false, freedEntries: 12 }),
+    });
+
+    await app.init();
+    analytics.restore();
+
+    assert.match(app.state.statusText, /site data for steliara\.com/);
+    assert.equal(analytics.events[0].props.storage_writable, false);
+    assert.equal(analytics.events[0].props.storage_freed, 12);
+    delete global.FrontendI18n;
+});
+
+test('google callback carries the provider error code from the redirect', async () => {
+    await installLocale('en');
+    const analytics = captureAnalytics();
+
+    const app = createCallbackApp({
+        search: '?oauth=callback&error=access_denied',
+        supabaseAuth: {
+            getSession: async () => ({ data: { session: null }, error: null }),
+        },
+    });
+
+    await app.init();
+    analytics.restore();
+
+    assert.equal(analytics.events[0].props.stage, 'oauth_error');
+    assert.equal(analytics.events[0].props.reason, 'access_denied');
+    delete global.FrontendI18n;
+});
+
+test('supabase-js is loaded only after localStorage has been prepared', async () => {
+    // supabase-js tests localStorage once, while its file executes. Loading it
+    // before prepareAuthStorage() would lock a full quota into memory mode.
+    await installLocale('en');
+    const order = [];
+    let appended = null;
+    let createdWith = null;
+
+    const app = AstroLogin.createAuthApp({
+        document: {
+            title: 'Login',
+            body: { dataset: {} },
+            head: {
+                appendChild(script) {
+                    order.push('load');
+                    appended = script;
+                    global.supabase = {
+                        createClient: (url) => {
+                            createdWith = url;
+                            return { auth: { getSession: async () => ({ data: { session: null } }) } };
+                        },
+                    };
+                    script.onload();
+                },
+            },
+            createElement: () => ({}),
+            getElementById() { return null; },
+            querySelector() { return null; },
+            querySelectorAll() { return []; },
+            addEventListener() {},
+        },
+        history: { replaceState() {} },
+        location: { search: '' },
+        fetchFn: async (url) => {
+            if (String(url).endsWith('/auth/frontend-config')) {
+                return {
+                    ok: true,
+                    json: async () => ({ supabase_url: 'https://example.supabase.co', supabase_anon_key: 'anon-key' }),
+                };
+            }
+            return { ok: false, json: async () => ({}) };
+        },
+        prepareAuthStorage: () => {
+            order.push('prepare');
+            return { available: true, writable: true, freedEntries: 0 };
+        },
+        getCurrentAstrologer: async () => null,
+    });
+
+    await app.init();
+    delete global.supabase;
+
+    assert.deepEqual(order, ['prepare', 'load']);
+    assert.match(appended.src, /supabase-js@\d+\.\d+\.\d+\/dist\/umd\/supabase\.js$/);
+    assert.match(appended.integrity, /^sha384-/);
+    assert.equal(appended.crossOrigin, 'anonymous');
+    assert.equal(createdWith, 'https://example.supabase.co');
+    assert.equal(app.state.googleEnabled, true);
+    delete global.FrontendI18n;
+});
+
+test('login.html preloads exactly the supabase-js file that login.js loads', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'frontend', 'login.html'), 'utf8');
+    const source = fs.readFileSync(path.join(__dirname, '..', 'frontend', 'js', 'login.js'), 'utf8');
+    const url = source.match(/SUPABASE_JS_URL = '([^']+)'/)[1];
+    const integrity = source.match(/SUPABASE_JS_INTEGRITY = '([^']+)'/)[1];
+    assert.ok(html.includes(`href="${url}" integrity="${integrity}"`));
+    // No <script> tag may load the library before login.js prepares storage.
+    assert.ok(!/<script[^>]+supabase-js/.test(html));
+});
+
+test('the storage message exists in every catalog', () => {
+    const baseDir = path.join(__dirname, '..', 'frontend', 'locales');
+    for (const locale of ['en', 'de', 'ru', 'uk']) {
+        const page = JSON.parse(fs.readFileSync(path.join(baseDir, `${locale}.json`), 'utf8')).page.login;
+        assert.ok(page.errors.googleStorage, `${locale} googleStorage`);
+    }
+});
+
 test('promo input is normalised the way the backend normalises it', () => {
     assert.equal(AstroLogin.normalizePromoInput('  DAV2026 '), 'dav2026');
     assert.equal(AstroLogin.normalizePromoInput('dav-2026_x'), 'dav-2026_x');

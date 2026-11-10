@@ -12,8 +12,8 @@
     <link rel="alternate" hreflang="uk" href="https://www.steliara.com/uk/login.html">
     <link rel="alternate" hreflang="x-default" href="https://www.steliara.com/login.html">
     <!-- hreflang:end -->
-    <link rel="stylesheet" href="/bundles/login.bundle.css?v=dfef321de886">
-    <script>window.__APP_BUILD_ID__ = 'dfef321de886';</script>
+    <link rel="stylesheet" href="/bundles/login.bundle.css?v=823712944b31">
+    <script>window.__APP_BUILD_ID__ = '823712944b31';</script>
 
     <link rel="canonical" href="https://www.steliara.com/de/login.html">
 </head>
@@ -245,8 +245,11 @@
         </section>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Downloaded now, executed by login.js only after it has made room in
+         localStorage (see SUPABASE_JS_URL there): a <script> tag would run the
+         library's one-time storage test too early. Keep URL and hash in sync. -->
+    <link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous">
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=dfef321de886"></script>
-    <script type="module" src="/js/bundles/login.bundle.js?v=dfef321de886"></script>
+    <script src="/js/analytics.js?v=823712944b31"></script>
+    <script type="module" src="/js/bundles/login.bundle.js?v=823712944b31"></script>
 </body></html>

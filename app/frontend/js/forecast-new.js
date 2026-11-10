@@ -5071,30 +5071,25 @@
         return `${LAYER_CACHE_PREFIX}${state.userId || 'anonymous'}:${key}`;
     }
 
-    function readPersistedLayerCache(key) {
-        try {
-            const raw = localStorage.getItem(persistedLayerCacheStorageKey(key));
-            if (!raw) return null;
-            const payload = JSON.parse(raw);
-            if (!payload || Date.now() - Number(payload.savedAt || 0) > LAYER_CACHE_TTL_MS) {
-                localStorage.removeItem(persistedLayerCacheStorageKey(key));
-                return null;
-            }
-            return payload.data || null;
-        } catch {
-            return null;
+    // The persisted cache shares the site's localStorage quota with sign-in, so it
+    // keeps to a budget and drops expired entries (see storage-hygiene.js). Created
+    // on first use: building it scans the stored entries once.
+    let persistedLayerCache = null;
+
+    function getPersistedLayerCache() {
+        if (!persistedLayerCache && window.StorageHygiene) {
+            persistedLayerCache = window.StorageHygiene.createLayerCache({ ttlMs: LAYER_CACHE_TTL_MS });
         }
+        return persistedLayerCache;
+    }
+
+    function readPersistedLayerCache(key) {
+        return getPersistedLayerCache()?.read(persistedLayerCacheStorageKey(key)) || null;
     }
 
     function writePersistedLayerCache(key, data) {
-        try {
-            localStorage.setItem(persistedLayerCacheStorageKey(key), JSON.stringify({
-                savedAt: Date.now(),
-                data,
-            }));
-        } catch {
-            // Storage may be full or unavailable; in-memory cache still applies.
-        }
+        // A failed write leaves the layer in the in-memory cache only.
+        getPersistedLayerCache()?.write(persistedLayerCacheStorageKey(key), data);
     }
 
     function renderWheel() {
