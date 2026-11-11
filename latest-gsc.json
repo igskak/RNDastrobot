@@ -1,12 +1,6 @@
 {
   "by_day": [
     {
-      "clicks": 1,
-      "date": "2026-10-11",
-      "impressions": 14,
-      "position": 5.714285714285714
-    },
-    {
       "clicks": 0,
       "date": "2026-10-12",
       "impressions": 11,
@@ -167,22 +161,22 @@
       "date": "2026-11-07",
       "impressions": 134,
       "position": 15.134328358208956
+    },
+    {
+      "clicks": 2,
+      "date": "2026-11-08",
+      "impressions": 200,
+      "position": 13.75
     }
   ],
   "delta": {
     "clicks": 17,
-    "ctr": -0.0365,
-    "impressions": 1174,
-    "position": 12.73
+    "ctr": -0.0409,
+    "impressions": 1351,
+    "position": 12.09
   },
   "fresh": {
     "by_day": [
-      {
-        "clicks": 3,
-        "date": "2026-11-04",
-        "impressions": 105,
-        "position": 17.904761904761905
-      },
       {
         "clicks": 2,
         "date": "2026-11-05",
@@ -210,40 +204,40 @@
       {
         "clicks": 1,
         "date": "2026-11-09",
-        "impressions": 134,
-        "position": 15.059701492537313
+        "impressions": 138,
+        "position": 14.855072463768115
+      },
+      {
+        "clicks": 3,
+        "date": "2026-11-10",
+        "impressions": 97,
+        "position": 18.010309278350515
       },
       {
         "clicks": 1,
-        "date": "2026-11-10",
-        "impressions": 9,
-        "position": 17.77777777777778
+        "date": "2026-11-11",
+        "impressions": 6,
+        "position": 21
       }
     ],
     "top_pages": [
       {
         "clicks": 3,
-        "impressions": 66,
-        "page": "https://www.steliara.com/cloud-astrology-software",
-        "position": 14.181818181818182
+        "impressions": 74,
+        "page": "https://www.steliara.com/moon/it/luna-nuova-9-novembre-2026",
+        "position": 20.5
       },
       {
         "clicks": 2,
-        "impressions": 22,
-        "page": "https://www.steliara.com/kundli/dasha-calculator",
-        "position": 46.5
+        "impressions": 69,
+        "page": "https://www.steliara.com/cloud-astrology-software",
+        "position": 15.304347826086957
       },
       {
         "clicks": 2,
         "impressions": 36,
         "page": "https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026",
-        "position": 49
-      },
-      {
-        "clicks": 2,
-        "impressions": 75,
-        "page": "https://www.steliara.com/moon/it/luna-nuova-9-novembre-2026",
-        "position": 20
+        "position": 50.25
       },
       {
         "clicks": 1,
@@ -253,21 +247,27 @@
       },
       {
         "clicks": 1,
+        "impressions": 4,
+        "page": "https://www.steliara.com/moon/es/luna-llena-20-de-mayo-de-2027",
+        "position": 7
+      },
+      {
+        "clicks": 1,
         "impressions": 2,
         "page": "https://www.steliara.com/moon/new-moon-april-6-2027",
         "position": 10.5
       },
       {
         "clicks": 1,
-        "impressions": 122,
+        "impressions": 113,
         "page": "https://www.steliara.com/moon/new-moon-november-9-2026",
-        "position": 9.819672131147541
+        "position": 9.946902654867257
       },
       {
         "clicks": 1,
-        "impressions": 7,
+        "impressions": 6,
         "page": "https://www.steliara.com/moon/pl/now-9-grudnia-2026",
-        "position": 6
+        "position": 5.833333333333333
       },
       {
         "clicks": 1,
@@ -276,34 +276,40 @@
         "position": 7.8
       },
       {
+        "clicks": 1,
+        "impressions": 52,
+        "page": "https://www.steliara.com/solar-fire-alternative",
+        "position": 5.673076923076923
+      },
+      {
         "clicks": 0,
-        "impressions": 15,
+        "impressions": 17,
         "page": "https://www.steliara.com/",
-        "position": 5.733333333333333
+        "position": 5.470588235294118
       },
       {
         "clicks": 0,
-        "impressions": 6,
+        "impressions": 5,
         "page": "https://www.steliara.com/answers/best-astrology-software-for-professional-practice",
-        "position": 7.166666666666667
-      },
-      {
-        "clicks": 0,
-        "impressions": 9,
-        "page": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
-        "position": 5.555555555555555
+        "position": 7.6
       },
       {
         "clicks": 0,
         "impressions": 8,
-        "page": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
-        "position": 7.125
+        "page": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
+        "position": 7.25
       },
       {
         "clicks": 0,
-        "impressions": 7,
+        "impressions": 10,
+        "page": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
+        "position": 7.2
+      },
+      {
+        "clicks": 0,
+        "impressions": 8,
         "page": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
-        "position": 7.714285714285714
+        "position": 7.25
       },
       {
         "clicks": 0,
@@ -319,9 +325,9 @@
       },
       {
         "clicks": 0,
-        "impressions": 18,
+        "impressions": 21,
         "page": "https://www.steliara.com/astroprocessor",
-        "position": 8.5
+        "position": 9.666666666666666
       },
       {
         "clicks": 0,
@@ -343,87 +349,87 @@
       },
       {
         "clicks": 0,
+        "impressions": 21,
+        "page": "https://www.steliara.com/kundli/dasha-calculator",
+        "position": 47.714285714285715
+      },
+      {
+        "clicks": 0,
         "impressions": 2,
         "page": "https://www.steliara.com/kundli/sade-sati-calculator",
         "position": 13.5
       },
       {
         "clicks": 0,
-        "impressions": 9,
+        "impressions": 15,
         "page": "https://www.steliara.com/moon",
-        "position": 26.333333333333332
+        "position": 32.8
       },
       {
         "clicks": 0,
-        "impressions": 1,
-        "page": "https://www.steliara.com/moon/de/neumond-6-februar-2027",
-        "position": 10
-      },
-      {
-        "clicks": 0,
-        "impressions": 1,
-        "page": "https://www.steliara.com/moon/de/neumond-7-april-2027",
-        "position": 5
-      },
-      {
-        "clicks": 0,
-        "impressions": 1,
-        "page": "https://www.steliara.com/moon/de/neumond-7-januar-2027",
-        "position": 17
+        "impressions": 2,
+        "page": "https://www.steliara.com/moon/data",
+        "position": 2
       }
     ],
     "window": {
-      "end": "2026-11-10",
-      "start": "2026-11-04"
+      "end": "2026-11-11",
+      "start": "2026-11-05"
     }
   },
   "previous_totals": {
-    "clicks": 10,
-    "ctr": 0.0565,
-    "impressions": 177,
-    "position": 9.45
+    "clicks": 11,
+    "ctr": 0.0591,
+    "impressions": 186,
+    "position": 9.15
   },
   "previous_window": {
-    "end": "2026-10-10",
-    "start": "2026-09-13"
+    "end": "2026-10-11",
+    "start": "2026-09-14"
   },
   "site": "sc-domain:steliara.com",
   "top_pages": [
     {
-      "clicks": 6,
-      "impressions": 250,
+      "clicks": 5,
+      "impressions": 267,
       "page": "https://www.steliara.com/cloud-astrology-software",
-      "position": 13.612
+      "position": 13.835205992509364
     },
     {
       "clicks": 4,
-      "impressions": 74,
+      "impressions": 76,
       "page": "https://www.steliara.com/",
-      "position": 7.648648648648648
+      "position": 7.5131578947368425
     },
     {
       "clicks": 4,
-      "impressions": 149,
+      "impressions": 159,
       "page": "https://www.steliara.com/solar-fire-alternative",
-      "position": 6.89261744966443
+      "position": 6.830188679245283
     },
     {
       "clicks": 2,
-      "impressions": 34,
+      "impressions": 33,
       "page": "https://www.steliara.com/astrology-practice-management",
-      "position": 5.0588235294117645
+      "position": 5.121212121212121
+    },
+    {
+      "clicks": 2,
+      "impressions": 35,
+      "page": "https://www.steliara.com/kundli/dasha-calculator",
+      "position": 43.8
     },
     {
       "clicks": 2,
       "impressions": 32,
-      "page": "https://www.steliara.com/kundli/dasha-calculator",
-      "position": 43.71875
+      "page": "https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026",
+      "position": 47.4375
     },
     {
       "clicks": 2,
-      "impressions": 24,
-      "page": "https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026",
-      "position": 51.916666666666664
+      "impressions": 58,
+      "page": "https://www.steliara.com/moon/it/luna-nuova-9-novembre-2026",
+      "position": 19.482758620689655
     },
     {
       "clicks": 1,
@@ -433,27 +439,21 @@
     },
     {
       "clicks": 1,
-      "impressions": 37,
+      "impressions": 42,
       "page": "https://www.steliara.com/astroprocessor",
-      "position": 11.64864864864865
+      "position": 10.642857142857142
     },
     {
       "clicks": 1,
-      "impressions": 21,
+      "impressions": 20,
       "page": "https://www.steliara.com/de/",
-      "position": 24.333333333333332
+      "position": 25.15
     },
     {
       "clicks": 1,
-      "impressions": 4,
+      "impressions": 7,
       "page": "https://www.steliara.com/moon/de/neumond-9-dezember-2026",
-      "position": 9.25
-    },
-    {
-      "clicks": 1,
-      "impressions": 34,
-      "page": "https://www.steliara.com/moon/it/luna-nuova-9-novembre-2026",
-      "position": 14.323529411764707
+      "position": 8.285714285714285
     },
     {
       "clicks": 1,
@@ -463,39 +463,51 @@
     },
     {
       "clicks": 1,
-      "impressions": 85,
+      "impressions": 124,
       "page": "https://www.steliara.com/moon/new-moon-november-9-2026",
-      "position": 10.705882352941176
+      "position": 9.758064516129032
     },
     {
       "clicks": 1,
-      "impressions": 8,
+      "impressions": 5,
+      "page": "https://www.steliara.com/moon/pl/now-9-grudnia-2026",
+      "position": 6.4
+    },
+    {
+      "clicks": 1,
+      "impressions": 10,
       "page": "https://www.steliara.com/moon/pt/lua-nova-9-de-novembro-de-2026",
-      "position": 7.25
+      "position": 7.8
     },
     {
       "clicks": 0,
-      "impressions": 44,
+      "impressions": 45,
       "page": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
-      "position": 7.090909090909091
-    },
-    {
-      "clicks": 0,
-      "impressions": 4,
-      "page": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
-      "position": 5.5
+      "position": 7.088888888888889
     },
     {
       "clicks": 0,
       "impressions": 7,
-      "page": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
-      "position": 4
+      "page": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
+      "position": 7.285714285714286
     },
     {
       "clicks": 0,
-      "impressions": 17,
+      "impressions": 11,
+      "page": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
+      "position": 4.454545454545455
+    },
+    {
+      "clicks": 0,
+      "impressions": 3,
+      "page": "https://www.steliara.com/astro-gold-alternative",
+      "position": 5.333333333333333
+    },
+    {
+      "clicks": 0,
+      "impressions": 16,
       "page": "https://www.steliara.com/astrologer-workspace",
-      "position": 4.588235294117647
+      "position": 4.375
     },
     {
       "clicks": 0,
@@ -526,18 +538,6 @@
       "impressions": 2,
       "page": "https://www.steliara.com/kundli/hi/sade-sati-calculator",
       "position": 8
-    },
-    {
-      "clicks": 0,
-      "impressions": 2,
-      "page": "https://www.steliara.com/kundli/sade-sati-calculator",
-      "position": 31
-    },
-    {
-      "clicks": 0,
-      "impressions": 46,
-      "page": "https://www.steliara.com/moon",
-      "position": 25.152173913043477
     }
   ],
   "top_queries": [
@@ -549,7 +549,7 @@
     },
     {
       "clicks": 1,
-      "impressions": 11,
+      "impressions": 12,
       "position": 7,
       "query": "astrolium"
     },
@@ -574,6 +574,12 @@
     {
       "clicks": 0,
       "impressions": 1,
+      "position": 11,
+      "query": "9 novembre 2026"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
       "position": 71,
       "query": "accurate dasha calculator"
     },
@@ -591,14 +597,20 @@
     },
     {
       "clicks": 0,
+      "impressions": 1,
+      "position": 2,
+      "query": "astrogold similar free carta astralall tarot cards"
+    },
+    {
+      "clicks": 0,
       "impressions": 2,
       "position": 6.5,
       "query": "astrologer studio"
     },
     {
       "clicks": 0,
-      "impressions": 1,
-      "position": 12,
+      "impressions": 2,
+      "position": 10,
       "query": "astrologerapp.org"
     },
     {
@@ -633,20 +645,20 @@
     },
     {
       "clicks": 0,
-      "impressions": 14,
-      "position": 47,
+      "impressions": 16,
+      "position": 46.625,
       "query": "astrology software"
     },
     {
       "clicks": 0,
-      "impressions": 23,
-      "position": 34.608695652173914,
+      "impressions": 25,
+      "position": 34.92,
       "query": "astrology software for mac"
     },
     {
       "clicks": 0,
-      "impressions": 5,
-      "position": 30.6,
+      "impressions": 6,
+      "position": 31.833333333333332,
       "query": "astrology software for windows"
     },
     {
@@ -678,29 +690,17 @@
       "impressions": 1,
       "position": 8,
       "query": "can you help me choose between two natal chart calculators, one cloud-hosted and one on-prem?"
-    },
-    {
-      "clicks": 0,
-      "impressions": 12,
-      "position": 7.416666666666667,
-      "query": "cloud astrology"
-    },
-    {
-      "clicks": 0,
-      "impressions": 2,
-      "position": 81.5,
-      "query": "cuando empieza la luna nueva"
     }
   ],
   "totals": {
-    "clicks": 27,
-    "ctr": 0.02,
-    "impressions": 1351,
-    "position": 22.18
+    "clicks": 28,
+    "ctr": 0.0182,
+    "impressions": 1537,
+    "position": 21.24
   },
   "window": {
     "days": 28,
-    "end": "2026-11-07",
-    "start": "2026-10-11"
+    "end": "2026-11-08",
+    "start": "2026-10-12"
   }
 }
