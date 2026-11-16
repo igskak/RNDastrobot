@@ -26,16 +26,9 @@
     }
   },
   "base": "https://www.steliara.com",
-  "date": "2026-11-15",
+  "date": "2026-11-16",
   "errors": 0,
-  "findings": [
-    {
-      "check": "page.description-length",
-      "detail": "166 chars (want 70-165)",
-      "level": "warning",
-      "url": "https://www.steliara.com/moon/data"
-    }
-  ],
+  "findings": [],
   "pages": {
     "https://www.steliara.com/": {
       "body_words": 990,
@@ -403,9 +396,9 @@
     },
     "https://www.steliara.com/moon/data": {
       "body_words": 557,
-      "bytes": 10977,
+      "bytes": 10962,
       "canonical": "https://www.steliara.com/moon/data",
-      "description_length": 166,
+      "description_length": 161,
       "empty_i18n_nodes": 0,
       "h1": "New moon and full moon dates, 2026–2027",
       "hreflang_count": 0,
@@ -2336,5 +2329,5 @@
   },
   "regressions": [],
   "sitemap_url_count": 164,
-  "warnings": 1
+  "warnings": 0
 }
