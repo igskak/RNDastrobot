@@ -704,6 +704,7 @@
         "chip": "Primary chart: {chart}",
         "baseTitle": "{chart} (primary)"
       },
+      "pinchHint": "Pinch to zoom the chart",
       "emptyLayer": {
         "title": "No layer selected",
         "body": "Add a layer to calculate it"

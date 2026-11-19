@@ -704,6 +704,7 @@
         "chip": "Basishoroskop: {chart}",
         "baseTitle": "{chart} (Basis)"
       },
+      "pinchHint": "Mit zwei Fingern zoomen",
       "emptyLayer": {
         "title": "Keine Ebene ausgewählt",
         "body": "Fügen Sie eine Ebene für die Berechnung hinzu"

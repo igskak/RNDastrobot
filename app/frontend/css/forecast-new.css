@@ -1832,6 +1832,43 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     display: none;
 }
 
+/* Touch phones: one-off hint that the wheel zooms with a pinch (the +/− buttons
+   are hidden there, see the ≤640px coarse-pointer rule). */
+.forecast-new-pinch-hint {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    z-index: 46;
+    max-width: calc(100% - 120px);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    color: #fff;
+    background: rgba(30, 58, 95, 0.9);
+    box-shadow: 0 6px 16px rgba(26, 22, 20, 0.12);
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+}
+
+.forecast-new-pinch-hint.is-visible {
+    opacity: 1;
+}
+
+.forecast-new-pinch-hint[hidden] {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .forecast-new-pinch-hint {
+        transition: none;
+    }
+}
+
 .forecast-new-settings-btn {
     position: relative;
 }
@@ -4996,6 +5033,15 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
         height: 36px;
         min-height: 36px;
         font-size: 16px;
+    }
+
+    /* Touch phones zoom the wheel with a pinch; a burst of +/− taps was the
+       only way before and read as a rage click. Mouse users at this width keep
+       the buttons (they have no pinch). */
+    @media (pointer: coarse) {
+        .forecast-new-zoom-controls .forecast-new-zoom-step-btn {
+            display: none;
+        }
     }
 
     /* ---- Datebar: keep clear of the fixed chat launcher (bottom-right, 44px) ---- */
