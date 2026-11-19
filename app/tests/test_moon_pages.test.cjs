@@ -184,3 +184,31 @@ test('the planner shows each moon in the chosen time zone and says which zone it
     assert.match(first.querySelector('time').textContent, new RegExp(`${hour % 12 || 12}:\\d\\d ${hour < 12 ? 'AM' : 'PM'}`));
     assert.match(document.getElementById('planner-times').textContent, /^Times are in /);
 });
+
+test('the usage signal waits for real input and sends only the hub-hook click and engagement', async () => {
+    const seenSource = fs.readFileSync(path.join(appRoot, 'frontend', 'js', 'moon-seen.js'), 'utf8');
+    const html = fs.readFileSync(path.join(pagesDir, 'new-moon-november-9-2026.html'), 'utf8').replace(/<script src="[^"]*" defer><\/script>/g, '');
+    const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'https://www.steliara.com/moon/new-moon-november-9-2026', pretendToBeVisual: true });
+    const beacons = [];
+    dom.window.navigator.sendBeacon = (url, blob) => { beacons.push({ url, blob }); return true; };
+    const timers = [];
+    dom.window.setTimeout = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
+    dom.window.eval(seenSource);
+
+    assert.equal(beacons.length, 0, 'loading the page alone sends nothing');
+    assert.equal(timers.length, 0);
+    dom.window.dispatchEvent(new dom.window.Event('scroll'));
+    dom.window.dispatchEvent(new dom.window.Event('keydown'));
+    assert.equal(timers.length, 1, 'only the first input starts the wait');
+    assert.equal(timers[0].ms, 5000);
+    assert.equal(beacons.length, 0);
+    timers[0].fn();
+    assert.equal(beacons.length, 1);
+    assert.equal(beacons[0].url, '/api/v1/moon/seen');
+    assert.equal(await beacons[0].blob.text(), JSON.stringify({ event: 'engaged', page: 'lunation', locale: 'en' }));
+
+    dom.window.document.querySelector('.hook-link').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+    dom.window.document.querySelector('.hook-link').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+    assert.equal(beacons.length, 2, 'the hook click is sent once');
+    assert.equal(await beacons[1].blob.text(), JSON.stringify({ event: 'hook_click', page: 'lunation', locale: 'en' }));
+});

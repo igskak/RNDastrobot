@@ -29,7 +29,7 @@ const outRoot = path.join(frontendRoot, 'moon');
 const ORIGIN = 'https://www.steliara.com';
 const LOCALES = ['en', 'pl', 'de', 'fr', 'it', 'es', 'pt'];
 const PAGES = ['index', 'letter'];
-const ASSET_VERSION = '5';
+const ASSET_VERSION = '6';
 
 const TIMEZONES = [
     'Europe/Warsaw', 'Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/Paris', 'Europe/Brussels',
@@ -596,6 +596,7 @@ function renderLunation(locale, entry, index, plan, ctx) {
   ${header(locale, 'lunation', catalog, catalogs)}
   ${lunationMain(locale, catalog, letters[locale], plan, index, catalogs)}
   ${footer(catalog)}
+  <script src="/js/moon-seen.js?v=${ASSET_VERSION}" defer></script>
 </body>
 </html>
 `;
@@ -620,7 +621,7 @@ function render(locale, slug, catalogs, letters, lunations, links) {
   ${footer(catalog)}
   <script type="application/json" id="moon-i18n">${JSON.stringify(i18n(catalog)).replace(/</g, '\\u003c')}</script>
   <script src="/js/${script}.js?v=${ASSET_VERSION}" defer></script>
-</body>
+${slug === 'index' ? `  <script src="/js/moon-seen.js?v=${ASSET_VERSION}" defer></script>\n` : ''}</body>
 </html>
 `;
 }
@@ -762,6 +763,7 @@ function renderData(catalogs, letters, lunations, range) {
       <p><a href="${pagePath('en')}">${esc(catalog.ui.backToMoon)}</a></p>
     </main>
   ${footer(catalog)}
+  <script src="/js/moon-seen.js?v=${ASSET_VERSION}" defer></script>
 </body>
 </html>
 `;
@@ -818,6 +820,7 @@ function renderPlanner(locale, catalogs, letters, lunations) {
   ${footer(catalog)}
   <script type="application/json" id="moon-i18n">${JSON.stringify({ ...i18n(catalog), timesNote: page.timesNote }).replace(/</g, '\\u003c')}</script>
   <script src="/js/moon-planner.js?v=${ASSET_VERSION}" defer></script>
+  <script src="/js/moon-seen.js?v=${ASSET_VERSION}" defer></script>
 </body>
 </html>
 `;

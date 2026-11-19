@@ -500,3 +500,35 @@ def test_letters_and_links_are_counted(env, sent, events, db_factory, client):
         db.commit()
     assert _names(events) == [("moon.letter_sent", "de")]
     assert events[0]["properties"]["kind"] == lun.kind
+
+
+# --- "a person used the page" signal -----------------------------------------------------
+
+def test_engaged_and_hook_click_are_counted_anonymously(client, events):
+    browser = {"User-Agent": REAL_BROWSERS[0]}
+    for event, page in (("engaged", "lunation"), ("hook_click", "lunation"), ("engaged", "planner")):
+        assert client.post("/api/v1/moon/seen", json={"event": event, "page": page, "locale": "de"}, headers=browser).status_code == 204
+    assert [(e["event"], e["properties"]["page"]) for e in events] == [
+        ("moon.engaged", "lunation"), ("moon.hook_click", "lunation"), ("moon.engaged", "planner"),
+    ]
+    for event in events:
+        props = event["properties"]
+        assert props["locale"] == "de" and props["$process_person_profile"] is False and props["$geoip_disable"] is True
+        assert len(event["distinct_id"]) == 32
+
+
+@pytest.mark.parametrize("agent", MACHINES)
+def test_tools_never_count_as_engaged(client, events, agent):
+    response = client.post("/api/v1/moon/seen", json={"event": "engaged", "page": "index", "locale": "en"}, headers={"User-Agent": agent})
+    assert response.status_code == 204 and events == []
+
+
+@pytest.mark.parametrize("body", (
+    {"event": "signup", "page": "index", "locale": "en"},
+    {"event": "engaged", "page": "letter", "locale": "en"},
+    {"event": "engaged", "page": "index", "locale": "english"},
+    {"event": "engaged"},
+))
+def test_the_signal_accepts_only_known_events_and_pages(client, events, body):
+    assert client.post("/api/v1/moon/seen", json=body, headers={"User-Agent": REAL_BROWSERS[0]}).status_code == 422
+    assert events == []
