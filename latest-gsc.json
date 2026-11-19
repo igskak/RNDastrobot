@@ -1,12 +1,6 @@
 {
   "by_day": [
     {
-      "clicks": 1,
-      "date": "2026-10-19",
-      "impressions": 18,
-      "position": 15.722222222222221
-    },
-    {
       "clicks": 0,
       "date": "2026-10-20",
       "impressions": 32,
@@ -167,22 +161,22 @@
       "date": "2026-11-15",
       "impressions": 96,
       "position": 17.375
+    },
+    {
+      "clicks": 1,
+      "date": "2026-11-16",
+      "impressions": 118,
+      "position": 12.55084745762712
     }
   ],
   "delta": {
     "clicks": 27,
-    "ctr": -0.0367,
-    "impressions": 1957,
-    "position": 9.36
+    "ctr": -0.0361,
+    "impressions": 2051,
+    "position": 8.49
   },
   "fresh": {
     "by_day": [
-      {
-        "clicks": 4,
-        "date": "2026-11-12",
-        "impressions": 107,
-        "position": 9.822429906542055
-      },
       {
         "clicks": 1,
         "date": "2026-11-13",
@@ -214,126 +208,126 @@
         "position": 9.99290780141844
       },
       {
-        "clicks": 0,
+        "clicks": 3,
         "date": "2026-11-18",
-        "impressions": 4,
-        "position": 6
+        "impressions": 121,
+        "position": 11.057851239669422
+      },
+      {
+        "clicks": 0,
+        "date": "2026-11-19",
+        "impressions": 11,
+        "position": 13.454545454545455
       }
     ],
     "top_pages": [
       {
-        "clicks": 5,
-        "impressions": 78,
+        "clicks": 4,
+        "impressions": 86,
         "page": "https://www.steliara.com/moon/it/luna-piena-24-novembre-2026",
-        "position": 9.282051282051283
+        "position": 8.627906976744185
       },
       {
-        "clicks": 1,
-        "impressions": 4,
-        "page": "https://www.steliara.com/astrology-practice-management",
-        "position": 4.25
-      },
-      {
-        "clicks": 1,
-        "impressions": 72,
-        "page": "https://www.steliara.com/cloud-astrology-software",
-        "position": 20
-      },
-      {
-        "clicks": 1,
-        "impressions": 9,
-        "page": "https://www.steliara.com/moon/it/planner",
-        "position": 6.555555555555555
-      },
-      {
-        "clicks": 1,
-        "impressions": 5,
-        "page": "https://www.steliara.com/record-astrology-consultations",
-        "position": 4
-      },
-      {
-        "clicks": 1,
-        "impressions": 9,
-        "page": "https://www.steliara.com/ru/",
-        "position": 5.111111111111111
-      },
-      {
-        "clicks": 1,
-        "impressions": 51,
+        "clicks": 2,
+        "impressions": 47,
         "page": "https://www.steliara.com/solar-fire-alternative",
-        "position": 6.607843137254902
+        "position": 6.276595744680851
       },
       {
         "clicks": 1,
-        "impressions": 17,
+        "impressions": 1,
+        "page": "https://www.steliara.com/astrology-practice-management",
+        "position": 8
+      },
+      {
+        "clicks": 1,
+        "impressions": 64,
+        "page": "https://www.steliara.com/cloud-astrology-software",
+        "position": 21.796875
+      },
+      {
+        "clicks": 1,
+        "impressions": 23,
+        "page": "https://www.steliara.com/moon/new-moon-december-8-2026",
+        "position": 7.434782608695652
+      },
+      {
+        "clicks": 1,
+        "impressions": 15,
+        "page": "https://www.steliara.com/moon/pl/pelnia-24-listopada-2026",
+        "position": 8.733333333333334
+      },
+      {
+        "clicks": 1,
+        "impressions": 13,
         "page": "https://www.steliara.com/zet-online",
-        "position": 7.352941176470588
+        "position": 6.923076923076923
       },
       {
         "clicks": 0,
-        "impressions": 24,
+        "impressions": 19,
         "page": "https://www.steliara.com/",
-        "position": 6.083333333333333
+        "position": 9.421052631578947
       },
       {
         "clicks": 0,
-        "impressions": 12,
+        "impressions": 15,
         "page": "https://www.steliara.com/answers/best-astrology-software-for-mac",
         "position": 8.666666666666668
       },
       {
         "clicks": 0,
-        "impressions": 14,
+        "impressions": 11,
         "page": "https://www.steliara.com/answers/best-astrology-software-for-professional-practice",
-        "position": 6.714285714285714
-      },
-      {
-        "clicks": 0,
-        "impressions": 1,
-        "page": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
-        "position": 7
+        "position": 7.181818181818182
       },
       {
         "clicks": 0,
         "impressions": 3,
-        "page": "https://www.steliara.com/answers/how-astrology-consultation-recordings-are-stored",
-        "position": 6.666666666666667
+        "page": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
+        "position": 18.666666666666668
       },
       {
         "clicks": 0,
         "impressions": 8,
         "page": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
-        "position": 7.625
-      },
-      {
-        "clicks": 0,
-        "impressions": 4,
-        "page": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
         "position": 6.75
       },
       {
         "clicks": 0,
-        "impressions": 12,
+        "impressions": 2,
+        "page": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
+        "position": 8
+      },
+      {
+        "clicks": 0,
+        "impressions": 14,
         "page": "https://www.steliara.com/astro-gold-alternative",
-        "position": 14.166666666666666
+        "position": 15.714285714285714
+      },
+      {
+        "clicks": 0,
+        "impressions": 1,
+        "page": "https://www.steliara.com/astrologer-workspace",
+        "position": 10
+      },
+      {
+        "clicks": 0,
+        "impressions": 14,
+        "page": "https://www.steliara.com/astroprocessor",
+        "position": 17.642857142857142
+      },
+      {
+        "clicks": 0,
+        "impressions": 1,
+        "page": "https://www.steliara.com/astroprocessor-uk",
+        "position": 8
       },
       {
         "clicks": 0,
         "impressions": 2,
-        "page": "https://www.steliara.com/astrologer-workspace",
-        "position": 7.5
-      },
-      {
-        "clicks": 0,
-        "impressions": 19,
-        "page": "https://www.steliara.com/astroprocessor",
-        "position": 15.947368421052632
-      },
-      {
-        "clicks": 0,
-        "impressions": 3,
         "page": "https://www.steliara.com/de/",
-        "position": 10.666666666666666
+        "position": 7
       },
       {
         "clicks": 0,
@@ -345,115 +339,121 @@
         "clicks": 0,
         "impressions": 11,
         "page": "https://www.steliara.com/kundli/dasha-calculator",
-        "position": 47.36363636363637
+        "position": 49.27272727272727
       },
       {
         "clicks": 0,
         "impressions": 1,
         "page": "https://www.steliara.com/kundli/hi/dasha-calculator",
-        "position": 10
+        "position": 6
       },
       {
         "clicks": 0,
-        "impressions": 89,
+        "impressions": 97,
         "page": "https://www.steliara.com/moon",
-        "position": 13.393258426966293
+        "position": 12.65979381443299
       },
       {
         "clicks": 0,
         "impressions": 10,
         "page": "https://www.steliara.com/moon/data",
-        "position": 16.7
+        "position": 16.5
       },
       {
         "clicks": 0,
         "impressions": 1,
         "page": "https://www.steliara.com/moon/de",
         "position": 7
+      },
+      {
+        "clicks": 0,
+        "impressions": 1,
+        "page": "https://www.steliara.com/moon/de/neumond-4-juni-2027",
+        "position": 11
       }
     ],
     "window": {
-      "end": "2026-11-18",
-      "start": "2026-11-12"
+      "end": "2026-11-19",
+      "start": "2026-11-13"
     }
   },
   "previous_totals": {
     "clicks": 13,
-    "ctr": 0.0549,
-    "impressions": 237,
-    "position": 10.31
+    "ctr": 0.0535,
+    "impressions": 243,
+    "position": 10.84
   },
   "previous_window": {
-    "end": "2026-10-18",
-    "start": "2026-09-21"
+    "end": "2026-10-19",
+    "start": "2026-09-22"
   },
   "site": "sc-domain:steliara.com",
   "top_pages": [
     {
       "clicks": 7,
-      "impressions": 317,
+      "impressions": 315,
       "page": "https://www.steliara.com/cloud-astrology-software",
-      "position": 15.211356466876971
+      "position": 15.406349206349207
     },
     {
       "clicks": 6,
-      "impressions": 218,
+      "impressions": 228,
       "page": "https://www.steliara.com/solar-fire-alternative",
-      "position": 6.724770642201835
+      "position": 6.6535087719298245
     },
     {
       "clicks": 3,
-      "impressions": 95,
+      "impressions": 97,
       "page": "https://www.steliara.com/moon/it/luna-nuova-9-novembre-2026",
-      "position": 21.231578947368423
+      "position": 21.195876288659793
     },
     {
       "clicks": 3,
-      "impressions": 57,
+      "impressions": 80,
       "page": "https://www.steliara.com/moon/it/luna-piena-24-novembre-2026",
-      "position": 11.403508771929825
+      "position": 10.05
     },
     {
       "clicks": 2,
-      "impressions": 90,
+      "impressions": 91,
       "page": "https://www.steliara.com/",
-      "position": 6.777777777777778
+      "position": 6.714285714285714
     },
     {
       "clicks": 2,
-      "impressions": 31,
+      "impressions": 30,
       "page": "https://www.steliara.com/astrology-practice-management",
-      "position": 4.709677419354838
+      "position": 4.833333333333334
     },
     {
       "clicks": 2,
-      "impressions": 66,
+      "impressions": 67,
       "page": "https://www.steliara.com/astroprocessor",
-      "position": 11.803030303030303
+      "position": 12.17910447761194
     },
     {
       "clicks": 2,
-      "impressions": 53,
+      "impressions": 56,
       "page": "https://www.steliara.com/kundli/dasha-calculator",
-      "position": 45.81132075471698
+      "position": 44.517857142857146
     },
     {
       "clicks": 2,
-      "impressions": 55,
+      "impressions": 57,
       "page": "https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026",
-      "position": 55.18181818181818
+      "position": 56.87719298245614
     },
     {
       "clicks": 1,
-      "impressions": 38,
+      "impressions": 40,
       "page": "https://www.steliara.com/answers/best-astrology-software-for-professional-practice",
-      "position": 12.657894736842104
+      "position": 12.5
     },
     {
       "clicks": 1,
-      "impressions": 12,
+      "impressions": 14,
       "page": "https://www.steliara.com/moon/de/neumond-9-dezember-2026",
-      "position": 9.333333333333334
+      "position": 9
     },
     {
       "clicks": 1,
@@ -499,21 +499,27 @@
     },
     {
       "clicks": 1,
-      "impressions": 14,
+      "impressions": 17,
       "page": "https://www.steliara.com/ru/",
-      "position": 8.214285714285715
+      "position": 8.117647058823529
     },
     {
       "clicks": 1,
-      "impressions": 28,
+      "impressions": 30,
       "page": "https://www.steliara.com/zet-online",
-      "position": 8.25
+      "position": 8.033333333333333
     },
     {
       "clicks": 0,
-      "impressions": 49,
+      "impressions": 1,
+      "page": "https://www.steliara.com/answers/best-astrology-software-for-mac",
+      "position": 9
+    },
+    {
+      "clicks": 0,
+      "impressions": 48,
       "page": "https://www.steliara.com/answers/how-astrologers-keep-client-notes",
-      "position": 7.204081632653061
+      "position": 7.291666666666667
     },
     {
       "clicks": 0,
@@ -523,21 +529,15 @@
     },
     {
       "clicks": 0,
-      "impressions": 15,
-      "page": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
-      "position": 7.533333333333333
-    },
-    {
-      "clicks": 0,
       "impressions": 17,
-      "page": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
-      "position": 5.588235294117647
+      "page": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
+      "position": 7.588235294117647
     },
     {
       "clicks": 0,
-      "impressions": 21,
-      "page": "https://www.steliara.com/astro-gold-alternative",
-      "position": 9.333333333333334
+      "impressions": 16,
+      "page": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
+      "position": 5.8125
     }
   ],
   "top_queries": [
@@ -555,8 +555,8 @@
     },
     {
       "clicks": 1,
-      "impressions": 3,
-      "position": 29.666666666666668,
+      "impressions": 4,
+      "position": 29.75,
       "query": "luna nuova novembre 2026"
     },
     {
@@ -570,6 +570,12 @@
       "impressions": 1,
       "position": 1,
       "query": "solar fire x"
+    },
+    {
+      "clicks": 0,
+      "impressions": 2,
+      "position": 103.5,
+      "query": "-filetype:pdf (\"09/11/2026\" or \"9 novembre 2026\") and -site:instagram.com -site:facebook.com -site:linkedin.com photovoltaïque or photovoltaique or solaire or agrivoltaïsme or agrivoltaïque or agrivoltaisme or agrivoltaique"
     },
     {
       "clicks": 0,
@@ -598,6 +604,12 @@
     {
       "clicks": 0,
       "impressions": 1,
+      "position": 11,
+      "query": "9. dezember 2026"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
       "position": 71,
       "query": "accurate dasha calculator"
     },
@@ -612,6 +624,12 @@
       "impressions": 2,
       "position": 69,
       "query": "antardasha calculator"
+    },
+    {
+      "clicks": 0,
+      "impressions": 1,
+      "position": 9,
+      "query": "apple silicon?"
     },
     {
       "clicks": 0,
@@ -663,8 +681,8 @@
     },
     {
       "clicks": 0,
-      "impressions": 28,
-      "position": 46.357142857142854,
+      "impressions": 27,
+      "position": 44.96296296296296,
       "query": "astrology software"
     },
     {
@@ -672,35 +690,17 @@
       "impressions": 24,
       "position": 35.375,
       "query": "astrology software for mac"
-    },
-    {
-      "clicks": 0,
-      "impressions": 9,
-      "position": 35.55555555555556,
-      "query": "astrology software for windows"
-    },
-    {
-      "clicks": 0,
-      "impressions": 1,
-      "position": 39,
-      "query": "astrosoftware"
-    },
-    {
-      "clicks": 0,
-      "impressions": 1,
-      "position": 56,
-      "query": "best astrology software"
     }
   ],
   "totals": {
     "clicks": 40,
-    "ctr": 0.0182,
-    "impressions": 2194,
-    "position": 19.67
+    "ctr": 0.0174,
+    "impressions": 2294,
+    "position": 19.33
   },
   "window": {
     "days": 28,
-    "end": "2026-11-15",
-    "start": "2026-10-19"
+    "end": "2026-11-16",
+    "start": "2026-10-20"
   }
 }
