@@ -140,6 +140,16 @@ def track_page_view(
     track("page_view", locale, page=page, referrer_host=host or "direct", **extra)
 
 
+def track_seen(event: str, page: str, locale: str, user_agent: Optional[str]) -> None:
+    """A page told us a person used it (scrolled, typed or clicked after a few seconds) or clicked the hub hook.
+
+    The server cannot tell a person from a patient crawler by the request alone, so the page
+    sends this only after real input; tools that announce themselves are still left out.
+    """
+    if looks_like_a_visitor(user_agent):
+        track(event, locale, page=page)
+
+
 @lru_cache(maxsize=None)
 def content(locale: str) -> Dict[str, Any]:
     return json.loads((_CONTENT_DIR / f"{normalize_locale(locale)}.json").read_text(encoding="utf-8"))

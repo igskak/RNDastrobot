@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.kundli import EMAIL_PATTERN, KundliBirth, TokenRequest
 
-__all__ = ["JournalEntryRequest", "MoonBirth", "MoonChartRequest", "MoonLinkRequest", "MoonSubscribeRequest", "TokenRequest"]
+__all__ = [
+    "JournalEntryRequest", "MoonBirth", "MoonChartRequest", "MoonLinkRequest", "MoonSeenRequest", "MoonSubscribeRequest",
+    "TokenRequest",
+]
 
 
 class MoonBirth(KundliBirth):
@@ -22,6 +25,17 @@ class MoonBirth(KundliBirth):
         if (self.latitude is None) != (self.longitude is None):
             raise ValueError("latitude and longitude go together")
         return self
+
+
+class MoonSeenRequest(BaseModel):
+    """What a public moon page tells us once a person (not a crawler) has really used it.
+
+    Only the event, the kind of page and the language: no address, no text, no identifier.
+    """
+
+    event: Literal["engaged", "hook_click"]
+    page: Literal["index", "lunation", "planner", "data"]
+    locale: str = Field(default="en", max_length=5)
 
 
 class MoonChartRequest(BaseModel):

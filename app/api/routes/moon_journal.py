@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, NoReturn
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -17,6 +17,7 @@ from app.models.moon_journal import (
     JournalEntryRequest,
     MoonChartRequest,
     MoonLinkRequest,
+    MoonSeenRequest,
     MoonSubscribeRequest,
     TokenRequest,
 )
@@ -30,6 +31,7 @@ _calc_limit = rate_limited("moon-calc", 40, 60)
 _subscribe_limit = rate_limited("moon-subscribe", 6, 3600)
 _token_limit = rate_limited("moon-token", 30, 60)
 _save_limit = rate_limited("moon-save", 120, 60)  # autosave while typing
+_seen_limit = rate_limited("moon-seen", 90, 60)
 
 
 class LetterRequest(TokenRequest):
@@ -63,6 +65,12 @@ def moon_chart(payload: MoonChartRequest) -> Dict[str, Any]:
     result = _guarded(lambda: moon.chart(payload.birth, payload.locale))
     moon.track("chart_calculated", payload.locale, frame=result["frame"])
     return result
+
+
+@router.post("/seen", summary="A person used a moon page (anonymous count)", status_code=204, dependencies=[Depends(_seen_limit)])
+def moon_seen(payload: MoonSeenRequest, request: Request) -> Response:
+    moon.track_seen(payload.event, payload.page, payload.locale, request.headers.get("user-agent"))
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/subscribe", summary="Ask for the moon letters", dependencies=[Depends(_subscribe_limit)])

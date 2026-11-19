@@ -290,3 +290,10 @@ def test_the_hub_offers_the_calendar_and_the_planner(client, locale):
     html = client.get(INDEX[locale]).text
     assert f'href="{ICS[locale]}" download' in html and f'href="{INDEX[locale]}/planner"' in html
     assert ('href="/moon/data"' in html) == (locale == "en")
+
+
+def test_public_pages_carry_the_usage_signal_and_private_ones_do_not(client):
+    for path in ("/moon", "/moon/de", "/moon/data", "/moon/planner", "/moon/pl/planner", MANIFEST["pages"][0]["paths"]["en"]):
+        assert "/js/moon-seen.js?v=" in client.get(path).text, path
+    for locale in LOCALES:
+        assert "moon-seen" not in client.get(LETTER[locale]).text, locale
