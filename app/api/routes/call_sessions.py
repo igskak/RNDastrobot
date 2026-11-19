@@ -26,6 +26,7 @@ from app.services.storage_service import storage_service
 from app.services.processing_pipeline import run_post_call_pipeline
 from app.services.entitlements_service import FEATURE_CALLS, FEATURE_RECORDING, assert_feature_enabled
 from app.services.person_profile_service import ensure_chart_person
+from app.services.call_session_lifecycle import close_abandoned_call_sessions
 
 router = APIRouter(prefix="/call-sessions")
 
@@ -228,6 +229,7 @@ def list_call_sessions(
     if not include_non_terminal:
         q = q.filter(CallSession.call_status.in_(TERMINAL_CALL_SESSION_STATUSES))
     sessions = q.order_by(CallSession.created_at.desc()).all()
+    close_abandoned_call_sessions(db, sessions)
     return [_serialize(cs) for cs in sessions]
 
 
@@ -240,6 +242,7 @@ def get_call_session(
 ):
     assert_feature_enabled(auth.astrologer, FEATURE_CALLS, plan_code=auth.effective_plan_code)
     cs = _ensure_session_access(db, auth, session_id)
+    close_abandoned_call_sessions(db, [cs])
     user = db.query(User).filter(User.user_id == cs.user_id).first() if cs.user_id else None
     person = db.query(Person).filter(Person.person_id == cs.person_id).first() if cs.person_id else None
     payload = _serialize(cs, user=user)

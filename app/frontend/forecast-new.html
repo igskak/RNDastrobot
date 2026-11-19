@@ -7,14 +7,14 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/assets/brand/icon-192.png">
     <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=85908e191942">
-    <link rel="stylesheet" href="/css/app-nav.css?v=85908e191942">
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=80df8db34104">
+    <link rel="stylesheet" href="/css/app-nav.css?v=80df8db34104">
     <!-- C2 (Фаза 3): символьные глифы (знаки/аспекты) появляются на колесе сразу;
          font-display:block делает их невидимыми до загрузки шрифта, поэтому прелоадим
          woff2-сабсеты (десятки КБ вместо 1.2 МБ ttf). crossorigin обязателен для шрифтов. -->
     <link rel="preload" href="/fonts/NotoSansSymbols.subset.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/NotoSansSymbols2.subset.woff2" as="font" type="font/woff2" crossorigin>
-    <script>window.__APP_BUILD_ID__ = '85908e191942';</script>
+    <script>window.__APP_BUILD_ID__ = '80df8db34104';</script>
     <!-- A3 (Фаза 1): каталог локали грузится i18n.js в рантайме и это первый await
          bootstrap. Прогреваем HTTP-кэш нужной локали сразу из <head> (immutable-кэш в
          проде → i18n.js переиспользует ответ). Локаль резолвим тем же приоритетом, что
@@ -324,12 +324,15 @@
             <div id="nowEclipsesView" class="panel-tab-content forecast-new-now-block" hidden></div>
             <div id="nowHoursView" class="panel-tab-content forecast-new-now-block" hidden></div>
             <div class="forecast-new-swap-chip hidden" id="forecastNewSwapChip" role="status" aria-live="polite" hidden></div>
+            <!-- Touch phones: the +/− buttons are hidden (see forecast-new.css), so a
+                 short hint teaches the pinch gesture instead. Shown by initPinchHint(). -->
+            <div class="forecast-new-pinch-hint" id="forecastNewPinchHint" role="status" aria-live="polite" hidden data-i18n="page.forecastNew.pinchHint">Pinch to zoom the chart</div>
             <div class="forecast-new-zoom-controls zoom-controls-float">
                 <button class="zoom-btn forecast-new-view-btn" id="forecastNewViewSingle" data-i18n-title="page.forecastNew.view.single" data-i18n-aria-label="page.forecastNew.view.single" title="Single wheel" aria-label="Single wheel">◯</button>
                 <button class="zoom-btn forecast-new-view-btn is-active" id="forecastNewViewMulti" data-i18n-title="page.forecastNew.view.multi" data-i18n-aria-label="page.forecastNew.view.multi" title="Multi-wheel" aria-label="Multi-wheel">◎</button>
                 <button class="zoom-btn forecast-new-swap-btn" id="forecastNewSwapCharts" type="button" disabled aria-pressed="false" data-i18n-title="page.forecastNew.swap.label" data-i18n-aria-label="page.forecastNew.swap.label" title="Swap charts" aria-label="Swap charts">⇄</button>
-                <button class="zoom-btn" id="forecastNewZoomIn" data-i18n-title="common.zoomIn" data-i18n-aria-label="common.zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
-                <button class="zoom-btn" id="forecastNewZoomOut" data-i18n-title="common.zoomOut" data-i18n-aria-label="common.zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+                <button class="zoom-btn forecast-new-zoom-step-btn" id="forecastNewZoomIn" data-i18n-title="common.zoomIn" data-i18n-aria-label="common.zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+                <button class="zoom-btn forecast-new-zoom-step-btn" id="forecastNewZoomOut" data-i18n-title="common.zoomOut" data-i18n-aria-label="common.zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
                 <button class="zoom-btn forecast-new-settings-btn" id="forecastNewSettingsToggle" data-i18n-title="common.displaySettings" data-i18n-aria-label="common.displaySettings" title="Settings" aria-label="Settings" aria-expanded="false" aria-controls="forecastNewSettingsPanel">
                     <svg class="forecast-new-settings-gear" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
@@ -715,8 +718,8 @@
          поэтому window.__RUNTIME_CONFIG__ (runtime-config.js) готов до analytics.js и до
          модуля приложения. -->
     <script defer src="/runtime-config.js"></script>
-    <script defer src="/js/analytics.js?v=85908e191942"></script>
-    <script defer src="/js/app-nav.js?v=85908e191942"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=85908e191942"></script>
+    <script defer src="/js/analytics.js?v=80df8db34104"></script>
+    <script defer src="/js/app-nav.js?v=80df8db34104"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=80df8db34104"></script>
 </body>
 </html>

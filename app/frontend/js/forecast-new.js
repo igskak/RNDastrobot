@@ -820,7 +820,7 @@
             'natalTimezoneInput', 'natalLocationInput', 'natalLocationSuggestions',
             'natalLatitudeInput', 'natalLongitudeInput',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
-            'forecastNewViewSingle', 'forecastNewViewMulti', 'forecastNewSwapCharts', 'forecastNewSwapChip',
+            'forecastNewViewSingle', 'forecastNewViewMulti', 'forecastNewSwapCharts', 'forecastNewSwapChip', 'forecastNewPinchHint',
             'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
             'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect', 'forecastNewCompositeHeaderBtn',
             'momentSolarYearInput', 'momentSolarLocationInput', 'momentSolarLocationSuggestions',
@@ -2278,9 +2278,66 @@
         return { user_id: c.partnerId };
     }
 
+    // Touch phones have no +/− wheel buttons (hidden in CSS under the same media
+    // query), so a short hint teaches the pinch. It stops for good after the first
+    // pinch, and after PINCH_HINT_MAX_SHOWS page loads for someone who never pinches.
+    const PINCH_HINT_MEDIA = '(max-width: 640px) and (pointer: coarse)';
+    const PINCH_HINT_STORAGE_KEY = 'forecastNewPinchHint';
+    const PINCH_HINT_MAX_SHOWS = 3;
+    let pinchHintTimer = null;
+    let pinchZoomTracked = false;
+
+    function readPinchHintState() {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(PINCH_HINT_STORAGE_KEY) || '{}');
+            return {
+                shows: Number(parsed?.shows) || 0,
+                pinched: parsed?.pinched === true,
+            };
+        } catch (_) {
+            return { shows: 0, pinched: false };
+        }
+    }
+
+    function writePinchHintState(next) {
+        try { localStorage.setItem(PINCH_HINT_STORAGE_KEY, JSON.stringify(next)); } catch (_) { /* ignore */ }
+    }
+
+    function hidePinchHint() {
+        const hint = refs.forecastNewPinchHint;
+        clearTimeout(pinchHintTimer);
+        pinchHintTimer = null;
+        if (!hint || hint.hidden) return;
+        hint.classList.remove('is-visible');
+        setTimeout(() => { hint.hidden = true; }, 260);
+    }
+
+    function maybeShowPinchHint() {
+        const hint = refs.forecastNewPinchHint;
+        if (!hint || !window.matchMedia?.(PINCH_HINT_MEDIA).matches) return;
+        const saved = readPinchHintState();
+        if (saved.pinched || saved.shows >= PINCH_HINT_MAX_SHOWS) return;
+        writePinchHintState({ ...saved, shows: saved.shows + 1 });
+        pinchHintTimer = setTimeout(() => {
+            hint.hidden = false;
+            requestAnimationFrame(() => hint.classList.add('is-visible'));
+            pinchHintTimer = setTimeout(hidePinchHint, 5000);
+        }, 1200);
+    }
+
+    function notePinchZoomUsed() {
+        hidePinchHint();
+        const saved = readPinchHintState();
+        if (!saved.pinched) writePinchHintState({ ...saved, pinched: true });
+        if (pinchZoomTracked) return;
+        pinchZoomTracked = true;
+        window.AstroAnalytics?.track?.('wheel_pinch_zoomed', {});
+    }
+
     function bindWheelPanZoom() {
         const shell = refs.forecastNewWheelShell;
         if (!shell) return;
+        maybeShowPinchHint();
         let panning = false;
         let startX = 0;
         let startY = 0;
@@ -2325,6 +2382,7 @@
             const second = touches[1];
             const mid = touchMidpoint(first, second);
             touchMode = 'pinch';
+            notePinchZoomUsed();
             pinchStartDistance = Math.max(1, touchDistance(first, second));
             pinchStartZoom = state.viewport.zoom;
             pinchStartMidX = mid.x;
