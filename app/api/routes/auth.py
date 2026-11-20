@@ -41,7 +41,7 @@ from app.auth.security import (
     utcnow,
     verify_password,
 )
-from app.auth.supabase import verify_supabase_token
+from app.auth.supabase import profile_names, verify_supabase_token
 from app.auth.site_mode import is_solo_request, solo_frontend_base_url
 from app.database.connection import get_db
 from app.database.models import AdConversion, Astrologer, EmailVerificationToken, PasswordResetToken
@@ -1118,6 +1118,7 @@ def google_login(
         .first()
     )
 
+    first_name, last_name = profile_names(identity.claims or {})
     is_new_user = astrologer is None
     promo: Optional[SignupPromo] = None
     if astrologer is None:
@@ -1129,6 +1130,8 @@ def google_login(
             password_hash=None,
             auth_provider="google",
             google_sub=identity.sub,
+            first_name=first_name,
+            last_name=last_name,
             is_active=True,
             email_verified_at=utcnow(),
             plan_code=PLAN_TRIAL,
@@ -1142,6 +1145,11 @@ def google_login(
             astrologer.google_sub = identity.sub
         astrologer.auth_provider = "google"
         astrologer.email = identity.email
+        # Accounts created before Google names were read have none; fill them,
+        # but never overwrite a name the person typed in themselves.
+        if not (astrologer.first_name or astrologer.last_name):
+            astrologer.first_name = first_name
+            astrologer.last_name = last_name
         _mark_email_verified(astrologer)
         db.flush()
 

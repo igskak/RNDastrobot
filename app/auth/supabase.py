@@ -4,11 +4,14 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import httpx
 import jwt
 from jwt import InvalidTokenError
+
+# Matches the first_name/last_name columns on astrologers.
+_NAME_MAX_LENGTH = 100
 
 
 @dataclass
@@ -17,6 +20,31 @@ class SupabaseIdentity:
     email: str
     provider: Optional[str]
     claims: Dict[str, Any]
+
+
+def _clean_name(value: Any) -> Optional[str]:
+    if not isinstance(value, str):
+        return None
+    normalized = " ".join(value.split())
+    return normalized[:_NAME_MAX_LENGTH] or None
+
+
+def profile_names(claims: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]:
+    """First and last name the OAuth provider shared, read from the token's
+    user_metadata. Google may send given_name/family_name; Supabase always
+    stores the display name as full_name/name, which is split on the first space."""
+    meta = claims.get("user_metadata") or {}
+    if not isinstance(meta, dict):
+        return None, None
+    first = _clean_name(meta.get("given_name"))
+    last = _clean_name(meta.get("family_name"))
+    if first or last:
+        return first, last
+    full = _clean_name(meta.get("full_name")) or _clean_name(meta.get("name"))
+    if not full:
+        return None, None
+    head, _, tail = full.partition(" ")
+    return head, tail or None
 
 
 def _normalize_supabase_url(raw_url: str) -> str:
@@ -115,5 +143,6 @@ def _verify_token_via_supabase_userinfo(token: str) -> SupabaseIdentity:
         "sub": sub,
         "email": email,
         "app_metadata": app_meta,
+        "user_metadata": data.get("user_metadata") or {},
     }
     return SupabaseIdentity(sub=str(sub), email=str(email).lower().strip(), provider=provider, claims=claims)
