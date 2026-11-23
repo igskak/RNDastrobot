@@ -163,16 +163,10 @@ class ForecastAuxService:
         return numeric if numeric == numeric else None
 
     def _compute_profections(self, chart: Dict[str, Any], *, target_date: Optional[date]) -> Dict[str, Any]:
-        asc = (chart.get("angles") or {}).get("ASC") or {}
-        asc_sign = asc.get("sign")
-        birth_iso = (chart.get("birth_data") or {}).get("date")
-        if not asc_sign or not birth_iso:
-            raise ForecastAuxBlockError("Chart lacks ascendant sign or birth date")
-        return ProfectionsService.profections(
-            ascendant_sign=asc_sign,
-            birth_date=date.fromisoformat(str(birth_iso)[:10]),
-            target_date=target_date,
-        )
+        try:
+            return ProfectionsService.for_chart(chart, target_date=target_date)
+        except ValueError as exc:
+            raise ForecastAuxBlockError(str(exc)) from exc
 
     def _compute_antiscia(self, chart: Dict[str, Any], *, orb: float) -> Dict[str, Any]:
         objects = self._collect_objects(chart, include_special_points=True, angle_names=("ASC", "MC"))

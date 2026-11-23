@@ -202,3 +202,8 @@ def test_natal_summary_is_backed_by_the_complete_placement_facet():
     assert "facet=natal_positions" in P
     assert "degree, house and R for every retrograde planet" in P
     assert "Leave that list to the server" in P
+
+
+def test_profection_questions_use_the_engine_tool():
+    assert "call calculate_profections for the requested date" in P
+    assert "profected house, sign and traditional ruler" in P

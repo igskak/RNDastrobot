@@ -105,6 +105,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.natal_context import NatalContext
 from app.services.openai_service import get_openai_client, is_openai_configured
 from app.services.preferences_runtime import PreferencesRuntimeResolver
+from app.services.profections_service import ProfectionsService
 from app.services.progression_service import ProgressionService
 from app.services.transit_service import TransitService
 from app.utils.ephemeris import get_ephemeris_path
@@ -818,6 +819,11 @@ find_aspect_passes, or find_symbolic_aspect_passes for progressions and directio
 высших планет", "обзор") — use survey_transits. NEVER emulate a survey with repeated \
 one-pair calls: the iteration budget runs out long before the ground is covered, and you \
 answer about one planet when the period was the question.
+- For annual or monthly profections ("профекции", "lord of the year", "хозяин года"), \
+call calculate_profections for the requested date. For "now" use today, and use the \
+selected forecast date only when the astrologer asks about it. Report the year's \
+profected house, sign and traditional ruler, adding monthly profections when asked. \
+The house number counts whole signs from the Ascendant.
 - For a current or date-specific progression overview, call calculate_progression for \
 the requested date (today if they say "now"). Use the layer date when they ask about \
 the selected progression layer, including its time if known. A date-only progression \
@@ -1137,8 +1143,11 @@ class AstroAssistantService:
 
     # --- tool execution -------------------------------------------------
 
+    def _today_in_chart_timezone(self) -> date_type:
+        return datetime.now(resolve_timezone(self.default_timezone)).date()
+
     def _transit_period_context(self) -> str:
-        today = datetime.now(resolve_timezone(self.default_timezone)).date()
+        today = self._today_in_chart_timezone()
         week = timedelta(days=7)
         month = relativedelta(months=1)
         line = (
@@ -1912,6 +1921,12 @@ class AstroAssistantService:
             )
         return self._chart_dataset
 
+    def _exec_calculate_profections(self, user_id: UUID, args: Dict) -> Dict:
+        target = args.get("target_date")
+        target_date = _parse_tool_date(target) if target else self._today_in_chart_timezone()
+        chart = self._get_chart_dataset(user_id)._natal_chart() or {}
+        return {"status": "ok", **ProfectionsService.for_chart(chart, target_date=target_date)}
+
     def _exec_get_chart_data(self, user_id: UUID, args: Dict) -> Dict:
         return get_chart_data(self._get_chart_dataset(user_id), args.get("facet"))
 
@@ -1942,6 +1957,7 @@ class AstroAssistantService:
             "find_aspect_passes": self._exec_find_aspect_passes,
             "find_chart": self._exec_find_chart,
             "calculate_progression": self._exec_calculate_progression,
+            "calculate_profections": self._exec_calculate_profections,
             "calculate_direction": self._exec_calculate_direction,
             "get_chart_data": self._exec_get_chart_data,
             "analyze": self._exec_analyze,

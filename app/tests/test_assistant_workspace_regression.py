@@ -191,3 +191,19 @@ def test_natal_summary_renders_all_signs_degrees_houses_and_retrogrades(
         name = planet["name"] + (" R" if planet["retrograde"] else "")
         assert f"**{name}** — {planet['sign']} {planet['degree_in_sign_formatted']}, house {planet['house']}" in reply
     assert all(f"**{name} R**" in reply for name in ("Saturn", "Uranus", "Neptune"))
+
+
+@pytest.mark.parametrize("args", [{}, {"target_date": "2026-11-21"}])
+def test_annual_and_monthly_profections_on_the_synthetic_chart(service, args):
+    result = service._dispatch("calculate_profections", args, uuid4())
+
+    assert result["target_date"] == REFERENCE_DATE.isoformat()
+    assert result["age"] == 33
+    assert result["annual"] == {"house": 10, "sign": "Virgo", "lord": "Mercury"}
+    assert result["monthly"] == {"house": 1, "sign": "Sagittarius", "lord": "Jupiter", "month_index": 4}
+
+
+def test_profections_reject_a_malformed_date(service):
+    result = service._dispatch("calculate_profections", {"target_date": "2026-11-31"}, uuid4())
+
+    assert result == {"status": "error", "error": "bad_target_date"}

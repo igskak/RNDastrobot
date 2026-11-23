@@ -208,6 +208,26 @@ def build_query_tools() -> List[Dict]:
     }, {
         "type": "function",
         "function": {
+            "name": "calculate_profections",
+            "description": (
+                "Calculate annual and monthly profections for the active natal chart "
+                "at a date. Returns completed age, profected house, sign and traditional "
+                "ruler of the year/month. Counts whole signs from the natal Ascendant."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "target_date": {
+                        "type": "string",
+                        "description": "YYYY-MM-DD. Defaults to today in the chart timezone.",
+                    },
+                },
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
             "name": "calculate_direction",
             "description": (
                 "Calculate directions/solar arcs for the active chart or the active "
