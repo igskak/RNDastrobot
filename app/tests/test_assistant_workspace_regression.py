@@ -130,3 +130,43 @@ def test_empty_outer_planet_day_still_carries_applying_and_separating_contacts(s
     outside = data["nearby_contacts"]["outside_orb"]
     assert {"applying", "separating"} == {item["phase"] for item in outside}
     assert all(not item["in_orb"] and item["orb_used"] == 1 for item in outside)
+
+
+def test_current_progressions_return_engine_aspects_within_configured_orbs(
+    service, chart, aspect_types, monkeypatch,
+):
+    from app.services.progression_service import ProgressionService
+
+    engine = ProgressionService(db_session=None)
+    context = NatalContext.from_inline(chart, astrologer_id=None)
+    monkeypatch.setattr(engine, "_build_context_from_user_id", lambda _: context)
+    monkeypatch.setattr(engine, "_get_aspect_types", lambda: aspect_types)
+    service._progression_service = engine
+
+    result = service._dispatch("calculate_progression", {"target_date": "2026-11-21"}, uuid4())
+
+    assert result["progression_info"]["target_date"] == "2026-11-21"
+    assert result["progression_info"]["target_time"] == "12:00:00"
+    assert any(body["name"] == "Moon" and body["degree"] for body in result["progressed_planets"])
+    aspects = {
+        (item["left"], item["aspect"], item["right"]): round(item["orb"], 2)
+        for item in result["aspects_to_natal"]
+    }
+    assert aspects["Venus", "Opposition", "Saturn"] == 0.30
+    assert aspects["Moon", "Square", "Mercury"] == 2.08
+    assert all(orb <= (3 if left == "Moon" else 1)
+               for (left, _, _), orb in aspects.items())
+
+
+def test_progression_snapshot_does_not_truncate_aspects_or_positions(service):
+    aspects = [
+        {"progressed_planet": "Moon", "natal_object": str(i), "aspect_type": "Trine", "orb": i / 100}
+        for i in range(assistant._SUMMARY_ASPECT_LIMIT + 1)
+    ]
+    positions = [{"name": str(i)} for i in range(assistant._SUMMARY_OBJECT_LIMIT + 1)]
+    result = service._compact_progression_result(
+        {"aspects_to_natal": aspects, "progressed_planets": positions}, "active_chart",
+    )
+
+    assert len(result["aspects_to_natal"]) == len(aspects)
+    assert len(result["progressed_planets"]) == len(positions)

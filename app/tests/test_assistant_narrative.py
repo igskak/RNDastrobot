@@ -189,3 +189,10 @@ def test_current_transit_prompt_clarifies_ambiguous_dates_and_uses_slow_planets(
     assert "Include actual Saturn and Jupiter contacts when present" in P
     assert "nearest applying and separating contacts" in P
     assert "clearly labelling those outside the configured orb" in P
+
+
+def test_current_progression_uses_complete_snapshot_not_named_pass_search():
+    assert "call calculate_progression for the requested date" in P
+    assert "ALL aspects to natal returned within the configured prognostic orbs" in P
+    assert "Never guess or pick pairs to test" in P
+    assert "find_symbolic_aspect_passes only for a named relationship with a timing question" in P
