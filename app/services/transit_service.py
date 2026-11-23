@@ -1506,6 +1506,83 @@ class TransitService:
             'contacts': contacts,
         }
 
+    def nearby_natal_contacts(
+        self,
+        user_id: UUID,
+        reference_date: date,
+        timezone: str,
+        transit_bodies: List[str],
+        natal_targets: List[str],
+        aspect_types: List[str],
+    ) -> Dict:
+        """Closest aspects at local noon, retaining the configured orb per pair."""
+        context = self._build_context_from_user_id(user_id, apply_exclusions=False)
+        if context is None:
+            raise ValueError("natal_chart_missing")
+        prior_zodiac = getattr(self, "_active_zodiac", "tropical")
+        prior_ayanamsha = getattr(self, "_active_ayanamsha", "lahiri")
+        try:
+            self._active_zodiac = context.zodiac or "tropical"
+            self._active_ayanamsha = context.ayanamsha or "lahiri"
+            _, jd = TimeService.process_birth_time(reference_date, time(12), timezone)
+            objects = [obj for obj in context.natal_data["all_objects"] if obj["name"] in natal_targets]
+            aspects = [aspect for aspect in self._get_aspect_types() if aspect.aspect_type in aspect_types]
+
+            contacts = []
+            minute = 1 / 1440
+            for body in transit_bodies:
+                for obj in objects:
+                    for aspect in aspects:
+                        angle = float(aspect.exact_angle)
+                        orb = self._signed_orb_at_jd(jd, body, obj["longitude"], angle)
+                        if orb is None:
+                            continue
+                        allowed = self._calculate_allowed_orb(
+                            context.astrologer_id, body, obj["name"], aspect.aspect_type,
+                        )
+                        deviation = abs(orb)
+                        # A centered sample estimates the local phase even near a station.
+                        before = self._signed_orb_at_jd(jd - minute, body, obj["longitude"], angle)
+                        after = self._signed_orb_at_jd(jd + minute, body, obj["longitude"], angle)
+                        phase = None
+                        if before is not None and after is not None:
+                            change = abs(after) - abs(before)
+                            if change < 0:
+                                phase = "applying"
+                            elif change > 0:
+                                phase = "separating"
+                        contacts.append({
+                            "transit_body": body,
+                            "natal_body": obj["name"],
+                            "aspect_type": aspect.aspect_type,
+                            "orb": deviation,
+                            "orb_used": allowed,
+                            "in_orb": deviation <= allowed,
+                            "phase": phase,
+                        })
+
+        finally:
+            self._active_zodiac = prior_zodiac
+            self._active_ayanamsha = prior_ayanamsha
+
+        contacts.sort(key=lambda contact: contact["orb"])
+        active = [contact for contact in contacts if contact["in_orb"]]
+        outside = [contact for contact in contacts if not contact["in_orb"]]
+        nearby = [contact for contact in outside if contact["orb"] <= 3.0]
+        # Always provide the closest pair in each direction when the selected
+        # date is quiet. Include clearly labelled wider orbs if needed.
+        for phase in ("applying", "separating"):
+            if not any(contact["phase"] == phase for contact in nearby):
+                closest = next((contact for contact in outside if contact["phase"] == phase), None)
+                if closest:
+                    nearby.append(closest)
+        return {
+            "reference_date": reference_date.isoformat(),
+            "reference_time": "12:00",
+            "active": active,
+            "outside_orb": nearby,
+        }
+
     def calculate_aspect_dynamics(
         self,
         user_id: UUID,
