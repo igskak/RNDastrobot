@@ -180,3 +180,12 @@ def test_window_rule_no_longer_demands_auto_expansion_in_every_answer():
     the OUTPUT rule and put "Auto-expanded: no." at the end of every reply."""
     assert "whether the search auto-expanded" not in P
     assert "Mention that the search window grew only when" in P
+
+
+def test_current_transit_prompt_clarifies_ambiguous_dates_and_uses_slow_planets():
+    assert "call clarify_transit_period by itself" in P
+    assert "A selected forecast date does not answer this question" in P
+    assert "with slow_planets unless the astrologer restricts" in P
+    assert "Include actual Saturn and Jupiter contacts when present" in P
+    assert "nearest applying and separating contacts" in P
+    assert "clearly labelling those outside the configured orb" in P

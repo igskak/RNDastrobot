@@ -391,11 +391,32 @@ class ChatWidget {
         }
         const content = messageEl.querySelector('.message-content');
         this.appendVisuals(content, data.tool_results);
+        this.appendQuickReplies(content, data.quick_replies);
         const chip = this.buildProvenanceChip(data.tool_results, guardrail);
         if (chip && content) content.appendChild(chip);
         if (data.metric_id && content) {
             content.appendChild(this.buildFeedbackControl(data.metric_id));
         }
+    }
+
+    appendQuickReplies(content, replies) {
+        if (!content || !Array.isArray(replies) || !replies.length) return;
+        const row = document.createElement('div');
+        row.className = 'chat-suggestions-row';
+        row.id = 'chatQuickReplies';
+        for (const reply of replies) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'chat-suggestion';
+            button.textContent = reply;
+            button.addEventListener('click', () => {
+                if (this.isLoading || this.isRecording || this.isTranscribing) return;
+                this.input.value = reply;
+                this.sendMessage();
+            });
+            row.appendChild(button);
+        }
+        content.appendChild(row);
     }
 
     // Correction flag (D3): one-tap flag + optional one-line note, feeding the
@@ -1069,6 +1090,11 @@ class ChatWidget {
 
     clearSuggestions() {
         document.getElementById('chatSuggestions')?.remove();
+        const quickReplies = document.getElementById('chatQuickReplies');
+        if (quickReplies) {
+            quickReplies.removeAttribute('id');
+            quickReplies.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+        }
     }
 
     startNewThread() {
@@ -1294,7 +1320,8 @@ class ChatWidget {
             if (data.conversation_id) this.conversationId = data.conversation_id;
             loadingMsg.remove();
             if (reply) {
-                const assistantEl = this.addMessage(reply, 'assistant');
+                const visibleReply = data.quick_replies?.length ? reply.split('\n\n', 1)[0] : reply;
+                const assistantEl = this.addMessage(visibleReply, 'assistant');
                 this.decorateAssistantTurn(assistantEl, data);
                 this.history.push({ role: 'assistant', content: reply });
                 if (compactFeedback) {
@@ -1330,6 +1357,7 @@ class ChatWidget {
                 wheelView: s.wheelView,
                 houseSystem: s.houseSystem,
                 date: s.date,
+                ...(s.startDate && s.endDate ? { startDate: s.startDate, endDate: s.endDate } : {}),
                 solarYear: s.solarYear,
                 layers: Array.isArray(s.activeLayers) ? s.activeLayers.map((l) => l.method) : [],
                 ...(s.synastry ? { synastry: this.normalizeSynastrySummary(s.synastry) } : {}),

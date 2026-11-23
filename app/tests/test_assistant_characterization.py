@@ -89,7 +89,7 @@ _EXPECTED_TOOLS = {
     "find_symbolic_aspect_passes", "survey_symbolic_ingresses",
     # Bulk transit survey — the one call that replaces dozens of one-pair calls
     # for a period question (slice-1 PR2).
-    "survey_transits",
+    "survey_transits", "clarify_transit_period",
     # Sweep-line overlap: when several contacts are active at once (PR3).
     "intersect_forecast_windows",
     # Deterministic pattern discovery over a survey (PR5).

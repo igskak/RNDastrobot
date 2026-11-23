@@ -324,6 +324,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    quick_replies: List[str] = Field(default_factory=list)
     tool_results: List[dict] = Field(default_factory=list)
     # Workspace commands the client should apply (PR2). The server validates the
     # model's intent but never executes it — workspace state lives in the browser.
@@ -511,6 +512,7 @@ async def chat(
 
     return ChatResponse(
         reply=result.get("reply", ""),
+        quick_replies=result.get("quick_replies", []),
         tool_results=result.get("tool_results", []),
         actions=applied_actions,
         iterations=result.get("iterations", 0),

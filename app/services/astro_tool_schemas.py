@@ -264,6 +264,17 @@ def build_query_tools() -> List[Dict]:
     }, {
         "type": "function",
         "function": {
+            "name": "clarify_transit_period",
+            "description": (
+                "End this turn with a short question and preset choices for a transit "
+                "request about 'right now' with no explicit or already chosen period. "
+                "Call by itself, before calculating."
+            ),
+            "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+        },
+    }, {
+        "type": "function",
+        "function": {
             "name": "survey_transits",
             "description": (
                 "Scan a PERIOD for transit contacts across MANY bodies and natal "
@@ -277,7 +288,7 @@ def build_query_tools() -> List[Dict]:
                 "Omit profile and target_profile to get the product defaults: "
                 "outer planets (Uranus, Neptune, Pluto, Chiron) against the ten "
                 "planets, the four angles, both nodes and Lilith. Use "
-                "profile='slow_planets' to add Jupiter and Saturn, or "
+                "profile='slow_planets' for key transits including Jupiter and Saturn, or "
                 "profile='all_planets' for the full set. Returns one event per "
                 "contact with enter/exact passes/leave, stations, the transiting "
                 "body's natal house and ruled houses, axis grouping, plus a monthly "
@@ -295,6 +306,13 @@ def build_query_tools() -> List[Dict]:
                     },
                     "start_date": {"type": "string", "description": "YYYY-MM-DD"},
                     "end_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "reference_date": {
+                        "type": "string",
+                        "description": (
+                            "YYYY-MM-DD. For today or a symmetric week/month, supply today "
+                            "to also show the closest applying and separating aspects."
+                        ),
+                    },
                     "profile": {
                         "type": "string",
                         "enum": sorted(TRANSIT_BODY_PROFILES),
