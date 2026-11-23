@@ -112,8 +112,7 @@ def build_methodology_provenance(
         return {
             "methodology_hash": methodology_hash,
             "resolved_settings": {
-                # Short form for display. Given only the full sha256, a reply
-                # quotes all 64 characters into the astrologer's scope line.
+                # Short fingerprint retained with the full hash for diagnostics.
                 "methodology_version": (methodology_hash or "")[:12] or None,
                 "orb_profile": orb_profile,
                 "orb_source": "astrologer_settings" if astrologer_id else "default",
@@ -170,3 +169,21 @@ def attach_provenance(result: Any, provenance: Optional[Dict[str, Any]]) -> Any:
         merged.setdefault(key, value)
     result["provenance"] = merged
     return result
+
+
+_INTERNAL_MODEL_FIELDS = frozenset({
+    "methodology_hash", "methodology_version", "calc_version", "dataset",
+})
+
+
+def omit_internal_metadata(value: Any) -> Any:
+    """Exclude fingerprints from model input while retaining all audit data."""
+    if isinstance(value, dict):
+        return {
+            key: omit_internal_metadata(item)
+            for key, item in value.items()
+            if key not in _INTERNAL_MODEL_FIELDS
+        }
+    if isinstance(value, list):
+        return [omit_internal_metadata(item) for item in value]
+    return value

@@ -6,7 +6,11 @@
     "month": "±1 month",
     "forecast": "The forecast period ({start} to {end})",
     "natal_positions": "Natal placements",
-    "natal_house": "house {number}"
+    "natal_house": "house {number}",
+    "transit_empty": "There are no contacts within your forecast orbs in the selected period.",
+    "transit_nearby": "Closest aspects outside those orbs",
+    "applying": "Applying",
+    "separating": "Separating"
   },
   "de": {
     "transit_period": "Welchen Zeitraum soll ich prüfen?",
@@ -15,7 +19,11 @@
     "month": "±1 Monat",
     "forecast": "Den Prognosezeitraum ({start} bis {end})",
     "natal_positions": "Radixpositionen",
-    "natal_house": "Haus {number}"
+    "natal_house": "Haus {number}",
+    "transit_empty": "Im gewählten Zeitraum liegen keine Kontakte innerhalb Ihrer Prognose-Orben.",
+    "transit_nearby": "Nächste Aspekte außerhalb dieser Orben",
+    "applying": "Applikativ",
+    "separating": "Separativ"
   },
   "ru": {
     "transit_period": "За какой период посмотреть транзиты?",
@@ -24,7 +32,11 @@
     "month": "±1 месяц",
     "forecast": "Период прогноза ({start} — {end})",
     "natal_positions": "Положения в натальной карте",
-    "natal_house": "{number}-й дом"
+    "natal_house": "{number}-й дом",
+    "transit_empty": "В выбранном периоде нет контактов в пределах ваших орбисов прогноза.",
+    "transit_nearby": "Ближайшие аспекты за пределами этих орбисов",
+    "applying": "Сходящийся",
+    "separating": "Расходящийся"
   },
   "uk": {
     "transit_period": "За який період переглянути транзити?",
@@ -33,6 +45,10 @@
     "month": "±1 місяць",
     "forecast": "Період прогнозу ({start} — {end})",
     "natal_positions": "Положення в натальній карті",
-    "natal_house": "{number}-й дім"
+    "natal_house": "{number}-й дім",
+    "transit_empty": "У вибраному періоді немає контактів у межах ваших орбісів прогнозу.",
+    "transit_nearby": "Найближчі аспекти поза цими орбісами",
+    "applying": "Збіжний",
+    "separating": "Розбіжний"
   }
 }

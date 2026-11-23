@@ -207,3 +207,58 @@ def test_profections_reject_a_malformed_date(service):
     result = service._dispatch("calculate_profections", {"target_date": "2026-11-31"}, uuid4())
 
     assert result == {"status": "error", "error": "bad_target_date"}
+
+
+def test_natal_aspect_counts_need_one_tool_call_and_keep_raw_audit_fields(service, chart, monkeypatch):
+    methodology = {
+        "methodology_hash": "15b78c0af609" + "a" * 52,
+        "resolved_settings": {"methodology_version": "15b78c0af609", "house_system": "P"},
+    }
+    client = _FakeClient([
+        _msg(tool_calls=[_tool_call("1", "get_chart_data", '{"facet":"natal_aspects","summary_only":true}')]),
+        _msg(content="Here are the natal aspect counts."),
+    ])
+    monkeypatch.setattr(assistant, "build_methodology_provenance", lambda *a: methodology)
+    monkeypatch.setattr(assistant, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(assistant, "get_openai_client", lambda: client)
+
+    result = service.chat(uuid4(), [
+        {"role": "user", "content": "How many natal aspects are there? How many major and minor?"},
+    ], locale="en")
+
+    assert result["iterations"] == 2
+    tool, = result["tool_results"]
+    assert tool["name"] == "get_chart_data"
+    data = tool["result"]["data"]
+    summary = data["summary"]
+    assert "aspects" not in data
+    assert summary["total"] == len(chart["aspects"])
+    assert summary["major"] + summary["minor"] == summary["total"]
+    assert summary["natal_planets"] == len(chart["planets"])
+    assert sum(summary["by_aspect"].values()) == summary["total"]
+    assert result["methodology"] == methodology
+    assert tool["result"]["provenance"]["methodology_hash"] == methodology["methodology_hash"]
+    model_result = json.loads(client.chat.completions.calls[-1]["messages"][-1]["content"])
+    assert model_result["provenance"] == {"resolved_settings": {"house_system": "P"}}
+
+
+def test_empty_transit_window_never_ends_with_only_no_contacts(service, monkeypatch):
+    args = {
+        "start_date": "2026-11-21", "end_date": "2026-11-21",
+        "profile": "outer_planets", "natal_targets": ["Sun"],
+    }
+    client = _FakeClient([
+        _msg(tool_calls=[_tool_call("1", "survey_transits", json.dumps(args))]),
+        _msg(content="No contacts. 0 contacts, 0 exact passes, 0 clusters, 0 simultaneous contacts."),
+    ])
+    monkeypatch.setattr(assistant, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(assistant, "get_openai_client", lambda: client)
+
+    reply = service.chat(
+        uuid4(), [{"role": "user", "content": "Outer-planet transits today only?"}], locale="en",
+    )["reply"]
+
+    assert "There are no contacts within your forecast orbs in the selected period." in reply
+    assert "- Applying" in reply
+    assert "- Separating" in reply
+    assert "0 clusters" not in reply
