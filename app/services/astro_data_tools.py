@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections import Counter
 from typing import Callable, Dict, List, Optional
 from uuid import UUID
 
@@ -389,7 +390,20 @@ def _build_natal_aspects(ds: ChartDataset) -> Dict:
             "applying": a.get("applying"),
         })
     rows.sort(key=lambda r: r["orb"] if r["orb"] is not None else 99)
-    return {"aspects": rows}
+    return {
+        "aspects": rows,
+        "summary": {
+            "natal_planets": len(chart.get("planets") or []),
+            "total": len(rows),
+            "major": sum(row["is_major"] is True for row in rows),
+            "minor": sum(row["is_major"] is False for row in rows),
+            "partile": sum(row["is_partile"] for row in rows),
+            "by_aspect": dict(Counter(row["aspect"] for row in rows if row["aspect"])),
+            "by_harmonic_type": dict(Counter(
+                row["harmonic_type"] for row in rows if row["harmonic_type"]
+            )),
+        },
+    }
 
 
 def _build_angles_and_points(ds: ChartDataset) -> Dict:
@@ -512,7 +526,7 @@ _FACET_BUILDERS: Dict[str, Callable[[ChartDataset], Dict]] = {
 }
 
 
-def get_chart_data(dataset: ChartDataset, facet: str) -> Dict:
+def get_chart_data(dataset: ChartDataset, facet: str, *, summary_only: bool = False) -> Dict:
     """Layer-1 tool entrypoint: one facet of the frozen dataset + provenance.
 
     Returns a server-computed result the model narrates (never invents). On an
@@ -523,6 +537,8 @@ def get_chart_data(dataset: ChartDataset, facet: str) -> Dict:
         data = dataset.facet(facet)
     except ValueError as e:
         return {"status": "error", "error": str(e)}
+    if summary_only and facet == "natal_aspects" and "summary" in data:
+        data = {"summary": data["summary"]}
     return {
         "status": "ok",
         "facet": facet,

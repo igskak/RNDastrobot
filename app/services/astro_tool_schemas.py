@@ -264,8 +264,8 @@ def build_query_tools() -> List[Dict]:
                 "speeds (speed and motion); houses (cusps and rulers); "
                 "natal_positions (all signs, degrees, houses and retrograde flags; "
                 "use for a natal overview; the assistant appends the placement list); "
-                "natal_aspects (the full natal aspect network with orbs, sorted "
-                "tightest first); angles_and_points (ASC/MC/IC/DSC/Vertex and the "
+                "natal_aspects (total, major, minor, partile, per-aspect and harmonic "
+                "counts in one response; also includes rows with orbs by default); angles_and_points (ASC/MC/IC/DSC/Vertex and the "
                 "nodes, Lilith, Fortune); planet_roles (ruled houses, chart-ruler "
                 "and other roles, elevation, peregrine, strength); house_details "
                 "(rulers, co-rulers, ruler's house, significator, occupants); "
@@ -275,6 +275,10 @@ def build_query_tools() -> List[Dict]:
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "summary_only": {
+                        "type": "boolean",
+                        "description": "For natal_aspects counts only, omit the full aspect list.",
+                    },
                     "facet": {
                         "type": "string",
                         "enum": list(CHART_DATA_FACETS),
@@ -639,7 +643,8 @@ def build_query_tools() -> List[Dict]:
                 "pattern_findings), optional filter "
                 "(column=value), group_by, sort, order, limit. The server computes "
                 "the result and returns rows with ids; you narrate and cite rows by "
-                "id. Use this for objective structure questions — most-aspected "
+                "id. For standard natal aspect counts, use get_chart_data with "
+                "facet=natal_aspects and summary_only=true instead. Use analyze for objective structure questions — most-aspected "
                 "body (count over natal_aspects grouped by left), tightest orbs "
                 "(rank over natal_aspects sorted by orb ascending), busiest house "
                 "(extreme over houses sorted by planet_count). Never compute or "

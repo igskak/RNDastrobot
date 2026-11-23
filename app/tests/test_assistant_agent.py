@@ -241,7 +241,7 @@ def test_assistant_defaults_to_compact_modern_model():
     # Readability-first formatting (beta feedback): structure over the old 80-word cap.
     # Case-insensitive: the §13 rewrite moved the rule into the OUTPUT section, and
     # the rule is what matters, not where its sentence begins.
-    assert "structure beats brevity" in svc._SYSTEM_PROMPT.lower()
+    assert "use short headings and omit filler" in svc._SYSTEM_PROMPT.lower()
     # The per-contact form survives the rewrite — it is now scoped to a single
     # named contact rather than imposed on every answer.
     assert "each contact as its own block with Enter" in svc._SYSTEM_PROMPT

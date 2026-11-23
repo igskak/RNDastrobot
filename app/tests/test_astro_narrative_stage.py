@@ -141,7 +141,7 @@ def test_prompt_forbids_creating_facts():
 
 def test_prompt_demands_structure_before_aspects():
     assert "Begin with the STRUCTURE of the data, not a list of aspects" in FLAT
-    assert "one short paragraph of PROSE" in FLAT
+    assert "one short paragraph of prose" in FLAT
 
 
 def test_prompt_carries_the_boundary_rubric():
@@ -154,8 +154,8 @@ def test_prompt_states_the_no_pattern_case():
 
 
 def test_prompt_fixes_the_two_cosmetic_warts_seen_live():
-    assert "never a full hash" in FLAT
-    assert 'rather than writing "not specified"' in FLAT
+    assert "Keep methodology fingerprints" in FLAT
+    assert "methodology_version" not in FLAT
     assert "write every heading in the astrologer's language" in FLAT
 
 

@@ -1,5 +1,6 @@
 """§13 master prompt — analytical narrative, conditional shape, evidence-bound detail."""
 import app.services.astro_assistant_service as svc
+from app.services.astro_narrative import _SYSTEM as NARRATOR_PROMPT
 from app.services.astro_patterns import discover
 from app.services.astro_provenance import build_methodology_provenance
 
@@ -35,8 +36,8 @@ def test_the_calculator_dump_format_is_gone():
 
 
 def test_narrative_order_is_specified():
-    for step in ("Scope:", "Executive overview", "Main objective patterns",
-                 "Time clusters", "Structural observations", "Statistical summary",
+    for step in ("Scope:", "Overview", "Main objective patterns",
+                 "Time clusters", "Structural observations", "Relevant counts",
                  "Detailed supporting records", "Technical notes"):
         assert step in P
 
@@ -86,9 +87,13 @@ def test_detail_is_bound_to_records_that_exist():
     assert "Never write an entry, exact or exit date that is not in the data" in P
 
 
-def test_scope_line_uses_the_short_methodology_form():
-    assert "methodology_version" in P
-    assert "never the full hash" in P
+def test_reader_format_hides_internal_metadata_in_both_prompts():
+    for prompt in (P, NARRATOR_PROMPT):
+        assert "Keep methodology fingerprints" in prompt
+        assert "the person's forecast orb settings" in prompt.replace("\n", " ")
+        assert "methodology_version" not in prompt
+        assert "Executive overview" not in prompt
+        assert "Statistical summary" not in prompt
 
 
 # --- the data side of the same failure ----------------------------------------
@@ -207,3 +212,27 @@ def test_natal_summary_is_backed_by_the_complete_placement_facet():
 def test_profection_questions_use_the_engine_tool():
     assert "call calculate_profections for the requested date" in P
     assert "profected house, sign and traditional ruler" in P
+
+
+
+def test_standard_counts_are_fetched_together():
+    assert "call get_chart_data once with facet=natal_aspects" in P
+    assert "and summary_only=true" in P
+    assert "never split these standard counts into separate analyze calls" in P
+
+
+def test_output_filters_only_debug_fingerprints_and_counters():
+    from app.services.assistant_reply_text import strip_report_diagnostics
+
+    reply = strip_report_diagnostics(
+        "21 November 2026, Placidus, methodology version 15b78c0af609.\n\n"
+        "No contacts in the selected window.\n"
+        "0 contacts, 0 exact passes, 0 clusters, 0 simultaneous contacts.\n"
+        "Statistical summary: Natal planets listed: 12\n"
+        "Applying: Pluto opposition Mercury, 2.8°."
+    )
+    assert "15b78c0af609" not in reply
+    assert "0 clusters" not in reply
+    assert "Natal planets listed" not in reply
+    assert "No contacts in the selected window." in reply
+    assert "Pluto opposition Mercury, 2.8°." in reply
