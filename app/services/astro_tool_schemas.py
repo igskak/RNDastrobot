@@ -177,8 +177,10 @@ def build_query_tools() -> List[Dict]:
         "function": {
             "name": "calculate_progression",
             "description": (
-                "Calculate secondary progressions for the active chart or the active "
-                "synastry partner. Use synastry_partner when the astrologer asks about "
+                "Use for current or date-specific secondary progressions. Returns all "
+                "progressed positions and all in-orb aspects to the natal chart, using "
+                "the astrologer's prognostic orbs. Defaults to local noon if no time "
+                "is specified. Use synastry_partner when the astrologer asks about "
                 "the second chart/partner in the current synastry."
             ),
             "parameters": {
@@ -545,7 +547,8 @@ def build_query_tools() -> List[Dict]:
             "description": (
                 "Find WHEN a progressed or directed body forms an aspect to a natal "
                 "object: enter / each exact crossing / leave, motion per pass and "
-                "stations. The symbolic counterpart of find_aspect_passes. "
+                "stations, only for a named pair and aspect. Do not guess pairs for an "
+                "overview. The symbolic counterpart of find_aspect_passes. "
                 "calculate_progression and calculate_direction return a SNAPSHOT on "
                 "one date and cannot answer a 'when' question — use this instead for "
                 "'when does progressed Moon square natal Saturn'. Read contact_count "

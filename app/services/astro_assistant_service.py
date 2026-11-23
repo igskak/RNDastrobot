@@ -813,6 +813,14 @@ find_aspect_passes, or find_symbolic_aspect_passes for progressions and directio
 высших планет", "обзор") — use survey_transits. NEVER emulate a survey with repeated \
 one-pair calls: the iteration budget runs out long before the ground is covered, and you \
 answer about one planet when the period was the question.
+- For a current or date-specific progression overview, call calculate_progression for \
+the requested date (today if they say "now"). Use the layer date when they ask about \
+the selected progression layer, including its time if known. A date-only progression \
+snapshot is calculated at local noon. Reuse a layer only if it contains complete positions \
+and aspects to natal. List progressed positions and ALL aspects to natal returned \
+within the configured prognostic orbs, showing each aspect's orb. The compact layer \
+preview alone is not sufficient. Never guess or pick pairs to test. Use \
+find_symbolic_aspect_passes only for a named relationship with a timing question.
 - For key/main transits ("ключевые", "главные", "key transits"), call survey_transits \
 with slow_planets unless the astrologer restricts the bodies. Include actual Saturn and \
 Jupiter contacts when present. For today or a symmetric week/month, pass today's date \
@@ -1323,21 +1331,16 @@ class AstroAssistantService:
             "progression_info": result.get("progression_info") or {},
             "birth_data": result.get("birth_data") or {},
             "progressed_planets": [
-                _compact_object(p) for p in (result.get("progressed_planets") or [])[:_SUMMARY_OBJECT_LIMIT]
+                _compact_object(p) for p in (result.get("progressed_planets") or [])
             ],
             "aspects_to_natal": [
                 _compact_aspect(a, left_key="progressed_planet")
-                for a in aspects[:_SUMMARY_ASPECT_LIMIT]
+                for a in aspects
             ],
             "planet_ingresses": [
                 _compact_ingress(i)
                 for i in (result.get("planet_ingresses") or [])[:_SUMMARY_INGRESS_LIMIT]
             ],
-            "truncated": {
-                "aspects": max(0, len(aspects) - _SUMMARY_ASPECT_LIMIT),
-                "progressed_planets": max(
-                    0, len(result.get("progressed_planets") or []) - _SUMMARY_OBJECT_LIMIT),
-            },
         }
 
     def _compact_direction_result(self, result: Dict, chart_ref: str) -> Dict:
@@ -1379,9 +1382,9 @@ class AstroAssistantService:
     def _exec_calculate_progression(self, user_id: UUID, args: Dict) -> Dict:
         chart_ref, saved_user_id, inline_context = self._resolve_chart_source(user_id, args)
         target_date = _parse_tool_date(args.get("target_date"))
-        target_time = _parse_tool_time(args.get("target_time"))
+        target_time = _parse_tool_time(args.get("target_time")) or time_type(12)
         timezone = args.get("timezone") or self.default_timezone
-        if target_time is not None and not _valid_timezone(timezone):
+        if not _valid_timezone(timezone):
             raise ValueError("bad_timezone")
 
         service = self._progressions()
@@ -1390,14 +1393,14 @@ class AstroAssistantService:
                 inline_context,
                 target_date=target_date,
                 target_time=target_time,
-                timezone=timezone if target_time is not None else None,
+                timezone=timezone,
             )
         else:
             result = service.calculate_progression(
                 user_id=saved_user_id,
                 target_date=target_date,
                 target_time=target_time,
-                timezone=timezone if target_time is not None else None,
+                timezone=timezone,
                 save_to_db=False,
             )
         return self._compact_progression_result(result, chart_ref)
