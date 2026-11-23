@@ -196,3 +196,9 @@ def test_current_progression_uses_complete_snapshot_not_named_pass_search():
     assert "ALL aspects to natal returned within the configured prognostic orbs" in P
     assert "Never guess or pick pairs to test" in P
     assert "find_symbolic_aspect_passes only for a named relationship with a timing question" in P
+
+
+def test_natal_summary_is_backed_by_the_complete_placement_facet():
+    assert "facet=natal_positions" in P
+    assert "degree, house and R for every retrograde planet" in P
+    assert "Leave that list to the server" in P

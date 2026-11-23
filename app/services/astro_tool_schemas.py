@@ -242,6 +242,8 @@ def build_query_tools() -> List[Dict]:
                 "Available facets: sign_properties (element/mode/rulers per sign); "
                 "dignities (each natal planet's sign, house, essential dignity); "
                 "speeds (speed and motion); houses (cusps and rulers); "
+                "natal_positions (all signs, degrees, houses and retrograde flags; "
+                "use for a natal overview; the assistant appends the placement list); "
                 "natal_aspects (the full natal aspect network with orbs, sorted "
                 "tightest first); angles_and_points (ASC/MC/IC/DSC/Vertex and the "
                 "nodes, Lilith, Fortune); planet_roles (ruled houses, chart-ruler "
