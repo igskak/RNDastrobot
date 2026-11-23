@@ -83,7 +83,7 @@ _EXPECTED_TOOLS = {
     # query tools
     "find_aspect_passes", "find_chart", "calculate_progression", "calculate_direction",
     # Layer-1 technical data + Layer-2 analysis (chat-v2)
-    "get_chart_data", "analyze",
+    "get_chart_data", "analyze", "calculate_profections",
     # Symbolic windows + ingresses: engine services that already existed but were
     # reachable only from HTTP routes, never by the assistant (slice-1 PR8).
     "find_symbolic_aspect_passes", "survey_symbolic_ingresses",

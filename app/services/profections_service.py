@@ -59,6 +59,19 @@ class ProfectionsService:
             return date(d.year + 1, 2, 28)
 
     @classmethod
+    def for_chart(cls, chart: Dict, *, target_date: Optional[date] = None) -> Dict:
+        """Calculate profections from the Ascendant sign and birth date of a saved/inline chart."""
+        asc_sign = ((chart.get("angles") or {}).get("ASC") or {}).get("sign")
+        birth_iso = (chart.get("birth_data") or {}).get("date")
+        if not asc_sign or not birth_iso:
+            raise ValueError("Chart lacks ascendant sign or birth date")
+        return cls.profections(
+            ascendant_sign=asc_sign,
+            birth_date=date.fromisoformat(str(birth_iso)[:10]),
+            target_date=target_date,
+        )
+
+    @classmethod
     def profections(
         cls,
         ascendant_sign: str,
