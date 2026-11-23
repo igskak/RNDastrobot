@@ -27,6 +27,7 @@ from app.services.astro_provenance import overridable
 from app.services.dignity_service import DignityService
 from app.services.natal_chart_service import NatalChartService
 from app.services.preferences_runtime import CANONICAL_SIGNS
+from app.utils.constants import format_degree_minutes_seconds
 
 # Sentinel so a real chart of None (no saved chart) is memoized, not re-fetched.
 _UNSET = object()
@@ -39,7 +40,7 @@ CHART_DATA_FACETS = (
     # Slice-1 additions: the chart is loaded whole every turn, but the model
     # could previously see 5 planet fields and zero aspects. These surface the
     # structure an analyst actually reasons over.
-    "natal_aspects", "angles_and_points", "planet_roles", "house_details",
+    "natal_aspects", "natal_positions", "angles_and_points", "planet_roles", "house_details",
     "configurations",
 )
 
@@ -285,6 +286,24 @@ def _build_sign_properties(ds: ChartDataset) -> Dict:
     return {sign: svc.get_sign_properties(sign) for sign in CANONICAL_SIGNS}
 
 
+def _build_natal_positions(ds: ChartDataset) -> Dict:
+    """Planet positions from the same snapshot used by the other natal facets."""
+    chart = ds._natal_chart() or {}
+    planets = []
+    for p in chart.get("planets") or []:
+        degree = p.get("degree_in_sign_formatted")
+        if degree is None and p.get("degree_in_sign") is not None:
+            degree = format_degree_minutes_seconds(float(p["degree_in_sign"]))
+        planets.append({
+            "name": p["name"],
+            "sign": p.get("sign"),
+            "degree": degree,
+            "house": p.get("house"),
+            "retrograde": p.get("retrograde"),
+        })
+    return {"planets": planets}
+
+
 def _build_dignities(ds: ChartDataset) -> Dict:
     """Chart-specific facet: each natal planet's sign, house, and essential dignity.
 
@@ -485,6 +504,7 @@ _FACET_BUILDERS: Dict[str, Callable[[ChartDataset], Dict]] = {
     "speeds": _build_speeds,
     "houses": _build_houses,
     "natal_aspects": _build_natal_aspects,
+    "natal_positions": _build_natal_positions,
     "angles_and_points": _build_angles_and_points,
     "planet_roles": _build_planet_roles,
     "house_details": _build_house_details,

@@ -4,27 +4,35 @@
     "today": "Today only (aspects in orb)",
     "week": "±1 week",
     "month": "±1 month",
-    "forecast": "The forecast period ({start} to {end})"
+    "forecast": "The forecast period ({start} to {end})",
+    "natal_positions": "Natal placements",
+    "natal_house": "house {number}"
   },
   "de": {
     "transit_period": "Welchen Zeitraum soll ich prüfen?",
     "today": "Nur heute (Aspekte im Orbis)",
     "week": "±1 Woche",
     "month": "±1 Monat",
-    "forecast": "Den Prognosezeitraum ({start} bis {end})"
+    "forecast": "Den Prognosezeitraum ({start} bis {end})",
+    "natal_positions": "Radixpositionen",
+    "natal_house": "Haus {number}"
   },
   "ru": {
     "transit_period": "За какой период посмотреть транзиты?",
     "today": "Только сегодня (аспекты в орбисе)",
     "week": "±1 неделя",
     "month": "±1 месяц",
-    "forecast": "Период прогноза ({start} — {end})"
+    "forecast": "Период прогноза ({start} — {end})",
+    "natal_positions": "Положения в натальной карте",
+    "natal_house": "{number}-й дом"
   },
   "uk": {
     "transit_period": "За який період переглянути транзити?",
     "today": "Лише сьогодні (аспекти в орбісі)",
     "week": "±1 тиждень",
     "month": "±1 місяць",
-    "forecast": "Період прогнозу ({start} — {end})"
+    "forecast": "Період прогнозу ({start} — {end})",
+    "natal_positions": "Положення в натальній карті",
+    "natal_house": "{number}-й дім"
   }
 }

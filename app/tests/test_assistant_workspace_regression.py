@@ -170,3 +170,24 @@ def test_progression_snapshot_does_not_truncate_aspects_or_positions(service):
 
     assert len(result["aspects_to_natal"]) == len(aspects)
     assert len(result["progressed_planets"]) == len(positions)
+
+
+def test_natal_summary_renders_all_signs_degrees_houses_and_retrogrades(
+    service, chart, monkeypatch,
+):
+    client = _FakeClient([
+        _msg(tool_calls=[_tool_call("1", "get_chart_data", '{"facet":"natal_positions"}')]),
+        _msg(content=""),
+    ])
+    monkeypatch.setattr(assistant, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(assistant, "get_openai_client", lambda: client)
+
+    reply = service.chat(
+        uuid4(), [{"role": "user", "content": "Give me a natal overview"}], locale="en",
+    )["reply"]
+
+    assert "**Natal placements**" in reply
+    for planet in chart["planets"]:
+        name = planet["name"] + (" R" if planet["retrograde"] else "")
+        assert f"**{name}** — {planet['sign']} {planet['degree_in_sign_formatted']}, house {planet['house']}" in reply
+    assert all(f"**{name} R**" in reply for name in ("Saturn", "Uranus", "Neptune"))

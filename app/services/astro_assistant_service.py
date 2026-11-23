@@ -26,7 +26,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database.models import Person, User
-from app.services.assistant_reply_text import reply_text
+from app.services.assistant_reply_text import render_natal_positions, reply_text
 from app.services.astro_commands import (
     handle_command,
     validate_command,
@@ -807,6 +807,11 @@ contact never perfects, say it was a close approach without an exact aspect.
 remain after applying the rules above.
 
 TOOL RULES
+- For a natal overview or a full list of natal placements, call get_chart_data with \
+facet=natal_positions. The server appends the complete placement block with sign, \
+degree, house and R for every retrograde planet. Leave that list to the server, and \
+write only any extra facts the astrologer requested. If there are no saved positions, \
+say the data are unavailable. A lookup of one placement stays short.
 - One named pair and aspect ("когда Плутон войдёт в квадрат к Солнцу") — use the atomic \
 find_aspect_passes, or find_symbolic_aspect_passes for progressions and directions.
 - A PERIOD with no single named pair ("на год", "что важного за два года", "все аспекты \
@@ -2003,6 +2008,7 @@ class AstroAssistantService:
             return final_actions, _wheel_view_reply(coerced_view, messages, locale), "ok"
 
         index = build_citation_index(tool_results)
+        natal_block = render_natal_positions(tool_results, locale)
 
         def render(text):
             """(rendered, ok). ok=False ONLY for a true fabrication: the model cited an
@@ -2015,7 +2021,7 @@ class AstroAssistantService:
                 return rendered, False
             if unresolved:
                 rendered = strip_citation_tokens(rendered)
-            return rendered, True
+            return "\n\n".join(filter(None, (rendered.strip(), natal_block))), True
 
         reply, ok = render(raw_reply)
         if not ok:  # fabricated/unresolved citation
