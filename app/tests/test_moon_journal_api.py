@@ -504,12 +504,13 @@ def test_letters_and_links_are_counted(env, sent, events, db_factory, client):
 
 # --- "a person used the page" signal -----------------------------------------------------
 
-def test_engaged_and_hook_click_are_counted_anonymously(client, events):
+def test_moon_page_usage_is_counted_anonymously(client, events):
     browser = {"User-Agent": REAL_BROWSERS[0]}
-    for event, page in (("engaged", "lunation"), ("hook_click", "lunation"), ("engaged", "planner")):
+    for event, page in (("engaged", "lunation"), ("hook_click", "lunation"), ("calendar_click", "lunation"), ("engaged", "planner")):
         assert client.post("/api/v1/moon/seen", json={"event": event, "page": page, "locale": "de"}, headers=browser).status_code == 204
     assert [(e["event"], e["properties"]["page"]) for e in events] == [
-        ("moon.engaged", "lunation"), ("moon.hook_click", "lunation"), ("moon.engaged", "planner"),
+        ("moon.engaged", "lunation"), ("moon.hook_click", "lunation"),
+        ("moon.calendar_click", "lunation"), ("moon.engaged", "planner"),
     ]
     for event in events:
         props = event["properties"]

@@ -353,7 +353,7 @@ function indexMain(locale, catalog, letters, lunations, links) {
     return `<main id="main" class="shell tool moon-page">
       <h1>${esc(page.h1)}</h1>
       <p class="lead">${esc(page.lead)}</p>
-      <p class="trust">${esc(page.trust)}</p>
+${page.tableLink ? `      <p><a href="#lunations-title">${esc(page.tableLink)}</a></p>\n` : ''}      <p class="trust">${esc(page.trust)}</p>
       <div class="moon-grid">
         <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
           <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
@@ -479,7 +479,7 @@ function lunationTexts(locale, catalog, letters, entry) {
     };
 }
 
-function lunationMain(locale, catalog, letters, plan, index, catalogs) {
+function lunationMain(locale, catalog, letters, plan, index, catalogs, calendarLinks) {
     const lp = catalog.lunationPage;
     const entry = plan[index];
     const lun = entry.lun;
@@ -529,7 +529,7 @@ function lunationMain(locale, catalog, letters, plan, index, catalogs) {
           <div><dt>${esc(fill(lp.factLocal, v))}</dt><dd>${esc(v.time)}</dd></div>
           <div><dt>${esc(lp.factUtc)}</dt><dd>${esc(v.utc)}</dd></div>
           <div><dt>${esc(lp.factSign)}</dt><dd>${esc(`${v.sign} ${v.degree}°`)}</dd></div>
-        </dl>
+        </dl>${calendarLinks}
       </section>
       <section class="card hook" aria-labelledby="hook-title">
         <h2 id="hook-title">${esc(lp.hookTitle)}</h2>
@@ -583,6 +583,10 @@ function lunationMain(locale, catalog, letters, plan, index, catalogs) {
 function renderLunation(locale, entry, index, plan, ctx) {
     const { catalogs, letters } = ctx;
     const catalog = catalogs[locale];
+    const showCalendar = catalog.tools.calendarLinkSlugs?.includes(entry.slugs[locale]);
+    const calendarLinks = showCalendar
+        ? `\n        <p><a class="calendar-subscribe" href="webcal://${ICS_HOST}${icsPath(locale)}">${esc(catalog.tools.calendarLink)}</a> (<a href="${icsPath(locale)}" download>${esc(catalog.tools.calendarDownload)}</a>)</p>`
+        : '';
     const texts = lunationTexts(locale, catalog, letters[locale], entry);
     const alternates = LOCALES.map((l) => `    <link rel="alternate" hreflang="${catalogs[l].hreflang}" href="${ORIGIN}${pagePath(l, entry.slugs[l])}">`).join('\n')
         + `\n    <link rel="alternate" hreflang="x-default" href="${ORIGIN}${pagePath('en', entry.slugs.en)}">\n`;
@@ -594,9 +598,9 @@ function renderLunation(locale, entry, index, plan, ctx) {
 <body data-page="lunation" data-locale="${locale}">
   <a class="skip" href="#main">${esc(catalog.site.skip)}</a>
   ${header(locale, 'lunation', catalog, catalogs)}
-  ${lunationMain(locale, catalog, letters[locale], plan, index, catalogs)}
+  ${lunationMain(locale, catalog, letters[locale], plan, index, catalogs, calendarLinks)}
   ${footer(catalog)}
-  <script src="/js/moon-seen.js?v=${ASSET_VERSION}" defer></script>
+  <script src="/js/moon-seen.js?v=${ASSET_VERSION}${showCalendar ? '-calendar' : ''}" defer></script>
 </body>
 </html>
 `;

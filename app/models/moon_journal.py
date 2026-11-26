@@ -33,7 +33,7 @@ class MoonSeenRequest(BaseModel):
     Only the event, the kind of page and the language: no address, no text, no identifier.
     """
 
-    event: Literal["engaged", "hook_click"]
+    event: Literal["engaged", "hook_click", "calendar_click"]
     page: Literal["index", "lunation", "planner", "data"]
     locale: str = Field(default="en", max_length=5)
 

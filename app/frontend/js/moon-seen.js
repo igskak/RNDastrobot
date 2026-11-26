@@ -1,7 +1,6 @@
 /* Anonymous "a person used this page" signal for the public moon pages. Sends only the kind of
-   page, the language and one of two events: "engaged" (the visitor scrolled, typed or tapped and
-   stayed a few seconds) and "hook_click" (the visitor followed the link to the calculator). No
-   identifier, no text, no storage. A crawler that only loads the page never sends either. */
+   page, the language and the event (engagement, calculator link or calendar subscription click).
+   No identifier, text or storage. Loading the page alone sends nothing. */
 (function () {
     'use strict';
 
@@ -41,6 +40,8 @@
 
     document.addEventListener('click', function (event) {
         var target = event.target;
-        if (target && target.closest && target.closest('.hook-link')) send('hook_click');
+        if (!target || !target.closest) return;
+        if (target.closest('.hook-link')) send('hook_click');
+        if (target.closest('.calendar-subscribe')) send('calendar_click');
     });
 })();

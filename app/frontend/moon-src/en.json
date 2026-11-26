@@ -19,11 +19,12 @@
  },
  "pages": {
   "index": {
-   "title": "New Moon & Full Moon Dates 2026–2027 + Your Prompts | Steliara",
-   "description": "Every new and full moon of 2026–2027 with exact times, where each one falls in your birth chart, and free journal prompts for intentions and gratitude.",
-   "h1": "New moon and full moon 2026–2027: dates and your personal journal prompts",
-   "lead": "See where the next new moon and full moon fall in your birth chart and get a few gentle questions for your journal: an intention at the new moon, gratitude at the full moon.",
+   "title": "When Is the Next Full Moon? Dates & Times | Steliara",
+   "description": "Find the exact date and time of the next full moon and new moon in our 2026–2027 calendar. See where each falls in your birth chart and get free journal prompts.",
+   "h1": "When is the next full moon?",
+   "lead": "Find the exact dates and times of new and full moons in the 2026–2027 calendar. See where each one falls in your birth chart and get free prompts for your journal.",
    "trust": "Calculated with the Swiss Ephemeris, the astronomical engine behind professional astrology software. Free, no account needed.",
+   "tableLink": "See the moon calendar",
    "tableTitle": "New and full moons from November 2026 to December 2027",
    "tableNote": "Times are New York time (ET). The next one is highlighted.",
    "sections": [
