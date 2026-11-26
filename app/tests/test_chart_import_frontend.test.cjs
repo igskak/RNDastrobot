@@ -48,6 +48,7 @@ test('resumed import preserves the profile and reports the first successful save
         status: 'paused',
         total: 3,
         ready: 2,
+        imported: 0,
         warnings: 0,
         errors: 0,
         configuration: {
@@ -69,7 +70,7 @@ test('resumed import preserves the profile and reports the first successful save
         async requireAuth() {},
         async listPeople() { return []; },
         async listChartImports() { return []; },
-        async getChartImport() { return batch; },
+        async getChartImport() { return { ...batch }; },
         async commitChartImportItem(_batchId, itemId) {
             actions.push(['commit', itemId]);
             return { status: 'imported' };

@@ -295,7 +295,9 @@
                 const result = await root.AstroAPI.commitChartImportItem(state.batch.id, item.id);
                 if (result.status === 'imported') {
                     imported += 1;
-                    if (imported === 1) {
+                    if (state.batch.imported === 0) {
+                        // Keep the first save recorded if a later item fails and the run is retried.
+                        state.batch.imported = 1;
                         root.AstroAnalytics?.track?.('chart_import_succeeded', {
                             source_format: state.batch.source_format,
                         });

@@ -30,6 +30,7 @@ const ORIGIN = 'https://www.steliara.com';
 const LOCALES = ['en', 'pl', 'de', 'fr', 'it', 'es', 'pt'];
 const PAGES = ['index', 'letter'];
 const ASSET_VERSION = '6';
+const CALENDAR_PILOT_SLUGS = new Set(['luna-nuova-9-dicembre-2026', 'luna-piena-24-dicembre-2026']);
 
 const TIMEZONES = [
     'Europe/Warsaw', 'Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/Paris', 'Europe/Brussels',
@@ -353,7 +354,7 @@ function indexMain(locale, catalog, letters, lunations, links) {
     return `<main id="main" class="shell tool moon-page">
       <h1>${esc(page.h1)}</h1>
       <p class="lead">${esc(page.lead)}</p>
-${page.tableLink ? `      <p><a href="#lunations-title">${esc(page.tableLink)}</a></p>\n` : ''}      <p class="trust">${esc(page.trust)}</p>
+${locale === 'en' ? `      <p><a href="#lunations-title">${esc(catalog.lunationPage.crumbHub)}</a></p>\n` : ''}      <p class="trust">${esc(page.trust)}</p>
       <div class="moon-grid">
         <section id="moon-highlight" class="moon-highlight" aria-labelledby="moon-highlight-title" aria-live="polite" hidden>
           <div class="moon-highlight-orbit" aria-hidden="true"><span class="moon-highlight-disc"></span></div>
@@ -583,7 +584,7 @@ function lunationMain(locale, catalog, letters, plan, index, catalogs, calendarL
 function renderLunation(locale, entry, index, plan, ctx) {
     const { catalogs, letters } = ctx;
     const catalog = catalogs[locale];
-    const showCalendar = catalog.tools.calendarLinkSlugs?.includes(entry.slugs[locale]);
+    const showCalendar = locale === 'it' && CALENDAR_PILOT_SLUGS.has(entry.slugs[locale]);
     const calendarLinks = showCalendar
         ? `\n        <p><a class="calendar-subscribe" href="webcal://${ICS_HOST}${icsPath(locale)}">${esc(catalog.tools.calendarLink)}</a> (<a href="${icsPath(locale)}" download>${esc(catalog.tools.calendarDownload)}</a>)</p>`
         : '';
