@@ -185,10 +185,10 @@ test('the planner shows each moon in the chosen time zone and says which zone it
     assert.match(document.getElementById('planner-times').textContent, /^Times are in /);
 });
 
-test('the usage signal waits for real input and sends only the hub-hook click and engagement', async () => {
+test('the usage signal waits for input and counts each Italian calendar or calculator click once', async () => {
     const seenSource = fs.readFileSync(path.join(appRoot, 'frontend', 'js', 'moon-seen.js'), 'utf8');
-    const html = fs.readFileSync(path.join(pagesDir, 'new-moon-november-9-2026.html'), 'utf8').replace(/<script src="[^"]*" defer><\/script>/g, '');
-    const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'https://www.steliara.com/moon/new-moon-november-9-2026', pretendToBeVisual: true });
+    const html = fs.readFileSync(path.join(pagesDir, 'it', 'luna-nuova-9-dicembre-2026.html'), 'utf8');
+    const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'https://www.steliara.com/moon/it/luna-nuova-9-dicembre-2026', pretendToBeVisual: true });
     const beacons = [];
     dom.window.navigator.sendBeacon = (url, blob) => { beacons.push({ url, blob }); return true; };
     const timers = [];
@@ -205,10 +205,19 @@ test('the usage signal waits for real input and sends only the hub-hook click an
     timers[0].fn();
     assert.equal(beacons.length, 1);
     assert.equal(beacons[0].url, '/api/v1/moon/seen');
-    assert.equal(await beacons[0].blob.text(), JSON.stringify({ event: 'engaged', page: 'lunation', locale: 'en' }));
+    assert.equal(await beacons[0].blob.text(), JSON.stringify({ event: 'engaged', page: 'lunation', locale: 'it' }));
 
     dom.window.document.querySelector('.hook-link').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
     dom.window.document.querySelector('.hook-link').dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
     assert.equal(beacons.length, 2, 'the hook click is sent once');
-    assert.equal(await beacons[1].blob.text(), JSON.stringify({ event: 'hook_click', page: 'lunation', locale: 'en' }));
+    assert.equal(await beacons[1].blob.text(), JSON.stringify({ event: 'hook_click', page: 'lunation', locale: 'it' }));
+
+    const calendar = dom.window.document.querySelector('.facts .calendar-subscribe');
+    assert.equal(calendar.getAttribute('href'), 'webcal://www.steliara.com/moon/it/lunations.ics');
+    assert.ok(dom.window.document.querySelector('.facts a[download][href="/moon/it/lunations.ics"]'));
+    calendar.addEventListener('click', (event) => event.preventDefault());
+    calendar.click();
+    calendar.click();
+    assert.equal(beacons.length, 3, 'the subscription click is counted separately and once');
+    assert.equal(await beacons[2].blob.text(), JSON.stringify({ event: 'calendar_click', page: 'lunation', locale: 'it' }));
 });

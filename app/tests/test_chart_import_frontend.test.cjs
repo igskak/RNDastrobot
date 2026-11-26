@@ -36,7 +36,7 @@ test('chart import renders imported values as text and exposes resumable API cal
     }
 });
 
-test('resumed import selects only unfinished records and keeps saved profile name', async () => {
+test('resumed import preserves the profile and reports the first successful save', async () => {
     const dom = new JSDOM(html, {
         url: 'https://example.test/account-settings.html?import=batch-1',
         runScripts: 'outside-only',
@@ -44,9 +44,11 @@ test('resumed import selects only unfinished records and keeps saved profile nam
     const batch = {
         id: 'batch-1',
         original_filename: 'cards.zbs',
+        source_format: 'zet',
         status: 'paused',
-        total: 2,
-        ready: 1,
+        total: 3,
+        ready: 2,
+        imported: 0,
         warnings: 0,
         errors: 0,
         configuration: {
@@ -57,15 +59,22 @@ test('resumed import selects only unfinished records and keeps saved profile nam
         },
         items: [
             { id: 'pending', status: 'failed', selected: true, record: { title: 'Pending' }, issues: [] },
+            { id: 'second', status: 'selected', selected: true, record: { title: 'Second' }, issues: [] },
             { id: 'skipped', status: 'skipped', selected: false, record: { title: 'Skipped' }, issues: [] },
         ],
     };
+    const actions = [];
     dom.window.FrontendI18n = { t(key) { return key; } };
+    dom.window.AstroAnalytics = { track(event, props) { actions.push([event, props.source_format]); } };
     dom.window.AstroAPI = {
         async requireAuth() {},
         async listPeople() { return []; },
         async listChartImports() { return []; },
-        async getChartImport() { return batch; },
+        async getChartImport() { return { ...batch }; },
+        async commitChartImportItem(_batchId, itemId) {
+            actions.push(['commit', itemId]);
+            return { status: 'imported' };
+        },
     };
     dom.window.eval(source);
     if (dom.window.document.readyState === 'loading') {
@@ -73,8 +82,14 @@ test('resumed import selects only unfinished records and keeps saved profile nam
     }
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    assert.deepEqual(Array.from(dom.window.ChartImport.getState().selected), ['pending']);
+    assert.deepEqual(Array.from(dom.window.ChartImport.getState().selected), ['pending', 'second']);
     assert.equal(dom.window.document.getElementById('chartImportProfileName').value, 'Important events');
     assert.equal(dom.window.document.querySelector('#chartImportRows input').disabled, true);
+    assert.deepEqual(actions, []);
+    dom.window.document.getElementById('chartImportStart').click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.deepEqual(actions, [
+        ['commit', 'pending'], ['chart_import_succeeded', 'zet'], ['commit', 'second'],
+    ]);
     dom.window.close();
 });

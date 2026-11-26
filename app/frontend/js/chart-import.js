@@ -293,8 +293,18 @@
                 refs.progressText.textContent = t('page.accountSettings.import.progress.saving');
                 refs.progressCount.textContent = t('page.accountSettings.import.progress.count', { current: imported + failed, total: items.length });
                 const result = await root.AstroAPI.commitChartImportItem(state.batch.id, item.id);
-                if (result.status === 'imported') imported += 1;
-                else failed += 1;
+                if (result.status === 'imported') {
+                    imported += 1;
+                    if (state.batch.imported === 0) {
+                        // Keep the first save recorded if a later item fails and the run is retried.
+                        state.batch.imported = 1;
+                        root.AstroAnalytics?.track?.('chart_import_succeeded', {
+                            source_format: state.batch.source_format,
+                        });
+                    }
+                } else {
+                    failed += 1;
+                }
                 refs.progressBar.value = imported + failed;
             }
             if (imported > 0) {

@@ -141,7 +141,7 @@ def track_page_view(
 
 
 def track_seen(event: str, page: str, locale: str, user_agent: Optional[str]) -> None:
-    """A page told us a person used it (scrolled, typed or clicked after a few seconds) or clicked the hub hook.
+    """A person used a moon page or clicked its calculator or calendar link.
 
     The server cannot tell a person from a patient crawler by the request alone, so the page
     sends this only after real input; tools that announce themselves are still left out.
