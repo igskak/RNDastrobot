@@ -26,7 +26,7 @@
     }
   },
   "base": "https://www.steliara.com",
-  "date": "2026-11-26",
+  "date": "2026-11-27",
   "errors": 0,
   "findings": [],
   "pages": {
@@ -214,16 +214,16 @@
     },
     "https://www.steliara.com/cloud-astrology-software": {
       "body_words": 2329,
-      "bytes": 30660,
+      "bytes": 30579,
       "canonical": "https://www.steliara.com/cloud-astrology-software",
-      "description_length": 152,
+      "description_length": 135,
       "empty_i18n_nodes": 0,
       "h1": "Cloud astrology software built for a practice, not just a chart",
       "hreflang_count": 0,
       "jsonld_blocks": 3,
       "status": 200,
-      "title": "Cloud Astrology Software for Mac & Windows | Steliara",
-      "title_length": 53,
+      "title": "Cloud Astrology Software for Astrologers | Steliara",
+      "title_length": 51,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/de/": {
@@ -381,17 +381,17 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon": {
-      "body_words": 1768,
-      "bytes": 37174,
+      "body_words": 1761,
+      "bytes": 37134,
       "canonical": "https://www.steliara.com/moon",
-      "description_length": 151,
+      "description_length": 161,
       "empty_i18n_nodes": 0,
-      "h1": "New moon and full moon 2026–2027: dates and your personal journal prompts",
+      "h1": "When is the next full moon?",
       "hreflang_count": 8,
       "jsonld_blocks": 2,
       "status": 200,
-      "title": "New Moon & Full Moon Dates 2026–2027 + Your Prompts | Steliara",
-      "title_length": 62,
+      "title": "When Is the Next Full Moon? Dates & Times | Steliara",
+      "title_length": 52,
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/data": {
@@ -1375,8 +1375,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-nuova-9-dicembre-2026": {
-      "body_words": 520,
-      "bytes": 13072,
+      "body_words": 528,
+      "bytes": 13282,
       "canonical": "https://www.steliara.com/moon/it/luna-nuova-9-dicembre-2026",
       "description_length": 139,
       "empty_i18n_nodes": 0,
@@ -1487,8 +1487,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/moon/it/luna-piena-24-dicembre-2026": {
-      "body_words": 534,
-      "bytes": 13110,
+      "body_words": 542,
+      "bytes": 13320,
       "canonical": "https://www.steliara.com/moon/it/luna-piena-24-dicembre-2026",
       "description_length": 135,
       "empty_i18n_nodes": 0,
@@ -2229,8 +2229,8 @@
       "x_robots_tag": ""
     },
     "https://www.steliara.com/solar-fire-alternative": {
-      "body_words": 2384,
-      "bytes": 31057,
+      "body_words": 2386,
+      "bytes": 31110,
       "canonical": "https://www.steliara.com/solar-fire-alternative",
       "description_length": 162,
       "empty_i18n_nodes": 0,
