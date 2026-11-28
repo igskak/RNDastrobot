@@ -1,12 +1,6 @@
 {
   "by_day": [
     {
-      "clicks": 0,
-      "date": "2026-10-28",
-      "impressions": 73,
-      "position": 34.945205479452056
-    },
-    {
       "clicks": 1,
       "date": "2026-10-29",
       "impressions": 72,
@@ -167,22 +161,22 @@
       "date": "2026-11-24",
       "impressions": 183,
       "position": 12.234972677595628
+    },
+    {
+      "clicks": 1,
+      "date": "2026-11-25",
+      "impressions": 142,
+      "position": 13.47887323943662
     }
   ],
   "delta": {
-    "clicks": 44,
-    "ctr": -0.0155,
-    "impressions": 2895,
-    "position": 5.84
+    "clicks": 45,
+    "ctr": -0.0105,
+    "impressions": 2893,
+    "position": 1.62
   },
   "fresh": {
     "by_day": [
-      {
-        "clicks": 0,
-        "date": "2026-11-21",
-        "impressions": 126,
-        "position": 14.73015873015873
-      },
       {
         "clicks": 1,
         "date": "2026-11-22",
@@ -214,84 +208,96 @@
         "position": 13.099337748344372
       },
       {
-        "clicks": 1,
+        "clicks": 3,
         "date": "2026-11-27",
-        "impressions": 28,
-        "position": 28.035714285714285
+        "impressions": 168,
+        "position": 15.083333333333334
+      },
+      {
+        "clicks": 2,
+        "date": "2026-11-28",
+        "impressions": 24,
+        "position": 15.166666666666666
       }
     ],
     "top_pages": [
       {
         "clicks": 2,
         "impressions": 14,
-        "page": "https://www.steliara.com/moon/fr/nouvelle-lune-9-decembre-2026",
-        "position": 12.5
+        "page": "https://www.steliara.com/astroprocessor",
+        "position": 8.571428571428571
       },
       {
         "clicks": 2,
-        "impressions": 57,
-        "page": "https://www.steliara.com/moon/full-moon-november-24-2026",
-        "position": 14.210526315789474
+        "impressions": 15,
+        "page": "https://www.steliara.com/moon/fr/nouvelle-lune-9-decembre-2026",
+        "position": 12.4
       },
       {
-        "clicks": 1,
+        "clicks": 2,
         "impressions": 54,
-        "page": "https://www.steliara.com/answers/best-astrology-software-for-mac",
-        "position": 12.203703703703704
+        "page": "https://www.steliara.com/moon/full-moon-november-24-2026",
+        "position": 13.24074074074074
       },
       {
-        "clicks": 1,
-        "impressions": 16,
-        "page": "https://www.steliara.com/astroprocessor",
-        "position": 7.5625
-      },
-      {
-        "clicks": 1,
-        "impressions": 60,
-        "page": "https://www.steliara.com/cloud-astrology-software",
-        "position": 30.116666666666667
-      },
-      {
-        "clicks": 1,
-        "impressions": 30,
-        "page": "https://www.steliara.com/moon/es/luna-llena-24-de-noviembre-de-2026",
-        "position": 10.266666666666667
-      },
-      {
-        "clicks": 1,
-        "impressions": 14,
-        "page": "https://www.steliara.com/moon/fr/pleine-lune-24-novembre-2026",
-        "position": 20.714285714285715
-      },
-      {
-        "clicks": 1,
-        "impressions": 26,
-        "page": "https://www.steliara.com/moon/it/luna-piena-24-dicembre-2026",
-        "position": 6.961538461538462
-      },
-      {
-        "clicks": 1,
-        "impressions": 38,
+        "clicks": 2,
+        "impressions": 47,
         "page": "https://www.steliara.com/moon/new-moon-december-8-2026",
-        "position": 5.7368421052631575
+        "position": 6.340425531914893
       },
       {
         "clicks": 1,
-        "impressions": 9,
-        "page": "https://www.steliara.com/zet-online",
-        "position": 5.888888888888889
-      },
-      {
-        "clicks": 0,
-        "impressions": 45,
+        "impressions": 41,
         "page": "https://www.steliara.com/",
-        "position": 27.177777777777777
+        "position": 26.170731707317074
+      },
+      {
+        "clicks": 1,
+        "impressions": 58,
+        "page": "https://www.steliara.com/answers/best-astrology-software-for-mac",
+        "position": 12.224137931034482
+      },
+      {
+        "clicks": 1,
+        "impressions": 7,
+        "page": "https://www.steliara.com/astrologer-workspace",
+        "position": 3
+      },
+      {
+        "clicks": 1,
+        "impressions": 71,
+        "page": "https://www.steliara.com/cloud-astrology-software",
+        "position": 32.19718309859155
+      },
+      {
+        "clicks": 1,
+        "impressions": 23,
+        "page": "https://www.steliara.com/moon/es/luna-llena-24-de-noviembre-de-2026",
+        "position": 10.521739130434783
+      },
+      {
+        "clicks": 1,
+        "impressions": 13,
+        "page": "https://www.steliara.com/moon/fr/pleine-lune-24-novembre-2026",
+        "position": 19.23076923076923
+      },
+      {
+        "clicks": 1,
+        "impressions": 27,
+        "page": "https://www.steliara.com/moon/it/luna-piena-24-dicembre-2026",
+        "position": 7.2592592592592595
+      },
+      {
+        "clicks": 1,
+        "impressions": 10,
+        "page": "https://www.steliara.com/zet-online",
+        "position": 9.4
       },
       {
         "clicks": 0,
-        "impressions": 14,
+        "impressions": 19,
         "page": "https://www.steliara.com/answers/best-astrology-software-for-professional-practice",
-        "position": 11.428571428571429
+        "position": 8.421052631578949
       },
       {
         "clicks": 0,
@@ -303,25 +309,19 @@
         "clicks": 0,
         "impressions": 6,
         "page": "https://www.steliara.com/answers/how-to-move-charts-between-astrology-programs",
-        "position": 6.166666666666667
+        "position": 6.333333333333333
       },
       {
         "clicks": 0,
-        "impressions": 5,
+        "impressions": 7,
         "page": "https://www.steliara.com/answers/what-software-do-professional-astrologers-use",
-        "position": 5.8
+        "position": 5.857142857142857
       },
       {
         "clicks": 0,
-        "impressions": 19,
+        "impressions": 14,
         "page": "https://www.steliara.com/astro-gold-alternative",
-        "position": 7.7368421052631575
-      },
-      {
-        "clicks": 0,
-        "impressions": 3,
-        "page": "https://www.steliara.com/astrologer-workspace",
-        "position": 3.3333333333333335
+        "position": 6.785714285714286
       },
       {
         "clicks": 0,
@@ -337,87 +337,87 @@
       },
       {
         "clicks": 0,
-        "impressions": 5,
+        "impressions": 6,
         "page": "https://www.steliara.com/de/pricing.html",
-        "position": 36.8
-      },
-      {
-        "clicks": 0,
-        "impressions": 9,
-        "page": "https://www.steliara.com/kundli/dasha-calculator",
-        "position": 41.111111111111114
-      },
-      {
-        "clicks": 0,
-        "impressions": 3,
-        "page": "https://www.steliara.com/kundli/hi/dasha-calculator",
-        "position": 45.666666666666664
-      },
-      {
-        "clicks": 0,
-        "impressions": 154,
-        "page": "https://www.steliara.com/moon",
-        "position": 10.337662337662337
+        "position": 32.16666666666667
       },
       {
         "clicks": 0,
         "impressions": 10,
+        "page": "https://www.steliara.com/kundli/dasha-calculator",
+        "position": 41
+      },
+      {
+        "clicks": 0,
+        "impressions": 2,
+        "page": "https://www.steliara.com/kundli/hi/dasha-calculator",
+        "position": 51.5
+      },
+      {
+        "clicks": 0,
+        "impressions": 176,
+        "page": "https://www.steliara.com/moon",
+        "position": 10.5
+      },
+      {
+        "clicks": 0,
+        "impressions": 7,
         "page": "https://www.steliara.com/moon/data",
-        "position": 21.2
+        "position": 19.285714285714285
       },
       {
         "clicks": 0,
         "impressions": 1,
-        "page": "https://www.steliara.com/moon/de",
-        "position": 6
+        "page": "https://www.steliara.com/moon/de/neumond-6-februar-2027",
+        "position": 23
       }
     ],
     "window": {
-      "end": "2026-11-27",
-      "start": "2026-11-21"
+      "end": "2026-11-28",
+      "start": "2026-11-22"
     }
   },
   "previous_totals": {
     "clicks": 13,
-    "ctr": 0.0328,
-    "impressions": 396,
-    "position": 11.58
+    "ctr": 0.0278,
+    "impressions": 467,
+    "position": 15.25
   },
   "previous_window": {
-    "end": "2026-10-27",
-    "start": "2026-09-30"
+    "end": "2026-10-28",
+    "start": "2026-10-01"
   },
   "site": "sc-domain:steliara.com",
   "top_pages": [
     {
       "clicks": 8,
-      "impressions": 241,
+      "impressions": 228,
       "page": "https://www.steliara.com/solar-fire-alternative",
-      "position": 6.83402489626556
+      "position": 6.5964912280701755
     },
     {
       "clicks": 7,
-      "impressions": 301,
+      "impressions": 296,
       "page": "https://www.steliara.com/cloud-astrology-software",
-      "position": 17.910299003322258
+      "position": 18.4527027027027
     },
     {
       "clicks": 6,
-      "impressions": 185,
+      "impressions": 186,
       "page": "https://www.steliara.com/moon/it/luna-piena-24-novembre-2026",
-      "position": 14.659459459459459
+      "position": 15.005376344086022
     },
     {
       "clicks": 3,
-      "impressions": 118,
+      "impressions": 113,
       "page": "https://www.steliara.com/",
-      "position": 13.474576271186441
+      "position": 15.787610619469026
     },
     {
       "clicks": 3,
-      "impressions": 80,
+      "impressions": 75,
       "page": "https://www.steliara.com/astroprocessor",
-      "position": 12.0625
+      "position": 11.373333333333333
     },
     {
       "clicks": 3,
@@ -427,57 +427,57 @@
     },
     {
       "clicks": 2,
-      "impressions": 63,
+      "impressions": 62,
       "page": "https://www.steliara.com/kundli/dasha-calculator",
-      "position": 44.904761904761905
+      "position": 44.16129032258065
     },
     {
       "clicks": 2,
-      "impressions": 71,
-      "page": "https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026",
-      "position": 52.57746478873239
-    },
-    {
-      "clicks": 2,
-      "impressions": 103,
-      "page": "https://www.steliara.com/moon/full-moon-november-24-2026",
-      "position": 11.58252427184466
-    },
-    {
-      "clicks": 2,
-      "impressions": 83,
-      "page": "https://www.steliara.com/moon/new-moon-december-8-2026",
-      "position": 9.518072289156626
-    },
-    {
-      "clicks": 1,
       "impressions": 72,
+      "page": "https://www.steliara.com/moon/fr/nouvelle-lune-9-novembre-2026",
+      "position": 52.041666666666664
+    },
+    {
+      "clicks": 2,
+      "impressions": 108,
+      "page": "https://www.steliara.com/moon/full-moon-november-24-2026",
+      "position": 11.537037037037036
+    },
+    {
+      "clicks": 2,
+      "impressions": 91,
+      "page": "https://www.steliara.com/moon/new-moon-december-8-2026",
+      "position": 9.153846153846153
+    },
+    {
+      "clicks": 1,
+      "impressions": 80,
       "page": "https://www.steliara.com/answers/best-astrology-software-for-mac",
-      "position": 13.083333333333334
+      "position": 13.05
     },
     {
       "clicks": 1,
-      "impressions": 53,
+      "impressions": 54,
       "page": "https://www.steliara.com/answers/best-astrology-software-for-professional-practice",
-      "position": 12
+      "position": 12.462962962962964
     },
     {
       "clicks": 1,
-      "impressions": 18,
+      "impressions": 11,
       "page": "https://www.steliara.com/astrology-practice-management",
-      "position": 3.888888888888889
+      "position": 4.181818181818182
     },
     {
       "clicks": 1,
-      "impressions": 285,
+      "impressions": 298,
       "page": "https://www.steliara.com/moon",
-      "position": 14.891228070175439
+      "position": 13.966442953020135
     },
     {
       "clicks": 1,
-      "impressions": 39,
+      "impressions": 40,
       "page": "https://www.steliara.com/moon/de/neumond-9-dezember-2026",
-      "position": 8.23076923076923
+      "position": 8.3
     },
     {
       "clicks": 1,
@@ -487,21 +487,27 @@
     },
     {
       "clicks": 1,
-      "impressions": 51,
+      "impressions": 57,
       "page": "https://www.steliara.com/moon/es/luna-llena-24-de-noviembre-de-2026",
-      "position": 9.529411764705882
+      "position": 9.596491228070175
     },
     {
       "clicks": 1,
-      "impressions": 11,
+      "impressions": 12,
       "page": "https://www.steliara.com/moon/fr/nouvelle-lune-9-decembre-2026",
-      "position": 11.272727272727273
+      "position": 11
     },
     {
       "clicks": 1,
-      "impressions": 47,
+      "impressions": 17,
+      "page": "https://www.steliara.com/moon/fr/pleine-lune-24-novembre-2026",
+      "position": 23.294117647058822
+    },
+    {
+      "clicks": 1,
+      "impressions": 50,
       "page": "https://www.steliara.com/moon/it/luna-piena-24-dicembre-2026",
-      "position": 8.106382978723405
+      "position": 8.1
     },
     {
       "clicks": 1,
@@ -517,27 +523,21 @@
     },
     {
       "clicks": 1,
-      "impressions": 124,
+      "impressions": 125,
       "page": "https://www.steliara.com/moon/new-moon-november-9-2026",
-      "position": 9.758064516129032
+      "position": 9.744
     },
     {
       "clicks": 1,
-      "impressions": 23,
+      "impressions": 26,
       "page": "https://www.steliara.com/moon/pl/now-9-grudnia-2026",
-      "position": 7.173913043478261
+      "position": 7.076923076923077
     },
     {
       "clicks": 1,
-      "impressions": 29,
+      "impressions": 31,
       "page": "https://www.steliara.com/moon/pl/pelnia-24-listopada-2026",
-      "position": 10.344827586206897
-    },
-    {
-      "clicks": 1,
-      "impressions": 24,
-      "page": "https://www.steliara.com/moon/pt/lua-cheia-24-de-novembro-de-2026",
-      "position": 9.541666666666666
+      "position": 12.419354838709678
     }
   ],
   "top_queries": [
@@ -549,8 +549,8 @@
     },
     {
       "clicks": 1,
-      "impressions": 12,
-      "position": 6.75,
+      "impressions": 11,
+      "position": 6.181818181818182,
       "query": "astrolium"
     },
     {
@@ -573,8 +573,8 @@
     },
     {
       "clicks": 1,
-      "impressions": 13,
-      "position": 8.692307692307693,
+      "impressions": 14,
+      "position": 8.642857142857142,
       "query": "solar fire for mac"
     },
     {
@@ -693,14 +693,14 @@
     }
   ],
   "totals": {
-    "clicks": 57,
+    "clicks": 58,
     "ctr": 0.0173,
-    "impressions": 3291,
-    "position": 17.42
+    "impressions": 3360,
+    "position": 16.87
   },
   "window": {
     "days": 28,
-    "end": "2026-11-24",
-    "start": "2026-10-28"
+    "end": "2026-11-25",
+    "start": "2026-10-29"
   }
 }
